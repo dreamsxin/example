@@ -1,6 +1,7 @@
 #include <boost/multi_index_container.hpp> 
 #include <boost/multi_index/hashed_index.hpp> 
-#include <boost/multi_index/member.hpp> 
+#include <boost/multi_index/member.hpp>
+#include <boost/range/iterator_range.hpp>
 #include <iostream> 
 #include <string> 
 
@@ -56,6 +57,10 @@ int main() {
 		std::cout << start->name << std::endl;
 		start++;
 	}
+	std::cout << "-std=c++11 use range" << std::endl;
+	auto range = persons.equal_range("Boris");
+	for (auto const& p : boost::make_iterator_range(range.first, range.second))
+		std::cout << p.name << "\n";
 
 	std::cout << "Anton count " << persons.count("Anton") << std::endl;
 
@@ -78,5 +83,11 @@ int main() {
 	while (startage != endage) {
 		std::cout << startage->name << std::endl;
 		startage++;
+	}
+	std::cout << "-std=c++11 use range" << std::endl;
+	auto& index = persons.get<1>();
+	auto range2 = index.equal_range(25);
+	for (auto const& p : boost::make_iterator_range(range2.first, range2.second)) {
+		std::cout << p.name << "\n";
 	}
 } 

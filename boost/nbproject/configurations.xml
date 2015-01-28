@@ -39,6 +39,7 @@
           <incDir>
             <pElem>/usr/include</pElem>
           </incDir>
+          <commandLine>-std=c++11</commandLine>
         </ccTool>
       </compileType>
       <item path="main.cpp" ex="false" tool="1" flavor2="0">
