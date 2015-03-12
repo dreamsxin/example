@@ -9,13 +9,24 @@
 #include <iostream>
 #include <pqxx/pqxx>
 
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ini_parser.hpp>
+
 using namespace std;
 
 /*
  * 
  */
 int main(int argc, char** argv) {
-	pqxx::connection c("dbname=eotu host=192.168.1.108 user=eotu password=wx:)123456");
+	boost::property_tree::ptree pt;
+	boost::property_tree::ini_parser::read_ini("config.ini", pt);
+
+	pqxx::connection c(
+		"dbname=" + pt.get<std::string>("database.dbname") +
+		" host=" + pt.get<std::string>("database.host") +
+		" user=" + pt.get<std::string>("database.user") +
+		" password=" + pt.get<std::string>("database.password")
+	);
 	pqxx::work txn(c);
 
 	pqxx::result r = txn.exec(
