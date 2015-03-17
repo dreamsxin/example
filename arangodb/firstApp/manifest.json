@@ -1,0 +1,14 @@
+{
+  "name": "firstApp",
+  "description": "This is my first Foxx app",
+  "author": "ArangoDB",
+  "version": "0.0.1",
+  "license": "Apache 2",
+  "isSystem": false,
+  "contributors": [],
+  "controllers": {
+    "/firstCollection": "controllers/firstCollection.js"
+  },
+  "setup": "scripts/setup.js",
+  "teardown": "scripts/teardown.js"
+}
