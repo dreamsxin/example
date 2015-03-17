@@ -8,6 +8,7 @@
     schema: {
       // Describe the attributes with Joi here
       '_key': Joi.string(),
+	  'name': Joi.string(),
     }
   });
 
