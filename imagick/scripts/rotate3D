@@ -1,0 +1,341 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 8/18/2007 .......... revised 11/28/2011
+#
+# define usage function
+function usage
+	{
+	echo "USAGE: rotate3D pan,tilt,roll[,pef] in_file out_file"
+	echo "USAGE: rotate3D"
+	echo ""
+	echo "pan                   rotation about image vertical centerline: -180 to +180 (deg)"
+	echo "tilt                  rotation about image horizontal centerline: -180 to +180 (deg)"
+	echo "roll                  rotation about the image center: -180 to +180 (deg)"
+	echo "pef                   perspective exaggeration factor: 0 to 3.19"
+	echo "function name only    get help"
+	echo ""
+	}
+#
+# define description function
+function descr
+	{
+	echo "NAME: ROTATE3D "
+	echo ""
+	echo "PURPOSE: To apply a perspective distortion to an image by providing "
+	echo "rotation angles and perspective exaggeration. "
+	echo ""
+	echo "DESCRIPTION: ROTATE3D apply a perspective distortion to an image "
+	echo "by providing three optional rotation angle: pan, tilt and roll "
+	echo "with an option to control the perspective exaggeration."
+	echo ""
+	echo "ARGUMENTS: (no args)  ---  displays help information. "
+	echo ""
+	echo "ARGUMENTS: pan,tilt,roll[,pf] in_file out_file  ---  process the "
+	echo "in_file to generate the out_file."
+	echo ""
+	echo "PAN is a rotation of the image about its vertical "
+	echo "centerline -180 to +180 degrees. Positive rotations turn the "
+	echo "right side of the image away from the viewer and the left side "
+	echo "towards the viewer. Zero is no rotation. A PAN of +/- 180 deg "
+	echo "achieves the same results as -flip."
+	echo ""
+	echo "TILT is a rotation of the image about its horizontal "
+	echo "centerline -180 to +180 degrees. Positive rotations turn the top "
+	echo "of the image away from the viewer and the bottom towards the "
+	echo "viewer. Zero is no rotation. A TILT of +/- 180 deg "
+	echo "achieves the same results as -flop."
+	echo ""
+	echo "ROLL (like image rotation) is a rotation in the plane of the "
+	echo "the image -180 to +180 degrees. Positive values are clockwise "
+	echo "and negative values are counter-clockwise. Zero is no rotation. "
+	echo "A ROLL of any angle achieves the same results as -rotate. "
+	echo ""
+	echo "PAN, TILT and ROLL are order dependent. If all three are provided, "
+	echo "then they will be done in that order."
+	echo ""
+	echo "PEF is the perspective exaggeration factor. It ranges from 0 to 3.19. "
+	echo "A normal perspective is achieved with the default of 1. As PEF is "
+	echo "increased from one the perspective effect moves towards that of "
+	echo "a wide angle lens (more distortion). If PEF is decreased from one "
+	echo "the perspective effect moves towards a telephoto lens (less "
+	echo "distortion). PEF of 0.5 achieves an effect close to no perspective "
+	echo "distortion. PEF values too large may cause part of the image appear "
+	echo "above the 'horizon' in the 'sky'."
+	echo ""
+	echo "CAVEAT: No guarantee that this script will work on all platforms, "
+	echo "nor that trapping of inconsistent parameters is complete and "
+	echo "foolproof. Use At Your Own Risk. "
+	echo ""
+	}
+#
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+#
+# function to report error messages, usage and exit
+function errMsg
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage
+	exit 1
+	}
+#
+# function to test if entry is floating point number
+function testFloat
+	{
+	test1=`expr "$1" : '^[0-9][0-9]*$'`  				# counts same as above but preceeded by plus or minus
+	test2=`expr "$1" : '^[+-][0-9][0-9]*$'`  			# counts one or more digits
+	test3=`expr "$1" : '^[0-9]*[\.][0-9]*$'`			# counts 0 or more digits followed by period followed by 0 or more digits
+	test4=`expr "$1" : '^[+-][0-9]*[\.][0-9]*$'`		# counts same as above but preceeded by plus or minus
+	floatresult=`expr $test1 + $test2 + $test3 + $test4`
+#	[ $floatresult = 0 ] && errMsg "THE ENTRY $1 IS NOT A FLOATING POINT NUMBER"
+	}
+#
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+	usage
+	descr
+	exit 0
+elif [ $# -eq 2 ]
+	then
+	errMsg "--- NO PARAMETER VALUES WERE PROVIDED ---"
+elif [ $# -eq 3 ]
+	then
+	pan_tilt_roll_pef="$1,"
+	pan=`echo "$pan_tilt_roll_pef" | cut -d, -f1`
+	tilt=`echo "$pan_tilt_roll_pef" | cut -d, -f2`
+	roll=`echo "$pan_tilt_roll_pef" | cut -d, -f3`
+	pef=`echo "$pan_tilt_roll_pef" | cut -d, -f4`
+	#
+	# function bc does not seem to like numbers starting with + sign, so strip off
+	pan=`echo "$pan" | sed 's/^[+]\(.*\)$/\1/'`
+	tilt=`echo "$tilt" | sed 's/^[+]\(.*\)$/\1/'`
+	roll=`echo "$roll" | sed 's/^[+]\(.*\)$/\1/'`
+	pef=`echo "$pef" | sed 's/^[+]\(.*\)$/\1/'`
+	# pantest>0 if floating point number; otherwise pantest=0
+	testFloat "$pan"; pantest=$floatresult
+	[ "$pan" != "" ] && pantestA=`echo "$pan < - 180" | bc`
+	[ "$pan" != "" ] && pantestB=`echo "$pan > 180" | bc`
+	# tilttest>0 if floating point number; otherwise tilttest=0
+	testFloat "$tilt"; tilttest=$floatresult
+	[ "$tilt" != "" ] && tilttestA=`echo "$tilt < - 180" | bc`
+	[ "$tilt" != "" ] && tilttestB=`echo "$tilt > 180" | bc`
+	# rolltest>0 if floating point number; otherwise rolltest=0
+	testFloat "$roll"; rolltest=$floatresult
+	[ "$roll" != "" ] && rolltestA=`echo "$roll < - 180" | bc`
+	[ "$roll" != "" ] && rolltestB=`echo "$roll > 180" | bc`
+	# peftest>0 if floating point number; otherwise peftest=0
+	# but only care if "$pef" != "" as pef is optional
+	peftest=1
+	[ "$pef" != "" ] && testFloat "$pef"; peftest=$floatresult
+	[ "$pef" != "" ] && peftestA=`echo "$pef < 0" | bc`
+	[ "$pef" != "" ] && peftestB=`echo "$pef > 3.19" | bc`
+	#
+	# test for bad values
+	[ $pantest -eq 0 ] && errMsg "PAN=$pan IS NOT A NUMBER"
+	[ $tilttest -eq 0 ] && errMsg "TILT=$tilt IS NOT A NUMBER"
+	[ $rolltest -eq 0 ] && errMsg "ROLL=$roll IS NOT A NUMBER"
+	[ $peftest -eq 0 ] && errMsg "PEF=$pef IS NOT A NUMBER"
+	[ $pantestA -eq 1 -o $pantestB -eq 1 ] && errMsg "PAN=$pan MUST BE GREATER THAN -180 AND LESS THAN +180"
+	[ $tilttestA -eq 1 -o $tilttestB -eq 1 ] && errMsg "TILT=$tilt MUST BE GREATER THAN -180 AND LESS THAN +180"
+	[ $rolltestA -eq 1 -o $rolltestB -eq 1 ] && errMsg "ROLL=$roll MUST BE GREATER THAN -180 AND LESS THAN +180"
+	if [ "$pef" != "" ]
+		then
+		[ $peftestA -eq 1 -o $peftestB -eq 1 ] && errMsg "PEF=$pef MUST BE GREATER THAN 0 AND LESS THAN 2"
+	fi
+	infile=$2
+	outfile=$3
+fi
+#
+# setup temporary images and auto delete upon exit
+# use mpc/cache to hold input image temporarily in memory
+tmpA="$dir/rotate3D_$$.mpc"
+tmpB="$dir/rotate3D_$$.cache"
+trap "rm -f $tmpA $tmpB; exit 0" 0
+trap "rm -f $tmpA $tmpB; exit 1" 1 2 3 15
+#
+# test that infile provided
+[ "$infile" = "" ] && errMsg "NO INPUT FILE SPECIFIED"
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "NO OUTPUT FILE SPECIFIED"
+#
+if convert -quiet -regard-warnings "$infile" +repage "$tmpA"
+	then
+	[ "$pef" = "" ] && pef=1
+else
+	errMsg "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+fi
+#
+# need to change the sign of pan to accommodate the choice of positive rotation above
+pan=`echo "scale=10; - $pan" | bc`
+#
+# get size of input image
+function imagesize
+	{
+	width=`identify -format %w $tmpA`
+	height=`identify -format %h $tmpA`
+	totpix=`echo "$width * $height" | bc`
+	}
+imagesize
+ns=$width
+nl=$height
+#
+# We are going to treat the picture as if it was painted on a wall oriented along 
+# the X-Z plane with its center at the origin and with the focal point along -Y 
+# at a distance of the focal length away from the wall.
+# Then we are going to rotate the wall according to the orientation angles
+#
+# For a 35 mm camera whose film format is 36mm wide and 24mm tall, when the focal length 
+# is equal to the diagonal, the field of view is 53.13 degrees and this is 
+# considered a normal view equivalent to the human eye.
+# See http://www.panoramafactory.com/equiv35/equiv35.html
+# Max limit on dfov is 180 degrees (pef=3.19) where get single line like looking at picture on edge.
+# Above this limit the picture becomes like the angles get reversed.
+# Min limit on dfov seems to be slightly greater than zero degrees.
+# Practical limits on dfov depend upon orientation angles.
+# For tilt=45, this is about 2.5 dfov (pef=2.5). Above this, some parts of the picture 
+# that are cut off at the bottom, get wrapped and stretched in the 'sky'.
+#
+pi=`echo "scale=10; 4*a(1)" | bc -l`
+dfov=`echo "scale=10; 180 * a(36/24) / $pi" | bc -l`
+if [ "$pef" = "" ]
+	then
+	pfact=1
+elif [ "$pef" = "0" ]
+	then
+	pfact=`echo "scale=10; 0.01 / $dfov" | bc`
+else
+	pfact=$pef
+fi
+#compute new field of view based upon pef (pfact)
+pi=`echo "scale=10; 4*a(1)" | bc -l`
+dfov=`echo "scale=10; $pfact * $dfov" | bc`
+dfov2=`echo "scale=10; $dfov / 2" | bc`
+arg=`echo "scale=10; $pi * $dfov2 / 180" | bc`
+sfov=`echo "scale=10; s($arg)" | bc -l`
+cfov=`echo "scale=10; c($arg)" | bc -l`
+tfov=`echo "scale=10; $sfov / $cfov" | bc -l`
+#
+# calculate focal length in same units as wall (picture) using dfov
+diag=`echo "scale=10; sqrt(($width * $width) + ($height * $height))" | bc`
+focal=`echo "scale=10; ($diag / (2 * $tfov))" | bc -l`
+#
+# calculate the four source points at the corners of the input image (TL, TR, BR, BL)
+ss1=0
+sl1=0
+ss2=`expr $ns - 1`
+sl2=0
+ss3=`expr $ns - 1`
+sl3=`expr $nl - 1`
+ss4=0
+sl4=`expr $nl - 1`
+#
+# calculate rotation matrix elements
+pang=`echo "scale=10; $pi * $pan / 180" | bc`
+span=`echo "scale=10; s($pang)" | bc -l`
+cpan=`echo "scale=10; c($pang)" | bc -l`
+tang=`echo "scale=10; $pi * $tilt / 180" | bc`
+stilt=`echo "scale=10; s($tang)" | bc -l`
+ctilt=`echo "scale=10; c($tang)" | bc -l`
+rang=`echo "scale=10; $pi * $roll / 180" | bc`
+sroll=`echo "scale=10; s($rang)" | bc -l`
+croll=`echo "scale=10; c($rang)" | bc -l`
+R11=`echo "scale=10; ($croll * $cpan) + ($sroll * $stilt * $span)" | bc -l`
+R12=`echo "scale=10; ($croll * $span) - ($sroll * $stilt * $cpan)" | bc -l`
+R13=`echo "scale=10; ($sroll * $ctilt)" | bc -l`
+R21=`echo "scale=10; - ($ctilt * $span)" | bc -l`
+R22=`echo "scale=10; ($ctilt * $cpan)" | bc -l`
+R23=`echo "scale=10; ($stilt)" | bc -l`
+R31=`echo "scale=10; - ($sroll * $cpan) + ($croll * $stilt * $span)" | bc -l`
+R32=`echo "scale=10; - ($sroll * $span) - ($croll * $stilt * $cpan)" | bc -l`
+R33=`echo "scale=10; ($croll * $ctilt)" | bc -l`
+#
+# Now rotate the wall 4 corner points according to the orientation angles.
+# Define the four corner points of the wall at (X, Y, Z) corresponding to TL, TR, BR, BL
+ns2=`echo "scale=10; ($ns - 1) / 2" | bc`
+nl2=`echo "scale=10; ($nl - 1) / 2" | bc`
+ws1=`echo "scale=10; - $ns2" | bc`
+wl1=$nl2
+ws2=$ns2
+wl2=$nl2
+ws3=$ns2
+wl3=`echo "scale=10; - $nl2" | bc`
+ws4=`echo "scale=10; - $ns2" | bc`
+wl4=`echo "scale=10; - $nl2" | bc`
+#
+# rotate these four points to get new (X, Y, Z) coordinates
+X1=`echo "scale=10; ($ws1 * $R11) + ($wl1 * $R13)" | bc`
+Y1=`echo "scale=10; ($ws1 * $R21) + ($wl1 * $R23)" | bc`
+Z1=`echo "scale=10; ($ws1 * $R31) + ($wl1 * $R33)" | bc`
+X2=`echo "scale=10; ($ws2 * $R11) + ($wl2 * $R13)" | bc`
+Y2=`echo "scale=10; ($ws2 * $R21) + ($wl2 * $R23)" | bc`
+Z2=`echo "scale=10; ($ws2 * $R31) + ($wl2 * $R33)" | bc`
+X3=`echo "scale=10; ($ws3 * $R11) + ($wl3 * $R13)" | bc`
+Y3=`echo "scale=10; ($ws3 * $R21) + ($wl3 * $R23)" | bc`
+Z3=`echo "scale=10; ($ws3 * $R31) + ($wl3 * $R33)" | bc`
+X4=`echo "scale=10; ($ws4 * $R11) + ($wl4 * $R13)" | bc`
+Y4=`echo "scale=10; ($ws4 * $R21) + ($wl4 * $R23)" | bc`
+Z4=`echo "scale=10; ($ws4 * $R31) + ($wl4 * $R33)" | bc`
+#
+# Now project the points back to the original frame camera to get new picture coordinates
+s1=`echo "scale=10; (($focal * $X1) / ($Y1 + $focal)) + $ns2" | bc`
+l1=`echo "scale=10; $nl2 - (($focal * $Z1) / ($Y1 + $focal))" | bc`
+s2=`echo "scale=10; (($focal * $X2) / ($Y2 + $focal)) + $ns2" | bc`
+l2=`echo "scale=10; $nl2 - (($focal * $Z2) / ($Y2 + $focal))" | bc`
+s3=`echo "scale=10; (($focal * $X3) / ($Y3 + $focal)) + $ns2" | bc`
+l3=`echo "scale=10; $nl2 - (($focal * $Z3) / ($Y3 + $focal))" | bc`
+s4=`echo "scale=10; (($focal * $X4) / ($Y4 + $focal)) + $ns2" | bc`
+l4=`echo "scale=10; $nl2 - (($focal * $Z4) / ($Y4 + $focal))" | bc`
+#
+# Now get the bounding box dimensions and scale and offset to that of source image size
+sArr=($s1 $s2 $s3 $s4)
+lArr=($l1 $l2 $l3 $l4)
+index=0
+smin=1000000
+smax=-1000000
+lmin=1000000
+lmax=-1000000
+while [ $index -lt 4 ]
+	do
+	[ `echo "${sArr[$index]} < $smin" | bc` -eq 1 ] && smin=${sArr[$index]}
+	[ `echo "${sArr[$index]} > $smax" | bc` -eq 1 ] && smax=${sArr[$index]}
+	[ `echo "${lArr[$index]} < $lmin" | bc` -eq 1 ] && lmin=${lArr[$index]}
+	[ `echo "${lArr[$index]} > $lmax" | bc` -eq 1 ] && lmax=${lArr[$index]}
+	index=`expr $index + 1`
+done
+dels=`echo "scale=10; $smax - $smin + 1" | bc`
+dell=`echo "scale=10; $lmax - $lmin + 1" | bc`
+if [ `echo "$dels > $dell" | bc` -eq 1 ]
+	then 
+	del=$dels
+	offsets=0
+	offsetl=`echo "scale=10; ($nl - ($dell * $ns / $dels)) / 2" | bc`
+else
+	del=$dell
+	offsets=`echo "scale=10; ($ns - ($dels * $nl / $dell)) / 2" | bc`
+	offsetl=0
+fi
+ds1=`echo "scale=0; $offsets + (($s1 - $smin) * $ns / $del)" | bc`
+dl1=`echo "scale=0; $offsetl + (($l1 - $lmin) * $nl / $del)" | bc`
+ds2=`echo "scale=0; $offsets + (($s2 - $smin) * $ns / $del)" | bc`
+dl2=`echo "scale=0; $offsetl + (($l2 - $lmin) * $nl / $del)" | bc`
+ds3=`echo "scale=0; $offsets + (($s3 - $smin) * $ns / $del)" | bc`
+dl3=`echo "scale=0; $offsetl + (($l3 - $lmin) * $nl / $del)" | bc`
+ds4=`echo "scale=0; $offsets + (($s4 - $smin) * $ns / $del)" | bc`
+dl4=`echo "scale=0; $offsetl + (($l4 - $lmin) * $nl / $del)" | bc`
+#
+# now do the perspective distort
+im_version=`convert -list configure | \
+	sed '/^LIB_VERSION_NUMBER /!d; s//,/;  s/,/,0/g;  s/,0*\([0-9][0-9]\)/\1/g' | head -n 1`
+if [ "$im_version" -lt "06030600" ]
+	then
+	convert $tmpA -virtual-pixel background -background black -distort Perspective \
+	"$ss1,$sl1 $ss2,$sl2 $ss3,$sl3 $ss4,$sl4  $ds1,$dl1 $ds2,$dl2 $ds3,$dl3 $ds4,$dl4" $outfile
+else
+	convert $tmpA -virtual-pixel background -background black -mattecolor black -distort Perspective \
+	"$ss1,$sl1 $ds1,$dl1   $ss2,$sl2 $ds2,$dl2   $ss3,$sl3 $ds3,$dl3   $ss4,$sl4 $ds4,$dl4" $outfile
+fi
+exit 0

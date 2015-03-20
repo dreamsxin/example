@@ -1,0 +1,70 @@
+```shell
+sudo apt-get install libmagickwand-dev
+```
+
+```shell
+./stainedglass -k random -b 150 -t 1 -r 56 birdofparadise.gif stainedglass.gif
+./vignette -i 50 -o 150 -c red -a 100 birdofparadise.gif vignette.gif
+./rotate3D 45,45,0 birdofparadise.gif rotate3D.gif
+```
+
+
+PHP Imagick API - Translate CLI command to IMagick API
+
+```php
+ public function colortone($input, $color, $level, $type = 0)
+ {
+    $args[0] = $level;
+    $args[1] = 100 - $level;
+    $negate = $type == 0? '-negate': '';
+
+    $this->execute("convert 
+    {$input} 
+    ( -clone 0 -fill '$color' -colorize 100% ) 
+    ( -clone 0 -colorspace gray $negate ) 
+    -compose blend -define compose:args=$args[0],$args[1] -composite 
+    {$input}");
+}
+```
+
+```php
+public function colortone( $color, $level, $type = 0){
+    $args[0] = $level;
+    $args[1] = 100 - $level;
+    $this->_image = new Imagick();
+    $this->_image->setOption( 'compose:args', $args[0] . 'x' . $args[1] );
+    $this->_image->readImage( $image_loc );
+
+
+    $negate = $type == 0 ? TRUE : FALSE;
+
+    $this->_image->setImageColorspace ( Imagick::COLORSPACE_RGB ); 
+    $_image_clone_1 = clone $this->_image; 
+    $_image_clone_1 = $this->colorizeIt( $_image_clone_1, $color, 1.0 );
+
+    $_image_clone_2 = clone $this->_image; 
+    $_image_clone_2->setImageColorspace( Imagick::COLORSPACE_GRAY );
+    if( $negate )
+        $_image_clone_2->negateImage( 0 );
+
+    $this->_image->compositeImage( $_image_clone_1, Imagick::COMPOSITE_BLEND, 0, 0 );
+    $this->_image->compositeImage( $_image_clone_2, Imagick::COMPOSITE_BLEND, 0, 0 );
+}
+
+public function colorizeIt( $image_obj, $color, $alpha = 1 ){
+    $draw = new ImagickDraw();
+    $draw->setFillColor($color);
+
+    if (is_float($alpha))
+        $draw->setFillAlpha($alpha);        
+
+    $geometry = $image_obj->getImageGeometry();
+    $width = $geometry['width'];
+    $height = $geometry['height'];
+
+    $draw->rectangle(0, 0, $width, $height);
+
+    $image_obj->drawImage($draw);
+    return $image_obj;
+}
+```
