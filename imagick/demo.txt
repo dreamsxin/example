@@ -7,6 +7,7 @@ sudo apt-get install libmagickwand-dev
 ./vignette -i 50 -o 150 -c red -a 100 birdofparadise.gif vignette.gif
 ./rotate3D 45,45,0 birdofparadise.gif rotate3D.gif
 ./crosshatch -l 7 -s 10 -g 1 -a 2 birdofparadise.gif crosshatch.gif
+./whitebalance -c "rgb(200,220,210)" birdofparadise.gif whitebalance.gif
 ```
 
 
