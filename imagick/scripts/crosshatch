@@ -1,0 +1,415 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 7/19/2012 .......... revised 12/11/2014
+#
+# ------------------------------------------------------------------------------
+# 
+# Licensing:
+# 
+# Copyright © Fred Weinhaus
+# 
+# My scripts are available free of charge for non-commercial use, ONLY.
+# 
+# For use of my scripts in commercial (for-profit) environments or 
+# non-free applications, please contact me (Fred Weinhaus) for 
+# licensing arrangements. My email address is fmw at alink dot net.
+# 
+# If you: 1) redistribute, 2) incorporate any of these scripts into other 
+# free applications or 3) reprogram them in another scripting language, 
+# then you must contact me for permission, especially if the result might 
+# be used in a commercial or for-profit environment.
+# 
+# My scripts are also subject, in a subordinate manner, to the ImageMagick 
+# license, which can be found at: http://www.imagemagick.org/script/license.php
+# 
+# ------------------------------------------------------------------------------
+# 
+# USAGE: crosshatch [-l length] [-s sharp ] [-g gain ] [-a amount] [-p prune] 
+# [-b balance] [-e effect] [-m mix] [-B bri] [-C con] [-S sat] infile outfile
+#
+# USAGE: crosshatch [-h|-help]
+#
+# OPTIONS:
+#
+# -l     length      length of strokes; integer>=0; default=7
+# -s     sharp       sharpness; integer>=0; default=10 
+# -g     gain        gain (strength) of strokes; integer>=0; default=1
+# -a     amount      edge amount; integer>0; default=1
+# -p     prune       edge pruning; integer (positive or negative); default=0
+# -b     balance     balance between plus and minus 45 degree diagonal strokes; 
+#                    -100<=integer<=100; default=0
+# -e     effect      stroke effect; choices are normal(n), light(l) or dark(d);
+#                    default=normal
+# -m     mix         mixing (blend) between original and processing image; 
+#                    0<=integer<=100; 0 is original image, 100 is processed 
+#                    image; default=100 (processed image)
+# -B     bri         percent change of brightness; positive or negative integer;
+#                    default=0
+# -C     con         percent change of contrast; positive or negative integer;
+#                    default=0
+# -S     sat         percent change of saturation; positive or negative integer;
+#                    default=0
+#
+###
+#
+# NAME: CROSSHATCH 
+# 
+# PURPOSE: To apply a crosshatch effect to an image.
+# 
+# DESCRIPTION: CROSSHATCH applies a crosshatch effect to an image. Options 
+# include: the length, gain, (edge) amount, balance and effect of the stroke.
+# 
+# OPTIONS: 
+# 
+# -l length ... LENGTH of strokes. Values are integers>=0. The default=7.
+# 
+# -s sharp ... SHARP is the sharpness of image and strokes. Values are 
+# integers>=0. The default=10.
+#  
+# -g gain ... GAIN (strength) of strokes. Values are integers>=0. The default=1.
+# 
+# -a amount ... EDGE AMOUNT. Values are integers>0. The default=1.
+# 
+# -p prune ... EDGE PRUNING. Values are integers (positive or negative).
+# Positives remove lighter edges and negatives remove darker edges. The 
+# default=0.
+# 
+# -b balance ... BALANCE between plus and minus 45 degree diagonal strokes. 
+# Values are -100<=integer<=100. The default=0.
+# 
+# -e effect ... STROKE EFFECT. The choices are normal(n), light(l) or dark(d).
+# The default=normal.
+# 
+# -m mix ... MIX (blend) between original and processing image. Values are
+# 0<=integer<=100. 0 is original image. 100 is processed image. The default=100
+# (processed image).
+# 
+# -B bri... BRI is the percent change of brightness. Values are positive or 
+# negative integers. The default=0.
+#
+# -C con... CON is the percent change of contrast. Values are positive or 
+# negative integers. The default=0.
+#
+# -S sat... SAT is the percent change of saturation. Values are positive or 
+# negative integers. The default=0.
+#
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set default values
+length=7			# length of stroke
+sharp=10			# sharpness of image
+gain=1				# gain or strength of stroke
+amount=1			# edge amount of stroke			
+prune=0				# plus removes lighter edges; minus removes darker edges
+balance=0			# balance between each diagonal
+effect="normal"		# normal, light or dark
+mix=100				# 0 is original, 100 is processed, 50 is even mix
+bri=0				# percent change of brightness
+con=0				# percent change of contrast
+sat=0				# percent change of saturation
+
+# set directory for temporary files
+tmpdir="."		# suggestions are tmpdir="." or tmpdir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -e '1,/^####/d;  /^###/g;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -e '1,/^####/d;  /^######/g;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# function to create upper left to lower right (+45 degree) diagonal blur strokes
+diagBlurPlus()
+	{
+	kern=$(for ((j=0; j<length; j++)); do
+			for ((i=0; i<length; i++)); do
+				if [ $i -eq $j -a $j ]; then
+					echo "1,"
+				else
+					echo "0,"
+				fi
+			done
+			done)
+	kern=`echo ${kern%?} | sed 's/ //g'`
+	convert $dir/tmpS.mpc -define convolve:scale=\! \
+		-morphology convolve $kern $dir/tmpB.mpc
+	}
+	
+# function to create upper right to lower left (-45 degree) diagonal blur strokes
+diagBlurMinus()
+	{
+	kern=$(for ((j=0; j<length; j++)); do
+			for ((i=$((length-1)); i>=0; i--)); do
+				if [ $i -eq $j -a $j ]; then
+					echo "1,"
+				else
+					echo "0,"
+				fi
+			done
+			done)
+	kern=`echo ${kern%?} | sed 's/ //g'`
+	convert $dir/tmpS.mpc -define convolve:scale=\! \
+		-morphology convolve $kern $dir/tmpB.mpc
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 24 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		 -help|-h)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-l)    # get length
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID LENGTH SPECIFICATION ---"
+					   checkMinus "$1"
+					   length=`expr "$1" : '\([0-9]*\)'`
+					   [ "$length" = "" ] && errMsg "--- LENGTH=$length MUST BE A NON-NEGATIVE INTEGER ---"
+					   ;;
+				-s)    # get sharp
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SHARP SPECIFICATION ---"
+					   checkMinus "$1"
+					   sharp=`expr "$1" : '\([0-9]*\)'`
+					   [ "$sharp" = "" ] && errMsg "--- SHARP=$sharp MUST BE A NON-NEGATIVE INTEGER ---"
+					   ;;
+				-g)    # get gain
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID GAIN SPECIFICATION ---"
+					   checkMinus "$1"
+					   gain=`expr "$1" : '\([0-9]*\)'`
+					   [ "$gain" = "" ] && errMsg "--- GAIN=$gain MUST BE A NON-NEGATIVE INTEGER ---"
+					   ;;
+				-a)    # get amount
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID AMOUNT SPECIFICATION ---"
+					   checkMinus "$1"
+					   amount=`expr "$1" : '\([0-9]*\)'`
+					   [ "$amount" = "" ] && errMsg "--- AMOUNT=$amount MUST BE AN INTEGER ---"
+					   testA=`echo "$amount <= 0" | bc`
+					   [ $testA -eq 1 ] && errMsg "--- AMOUNT=$amount MUST BE A POSITIVE INTEGER ---"
+					   ;;
+				-p)    # get prune
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   #errorMsg="--- INVALID PRUNE SPECIFICATION ---"
+					   #checkMinus "$1"
+					   prune=`expr "$1" : '\([0-9\-]*\)'`
+					   [ "$prune" = "" ] && errMsg "--- PRUNE=$prune MUST BE AN INTEGER ---"
+					   ;;
+				-b)    # get balance
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   #errorMsg="--- INVALID BALANCE SPECIFICATION ---"
+					   #checkMinus "$1"
+					   balance=`expr "$1" : '\([0-9\-]*\)'`
+					   [ "$amount" = "" ] && errMsg "--- BALANCE=$balance MUST BE AN INTEGER ---"
+					   testA=`echo "$balance < -100" | bc`
+					   testB=`echo "$balance > 100" | bc`
+					   [ $testA -eq 1 -o $testB -eq 1 ] && errMsg "--- BALANCE=$balance MUST BE AN INTEGER BETWEEN -100 AND 100 ---"
+					   ;;
+				-e)    # get  effect
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID EFFECT SPECIFICATION ---"
+					   checkMinus "$1"
+					   effect=`echo "$1" | tr '[A-Z]' '[a-z]'`
+					   case "$effect" in 
+					   		normal|n) effect="normal";;
+					   		light|l) effect="light";;
+					   		dark|d) effect="dark";;
+					   		*) errMsg "--- EFFECT=$effect IS AN INVALID VALUE ---" 
+					   	esac
+					   ;;
+				-m)    # get mix
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID MID SPECIFICATION ---"
+					   checkMinus "$1"
+					   mix=`expr "$1" : '\([0-9]*\)'`
+					   [ "$mix" = "" ] && errMsg "--- MID=$mid MUST BE AN INTEGER ---"
+					   testA=`echo "$mix < 0" | bc`
+					   testB=`echo "$mix > 100" | bc`
+					   [ $testA -eq 1 -o $testB -eq 1 ] && errMsg "--- MID=$mid MUST BE AN INTEGER BETWEEN 0 AND 100 ---"
+					   ;;
+				-B)    # get bri
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   #errorMsg="--- INVALID BRI SPECIFICATION ---"
+					   #checkMinus "$1"
+					   bri=`expr "$1" : '\([0-9\-]*\)'`
+					   [ "$bri" = "" ] && errMsg "--- BRI=$bri MUST BE AN INTEGER ---"
+					   ;;
+				-C)    # get con
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   #errorMsg="--- INVALID CON SPECIFICATION ---"
+					   #checkMinus "$1"
+					   con=`expr "$1" : '\([0-9\-]*\)'`
+					   [ "$con" = "" ] && errMsg "--- CON=$con MUST BE AN INTEGER ---"
+					   ;;
+				-S)    # get sat
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   #errorMsg="--- INVALID SAT SPECIFICATION ---"
+					   #checkMinus "$1"
+					   sat=`expr "$1" : '\([0-9\-]*\)'`
+					   [ "$sat" = "" ] && errMsg "--- SAT=$sat MUST BE AN INTEGER ---"
+					   ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile
+	infile="$1"
+	outfile="$2"
+fi
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "NO INPUT FILE SPECIFIED"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "NO OUTPUT FILE SPECIFIED"
+
+dir="$tmpdir/CROSSHATCH.$$"
+
+mkdir "$dir" || errMsg "--- FAILED TO CREATE TEMPORARY FILE DIRECTORY ---"
+trap "rm -rf $dir;" 0
+trap "rm -rf $dir; exit 1" 1 2 3 15
+trap "rm -rf $dir; exit 1" ERR
+
+
+# read input image
+convert -quiet "$infile" $dir/tmpA0.mpc ||
+	echo  "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE  ---"
+
+# convert sat from 0 to 100 basis
+sat=`convert xc: -format "%[fx:100+$sat]" info:`
+
+# make length double and odd
+length=$((2*length+1))
+
+# set up for pruning
+absprune=`convert xc: -format "%[fx:abs($prune)]" info:` 
+if [ $prune -lt 0 ]; then
+	pruning="-morphology close diamond:$absprune"
+elif [ $prune -gt 0 ]; then
+	pruning="-morphology open diamond:$absprune"
+elif [ $prune -eq 0 ]; then
+	pruning=""
+fi
+#echo "pruning=$pruning"
+
+
+# apply pruning, gain and amount to input	
+convert $dir/tmpA0.mpc $pruning -unsharp 0x${gain}+${amount}+0 $dir/tmpS.mpc
+
+ 
+# create blur +45 degree strokes
+diagBlurPlus
+convert $dir/tmpB.mpc $dir/tmpB45.mpc
+ 
+
+# blur blur -45 degree strokes
+diagBlurMinus
+convert $dir/tmpB.mpc $dir/tmpBm45.mpc
+ 
+
+# set up effect
+if [ "$effect" = "normal" ]; then
+	stats="mean"
+elif [ "$effect" = "light" ]; then
+	stats="max"
+elif [ "$effect" = "dark" ]; then
+	stats="min"
+fi
+#echo "effect=$effect"
+
+# set up balance
+balance1=`convert xc: -format "%[fx:($balance+100)/2]" info:`
+balance2=$((100-$balance1))
+#echo "balance1=$balance1; balance2=$balance2"
+
+
+#combine +-45 stroked images
+if [ "$balance" = "0" ]; then
+	convert $dir/tmpB45.mpc $dir/tmpBm45.mpc -evaluate-sequence \
+		$stats $dir/tmpB.mpc
+else
+	convert $dir/tmpB45.mpc $dir/tmpBm45.mpc -compose blend \
+		-define compose:args=$balance2,$balance1 -composite $dir/tmpB.mpc
+fi
+
+
+# sharpen combined stroke images
+convert $dir/tmpB.mpc -unsharp 0x1+${sharp}+0 $dir/tmpBs.mpc
+
+
+# blend and enhance
+convert $dir/tmpA0.mpc  $dir/tmpBs.mpc \
+	-compose blend -define compose:args=$mix -composite \
+	-brightness-contrast $bri,$con -modulate 100,$sat,100 \
+	"$outfile"
+
+exit 0

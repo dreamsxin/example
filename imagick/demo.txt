@@ -6,6 +6,7 @@ sudo apt-get install libmagickwand-dev
 ./stainedglass -k random -b 150 -t 1 -r 56 birdofparadise.gif stainedglass.gif
 ./vignette -i 50 -o 150 -c red -a 100 birdofparadise.gif vignette.gif
 ./rotate3D 45,45,0 birdofparadise.gif rotate3D.gif
+./crosshatch -l 7 -s 10 -g 1 -a 2 birdofparadise.gif crosshatch.gif
 ```
 
 
