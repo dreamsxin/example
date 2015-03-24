@@ -1,0 +1,421 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 2/4/2013 .......... revised 2/4/2013
+#
+# USAGE: postagestamp [-d diameter] [-s spacing] [-b bordersize] [-B bcolor] 
+# [-H hcolor] [-t text] [-f font] [-F fcolor] [-p pointsize] [-g gravity] 
+# [-o offsets ] [-m mode] [-O opacity] [-L length] [-S softness] infile outfile
+#
+# USAGE: postagestamp [-h or -help]
+#
+# OPTIONS:
+#
+# -d     diameter       diameter of half holes as perforation around the 
+#                       border in pixels; integer>=0; default=10
+# -s     spacing        spacing between half holes as percent of diameter; 
+#                       0<=integer<=100; default=20
+# -b     bordersize     border size; integer>=0; default=15
+# -B     bcolor         border color; any valid IM color is allowed;
+#                       default=white
+# -H     hcolor         hole color for gaps between perforations; any valid 
+#                       IM color is allowed; default=none (for transparent)
+# -t     text           text to place onto the image; default=no text
+# -f     font           font name or path to font file; default="Arial" 
+# -F     fcolor         font color; any valid IM color is allowed; default=white
+# -p     pointsize      font point size; integer>=0; default=36
+# -g     gravity        gravity location for placing text; default="southeast"
+# -o     offsets        offsets for positioning text relative to the gravity
+#                       location; comma separate pair of integers>=0; 
+#                       default="10,30"
+# -m     mode           shadow mode; choices are: none, center and bottomright;
+#                       default=none for no shadow
+# -O     opacity        shadow opacity; 0<=integer<=100; default=75
+# -L     length         shadow length (displacement); integer>=0; default=3
+# -S     softness       shadow softness; integer>=0; default=2
+#
+###
+#
+# NAME: POSTAGESTAMP 
+# 
+# PURPOSE: To apply a perforated postage stamp like border around an image.
+# 
+# DESCRIPTION: POSTAGESTAMP applies a perforated postage stamp like border 
+# around an image. The perforation size and border can be adjusted and colored. 
+# Optionally, a shadow may be added.
+# 
+# OPTIONS: 
+#
+# -d diameter ... DIAMETER of the half holes as perforation around the border
+# in pixels. Values are integers>=0. The default=10.
+# 
+# -s spacing ... SPACING between half hole perforations as percent of the 
+# diameter. Values are 0<=integer<=100. The default=20.
+# 
+# -b bordersize ... BORDERSIZE between image and perforations. Values are 
+# integers>=0. The default=15.
+# 
+# -B bcolor ... BCOLOR is the border color. Any valid IM color is allowed.
+# The default=white.
+# 
+# -H hcolor ... HCOLOR is the hole color for the gaps between perforations. 
+# Any valid IM color is allowed. The default=none (for transparent).
+# 
+# -t text ... TEXT to place onto the image. The default=no text.
+# 
+# -f font ... FONT name or path to font file. The default="Arial".
+# 
+# -F fcolor ... FCOLOR is the font color. Any valid IM color is allowed. The
+# default=white.
+# 
+# -p pointsize ... POINTSIZE is the font point size. Values are integers>=0.
+# The default=36.
+# 
+# -g gravity ... GRAVITY location for placing text. Any valid IM -gravity 
+# setting is allowed. The default="southeast".
+# 
+# -o offsets ... OFFSETS for positioning the text relative to the gravity 
+# location. Values are a comma separate pair of integers>=0. The  
+# default="10,30".
+# 
+# -m mode ... MODE is the shadow mode. The choices are: none (n), center (c) 
+# and bottomright (b). The default=none for no shadow.
+# 
+# -O opacity ... OPACITY is the shadow opacity. Values are 0<=integers<=100.
+# The default=75.
+# 
+# -L length ... LENGTH is the shadow length (displacement). Values are 
+# integers>=0. The default=3.
+# 
+# -S softness ... SOFTNESS is the shadow softness (blurring amount). Values 
+# are integers>=0. The default=2.
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set default values
+diameter=10				# hole size in pixels; integer>=0
+spacing=20				# spacing of holes as percent of diameter; 0<=integer<=100
+bordersize=15			# border size; integer>=0
+bcolor="white"			# border color
+hcolor="none"			# perforation hole color
+text=""					# text
+font="Arial"			# text font
+fcolor="white"			# text font color
+pointsize="36"			# text pointsize; integer>=0
+gravity="southeast"		# text gravity 
+offsets="10,30"			# text offset from gravity; integer pair>=0
+mode="none"				# shadow mode: none, center or bottomright
+opacity=75				# shadow opacity;  0<=integer<=100
+length=3				# shadow length; only for bottomright; integer>=0
+softness=2				# shadow softness; integer>=0
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 32 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		  -h|-help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-d)    # get diameter
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID DIAMETER SPECIFICATION ---"
+					   checkMinus "$1"
+					   diameter=`expr "$1" : '\([0-9]*\)'`
+					   [ "$diameter" = "" ] && errMsg "--- DIAMETER=$diameter MUST BE A NON-NEGATIVE INTEGER ---"
+					   ;;
+				-s)    # get spacing
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SPACING SPECIFICATION ---"
+					   checkMinus "$1"
+					   spacing=`expr "$1" : '\([0-9]*\)'`
+					   [ "$spacing" = "" ] && errMsg "--- SPACING=$spacing MUST BE A NON-NEGATIVE INTEGER ---"
+		   			   testA=`echo "$spacing < 0" | bc`
+		   			   testB=`echo "$spacing > 100" | bc`
+					   [ $testA -eq 1 -o $testB -eq 1 ] && errMsg "--- SPACING=$spacing MUST BE AN INTEGER BETWEEN 0 AND 100 ---"
+					   ;;
+				-b)    # get bordersize
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID BORDERSIZE SPECIFICATION ---"
+					   checkMinus "$1"
+					   bordersize=`expr "$1" : '\([0-9]*\)'`
+					   [ "$bordersize" = "" ] && errMsg "--- DIAMETER=$bordersize MUST BE A NON-NEGATIVE INTEGER ---"
+					   ;;
+				-B)    # get bcolor
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID BORDERCOLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   bcolor="$1"
+					   ;;
+				-H)    # get hcolor
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID HOLECOLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   hcolor="$1"
+					   ;;
+				-t)    # get text
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   #errorMsg="--- INVALID TEXT SPECIFICATION ---"
+					   #checkMinus "$1"
+					   text="$1"
+					   ;;
+				-f)    # get font
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID FONT SPECIFICATION ---"
+					   checkMinus "$1"
+					   font="$1"
+					   ;;
+				-F)    # get fcolor
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID FONTCOLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   fcolor="$1"
+					   ;;
+				-p)    # get pointsize
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID POINTSIZE SPECIFICATION ---"
+					   checkMinus "$1"
+					   pointsize=`expr "$1" : '\([0-9]*\)'`
+					   [ "$pointsize" = "" ] && errMsg "--- POINTSIZE=$pointsize MUST BE A NON-NEGATIVE INTEGER ---"
+					   ;;
+				-g)    # gravity
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID GRAVITY SPECIFICATION ---"
+					   checkMinus "$1"
+					   gravity=`echo "$1" | tr "[:upper:]" "[:lower:]"`
+					   case "$gravity" in 
+							northwest) ;;
+							north) ;;
+							northeast) ;;
+							west) ;;
+							center) ;;
+							east) ;;
+							southwest) ;;
+							south) ;;
+							southeast) ;;
+							*) errMsg "--- GRAVITY=$gravity IS AN INVALID VALUE ---" 
+					   esac
+				   	   ;;
+				-o)    # get offsets
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID OFFSETS SPECIFICATION ---"
+					   checkMinus "$1"
+					   test=`echo "$1" | tr "," " " | wc -w`
+					   [ $test -eq 0 -o $test -gt 2 ] && errMsg "--- INCORRECT NUMBER OF COORDINATES SUPPLIED ---"
+					   offsets=`expr "$1," : '\([0-9]*,[0-9]*\)'`
+					   [ "$offsets" = "" ] && errMsg "--- OFFSETS=$offsets MUST BE A PAIR OF NON-NEGATIVE INTEGERS SEPARATED BY A COMMA ---"
+					   ;;
+				-m)    # mode
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID MODE SPECIFICATION ---"
+					   checkMinus "$1"
+					   mode=`echo "$1" | tr "[:upper:]" "[:lower:]"`
+					   case "$mode" in 
+							none|n) mode="none" ;;
+							center|c) mode="center" ;;
+							bottomright|b) mode="bottomright" ;;
+							*) errMsg "--- MODE=$mode IS AN INVALID VALUE ---" 
+					   esac
+				   	   ;;
+				-O)    # get opacity
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID OPACITY SPECIFICATION ---"
+					   checkMinus "$1"
+					   opacity=`expr "$1" : '\([0-9]*\)'`
+					   [ "$opacity" = "" ] && errMsg "--- OPACITY=$opacity MUST BE A NON-NEGATIVE INTEGER ---"
+		   			   testA=`echo "$opacity < 0" | bc`
+		   			   testB=`echo "$opacity > 100" | bc`
+					   [ $testA -eq 1 -o $testB -eq 1 ] && errMsg "--- OPACITY=$opacity MUST BE AN INTEGER BETWEEN 0 AND 100 ---"
+					   ;;
+				-L)    # get length
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID LENGTH SPECIFICATION ---"
+					   checkMinus "$1"
+					   length=`expr "$1" : '\([0-9]*\)'`
+					   [ "$length" = "" ] && errMsg "--- LENGTH=$length MUST BE A NON-NEGATIVE INTEGER ---"
+					   ;;
+				-S)    # get softness
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SOFTNESS SPECIFICATION ---"
+					   checkMinus "$1"
+					   softness=`expr "$1" : '\([0-9]*\)'`
+					   [ "$softness" = "" ] && errMsg "--- SOFTNESS=$softness MUST BE A NON-NEGATIVE INTEGER ---"
+					   ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile
+	infile=$1
+	outfile=$2
+fi
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "--- NO INPUT FILE SPECIFIED ---"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "--- NO OUTPUT FILE SPECIFIED ---"
+
+# setup temp files
+tmpA1="$dir/postagestamp_1_$$.mpc"
+tmpB1="$dir/postagestamp_1_$$.cache"
+trap "rm -f $tmpA1 $tmpB1; exit 0" 0
+trap "rm -f $tmpA1 $tmpB1; exit 1" 1 2 3 15
+
+
+# tested and works fine for 6.7.4.10, 6.7.6.10 and 6.8.2.3
+
+# test input image
+convert -debug exception -quiet -regard-warnings "$infile" +repage "$tmpA1" ||
+	echo "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+
+
+# get image size 
+ww=`convert $infile -format "%w" info:`
+hh=`convert $infile -format "%h" info:`
+
+# get radius and convert spacing to pixels
+radius=`convert xc: -format "%[fx:round($diameter/2)]" info:`
+spacing=`convert xc: -format "%[fx:round($spacing*$diameter/100)]" info:`
+
+# compute size of cell for tiling
+size=$((diameter+2*spacing))
+size2=`convert xc: -format "%[fx:round(0.5*$size)]" info:`
+
+# computed adjusted cell size and tiling parameters
+ww2=$((ww+2*bordersize))
+hh2=$((hh+2*bordersize))
+tilewid=`convert xc: -format "%[fx:$size*ceil($ww2/$size)]" info:`
+tileht=`convert xc: -format "%[fx:$size*ceil($hh2/$size)]" info:`
+tilewid2=`convert xc: -format "%[fx:$tilewid-2*$size-ceil($spacing)]" info:`
+tileht2=`convert xc: -format "%[fx:$tileht-2*$size-ceil($spacing)]" info:`
+#echo "ww=$ww; hh=$hh; ww2=$ww2; hh2=$hh2; tilewid=$tilewid; tileht=$tileht; tilewid2=$tilewid2; tileht2=$tileht2;"
+
+# conver text offsets
+offsets=`echo $offsets | tr "," "+"`
+offsets="+$offsets"
+#echo "offsets=$offsets"
+
+# process image
+# add padding
+# create small black hole in white background size of diameter+2*spacing
+# tile it out to integer size just larger than the image so full circles
+# insert white region for inside the outer row/column of circles
+# shave half the circles away and resize to fit image plus optional border
+# put mask in alpha channel of image
+# flatten over background color
+# Note: -morphology added for bug in -draw circle antialiasing in IM 6.8.2.2 and possibly other earlier versions.
+# It seems to be fixed in IM 6.8.2.3
+convert \
+	\( $tmpA1 -gravity $gravity -font $font -fill "$fcolor" -pointsize $pointsize -annotate $offsets "$text" \
+		-bordercolor "$bcolor" -border $bordersize \) \
+	\( -size ${size}x${size} xc:white -fill black \
+		-draw "translate $size2,$size2 circle 0,0 0,$radius" -alpha off \
+		-write mpr:circle +delete -size ${tilewid}x${tileht} tile:mpr:circle \
+		-size ${tilewid2}x${tileht2} xc:white -gravity center -compose over -composite \
+		-shave ${size2}x${size2} -resize ${ww2}x${hh2}\! -morphology close diamond:1 \) \
+	-gravity center -alpha off -compose copy_opacity -composite -compose over \
+	-background "$hcolor" -flatten $tmpA1
+
+
+# add optional shadow
+if [ "$mode" = "bottomright" ]; then
+	convert $tmpA1 \
+		\( +clone -background black -shadow ${opacity}x${softness}+${length}+${length} \) \
+		+swap -background none -layers merge +repage $outfile
+
+elif [ "$mode" = "center" ]; then
+	# note bug with -channel A -level 0x50% +channel and replace with -channel A -evaluate multiply 2 +channel
+	# for IM 6.7.4.1 through 6.7.6.5
+	convert $tmpA1 \
+		\( +clone -background black -shadow ${opacity}x${softness}+0+0 -channel A -evaluate multiply 2 +channel \) \
+		+swap -gravity center -compose over -composite +repage $outfile
+else
+	convert $tmpA1 $outfile
+fi
+
+
+exit 0
+
+
+
+

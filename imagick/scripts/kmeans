@@ -1,0 +1,371 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 6/25/2014 .......... revised 2/20/2015
+#
+# ------------------------------------------------------------------------------
+# 
+# Licensing:
+# 
+# Copyright © Fred Weinhaus
+# 
+# My scripts are available free of charge for non-commercial use, ONLY.
+# 
+# For use of my scripts in commercial (for-profit) environments or 
+# non-free applications, please contact me (Fred Weinhaus) for 
+# licensing arrangements. My email address is fmw at alink dot net.
+# 
+# If you: 1) redistribute, 2) incorporate any of these scripts into other 
+# free applications or 3) reprogram them in another scripting language, 
+# then you must contact me for permission, especially if the result might 
+# be used in a commercial or for-profit environment.
+# 
+# My scripts are also subject, in a subordinate manner, to the ImageMagick 
+# license, which can be found at: http://www.imagemagick.org/script/license.php
+# 
+# ------------------------------------------------------------------------------
+# 
+# USAGE: kmeans [-n numcolors] [-s seedcolors] [-m maxiters] [-c convergence] 
+# [-C colorspace] [-v view] infile outfile
+# USAGE: kmeans [-h or -help]
+#
+# OPTIONS:
+#
+# -n     numcolors       number of colors to use as seeds; integer>1; default=5
+# -s     seedcolors      list of seed colors rather than selecting a number of 
+#                        colors; space separate list of opaque color; default  
+#                        is to use the number of colors
+# -m     maxiters        maximum number of iterations before stopping; 
+#                        integer>0; default=40
+# -c     convergence     minimum rmse (times 100) between previous and current 
+#                        set of colors to stop iterating; default=0.05
+# -C     colorspace      colorspace in which to do processing; default=sRGB
+# -v     view            hexcolors (only), swatches (and hex colors), 
+#                        progress (and hex colors), all
+#
+###
+#
+# NAME: KMEANS 
+# 
+# PURPOSE: To apply k-means color reduction to an image.
+# 
+# DESCRIPTION: KMEANS applies k-means color reduction to an image. This is a 
+# colorspace clustering or segmentation technique. The user must specify either 
+# a number of desired final colors or a set of initial seed colors. If a list 
+# of seed colors is not provided, then seed colors will be estimated using IM 
+# -colors (color quantization). The algorithm uses the seed colors to group 
+# (cluster) each pixel in the image according to the smallest rmse value to  
+# each seed color. Then it computes the new mean colors from the clusters. 
+# This process iterates until either the convergence value is reached or the 
+# maximum number of iterations is reached. The script is limited to fully 
+# opaque images.
+# 
+# OPTIONS: 
+#
+# -n numcolors ... NUMCOLORS is the number of colors to use as seeds. Values 
+# are integer>1. The default=5.
+# 
+# -s seedcolors ... SEEDCOLORS is a space delimited list of opaque seed colors.  
+# It is used rather than just selecting a given number of colors. Providing a  
+# well selected list of colors can make the iteration process quicker. Any 
+# valid set of opaque IM colors may be used. This includes rgb, hex or color 
+# names. However, there must not be any spaces in the color, especially for rgb 
+# color definitions. The default is to just use the desired number of colors.
+# 
+# -m maxiters ... MAXITERS is the maximum number of iterations before stopping. 
+# Values are integer>0. The default=40
+# 
+# -c convergence ... CONVERGENCES is the minimum rmse (times 100) between the 
+# previous and current set of colors to stop iterating. Values are floats>=0. 
+# The default=0.05
+# 
+# -C colorspace ... COLORSPACE in which to do processing; default=sRGB; other 
+# colorspaces that do well are YCbCr and LAB.
+# 
+# -v view ... VIEW permits one to list to the terminal or display any of the 
+# following options: hexcolors, swatches (and hex colors), progress 
+# (and hex colors), all. Hexcolors will list to the terminal the initial seed 
+# and final cluster colors in hex notation. Swatches will display the initial 
+# and final cluster colors as images to the display. It will also list the 
+# hex colors to the terminal. Progress will list each iteration and rmse value 
+# to the terminal in addition to the list of initial and final hex colors. All 
+# will do all of the above. The default none of the above. Note that hexcolors 
+# and swatches will be presented in the working colorspace and not converted 
+# to sRGB
+#
+# References:
+# http://en.wikipedia.org/wiki/Kmeans
+# 
+# NOTE: the script may be slow due to its iterative nature
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set default values
+numcolors="5"		# number of colors to use as seeds; corresponds to k in k-means
+seedcolors=""		# use this list of colors for seeds rather than selecting a number of colors
+maxiters=40			# maximum number of iterations; stops if reaches this limit
+convergence=0.05	# minimum rmse between previous and current set of colors; if rmse at some iteration is smaller, then stop; usually stops at 0% before reaching this value or maxiters
+colorspace="sRGB"	# working colorspace
+view=""				# hexcolors (only), swatches (and hex colors), progress (and hex colors), all
+
+
+# set directory for temporary files
+tmpdir="/tmp"
+
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -e '1,/^####/d;  /^###/g;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -e '1,/^####/d;  /^######/g;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 14 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		  -h|-help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-n)    # get numcolors
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID NUMCOLORS SPECIFICATION ---"
+					   checkMinus "$1"
+					   numcolors=`expr "$1" : '\([0-9]*\)'`
+					   [ "$numcolors" = "" ] && errMsg "--- NUMCOLORS=$numcolors MUST BE AN INTEGER ---"
+		   			   testA=`echo "$numcolors < 2" | bc`
+					   [ $testA -eq 1 ] && errMsg "--- NUMCOLORS=$numcolors MUST BE AN INTEGER GREATER THAN 1 ---"
+					   ;;
+				-s)    # get seedcolors
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SEEDCOLORS SPECIFICATION ---"
+					   checkMinus "$1"
+					   seedcolors="$1"
+					   ;;
+				-m)    # get maxiters
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID MAXITERS SPECIFICATION ---"
+					   checkMinus "$1"
+					   maxiters=`expr "$1" : '\([0-9]*\)'`
+					   [ "$maxiters" = "" ] && errMsg "--- MAXITERS=$maxiters MUST BE AN INTEGER ---"
+		   			   testA=`echo "$maxiters < 1" | bc`
+					   [ $testA -eq 1 ] && errMsg "--- MAXITERS=$maxiters MUST BE AN INTEGER GREATER THAN 1 ---"
+					   ;;
+				-c)    # get convergence
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID CONVERGENCE SPECIFICATION ---"
+					   checkMinus "$1"
+					   convergence=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$convergence" = "" ] && errMsg "--- CONVERGENCE=$convergence MUST BE A NON-NEGATIVE FLOAT ---"
+					   ;;
+				-C)    # get colorspace
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID COLORSPACE SPECIFICATION ---"
+					   checkMinus "$1"
+					   colorspace="$1"
+					   ;;
+				-v)    # get view
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign
+					   errorMsg="--- INVALID VIEW SPECIFICATION ---"
+					   checkMinus "$1"
+					   view=`echo "$1" | tr "[:upper:]" "[:lower:]"`
+					   case "$view" in
+							hexcolors|hex|h) view="hexcolors";;
+							swatches|s) view="swatches";;
+							progress|p) view="progress";;
+							all|a) view="all";;
+							*)  errMsg "--- VIEW=$view IS NOT A VALID VALUE ---" ;;
+					   esac
+					   ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile, outfile
+	infile="$1"
+	outfile="$2"
+fi
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "--- NO INPUT FILE SPECIFIED ---"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "--- NO OUTPUT FILE SPECIFIED ---"
+
+
+dir="$tmpdir/KMEANS.$$"
+
+mkdir "$dir" || errMsg "--- FAILED TO CREATE TEMPORARY FILE DIRECTORY ---"
+trap "rm -rf $dir; exit 0" 0
+trap "rm -rf $dir; exit 1" 1 2 3 15
+
+# test if infile exists, is readable and is not zero size
+if ! [ -f "$infile" -a -e "$infile" -a -r "$infile" -a -s "$infile" ]; then
+	echo  "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE  ---"
+else
+	convert -quiet "$infile" +repage -colorspace $colorspace -set colorspace sRGB $dir/tmpI.miff
+fi
+
+
+# get image dimensions
+ww=`identify -ping -format "%w" $dir/tmpI.miff`
+hh=`identify -ping -format "%h" $dir/tmpI.miff`
+#echo "ww=$ww; hh=$hh;"
+
+# get seed colors
+if [ "$seedcolors" != "" ]; then
+	# get array of colors
+	colorArr=($seedcolors)
+	#echo "colors=${colorArr[*]};"
+	numcolors=${#colorArr[*]}
+	#echo "numcolors=$numcolors;"
+elif [ "$numcolors" != "" ]; then
+	colorArr=(`convert $dir/tmpI.miff -alpha off -scale "100x100>" \
+		-colors $numcolors -unique-colors txt:- | tail -n +2 | grep -o "#[^ ]*"`)
+	[ "$view" = "hexcolors" -o "$view" = "swatches" -o "$view" = "progress" -o "$view" = "all" ] && echo "seed  colors = ${colorArr[*]}"
+	numcolors=${#colorArr[*]}
+	#echo "numcolors=$numcolors;"
+	[ "$view" = "swatches" -o "$view" = "all" ] && convert $dir/tmpI.miff -colors $numcolors -unique-colors -scale 5000% show:
+fi
+
+# create white image
+convert -size ${ww}x${hh} xc:white $dir/tmpW.miff
+
+# loop over iterations
+
+for ((k=0; k<maxiters; k++)); do
+
+	# initialize to white (max) for rmse difference images
+	convert $dir/tmpW.miff $dir/tmpD.miff
+
+	# loop over colors and get min rmse at each pixel
+	for (( i=0;i<numcolors; i++)); do
+
+		# get rmse for color vs image
+		convert $dir/tmpI.miff \( -size ${ww}x${hh} xc:"${colorArr[$i]}" \) \
+		-compose difference -composite +duplicate -compose over -compose multiply -composite \
+		-separate +channel -evaluate-sequence mean -evaluate pow 0.5 $dir/tmpCD$i.miff
+	
+		# get smallest rmse for all color rmse images
+		convert $dir/tmpD.miff $dir/tmpCD$i.miff -evaluate-sequence min $dir/tmpD.miff 
+	done
+
+	# create mask for each color
+	for (( i=0;i<numcolors; i++)); do
+	
+		# compare smallest rmse to each color rmse and threshold
+		convert $dir/tmpD.miff $dir/tmpCD$i.miff -compose difference -composite -threshold 0 -negate $dir/tmpM$i.miff
+
+		# get new mean colors for each regions
+		newcolorArr[$i]=`convert $dir/tmpI.miff $dir/tmpM$i.miff -alpha off -compose copy_opacity -composite \
+			-scale 1x1! -alpha off -format "%[pixel:u.p{0,0}]" info:`
+	done
+
+	# compare colors to get rmse difference
+	diffsq=0
+	for (( i=0;i<numcolors; i++)); do
+		colordiff=`convert -size 1x1 xc:"${colorArr[$i]}" xc:"${newcolorArr[$i]}" \
+			-format "%[fx:(u.r-v.r)^2+(u.g-v.g)^2+(u.b-v.b)^2)/3]\n" info: | head -n 1`
+		diffsq=`convert xc: -format "%[fx:$diffsq + $colordiff]" info:`
+	done
+	rmse=`convert xc: -format "%[fx:100*sqrt($diffsq/$numcolors)]" info:`
+	if [ "$view" = "progress" -o "$view" = "all" ]; then
+		j=$((k+1))
+		echo "iteration=$j 100*rmse=$rmse"
+	fi
+	
+	test=`convert xc: -format "%[fx:$rmse<$convergence?1:0]" info:`
+	[ $test -eq 1 ] && break
+
+	# update color arrays
+	for (( i=0;i<numcolors; i++)); do
+		colorArr[$i]="${newcolorArr[$i]}"
+	done
+
+
+done
+
+
+# colorize masks to show segmentation and make rest transparent
+for (( i=0;i<numcolors; i++)); do
+	convert \( -size ${ww}x${hh} xc:"${newcolorArr[$i]}" \) $dir/tmpM$i.miff \
+		-compose copy_opacity -composite $dir/tmpS$i.miff
+done
+
+# combine colorized images to form final image
+convert \( -size ${ww}x${hh} xc:"none" \) $dir/tmpO.miff
+for (( i=0;i<numcolors; i++)); do
+	convert $dir/tmpO.miff $dir/tmpS$i.miff -flatten $dir/tmpO.miff
+done
+
+# output result
+convert $dir/tmpO.miff -set colorspace $colorspace -colorspace sRGB "$outfile"
+
+# show final colors
+[ "$view" = "swatches" -o "$view" = "all" ] && convert $dir/tmpO.miff -unique-colors -scale 5000% show:
+finalcolorArr=(`convert $dir/tmpO.miff -depth 8 -unique-colors txt:- | tail -n +2 | grep -o "#[^ ]*"`)
+[ "$view" = "hexcolors" -o "$view" = "swatches" -o "$view" = "progress" -o "$view" = "all" ] && echo "final colors = ${finalcolorArr[*]}"
+
+
+exit 0

@@ -1,0 +1,506 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 8/23/2011 .......... 7/16/2012
+#
+# USAGE: tonemap1 [-k kind] [-a amount] [-c colormode] [-m mode] [-s shadows] [-h highlights] [-e edge] [-b blur] [-S saturation] [-C colorspace] [-A] infile outfile
+# USAGE: tonemap1 [-help]
+#
+# OPTIONS:
+#
+# -k     kind      	    apply non-linear enhancement; log or gamma; default=log
+# -a     amount     	amount of non-linear enhancement; float>0; default=4
+# -c     colormode		colormode; HSB or HSL; default=HSB
+# -m     mode       	mode of channel enhancement; all or intensity; 
+#                       default=intensity
+# -s     shadows      	increase/decrease percent brightness in shadows;
+#                       positive or negative integer; default=0
+# -h     highlights		increase/decrease percent brightness in highlights;
+#                       positive or negative integer; default=0
+# -e     edge           edge enhancement increase/decrease percent
+#                       positive or negative integer; default=-30
+# -b     blur       	blur amount if edge != 0; float>=0; default=5
+# -S     saturation     saturation factor; float>0; increase >1; decrease <1; 
+#                       default=0.5
+# -C     colorproc      preprocessing to change colorspace to: RGB, sRGB;
+#                       default is no change
+# -A                    preprocessing to apply autolevel stretch; default is
+#                       not to apply autolevel stretch
+# 
+#
+###
+#
+# NAME: TONEMAP1 
+# 
+# PURPOSE: Enhances the shadows and/or highlight regions in an image using  
+# a non-linear log or gamma function.
+# 
+# DESCRIPTION: DUALTONEMAP enhances the shadows and/or highlight regions 
+# in an image using a non-linear function. The non-linear function can be 
+# either a log or gamma function. It can be applied to all channels before 
+# converting to either HSB or HSL colorspace. Alternately after converting 
+# to HSB or HSL colorspace, the non-linear function can be applied just to 
+# the intensity (brightness or lightness) channel. The processed intensity 
+# image is then separated into a low frequency component (blurred image)  
+# and a high frequency component (edge image) using a blur and subtractive  
+# method. Next, post processing is done to the intensity image to enhance  
+# the brightness in the shadows and/or highlights of the blurred image and 
+# to enhance the edges. These two image are then merged and combined with
+# with the hue and (optionally enhanced) saturation channels. Finally the 
+# resulting image is converted back to RGB.
+# 
+# 
+# OPTIONS: 
+# 
+# -k kind ... KIND of non-linear enhancement. Choices are log (l) or gamma (g).
+# The log function is a scaled log whose scaling function is 10^amount. 
+# The gamma function is a power law whose exponent is the amount.  
+# The default=log
+# 
+# -a amount ... AMOUNT of non-linear enhancement. Values are float>0. Note  
+# that kind=gamma can process dark image with amounts greater than 1 or bright 
+# images with amounts less than 1. Whereas kind=log can only process dark images.   
+# The log amounts are exponents for a power of 10. For example a log amount of 3  
+# is equivalent to 1000. Nominal amounts for the log are about 3 to 4. Nominal 
+# equivalent amounts for gamma are about twice those for the log, i.e. 6 to 8. 
+# The default=4
+# 
+# -c colormode ... COLORMODE is the colorspace in which processing is done. 
+# Values are either HSB or HSL. The default=HSB
+# 
+# -m mode ... MODE of non-linear enhancement. That is the channel(s) to which 
+# it is applied. Choices are: all (a), or intensity (i). For mode=all, it is 
+# applied before converting to HSB or HSL. For mode=intensity, it is appled to 
+# the intensity channel, namely, brightness B for HSB or lightness L for HSL. 
+# The default=intensity.
+#
+# -s shadows ... SHADOWS is the increase/decrease percent brightness in the 
+# shadows. Values are in range -100<=integer<=100. The default=0
+# 
+# -h highlights ... HIGHLIGHTS is the increase/decrease percent brightness in 
+# the highlights. Values are in range -100<=integer<=100. The default=0
+#
+# -e edge ... EDGE is the edge enhancement increase/decrease percent. Values
+# are in range -100<=integer<=100. Nominal values will generally be positive. 
+# The default=50
+#
+# -b blur ... BLUR is the amount of blurring to use when edge is not zero. 
+# Values are floats>=0. The default=5.
+# 
+# -S saturation ... SATURATION is the saturation increase/decrease factor. 
+# Values are floats>=0. Values larger than 1 increase the saturation. Values 
+# smaller than 1 decrease the saturation. For mode=all, nominal values are 
+# about 2. For mode=intensity, nominal values are about 0.5. The default=0.5
+# 
+# -C colorproc ... COLORPROC is an optional preprocessing step to convert 
+# the input image from some other colorspace to RGB or sRGB. This 
+# seems to be needed for HDR Radiance images in XYZ colorspace (.hdr suffix) 
+# prior to a bug fix in .hdr images in IM 6.7.2.0. The choices are: RGB 
+# and sRGB. The default is no change. Note that somewhere between IM 6.7.5.5 
+# and IM 6.7.6.7, colorspace RGB and sRGB were swapped to correct their meaning.
+# 
+# -A ... Optional AUTOLEVEL preprocessing step. Generally this will not be 
+# needed, especially for HDR image with very high dynamic range that require 
+# processing in IM HDRI mode. Using it on such images generally cause changes 
+# in color or causes the images to become dark.
+# 
+# Requirements: IM 6.4.2-1 or higher to support -evaluate log or IM 6.5.5-1 
+# to support -auto-level, if -A option is used.
+#
+# Note: For IM 6.7.5.5 or higher, in order to reproduce some of the examples 
+# below, one may have to add, remove or change -C arguments, due to the 
+# swap of the meaning of -colorspace RGB and -colorspace sRGB. Also if -c is
+# not none for .hdr images, then some parameter changes may be needed. For IM 
+# 6.7.4.1 to 6.7.6.6, the processing of lampickaHDR_small.hdr cannot reproduce 
+# the examples posted. For more details, see 
+# http://www.fmwconcepts.com/imagemagick/tonemap1/tonemap_tests.txt  
+# 
+# 
+# Reference: 
+# http://www.nchu.edu.tw/~add/budget/student%20abroad/inter-meeting-95/T95-2-19.pdf
+#
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set default values
+kind="log"			# kind of non-linear enhancement; log or gamma
+amount="4"			# amount of non-linear enhancement; log ~ 10^amount; float
+mode="intensity"	# mode of enhancement; all channels or intensity (brightness/lightness) channel or blurred (intensity)
+colormode="HSB"		# HSB or HSL
+shadows=0			# increase/decrease percent of brightness in shadows; integer
+highlights=0		# increase/decrease percent of brightness in highlights; integer
+edge=50				# edge enhancement increase/decrease percent; float
+blur=5				# blur amount if edge != 0; float
+sat=0.5				# saturation factor; 1=no change; >1 is increase; <1 is decrease; float
+colorproc="none"	# preprocessing to change colorspace; none, RGB or sRGB
+alevel="no"			# preprocessing to apply autolevel stretch
+
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 23 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		     -help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-k)    # get  kind
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID KIND SPECIFICATION ---"
+					   checkMinus "$1"
+					   kind=`echo "$1" | tr '[A-Z]' '[a-z]'`
+					   case "$kind" in 
+					   		log|l) kind=log;;
+					   		gamma|g) kind=gamma;;
+					   		*) errMsg "--- KIND=$kind IS AN INVALID VALUE ---" 
+					   	esac
+					   ;;
+				-a)    # get amount
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID AMOUNT SPECIFICATION ---"
+					   checkMinus "$1"
+					   amount=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$amount" = "" ] && errMsg "--- AMOUNT=$amount MUST BE A NON-NEGATIVE FLOAT (with no sign) ---"
+					   test1=`echo "$amount <= 0" | bc`
+					   [ $test1 -eq 1 ] && errMsg "--- AMOUNT=$amount MUST BE A POSITIVE FLOAT ---"
+					   ;;
+				-m)    # get  mode
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID MODE SPECIFICATION ---"
+					   checkMinus "$1"
+					   mode=`echo "$1" | tr '[A-Z]' '[a-z]'`
+					   case "$mode" in 
+					   		all|a) mode=all;;
+					   		intensity|i) mode=intensity;;
+					   		blurred|b) mode=blurred;;
+					   		*) errMsg "--- MODE=$mode IS AN INVALID VALUE ---" 
+					   	esac
+					   ;;
+				-c)    # get  colormode
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID COLORMODE SPECIFICATION ---"
+					   checkMinus "$1"
+					   colormode=`echo "$1" | tr '[A-Z]' '[a-z]'`
+					   case "$colormode" in 
+					   		hsb) colormode=HSB;;
+					   		hsl) colormode=HSL;;
+					   		*) errMsg "--- COLORMODE=$colormode IS AN INVALID VALUE ---" 
+					   	esac
+					   ;;
+				-s)    # get shadows
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SHADOWS SPECIFICATION ---"
+					   #checkMinus "$1"
+					   shadows=`expr "$1" : '\([-0-9]*\)'`
+					   [ "$shadows" = "" ] && errMsg "--- SHADOWS=$shadows MUST BE AN INTEGER ---"
+					   test1=`echo "$shadows < -100" | bc`
+					   test2=`echo "$shadows > 100" | bc`
+					   [ $test1 -eq 1 -o $test2 -eq 1 ] && errMsg "--- SHADOWS=$shadows MUST BE AN INTEGER BETWEEN -100 AND 100 ---"
+					   ;;
+				-h)    # get highlights
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID HIGHLIGHTS SPECIFICATION ---"
+					   #checkMinus "$1"
+					   highlights=`expr "$1" : '\([-0-9]*\)'`
+					   [ "$highlights" = "" ] && errMsg "--- HIGHLIGHTS=$highlights MUST BE AN INTEGER ---"
+					   test1=`echo "$highlights < -100" | bc`
+					   test2=`echo "$highlights > 100" | bc`
+					   [ $test1 -eq 1 -o $test2 -eq 1 ] && errMsg "--- HIGHLIGHTS=$highlights MUST BE AN INTEGER BETWEEN -100 AND 100 ---"
+					   ;;
+				-e)    # get edge
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID EDGE SPECIFICATION ---"
+					   #checkMinus "$1"
+					   edge=`expr "$1" : '\([-0-9]*\)'`
+					   [ "$edge" = "" ] && errMsg "--- EDGE=$edge MUST BE AN INTEGER ---"
+					   test1=`echo "$edge < -100" | bc`
+					   test2=`echo "$edge > 100" | bc`
+					   [ $test1 -eq 1 -o $test2 -eq 1 ] && errMsg "--- EDGE=$edge MUST BE AN INTEGER BETWEEN -100 AND 100 ---"
+					   ;;
+				-b)    # get blur
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   #errorMsg="--- INVALID BLUR SPECIFICATION ---"
+					   #checkMinus "$1"
+					   blur=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$blur" = "" ] && errMsg "--- BLUR=$blur MUST BE A NON-NEGATIVE FLOAT ---"
+ 					   ;;
+				-S)    # get sat
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SATURATION SPECIFICATION ---"
+					   checkMinus "$1"
+					   sat=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$sat" = "" ] && errMsg "--- SATURATION=$sat MUST BE A NON-NEGATIVE FLOAT (with no sign) ---"
+					   test1=`echo "$sat <= 0" | bc`
+					   [ $test1 -eq 1 ] && errMsg "--- SATURATION=$sat MUST BE A POSITIVE FLOAT ---"
+					   ;;
+				-C)    # get  colorproc
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID COLORPROC SPECIFICATION ---"
+					   checkMinus "$1"
+					   colorproc=`echo "$1" | tr '[A-Z]' '[a-z]'`
+					   case "$colorproc" in 
+					   		none) colorproc=none;;
+					   		rgb) colorproc=RGB;;
+					   		srgb) colorproc=sRGB;;
+					   		*) errMsg "--- COLORPROC=$colorproc IS AN INVALID VALUE ---" 
+					   	esac
+					   ;;
+				-A)    # get  aproc
+					   alevel="yes"
+					   ;;
+			 	-)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile
+	infile=$1
+	outfile=$2
+fi
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "NO INPUT FILE SPECIFIED"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "NO OUTPUT FILE SPECIFIED"
+
+
+# get im_version
+im_version=`convert -list configure | \
+	sed '/^LIB_VERSION_NUMBER /!d; s//,/;  s/,/,0/g;  s/,0*\([0-9][0-9]\)/\1/g' | head -n 1`
+
+# colorspace RGB and sRGB swapped between 6.7.5.5 and 6.7.6.7 
+# though probably not resolved until the latter
+# then -colorspace gray changed to linear between 6.7.6.7 and 6.7.8.2 
+# then -separate converted to linear gray channels between 6.7.6.7 and 6.7.8.2,
+# though probably not resolved until the latter
+# so -colorspace HSL/HSB -separate and -colorspace gray became linear
+# but we need to use -set colorspace RGB before using them at appropriate times
+# so that results stay as in original script
+# The following was determined from various version tests using redist.
+# Note: bug in 6.7.6.6 HSL/HSB bad, 6.7.7.0 HSL/HSB/RGB bad, 6.7.7.8 & 6.7.7.9 HSL/HSB bad, 6.7.8.1 HSB very bad
+# Note: for notch and other auto thresholding scripts, some (small?) differences between 6.7.5.10 and 6.7.7.0 inclusive
+# Note: results for only lampickaHDR_small.hdr between 6.7.4.1 and 6.7.6.6 are gray rather than white
+if [ "$im_version" -lt "06070606" -o "$im_version" -gt "06070707" ]; then
+	cspace="RGB"
+else
+	cspace="sRGB"
+fi
+#echo "cspace=$cspace"
+if [ "$im_version" -lt "06070607" -o "$im_version" -gt "06070707" ]; then
+	setcspace="-set colorspace RGB"
+else
+	setcspace=""
+fi
+#echo "setcspace=$setcspace"
+
+: <<COMMENT
+# set up cproc processing -- old method works if -C none
+if [ "$colorproc" = "none" ]; then
+	cproc=""
+else
+	cproc="-set colorspace $colorproc"
+fi
+#echo "cproc=$cproc"
+COMMENT
+# set up cproc processing -- new method
+if [ "$colorproc" = "none" ]; then
+	cproc=""
+else
+	cproc="-set colorspace $colorproc"
+	# from trial and error using 6.7.2.0/6.7.4.10, 6.7.6.10 and 6.7.8.2/6.7.8.3
+	# the following is needed for tonemap2 and tonemap3 when using -C colorproc != none, i.e. for .hdr images after 6.7.7.7
+	if [ "$im_version" -lt "06070607" ]; then
+		setcspace=""
+	fi
+	if [ "$colorproc" = "sRGB" ]; then
+		cspace="RGB"
+	elif [ "$colorproc" = "RGB" ]; then
+		cspace="sRGB"
+	fi
+fi
+#echo "cproc=$cproc"
+
+# set up autolevel processing
+if [ "$alevel" = "yes" ]; then
+	aproc="-auto-level"
+else
+	aproc=""
+fi
+#echo "aproc=$aproc"
+
+# setup temp files
+tmpA1="$dir/tonemap1_1_$$.mpc"
+tmpB1="$dir/tonemap1_1_$$.cache"
+trap "rm -f $tmpA1 $tmpB1; exit 0" 0
+trap "rm -f $tmpA1 $tmpB1; exit 1" 1 2 3 15
+
+# test input image
+convert -quiet -regard-warnings "$infile" -alpha off $cproc $aproc +repage "$tmpA1" ||
+	errMsg "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+
+
+# set up log factor
+if [ "$kind" = "log" ]; then
+	amount=`convert xc: -precision 8 -format "%[fx:10^$amount]" info:`
+	proc0="-evaluate log $amount"
+elif [ "$kind" = "gamma" ]; then
+	proc0="-gamma $amount"
+fi
+#echo "amount=$amount; proc0=$proc0"
+
+# set up saturation
+if [ "$sat" = "1" ]; then
+	saturation=""
+else
+	saturation="-evaluate multiply $sat"
+fi
+#echo "sat=$saturation"
+
+
+# setup shadows and hightlights level values
+ssign=`convert xc: -format "%[fx:sign($shadows)==-1?1:0]" info:`
+hsign=`convert xc: -format "%[fx:sign($highlights)==-1?1:0]" info:`
+#echo "ssign=$ssign; hsign=$hsign"
+
+mlo=0
+mhi=100
+plo=0
+phi=100
+if [ "$shadows" != "0" -a $ssign -eq 1 ]; then
+	mlo=$((-shadows))
+elif [ "$shadows" != "0" -a $ssign -eq 0 ]; then
+	plo=$shadows
+fi
+if [ "$highlights" != "0" -a $hsign -eq 1 ]; then
+	phi=$((100+highlights))
+elif [ "$highlights" != "0" -a $hsign -eq 0 ]; then
+	mhi=$((100-highlights))
+fi
+
+if [ $mlo -eq 0 -a $mhi -eq 100 ]; then
+	proc1=""
+else
+	proc1="-level $mlo,$mhi%"
+fi
+
+if [ $plo -eq 0 -a $phi -eq 100 ]; then
+	proc2=""
+else
+	proc2="+level $plo,$phi%"
+fi
+#echo "mlo=$mlo; mhi=$mhi; plo=$plo; phi=$phi; proc1=$proc1; proc2=$proc2"
+
+
+# set up edge processing
+edge=`convert xc: -format "%[fx:1+$edge/100]" info:`
+eproc="-evaluate multiply $edge"
+#echo "eproc=$eproc"
+
+# set up clamp due its removal for HDRI somewhere after IM 6.6.0.10, 
+# so that neg values do not cause problems with -evaluate log.
+# clamping added to log in IM 6.7.7.6
+if [ "$im_version" -lt "06070706" -a "$im_version" -gt "06060010" -a "$kind" = "log" -a "$amount" != "0" ]; then
+	clamp="-evaluate max 0"
+else
+	clamp=""
+fi
+
+#echo "proc0=$proc0; cproc=$cproc; aproc=$aproc; sat=$saturation; blur=$blur; eproc=$eproc; proc1=$proc1; proc2=$proc2;"
+# process image
+if [ "$mode" = "all" ]; then
+#echo "got here"
+	convert $tmpA1 $clamp $proc0 $setcspace -colorspace $colormode -separate \
+		\( -clone 1 $saturation \) \
+		\( -clone 2 -blur 0x$blur \) \
+		\( -clone 2 -clone 4 +swap $setcspace -compose minus -composite $eproc \) \
+		\( -clone 4 $proc1 $proc2 \) \
+		\( -clone 5 -clone 6 $setcspace -compose plus -composite \) \
+		-delete 1,2,4,5,6 -set colorspace $colormode -combine -colorspace $cspace \
+		$outfile
+
+elif [ "$mode" = "intensity" ]; then
+	convert $tmpA1 $setcspace -colorspace $colormode -separate  \
+		\( -clone 1 $saturation \) \
+		\( -clone 2 $clamp $proc0 \) \
+		\( -clone 4 -blur 0x$blur \) \
+		\( -clone 4 -clone 5 +swap $setcspace -compose minus -composite $eproc \) \
+		\( -clone 5 $proc1 $proc2 \) \
+		\( -clone 6 -clone 7 $setcspace -compose plus -composite \) \
+		-delete 1,2,4,5,6,7 -set colorspace $colormode -combine -colorspace $cspace \
+		$outfile
+fi
+
+exit 0

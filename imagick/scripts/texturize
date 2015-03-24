@@ -1,0 +1,406 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 4/30/2011 .......... 6/14/2013
+#
+# USAGE: texturize [-d dimensions] [-n newseed] [-t threshold] [-b blur] 
+# [-w widen] [-s spread] [-g gnoise] [-f format] [-m mix] [-c contrast] 
+# [infile] outfile
+# 
+# USAGE: texturize [-help or -h]
+#
+# OPTIONS:
+#
+# -d     dimensions     dimensions of texture image to create if no input 
+#                       image is provided; WIDTHxHEIGHT; default=128x128
+# -n     newseed        seed value to use for random noise generator; 
+#                       integer>0; default=1
+# -t     threshold      white-threshold percent applied to random noise; 
+#                       0<=float<=100; default=2
+# -b     blur           sigma of 1D Gaussian blur used to create cross-hatch
+#                       pattern from the random noise; float>=0; default=9
+# -w     widen          sigma of 2D blur to apply to noise as a widening 
+#                       effect; float>=0; default=0 (no widenning)
+# -s     spread         amount of spread to apply; float>=0; default=0
+# -g     gnoise         amplitude of additive Gaussian noise added to final
+#                       effect; float>=0; default=5
+# -f     format         format of texture patten; choices are: plain or bump;
+#                       default=bump
+# -m     mix            mix percent of texture with the infile; 0<=float<=100; 
+#                       default=25; ignored if no infile
+# -c     contrast       percent contrast increase of image prior to mixing; 
+#                       float>=0; ignored if no infile
+#
+# If infile is provided, then -d dimensions will be ignored.
+# 
+###
+#
+# NAME: TEXTURIZE 
+# 
+# PURPOSE: To create a texture pattern and optionally apply it to the 
+# background of an input image
+# 
+# DESCRIPTION: TEXTURIZE creates a noise or cross-hatch texture pattern that 
+# can be saved or applied to the background of an image. The cross-hatch 
+# pattern is generated from 1D vertical and horizontal blurring of thresholded 
+# random noise. The pattern may be widened some or spread to make it more 
+# noisy.
+# 
+# 
+# OPTIONS: 
+# 
+# -d dimensions ... DIMENSIONS of texture image to create if no input 
+# image is provided. Dimensions are specified as integers WIDTHxHEIGHT.
+# The default=128x128.
+#
+# -n newseed ... NEWSEED is the seed value to use for the random noise 
+# generator. Values are integers>0. The default=1.
+# 
+# -t threshold ... THRESHOLD is the white-threshold percent to apply to the 
+# random noise. Values are in the range from 0 to 100. The default=2.
+# 
+# -b blur ... BLUR is the sigma of 1D Gaussian blur used to create the 
+# cross-hatch pattern from the random noise. It is applied both vertically 
+# and horizontally. Values are floats>=0. The default=9.
+# 
+# -w widen ... WIDEN is the sigma of 2D Gaussian blur used to create a 
+# widening effect on the pattern. Values are floats>=0; The default=0.
+# 
+# -s spread ... SPREAD is the amount of the spread effect to apply to the 
+# pattern. More spread will dissolve the cross-hatch and create more of a 
+# random noise pattern. Values are floats>=0. The default=0.
+# 
+# -g gnoise ... GNOISE is the amplitude of additive Gaussian noise added to 
+# the final effect. Values are floats>=0. The default=5.
+# 
+# -f format ... FORMAT is the format of the texture patten. Choices are: 
+# plain (p) or bump (b). The default=bump.
+# 
+# -m mix ... MIX is mixing percentage of the texture with the infile. 
+# Values are in the range from 0 to 100. The default=25. Mix is ignored, 
+# if an infile is not provided.
+# 
+# -c contrast ... CONTRAST is the percent contrast increase of image before 
+# mixing. Values are floats>=0. The default=0. Contrast is ignored, if an 
+# infile is not provided.
+# 
+# REQUIREMENTS: 1D morphology convolution kernels which probably were 
+# introduced at about IM 6.6.2.0
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set default values
+dim=128x128		# size of texture if no infile
+newseed=1		# seed for noise generation
+thresh=2		# white threshold of random noise
+widen=0			# sigma of 2D noise blur
+blur=9			# sigma of 1D gaussian blur
+gnoise=5		# amplitude of additive gaussian noise
+spread=0		# amount of spread to apply 
+format="bump"	# output mode: plain or bump
+mix=25			# blend texture with infile
+contrast=0		# contrast adjustment
+
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 22 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		   -help|h)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-d)    # get dimensions
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID DIMENSIONS SPECIFICATION ---"
+					   checkMinus "$1"
+					   dim=`expr "$1" : '\([x0-9]*\)'`
+					   [ "$dim" = "" ] && errMsg "--- DIMENSIONS=$dim MUST BE TWO X DELIMITED NON-NEGATIVE INTEGERS ---"
+ 					   ;;
+				-n)    # get newseed
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID NEWSEED SPECIFICATION ---"
+					   checkMinus "$1"
+					   newseed=`expr "$1" : '\([0-9]*\)'`
+					   [ "$newseed" = "" ] && errMsg "--- NEWSEED=$newseed MUST BE A NON-NEGATIVE INTEGER ---"
+					   test=`echo "$newseed <= 0" | bc`
+					   [ $test -eq 1  ] && errMsg "--- NEWSEED=$newseed MUST BE A POSITIVE INTEGER ---"
+		   			   ;;
+				-t)    # get thresh
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID THRESHOLD SPECIFICATION ---"
+					   checkMinus "$1"
+					   thresh=`expr "$1" : '\([0-9]*\)'`
+					   [ "$thresh" = "" ] && errMsg "--- THRESHOLD=$thresh MUST BE A NON-NEGATIVE FLOAT ---"
+		   			   testA=`echo "$thresh < 0" | bc`
+		   			   testB=`echo "$thresh > 100" | bc`
+					   [ $testA -eq 1 -o $testB -eq 1 ] && errMsg "--- THRESHOLD=$thresh MUST BE A FLOAT BETWEEN 0 AND 100 ---"
+					   ;;
+				-b)    # get blur
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID BLUR SPECIFICATION ---"
+					   checkMinus "$1"
+					   blur=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$blur" = "" ] && errMsg "--- BLUR=$blur MUST BE A NON-NEGATIVE FLOAT ---"
+					   ;;
+				-w)    # get widen
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID WIDEN SPECIFICATION ---"
+					   checkMinus "$1"
+					   widen=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$widen" = "" ] && errMsg "--- WIDEN=$widen MUST BE A NON-NEGATIVE FLOAT ---"
+					   ;;
+				-g)    # get gnoise
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID GNOISE SPECIFICATION ---"
+					   checkMinus "$1"
+					   gnoise=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$gnoise" = "" ] && errMsg "--- GNOISE=$gnoise MUST BE A NON-NEGATIVE FLOAT ---"
+					   ;;
+				-s)    # get spread
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SPREAD SPECIFICATION ---"
+					   checkMinus "$1"
+					   spread=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$spread" = "" ] && errMsg "--- SPREAD=$spread MUST BE A NON-NEGATIVE FLOAT ---"
+					   ;;
+				-m)    # get mix
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID MIX SPECIFICATION ---"
+					   checkMinus "$1"
+					   mix=`expr "$1" : '\([0-9]*\)'`
+					   [ "$mix" = "" ] && errMsg "--- MIX=$mix MUST BE A NON-NEGATIVE FLOAT ---"
+		   			   testA=`echo "$mix < 0" | bc`
+		   			   testB=`echo "$mix > 100" | bc`
+					   [ $testA -eq 1 -o $testB -eq 1 ] && errMsg "--- MIX=$mix MUST BE A FLOAT BETWEEN 0 AND 100 ---"
+					   ;;
+				-c)    # get contrast
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID CONTRAST SPECIFICATION ---"
+					   checkMinus "$1"
+					   contrast=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$contrast" = "" ] && errMsg "--- CONTRAST=$contrast MUST BE A NON-NEGATIVE FLOAT ---"
+					   ;;
+				-f)    # get format
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID FORMAT SPECIFICATION ---"
+					   checkMinus "$1"
+					   format=`echo "$1" | tr "[:upper:]" "[:lower:]"`
+					   case "$format" in 
+					   		plain|p) format="plain" ;;
+					   		bump|b) format="bump" ;;
+					   		*) errMsg "--- FORMAT=$format IS AN INVALID VALUE ---" 
+					   	esac
+					   ;;
+			 	 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile
+	if [ $# -eq 2 ]; then
+		infile=$1
+		outfile=$2
+	elif [ $# -eq 1 ]; then
+		outfile=$1
+		infile=""
+	else
+		errMsg "--- INCONSISTENT NUMBER OF INPUT AND OUTPUT IMAGES SPECIFIED ---"
+	fi
+fi
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "NO OUTPUT FILE SPECIFIED"
+
+# setup temporary images and auto delete upon exit
+tmpA1="$dir/texturize_1_$$.mpc"
+tmpB1="$dir/texturize_1_$$.cache"
+tmpA2="$dir/texturize_2_$$.mpc"
+tmpB2="$dir/texturize_2_$$.cache"
+trap "rm -f $tmpA1 $tmpB1 $tmpA2 $tmpB2; exit 0" 0
+trap "rm -f $tmpA1 $tmpB1 $tmpA2 $tmpB2; exit 1" 1 2 3 15
+
+# get im_version
+im_version=`convert -list configure | \
+	sed '/^LIB_VERSION_NUMBER /!d; s//,/;  s/,/,0/g;  s/,0*\([0-9][0-9]\)/\1/g' | head -n 1`
+
+# colorspace RGB and sRGB swapped between 6.7.5.5 and 6.7.6.7 
+# though probably not resolved until the latter
+# then -colorspace gray changed to linear between 6.7.6.7 and 6.7.8.2 
+# then -separate converted to linear gray channels between 6.7.6.7 and 6.7.8.2,
+# though probably not resolved until the latter
+# so -colorspace HSL/HSB -separate and -colorspace gray became linear
+# but we need to use -set colorspace RGB before using them at appropriate times
+# so that results stay as in original script
+# The following was determined from various version tests using texturize
+# with IM 6.7.4.10, 6.7.6.10, 6.7.9.0
+# Note: see below -- gnoise is about 5 times too large compared to examples, so divide by 5
+# Note: cannot reproduce same seed values as results from before
+if [ "$im_version" -lt "06070607" -o "$im_version" -gt "06070707" ]; then
+	setcspace="-set colorspace RGB"
+else
+	setcspace=""
+fi
+# no need for setcspace for grayscale or channels after 6.8.5.4
+if [ "$im_version" -gt "06080504" ]; then
+	setcspace=""
+fi
+
+
+if [ "$infile" != "" ]; then
+	# read the input image and filter image into the temp files and test validity.
+	convert -quiet -regard-warnings "$infile" +repage "$tmpA1" ||
+		errMsg "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE  ---"
+
+	# get image size
+	ww=`convert $tmpA1 -ping -format "%w" info:`
+	hh=`convert $tmpA1 -ping -format "%h" info:`
+else
+	ww=`echo "$dim" | cut -dx -f1`
+	hh=`echo "$dim" | cut -dx -f2`
+fi
+
+
+# set up widen
+if [ "$widen" = "0" ]; then
+	widening=""
+else
+	widening="-blur 0x$widen"
+fi
+
+# set up gnoise
+# NOTE: testing 8/21/2012 seems to imply the gaussiannoise has changed as is larger than my examples
+# So divide by 5 to get about what I had before
+if [ "$gnoise" = "0" ]; then
+	addnoise=""
+else
+	gnoise=`convert xc: -format "%[fx:$gnoise/5]" info:`
+	addnoise="-evaluate GaussianNoise $gnoise"
+fi
+
+# set up spread
+if [ "$spread" = "0" ]; then
+	spreading=""
+else
+	spreading="-spread $spread"
+fi
+
+# set up format
+if [ "$format" = "plain" ]; then
+	shading=""
+else
+	shading="-shade 135x45"
+fi
+
+# set up contrast
+if [ "$contrast" = "0" ]; then
+	contr=""
+else
+	contr="-brightness-contrast 0,$contrast"
+fi
+
+#echo "widening=$widening; addnoise=$addnoise; spreading=$spreading; contrast=$contrast;"
+
+convert -size ${ww}x${hh} xc:gray -seed $newseed +noise random \
+	$setcspace -channel g -separate +channel \
+	-white-threshold $thresh% $widening \
+	\( -clone 0 -virtual-pixel mirror -morphology Convolve Blur:0x${blur} +write 1tmp1.jpg \) \
+	\( -clone 0 -virtual-pixel mirror -morphology Convolve Blur:0x${blur},90 +write 1tmp2.jpg \) \
+	-delete 0 -compose multiply -composite -auto-level \
+	$addnoise -channel g -separate +channel \
+	$spreading $shading \
+	$tmpA2
+
+
+if [ "$infile" != "" ]; then
+	convert -respect-parenthesis \( $tmpA1 $contr \) $tmpA2 \
+		-compose blend -define compose:args=$mix% -composite $outfile
+else
+	convert $tmpA2 $outfile
+fi
+
+exit 0
+
+
+
+
+
+
+
+
+
+
+

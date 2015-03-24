@@ -1,0 +1,164 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 5/8/2008 .......... revised 8/23/2011
+#
+# USAGE: pixelize [-s size] [-m mode] infile outfile
+# USAGE: pixelize [-h or -help]
+#
+# OPTIONS:
+#
+# -s      size        pixelization size; size>0; default=3
+# -m      mode        mode of minimizing; 1=resize; 2=sample; default=1
+#
+###
+#
+# NAME: PIXELIZE 
+# 
+# PURPOSE: To create a pixelized or blocky effect in an image.
+# 
+# DESCRIPTION: PIXELIZE creates a pixelized or blocky effect in an  
+# image where more pixelization (larger sizes) create larger blocky 
+# effects.
+# 
+# OPTIONS: 
+# 
+# -s size ... SIZE is the pixelization (block) size. Values are greater 
+# than 0. The default is 3.
+# 
+# -m mode ... MODE is the mode of minimizing. Choices are 1 for -resize 
+# and 2 for -sample. The default=1
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set default values
+size=3
+mode=1
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 6 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		  -h|-help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-s)    # get size
+					   shift  # to get the next parameter - scale
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SIZE SPECIFICATION ---"
+					   checkMinus "$1"
+					   size=`expr "$1" : '\([0-9]*\)'`
+					   [ "$size" = "" ] && errMsg "SIZE=$size MUST BE AN INTEGER"
+		   			   sizetest=`echo "$size <= 0" | bc`
+					   [ $sizetest -eq 1 ] && errMsg "--- SIZE=$size MUST BE A POSITIVE INTEGER ---"
+					   ;;
+				-m)    # get mode
+					   shift  # to get the next parameter - mode
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID MODE SPECIFICATION ---"
+					   checkMinus "$1"
+					   mode=`expr "$1" : '\([0-9]*\)'`
+					   [ "$mode" = "" ] && errMsg "MODE=$mode MUST BE AN INTEGER"
+					   [ $mode -ne 1 -a $mode -ne 2 ] && errMsg "--- MODE=$mode MUST BE EITHER 1 OR 2 ---"
+					   ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile
+	infile=$1
+	outfile=$2
+fi
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "NO INPUT FILE SPECIFIED"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "NO OUTPUT FILE SPECIFIED"
+
+
+# test if image an ordinary, readable and non-zero size
+if [ -f $infile -a -r $infile -a -s $infile ]
+	then
+	: 'Do Nothing'
+else
+	errMsg "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+fi
+
+# get parameters
+w=`convert $infile -format "%[fx:w]" info:`
+h=`convert $infile -format "%[fx:h]" info:`
+minify=`convert xc: -format "%[fx:100/$size]" info:`
+
+# process image
+if [ $mode -eq 1 ]; then
+	convert $infile -resize $minify% -scale ${w}x${h}! $outfile
+elif [ $mode -eq 2 ]; then
+	convert $infile -sample $minify% -scale ${w}x${h}! $outfile
+fi
+exit 0

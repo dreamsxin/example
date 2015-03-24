@@ -1,0 +1,435 @@
+#!/bin/bash
+#
+# Script Developed by Fred Weinhaus 2/24/2009 ........... revised 2/5/2014
+# Concept And Intial Example By Anthony Thyssen  ................ 2/13/2009
+#
+# USAGE: starburst [-r radius] [-g glow] [-c center] [-k contrast] [-t tcolor] [-b bcolor] [-f fcolor] [-a angle] [-n newseed] [-s size] [infile] outfile
+# USAGE: starburst [-h or -help]
+#
+# OPTIONS:
+#
+# -r      radius             maximum radius of the starburst pattern; 
+#                            integer>0; default is one third the minimum image dimension
+# -g      glow               radius of the inner glow area as percentage of radius;
+#                            integer; 0<=glow<=100; default=50
+# -c      center             center point for the halo; center=cx,cy; 
+#                            integer>=0; default is center of image
+# -k      contrast           percent change in contrast for starburst pattern; 
+#                            values are positive, zero or negative integers; default=0
+# -t      tcolor             tint color for starburst;  Any valid IM color is allowed;
+#                            The default=white
+# -f      fcolor             foreground color for starburst;  Any valid IM color is allowed;
+#                            The default=white
+# -b      bcolor             background color for starburst if no input image is provided;  
+#                            Any valid IM color is allowed; The default=black
+# -a      angle              clockwise rotation angle for starburst pattern; integer; 
+#                            0<=angle<=360; default=0
+# -n      newseed            seed value for random starburst pattern; integer>0; 
+#                            default=different pattern each time
+# -s      size               size of output (WidthxHeight) if no input image provided
+#
+###
+#
+# NAME: STARBURST 
+# 
+# PURPOSE: To apply a starburst pattern to an image.
+# 
+# DESCRIPTION: STARBURST applies a radial starburst pattern to an image a given 
+# center, radius and glow amount. The user can also control the coloring,   
+# contrast and rotation of the starburst pattern. If no input image is provided 
+# the script will create an image of the desired size.
+# 
+# 
+# OPTIONS: 
+#
+# -r radius ... RADIUS is the maximum radius of the starburst pattern. Values are 
+# integers>0. The default is one third of the minimum dimension of the image.
+# 
+# -g glow ... GLOW is the radious of inner glow area of the starburst as a 
+# percentage of the radius parameter. Values are integers in the range 
+# 0<=glow<=100. The default=50.
+# 
+# -c center ... CENTER=cx,cy are the comma separated coordinates in the image 
+# determining the center of the halo. Values are integers>=0. The default 
+# is the center of the input image or size specified for the output image.
+# 
+# -k contrast ... CONTRAST is the percent contrast change for the starburst 
+# pattern. Values are positive or negative integers. The default=0.
+# 
+# -t tcolor ... TCOLOR is the tint color for the starburst. The default=white. 
+# Any valid IM color is allowed. See http://imagemagick.org/script/color.php
+# 
+# -f fcolor ... FCOLOR is the foreground color for the starburst. The default=white. 
+# Any valid IM color is allowed. See http://imagemagick.org/script/color.php
+# 
+# -b bcolor ... BCOLOR is the background color for the starburst when no input 
+# image is provided. The default=black. Any valid IM color is allowed.
+# See http://imagemagick.org/script/color.php
+# 
+# -a angle ... ANGLE is the clockwise rotation angle for the starburst   
+# pattern. Values are integers such that 0<=angle<=360. The default=0.
+# 
+# -n newseed ... NEWSEED is the seed value for the random starburst pattern. 
+# Values are integers>0. The default is a different pattern each time.
+# 
+# -s size ... SIZE is the WIDTHxHEIGHT of the desired output image if no 
+# input image is specified. Any value supplied will be ignored if an 
+# input image is specified.
+# 
+# NOTE: The concept and initial example were developed by Anthony Thyssen. 
+# See http://www.imagemagick.org/Usage/advanced/#radial_flares. This script 
+# is an elaboration on Anthony's original example.
+# 
+# NOTE: Requires IM 6.4.2-8 or higher due to the use of -distort polar/depolar.
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set default values
+rad=""				# default to 1/3 min of w,h
+glow="50"			# percent of rad
+size=""				# must specify if no input image
+center=""			# defaults to center of input image
+tcolor="white"		# tint color
+fcolor="white"		# foreground color only if no input image
+bcolor="black"		# background color only if no input image
+contrast=0			# percent increase or decrease
+angle=0				# rotation angle
+newseed=""	 		# seed value
+infile=""
+outfile=""
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 22 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		  -h|-help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-r)    # get rad
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID RADIUS SPECIFICATION ---"
+					   checkMinus "$1"
+					   rad=`expr "$1" : '\([0-9]*\)'`
+					   [ "$rad" = "" ] && errMsg "--- RADIUS=$rad MUST BE A NON-NEGATIVE INTEGER ---"
+		   			   radtest=`echo "$rad < 1" | bc`
+					   [ $radtest -eq 1 ] && errMsg "--- RADIUS=$rad MUST BE A POSITIVE INTEGER ---"
+					   ;;
+				-g)    # get glow
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID GLOW SPECIFICATION ---"
+					   checkMinus "$1"
+					   glow=`expr "$1" : '\([0-9]*\)'`
+					   [ "$glow" = "" ] && errMsg "--- GLOW=$glow MUST BE A NON-NEGATIVE INTEGER ---"
+		   			   glowtestA=`echo "$glow < 0" | bc`
+		   			   glowtestB=`echo "$glow > 100" | bc`
+					   [ $glowtestA -eq 1 -o $glowtestB -eq 1 ] && errMsg "--- GLOW=$glow MUST BE AN INTEGER BETWEEN 0 AND 100 ---"
+					   ;;
+				-c)    # get center
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID CENTER SPECIFICATION ---"
+					   checkMinus "$1"
+					   test=`echo "$1" | tr "," " " | wc -w`
+					   [ $test -eq 1 -o $test -gt 2 ] && errMsg "--- INCORRECT NUMBER OF COORDINATES SUPPLIED ---"
+					   center=`expr "$1" : '\([0-9]*,[0-9]*\)'`
+					   [ "$center" = "" ] && errMsg "--- CENTER=$coords MUST BE A PAIR OF NON-NEGATIVE INTEGERS SEPARATED BY A COMMA ---"
+					   center="$1,"
+		   			   cx=`echo "$center" | cut -d, -f1`
+		   			   cy=`echo "$center" | cut -d, -f2`
+					   ;;
+				-s)    # get size
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SIZE SPECIFICATION ---"
+					   checkMinus "$1"
+					   test=`echo "$1" | tr "x" " " | wc -w`
+					   [ $test -eq 1 -o $test -gt 2 ] && errMsg "--- INCORRECT NUMBER OF VALUES SUPPLIED ---"
+					   size=`expr "$1" : '\([0-9]*x[0-9]*\)'`
+					   [ "$size" = "" ] && errMsg "--- SIZE=$size MUST BE A PAIR OF NON-NEGATIVE INTEGERS SEPARATED BY AN x ---"
+					   size="$1x"
+		   			   width=`echo "$size" | cut -dx -f1`
+		   			   height=`echo "$size" | cut -dx -f2`
+					   ;;
+				-k)    # get contrast
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   #errorMsg="--- INVALID CONTRAST SPECIFICATION ---"
+					   #checkMinus "$1"
+					   contrast=`expr "$1" : '\([-]*[0-9]*\)'`
+					   [ "$contrast" = "" ] && errMsg "--- CONTRAST=$contrast MUST BE AN INTEGER ---"
+					   ;;
+				-t)    # get tcolor
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID TINT COLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   tcolor="$1"
+					   ;;
+				-f)    # get fcolor
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID FOREGROUND COLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   fcolor="$1"
+					   ;;
+				-b)    # get bcolor
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID BACKGROUND COLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   bcolor="$1"
+					   ;;
+				-a)    # get angle
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID ANGLE SPECIFICATION ---"
+					   checkMinus "$1"
+					   angle=`expr "$1" : '\([0-9]*\)'`
+					   [ "$angle" = "" ] && errMsg "--- ANGLE=$angle MUST BE A NON-NEGATIVE INTEGER ---"
+		   			   angletestA=`echo "$angle < 0" | bc`
+		   			   angletestB=`echo "$angle > 360" | bc`
+					   [ $angletestA -eq 1 -o $angletestB -eq 1 ] && errMsg "--- ANGLE=$angle MUST BE AN INTEGER BETWEEN 0 AND 360 ---"
+					   ;;
+				-n)    # get newseed
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID NEWSEED SPECIFICATION ---"
+					   checkMinus "$1"
+					   newseed=`expr "$1" : '\([0-9]*\)'`
+					   [ "$newseed" = "" ] && errMsg "--- NEWSEED=$newseed MUST BE A NON-NEGATIVE INTEGER ---"
+		   			   newseedtest=`echo "$newseed < 1" | bc`
+					   [ $newseedtest -eq 1 ] && errMsg "--- NEWSEED=$newseed MUST BE A POSITIVE INTEGER ---"
+					   ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile
+	if [ $# -eq 2 ]; then
+		infile=$1
+		outfile=$2
+	elif [ $# -eq 1 ]; then
+		if [ "$size" = "" ]; then
+			errMsg "--- NO OUTPUT SIZE SPECIFIED ---"
+		else
+			outfile=$1
+		fi
+	else
+		errMsg "--- INCONSISTENT NUMBER OF INPUT AND OUTPUT IMAGES SPECIFIED ---"
+	fi
+fi
+
+# test that infile provided
+[ "$size" = "" -a "$infile" = "" ] && errMsg "--- NO INPUT FILE SPECIFIED ---"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "--- NO OUTPUT FILE SPECIFIED ---"
+
+tmpA="$dir/starburst_$$.mpc"
+tmpB="$dir/starburst_$$.cache"
+tmp0="$dir/starburst_0_$$.miff"
+tmp1="$dir/starburst_1_$$.miff"
+trap "rm -f $tmpA $tmpB $tmp0 $tmp1; exit 0" 0
+trap "rm -f $tmpA $tmpB $tmp0 $tmp1; exit 1" 1 2 3 15
+
+# get im_version
+im_version=`convert -list configure | \
+	sed '/^LIB_VERSION_NUMBER /!d; s//,/;  s/,/,0/g;  s/,0*\([0-9][0-9]\)/\1/g' | head -n 1`
+
+# colorspace RGB and sRGB swapped between 6.7.5.5 and 6.7.6.7 
+# though probably not resolved until the latter
+# then -colorspace gray changed to linear between 6.7.6.7 and 6.7.8.2 
+# then -separate converted to linear gray channels between 6.7.6.7 and 6.7.8.2,
+# though probably not resolved until the latter
+# so -colorspace HSL/HSB -separate and -colorspace gray became linear
+# but we need to use -set colorspace RGB before using them at appropriate times
+# so that results stay as in original script
+# The following was determined from various version tests using starburst
+# with IM 6.7.4.10, 6.7.6.10, 6.7.9.0
+if [ "$im_version" -lt "06070607" -o "$im_version" -gt "06070707" ]; then
+	setcspace="-set colorspace RGB"
+else
+	setcspace=""
+fi
+# no need for setcspace for grayscale or channels after 6.8.5.4
+if [ "$im_version" -gt "06080504" ]; then
+	setcspace=""
+fi
+
+
+if [ "$infile" != "" ]; then
+	if convert -quiet -regard-warnings "$infile" +repage "$tmpA"
+		then
+		ww=`convert $tmpA -ping -format "%[fx:w]" info:`
+		hh=`convert $tmpA -ping -format "%[fx:h]" info:`
+	else
+		errMsg "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+	fi
+else
+	ww=$width
+	hh=$height
+fi
+
+# get min of width and height and last pixel
+mwh=`convert xc: -format "%[fx:min($ww,$hh)]" info:`
+mwh1=`convert xc: -format "%[fx:$mwh-1]" info:`
+
+if [ "$center" = "" ]; then
+	cx=`convert xc: -format "%[fx:0.5*($ww-1)]" info:`
+	cy=`convert xc: -format "%[fx:0.5*($hh-1)]" info:`
+fi
+
+# compute offset for center control
+ox=`convert xc: -format "%[fx:floor($cx-0.5*($mwh-1))]" info:`
+oy=`convert xc: -format "%[fx:floor($cy-0.5*($mwh-1))]" info:`
+if [ `echo "$ox < 0" | bc` -eq 1 ]; then
+	ox="$ox"
+else
+	ox="+$ox"
+fi
+if [ `echo "$oy < 0" | bc` -eq 1 ]; then
+	oy="$oy"
+else
+	oy="+$oy"
+fi
+
+# compute default radius if not provided
+if [ "$rad" = "" ]; then
+	rad=`convert xc: -format "%[fx:floor($mwh/3)]" info:`
+fi
+
+# fudge factor of 4 to properly adjust glow from percent of radius
+glow1=`convert xc: -format "%[fx:4*$rad*$glow/100]" info:`
+
+# set tint color string
+if [ "$tcolor" = "white" ]; then
+	tint=""
+else
+	tint="$setcspace -fill $tcolor -tint 100%"
+fi
+
+# set up level values for contrast control
+test=`convert xc: -format "%[fx:$contrast<0?0:1]" info:`
+if [ $test -eq 0 ]; then
+	loval=`convert xc: -format "%[fx:abs($contrast)]" info:`
+	hival=100
+else
+	loval=0
+	hival=`convert xc: -format "%[fx:100-$contrast]" info:`
+fi
+
+# set up roll from angle
+roll=`convert xc: -format "%[fx:$ww*(360-$angle)/360]" info:`
+if [ $angle -eq 0 -o $angle -eq 360 ]; then
+	rot=""
+else
+	rot="-roll +${roll}+0"
+fi
+
+# set up seed strinig
+if [ "$newseed" = "" ]; then
+	seed=""
+else
+	seed="-seed $newseed"
+fi
+
+if [ "$bcolor" = "none" -o "$bcolor" = "none" ]; then
+	channeling="-alpha set -channel rgba"
+else
+	channeling=""
+fi
+
+# create starburst pattern
+# L1: create random values in 1 row
+# L2: rotate/roll as needed and add foreground background color
+# L3: append remaining rows of background color and motion-blur vertically
+# L4: create central glow taper mask, where 
+# taper has shape of cosine raised to 1.5 power for reasonable rolloff
+# L5: use -compose screen so that will only brighten and not darken
+# L6: convert from polar back to rectangular coords
+convert -size ${mwh}x1 xc: $seed +noise Random $setcspace -channel G -separate +channel \
+	$rot +level-colors $bcolor,$fcolor \
+	-size ${mwh}x${mwh1} xc:$bcolor -append $channeling -motion-blur ${rad}x65535-90 \
+	\( -size ${mwh}x${glow1}  gradient:$fcolor-$bcolor -evaluate cos .5 -negate -evaluate pow 1.5 \) \
+	-compose screen -composite \
+	-distort Polar -1 $tmp0
+
+
+# apply starburst to background or to infile
+if [ "$infile" = "" ]; then
+	convert \( -size ${ww}x${hh} xc:$bcolor \) \
+	\( $tmp0 -level ${loval},${hival}% $tint \) \
+		-geometry ${ox}${oy} -composite $outfile
+else
+	convert $tmpA \( $tmp0 -level ${loval},${hival}% $tint \) \
+		-geometry ${ox}${oy} -compose screen -composite $outfile
+fi
+exit 0

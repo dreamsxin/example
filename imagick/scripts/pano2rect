@@ -1,0 +1,356 @@
+#!/bin/bash
+# 
+# Developed by Fred Weinhaus 8/10/2008 .......... revised 6/13/2013
+# 
+# USAGE: pano2rect [-v vtop,vbot] [-p pfov] [-f format] [-i iyc] [-o oyc] [-h height] [-vp vpmethod] [-b bgcolor] infile outfile
+# USAGE: pano2rect [-help]
+# 
+# OPTIONS:
+# 
+# -v      vtop,vbot         vertical viewing angles corresponding to the
+#                           top and bottom of the panoramic image;
+#                           default=-0,-90 (90 degree vertical 
+#                           range of view, i.e. horizon to nadir)
+# -p      pfov              perspective image vertical field of view in degrees;
+#                           float; 0<pfov<180; default=vrange=(vtop-vbot)
+# -f      format            output perspective format; tilt (T) 
+#                           or level (L) (perspective); default=tilt
+# -i      iyc               pixel coordinates of the desired row in the input 
+#                           panoramic image that is to be the center of 
+#                           the perspective correction; float; 
+#                           default=center of panorama image
+# -o      oyc               pixel coordinates of the desired row in the output 
+#                           perspective image that is to be the center of 
+#                           the perspective correction; float; 
+#                           default=center of perspective image for format=tilt;
+#                           default=bottom of perspective image for format=level
+# -h      height            desired height of output; 
+#                           Default=same as input
+# -vp     vpmethod          virtual-pixel method to use to fill area of output image 
+#                           that are outside the input image; default=black
+# -b      bgcolor           background color for virtual-pixel=background
+#                           any valid IM color is allowed. The default=black
+# 
+###
+# 
+# NAME: PANO2RECT
+# 
+# PURPOSE: To apply vertical perspective correction to an angular panoramic image
+# 
+# DESCRIPTION: PANO2RECT applies vertical perspective correction to an angular 
+# panoramic image. The output formats are either tilt or leve. These describe 
+# only the vertical format for the output image. The horizontal format will not 
+# be changed. For tilt format, the output will be a tilted view with the look 
+# direction towards the mid row of the input panoramic image. For level format,  
+# the perspective will be looking horizontally.
+# 
+# ARGUMENTS: 
+# 
+# -v vtop,vbot ... VTOP,VBOT are the vertical viewing angles at the top and 
+# bottom of the input panorama image. The default is 90,0 which corresponds 
+# to a 90 degree vertical range of view, i.e. zenith to horizon.
+# 
+# -p pfov ... PFOV is the vertical output perspective image field of view 
+# in degrees. Values are floats in the range 0<pfov<180. The default is to 
+# use the vertical viewing range of the fisheye image, which is vrange = 
+# (vrad-vcen) = ifov/2 (half of the field of view across the circular diameter). 
+# The amount of input image in the output perspective image will depend upon  
+# the pfov parameter. Note that in comparison, a value of 27 degrees 
+# corresponds to a vertical field of view from a 35 mm camera 
+# (film size 36mm x 24mm) with a 50mm focal length lens, i.e. a "normal" 
+#  view. 
+# 
+# -f format ... FORMAT is the output image perspective format. The choices are: 
+# tilt (T) and level (L). The default is tilt. If tilt (T) is chosen, then the 
+# output image will have perspective correction applied in the vertical direction 
+# and the image will be centered by default about the mid-angle of the panorama 
+# image, i.e., vertical center of the panorama. In other words a tilted vertical 
+# perspective will be produced. If level (L) is chosen, then the output image will 
+# also have perspective correction applied in the vertical direction. But the view 
+# will be one that is not tilted, but looking horizontally. The horizon line will 
+# default to the bottom of the output image (assuming that the top row of the 
+# panorama image is looking above the horizon).
+# 
+# -i iyc ... IYC is the pixel coordinates in the input panorama image that will 
+# be the center of the perspective correction. The default is the center row of the 
+# panorama image. Values are non-negative floats.
+# 
+# -o oyc ... OYC is the pixel coordinates in the output perspective image that will 
+# be the center of the perspective correction. The default is the center row of the 
+# perspective image for format=tilt and the bottom row of the perspective image for 
+# format=level (assuming that the top row of the panorama image is looking above 
+# the horizon). Values are non-negative floats.
+# 
+# -h height ... HEIGHT is the desired height of the perspective image. The default 
+# is the same as the input. Values larger than the input may be useful in showing 
+# more of the image when a level perspective is used. Values other than the default 
+# will not change the scale of the perspective image in the vertical dimension. They 
+# will only allow more (or less) data to be viewed. 
+# 
+# -vp vpmethod ... VP is the virtual-pixel method. Any valid IM virtual-pixel 
+# setting is allowed. The default is black.
+# 
+# -b bgcolor ... BGCOLOR is the background color to use with vpmethod=background. 
+# Any valid IM color may be used. The default is black.
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+# 
+
+# set default values
+vtop=90   				    # look direction in panorama at top of image
+vbot=0   				    # look direction in panorama at bottom of image
+pfov="" 					# perspective field of view (aperture) in degrees
+iyc=""						# initialization of center perspective correction in panorama image
+oyc=""						# initialization of center perspective correction in perspective image
+format="tilt"				# tilt, level
+vpmethod="black"			# virtual-pixel method
+bgcolor="black"				# virtual-pixel background color
+height=""					# extend vertical dimension of output perspective
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 18 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		     -help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-v)    # get vtop,vbot
+					   shift  # to get the next parameter
+					   # no test if parameter starts with minus sign 
+					   #errorMsg="--- INVALID VERTICAL ANGLE SPECIFICATIONS ---"
+					   #checkMinus "$1"
+					   test=`echo "$1" | tr "," " " | wc -w`
+					   [ $test -ne 2 ] && errMsg "--- INCORRECT NUMBER OF VERTICAL ANGLE VALUES SUPPLIED ---"
+					   vals=`expr "$1" : '\([-.0-9]*,[-.0-9]*\)'`
+					   [ "$vals" = "" ] && errMsg "--- ANGLES=$vals MUST BE A PAIR OF FLOATS SEPARATED BY A COMMA ---"
+		   			   vtop=`echo "$vals" | cut -d, -f1`
+		   			   vbot=`echo "$vals" | cut -d, -f2`
+		   			   ttest=`echo "$vtop < -180 || $vtop > 180" | bc`
+		   			   btest=`echo "$vbot < -180 || $vbot > 180" | bc`
+		   			   equaltest=`echo "$vtop == $vbot" | bc`
+		   			   [ $ttest -eq 1 ] && errMsg "--- VTOP=$vtop MUST BE BETWEEN -180 AND 180 DEGREES ---"
+		   			   [ $btest -eq 1 ] && errMsg "--- VBOT=$vbot MUST BE BETWEEN -180 AND 180 DEGREES ---"
+		   			   [ $equaltest -eq 1 ] && errMsg "--- VTOP AND VBOT MAY NOT BE EQUAL ---"
+					   ;;
+				-f)    # get  format
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID FORMAT SPECIFICATION ---"
+					   checkMinus "$1"
+						case "$1" in
+						 tilt)		format="tilt";;
+						 T)			format="tilt";;
+						 t)			format="tilt";;
+						 level)		format="level";;
+						 L)			format="level";;
+						 l)			format="level";;
+						esac
+					   ;;
+				-p)    # get pfov
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID PFOV SPECIFICATION ---"
+					   checkMinus "$1"
+					   pfov=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$pfov" = "" ] && errMsg "--- PFOV=$pfov MUST BE A NON-NEGATIVE FLOAT ---"
+					   pfovtestA=`echo "$pfov <= 0" | bc`
+					   pfovtestB=`echo "$pfov >= 180" | bc`
+					   [ $pfovtestA -eq 1 -o $pfovtestB -eq 1 ] && errMsg "--- PFOV=$pfov MUST BE A FLOAT GREATER THAN 0 AND LESS THAN 180 ---"
+					   ;;
+				-i)    # get vertical center of perspective correction in panorama (input) image
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID IYC SPECIFICATION ---"
+					   checkMinus "$1"
+					   iyc=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$iyc" = "" ] && errMsg "--- IYC=$iyc MUST BE A NON-NEGATIVE FLOAT ---"
+					   iyctestA=`echo "$iyc <= 0" | bc`
+					   [ $iyctestA -eq 1 ] && errMsg "--- IYC=$iyc MUST BE A FLOAT GREATER THAN 0 ---"
+					   ;;
+				-o)    # get vertical center of perspective correction in perspective (output) image
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID OYC SPECIFICATION ---"
+					   checkMinus "$1"
+					   oyc=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$oyc" = "" ] && errMsg "--- OYC=$oyc MUST BE A NON-NEGATIVE FLOAT ---"
+					   oyctestA=`echo "$oyc <= 0" | bc`
+					   [ $oyctestA -eq 1 ] && errMsg "--- OYC=$oyc MUST BE A FLOAT GREATER THAN 0 ---"
+					   ;;
+				-h)    # get height
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID HEIGHT SPECIFICATION ---"
+					   checkMinus "$1"
+					   height=`expr "$1" : '\([0-9]*\)'`
+					   [ "$height" = "" ] && errMsg "--- HEIGHT=$height MUST BE A NON-NEGATIVE INTEGER ---"
+					   heighttest=`echo "$height <= 0" | bc`
+					   [ $heighttest -eq 1 ] && errMsg "--- HEIGHT=$height MUST BE AN INTEGER GREATER THAN 0 ---"
+					   ;;
+			   -vp)    # get  vpmethod
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID VIRTUAL-PIXEL SPECIFICATION ---"
+					   checkMinus "$1"
+					   vpmethod="$1"
+					   ;;
+				-b)    # get  bgcolor
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID BACKGROUND COLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   bgcolor="$1"
+					   ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile
+	infile=$1
+	outfile=$2
+fi
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "NO INPUT FILE SPECIFIED"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "NO OUTPUT FILE SPECIFIED"
+
+tmpA="$dir/pano2rect_$$.mpc"
+tmpB="$dir/pano2rect_$$.cache"
+trap "rm -f $tmpA $tmpB; exit 0" 0
+trap "rm -f $tmpA $tmpB; exit 1" 1 2 3 15
+
+if convert -quiet -regard-warnings "$infile" +repage "$tmpA"
+	then
+
+	# compute width, height, bottom and vertical center of input (source) panorama image
+	swidth=`identify -format %w $tmpA`
+	sheight=`identify -format %h $tmpA`
+	shl=`convert xc: -format "%[fx:$sheight-1]" info:`
+	sh2=`convert xc: -format "%[fx:($sheight-1)/2]" info:`
+
+	# compute vrange
+	vrange=`convert xc: -format "%[fx:abs($vtop-$vbot)]" info:`
+
+	# compute center of perspective in input panorama image
+	if [ "$format" = "level" ]; then
+		# compute row corresponding to vertical angle = 0 (horizontal)
+		iyc=`convert xc: -format "%[fx:($vtop/$vrange)*$shl]" info:`
+	elif [ "$format" = "tilt" ]; then
+		[ "$iyc" = "" ] && iyc=$sh2
+	fi
+
+	# get pfov if not provided
+	[ "$pfov" = "" ] && pfov=$vrange
+	[ `echo "$pfov >= 180" | bc` -eq 1 ] && errMsg="--- PFOV=$pfov MUST BE LESS THAN 180 DEG ---"
+
+	# compute inverse perspective focal length from fov
+	pfoc=`convert xc: -format "%[fx:$sheight/(2*tan($pfov*pi/360))]" info:`
+	pfocinv=`convert xc: -format "%[fx:(2*tan($pfov*pi/360))/$sheight]" info:`
+	
+	# compute output (destination) vertical center and image bottom
+	[ "$height" = "" ] && height=$sheight
+	width=$swidth
+	dh2=`convert xc: -format "%[fx:($height-1)/2]" info:`
+	dhl=`convert xc: -format "%[fx:$height-1]" info:`
+
+	# compute center of perspective in output perspective image
+	if [ "$format" = "level" ]; then
+		[ "$oyc" = "" ] && oyc=$dhl		
+	elif [ "$format" = "tilt" ]; then
+		[ "$oyc" = "" ] && oyc=$dh2
+	fi
+	
+	else
+		errMsg "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+fi
+
+# Pertinent equations:
+# note phi=fov/2; fov=field of view (aperture)
+# note r=N/2; N=min(width,height)
+# perspective: r=f*tan(phi); f=r/tan(phi); f=(N/2)/tan((fov/2)*(pi/180))=N/(2*tan(fov*pi/360))
+
+im_version=`convert -list configure | \
+	sed '/^LIB_VERSION_NUMBER /!d;  s//,/;  s/,/,0/g;  s/,0*\([0-9][0-9]\)/\1/g' | head -n 1`
+
+# see Bourke diagram at http://local.wasp.uwa.edu.au/~pbourke/projection/fish2/
+
+# for testing
+if false; then
+echo "swidth=$swidth; sheight=$sheight; shl=$shl; sh2=$sh2"
+echo "iyc=$iyc; vrange=$vrange; pfov=$pfov; pfoc=$pfoc; pfocinv=$pfocinv"
+echo "height=$height; width=$width; dh2=$dh2; dhl=$dhl; oyc=$oyc"
+fi
+
+# process image
+	convert \( -size ${width}x${height} xc: \) $tmpA \
+	-virtual-pixel $vpmethod -background $bgcolor -monitor \
+	-fx "yd=j-$oyc; v.p{i,(180*$shl/(pi*$vrange))*atan($pfocinv*yd)+$iyc}" +monitor \
+	$outfile
+exit 0

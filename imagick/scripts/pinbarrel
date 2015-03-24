@@ -1,0 +1,388 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 3/1/2008 .......... revised 11/28/2011
+#
+# USAGE: pinbarrel "ax,bx,cx,dx,ex ay,by,cy,dy,ey" [-c coords] [-m mode] [-v vp] infile outfile
+# USAGE: pinbarrel [-h or -help]
+#
+# OPTIONS:
+#
+# ax,bx,cx,dx,ex        radial coefficients for x dimension; 
+#                       mode=normal r*(ax+bx*r+cx*r^2+dx*r^3+ex*r^4);
+#                       mode=inverse r/(ax+bx*r+cx*r^2+dx*r^3+ex*r^4);
+#                       ax=1,bx=0,c=0x,dx=0,ex=0 (means no change);
+#                       ax,bx,cx,dx,ex are floating point values;
+# ay,by,cy,dy,ey        radial coefficients for y dimension; 
+#                       mode=normal r*(ay+by*r+cy*r^2+dy*r^3+ey*r^4);
+#                       mode=inverse r/(ay+by*r+cy*r^2+dy*r^3+ey*r^4);
+#                       ay=1,by=0,c=0y,dy=0,ey=0 (means no change);
+#                       ay,by,cy,dy,ex are floating point values
+# -c      coords        x,y center point coordinates;
+#                       positive or negative floating point values;
+#                       default is center of image
+# -m      mode          normal or inverse; controls whether to use the 
+#                       normal polynomial coefficient term or its inverse;
+#                       default=normal
+# -v      vp            vp is the virtual-pixel method; default=black
+#
+# Note: if only one set of values are provided, then they 
+# will be used for both dimensions. Enclose the set of 
+# coefficients in double quotes and separate the two sets 
+# with a space.
+# 
+###
+#
+# NAME: PINBARREL 
+# 
+# PURPOSE: To correct or apply pincushion and/or barrel lens distortion to an image.
+# 
+# DESCRIPTION: PINBARREL is designed to correct or apply pincushion and/or
+# barrel lens distortion to an image. The script makes use of -fx and therefore 
+# will be rather slow.
+# 
+# 
+# ARGUMENTS: 
+# 
+# ax,bx,cx,dx,ex ... These are the radial distortion/correction coefficients for 
+# the X dimension equation of: R=r*(a + b*r + c*r^2 + d*r^3 + e*r^4) for normal mode 
+# and R=r/(a + b*r + c*r^2 + d*r^3 + e*r^4) for inverse mode, where R is the radius 
+# from the center of the infile and r is the radius from the center of the outfile. 
+#
+# ay,by,cy,dy,ey ... These are the radial distortion/correction coefficients for 
+# the y dimension equation of: R=r*(a + b*r + c*r^2 + d*r^3 + e*r^4) for normal mode  
+# and R=r/(a + b*r + c*r^2 + d*r^3 + e*r^4) for inverse mode, where R is the radius 
+# from the center of the infile and r is the radius from the center of the outfile. 
+
+# The coefficient a represents scaling and the radial terms control pincushion and 
+# barrel distortion. The higher order coefficients affect the pixels further from 
+# center. The whole expression has a scaling effect. Thus, to avoid overall scaling, 
+# keep a+b+c+d+e=1. For normal mode, pincushion correction and barrel distortion are 
+# achieved using b,c,d,e positive and barrel correction and pincushion distortion are 
+# achieved using b,c,d,e negative. For a+b+c+d+e>1, the image will be scaled smaller 
+# and for a+b+c+d+e<1, the image will be scaled larger. Typical values are: a near 1 
+# and b,c,d,e near zero. For inverse mode, the situation above is reversed. Thus for 
+# inverse mode, pincushion correction and barrel distortion are achieved using b,c,d,e 
+# negative and barrel correction and pincushion distortion are achieved using b,c,d,e 
+# positive. For a+b+c+d+e<1, the image will be scaled smaller and for a+b+c+d+e>1, 
+# the image will be scaled larger. Values of a=1,b=0,c=0,d=0,e=0 makes no change in 
+# the image in the appropriate dimension. Coefficients a,b,c,d,e are floating point 
+# values.
+#
+# -c ... COORDS are the x,y center point coordinates for computing the radial 
+# distances. These values may be positive or negative floating point values to 
+# allow the center point to be off the image if the image is a subsection.
+#
+# -m ... MODE controls whether to use the normal polynomial coefficient term or 
+# its inverse form. The default is normal.
+# 
+# -v ... VP is the virtual-pixel method to use. Any valid IM virtual-pixel may 
+# be used. The default is black.
+# 
+# For more details, see Helmut Dersch's page at 
+# http://www.all-in-one.ee/~dersch/barrel/barrel.html or 
+# http://wiki.panotools.org/Lens_correction_model
+#
+# Note that the meaning and order of a,b,c,d have been reversed in this 
+# script from that of Dresch's work to make parameter specification easier 
+# and keep the most significant parameters first in the list.
+# 
+# Also as some references suggest that a proper barrel or pincushion distortion 
+# is modeled by only the coefficients of the even exponents of r, a fifth term 
+# (ex*r^4 and ey*r^4) has been added so that one can specify at least three even 
+# term (a+c*r^2+e*r^4). See http://www.imatest.com/docs/distortion.html and 
+# http://www.fieldrobotics.org/~cgeyer/OMNIVIS05/final/Li.pdf
+#
+# Other references suggest that the inverse form allows better fit with the same 
+# or fewer coefficients. See http://www.fieldrobotics.org/~cgeyer/OMNIVIS05/final/Li.pdf
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set default value
+ax=-1000000		# trap for no coefficients supplied
+xc=-1000000		# trap for no center point coordinates, so use center of image
+mode="normal"	# normal or inverse
+vp="black"		# virtual-pixel method
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 9 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		  -h|-help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-v)    # get  vp
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID VIRTUAL-PIXEL SPECIFICATION ---"
+					   checkMinus "$1"
+					   vp="$1"
+					   ;;
+				-m)    # get  mode
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID MODE SPECIFICATION ---"
+					   checkMinus "$1"
+					   mode="$1"
+					   [ "$mode" != "normal" -a "$mode" != "inverse" ] && errMsg "--- INVALID MODE VALUE ---"
+					   ;;
+				-c)    # get coords
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID COORDS SPECIFICATION ---"
+					   checkMinus "$1"
+					   test=`echo "$1" | tr "," " " | wc -w`
+					   [ $test -eq 1 -o $test -gt 2 ] && errMsg "--- INCORRECT NUMBER OF COORDINATES SUPPLIED ---"
+					   coords="$1,"
+		   			   xc=`echo "$coords" | cut -d, -f1`
+		   			   yc=`echo "$coords" | cut -d, -f2`
+					   ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+	   [\ 0-9,.-]*)    # Coefficients
+		 			   coeffs="$1"
+					   coeffs=`echo "$coeffs" | sed -n 's/[ ]*,[ ]*/,/gp'`  # remove spaces from around commas
+					   coeffs=`echo "$coeffs" | sed -n 's/^ *//p'`  		# remove leading spaces
+					   coeffs=`echo "$coeffs" | sed -n 's/ *$//p'`  		# remove trailing spaces
+					   test=`echo "$coeffs" | wc -w`
+					   if [ $test -gt 1 ]
+							then
+							coeffs=`echo "$coeffs" | sed -n 's/[ ][ ]*/ /gp'`	 # change multiple spaces to single space
+					   fi
+					   test=`echo "$coeffs" | wc -w`
+					   [ $test -gt 2 ] && errMsg "--- TOO MANY SPACES IN SUPPLIED COEFFICIENTS ---"
+		   			   xcoeffs=`echo "$coeffs" | tr " " ":" | cut -d: -f1`
+		   			   ycoeffs=`echo "$coeffs" | tr " " ":" | cut -d: -f2`
+		   			   # ycoeffs = xcoeffs automatically if second set does not exist
+		   			   testx=`echo "$xcoeffs" | tr "," " " | wc -w`
+		   			   [ $testx -ne 5 ] && errMsg "--- FIVE X COEFFICIENTS REQUIRED ---"
+		   			   testy=`echo "$ycoeffs" | tr "," " " | wc -w`
+		   			   [ $testy -ne 5 ] && errMsg "--- FIVE Y COEFFICIENTS REQUIRED ---"
+		   			   ax=`echo "$xcoeffs" | cut -d, -f1`
+		   			   bx=`echo "$xcoeffs" | cut -d, -f2`
+		   			   cx=`echo "$xcoeffs" | cut -d, -f3`
+		   			   dx=`echo "$xcoeffs" | cut -d, -f4`
+		   			   ex=`echo "$xcoeffs" | cut -d, -f5`
+		   			   ay=`echo "$ycoeffs" | cut -d, -f1`
+		   			   by=`echo "$ycoeffs" | cut -d, -f2`
+		   			   cy=`echo "$ycoeffs" | cut -d, -f3`
+		   			   dy=`echo "$ycoeffs" | cut -d, -f4`
+		   			   ey=`echo "$ycoeffs" | cut -d, -f5`
+		   			   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile
+	infile=$1
+	outfile=$2
+fi
+
+[ "$ax" = "-1000000" ] && errMsg "--- NO COEFFICIENTS SUPPLIED ---"
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "NO INPUT FILE SPECIFIED"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "NO OUTPUT FILE SPECIFIED"
+
+tmpA="$dir/radialdistort_$$.mpc"
+tmpB="$dir/radialdistort_$$.cache"
+trap "rm -f $tmpA $tmpB; exit 0" 0
+trap "rm -f $tmpA $tmpB; exit 1" 1 2 3 15
+
+if convert -quiet -regard-warnings "$infile" +repage "$tmpA"
+	then
+	width=`identify -format %w $tmpA`
+	height=`identify -format %h $tmpA`
+	w2=`echo "scale=5; $width / 2" | bc`
+	h2=`echo "scale=5; $height / 2" | bc`
+	if [ "$xc" = "-1000000" ]
+		then
+		xc=`echo "scale=1; (($width / 2) - 0.5) / 1" | bc`
+		yc=`echo "scale=1; (($height / 2) - 0.5) / 1" | bc`
+	fi
+	test=`echo "$w2 > $h2" | bc`
+	if [ $test -eq 1 ]
+		then
+		sf=$h2
+	else
+		sf=$w2
+	fi
+	else
+		errMsg "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+fi
+
+echo ""
+echo "Please Wait - Progress Reporting"
+echo ""
+
+
+rterm=""
+if [ "$cx" != "0" -o "$cy" != "0" ]
+	then
+	rrd="rrd=rd^2;"
+	rterm="$rterm$rrd "
+fi
+if [ "$dx" != "0" -o "$dy" != "0" ]
+	then
+	rrrd="rrrd=rd^3;"
+	rterm="$rterm$rrrd "
+fi
+if [ "$ex" != "0" -o "$ey" != "0" ]
+	then
+	rrrrd="rrrrd=rd^4;"
+	rterm="$rterm$rrrrd "
+fi
+
+ctermx="$ax"
+if [ "$bx" != "0" ]
+	then
+	ctermx="$ctermx + $bx*rd"
+fi
+if [ "$cx" != "0" ]
+	then
+	ctermx="$ctermx + $cx*rrd"
+fi
+if [ "$dx" != "0" ]
+	then
+	ctermx="$ctermx + $dx*rrrd"
+fi
+if [ "$ex" != "0" ]
+	then
+	ctermx="$ctermx + $ex*rrrrd"
+fi
+if [ "$mode" = "normal" ]
+	then
+	fdx="fdx=$ctermx;"
+elif [ "$mode" = "inverse" ]
+	then
+	fdx="fdx=1/($ctermx);"
+fi
+
+ctermy="$ay"
+if [ "$by" != "0" ]
+	then
+	ctermy="$ctermy + $by*rd"
+fi
+if [ "$cy" != "0" ]
+	then
+	ctermy="$ctermy + $cy*rrd"
+fi
+if [ "$dy" != "0" ]
+	then
+	ctermy="$ctermy + $dy*rrrd"
+fi
+if [ "$ey" != "0" ]
+	then
+	ctermy="$ctermy + $ey*rrrrd"
+fi
+if [ "$mode" = "normal" ]
+	then
+	fdy="fdy=$ctermy;"
+elif [ "$mode" = "inverse" ]
+	then
+	fdy="fdy=1/($ctermy);"
+fi
+
+# IM version trap for use of newer -fx hypot function
+im_version=`convert -list configure | \
+sed '/^LIB_VERSION_NUMBER /!d;  s//,/;  s/,/,0/g;  s/,0*\([0-9][0-9]\)/\1/g' | head -n 1`
+if [ "$im_version" -ge "06030600" ]
+	then 
+	rd="rd=hypot(xd,yd)/$sf;"
+else
+	rd="rd=sqrt(xd^2+yd^2)/$sf;"
+fi
+
+# process image
+if [ "$ay" = "1" -a "$by" = "0" -a "$cy" = "0" -a "$dy" = "0" -a "$ey" = "0" ]
+	then
+	# x dimension only
+	convert $infile -virtual-pixel $vp -monitor -fx \
+		"xd=(i-$xc); yd=(j-$yc); $rd $rterm $fdx xs=fdx*xd+$xc; u.p{xs,j}" \
+		$outfile
+elif [ "$ax" = "1" -a "$bx" = "0" -a "$cx" = "0" -a "$dx" = "0" -a "$ex" = "0" ]
+	then
+	# y dimension only
+	convert $infile -virtual-pixel $vp -monitor -fx \
+		"xd=(i-$xc); yd=(j-$yc); $rd $rterm $fdy ys=fdy*yd+$yc; u.p{i,ys}" \
+		$outfile
+elif [ "$ay" = "$ax" -a "$by" = "$bx" -a "$cy" = "$cx" -a "$dy" = "$dx" -a "$ey" = "$ex" ]
+	then
+	# x = y coefficients
+	convert $infile -virtual-pixel $vp -monitor -fx \
+		"xd=(i-$xc); yd=(j-$yc); $rd $rterm $fdx xs=fdx*xd+$xc; ys=fdx*yd+$yc; u.p{xs,ys}" \
+		$outfile
+else
+	# all other cases
+	convert $infile -virtual-pixel $vp -monitor -fx \
+		"xd=(i-$xc); yd=(j-$yc); $rd $rterm $fdx $fdy xs=fdx*xd+$xc; ys=fdy*yd+$yc; u.p{xs,ys}" \
+		$outfile
+fi
+exit 0
+
+

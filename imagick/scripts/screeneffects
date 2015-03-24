@@ -1,0 +1,333 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 7/15/2009 .......... revised 6/14/2013
+#
+# USAGE: screeneffects [-s spacing] [-r] [-t type] [-a amount] [-m method] [-c color] infile outfile
+# USAGE: screeneffects [-h or -help]
+#
+# OPTIONS:
+#
+# -s      spacing        pixel spacing of screen pattern; float>0; default=6
+# -r                     rotate screen by 45 degrees
+# -t      type           screen type; simple (or s) or displace (or d);
+#                        default=simple
+# -a      amount         displacement amount; float>0; default=6
+# -m      method         displacement method; 1, 2 or 3; 1 indicates combine 
+#                        x and y displacement maps; 2 indicates to use x and y
+#                        maps separately for the x and y displacements; 3 
+#                        indicates to use x and y maps for y and x displacements;
+#                        default=0
+# -c      color          simple method screen colorization; default=black
+# 
+###
+#
+# NAME: SCREENEFFECTS 
+# 
+# PURPOSE: To apply screen-like effects to an image.
+# 
+# DESCRIPTION: SCREENEFFECTS applies screen-like effects to an image. 
+# The screen effects may be either simple or displacement. In the former, 
+# a screen pattern is mixed with the image and can be colored. In the latter, 
+# the screen pattern comes from various image displacement patterns. The 
+# screen pattern is generated from a sine wave pattern along x and another 
+# along y. Then they are optionally rotated 45 degrees.
+# 
+# OPTIONS: 
+# 
+# -s spacing ... SPACING is the approximate pixel spacing of the screen 
+# pattern. Values are floats>0. The default=6
+# 
+# -r ... ROTATE screen by 45 degrees from x and y orientation. Nominally, 
+# one gets more appealing results with no rotation for type=simple and 
+# with rotation for type=displace.
+#
+# -t type ... TYPE is screen type. Choices are simple (or s) and displace 
+# or (d). With type=simple, the screen pattern is mixed with the image and 
+# the screen can be colored. With type=displace, the screen texture comes 
+# from a displacement of the image. The default=simple.
+#
+# -a amount ... AMOUNT is the pixel displacement amount for type=displace. 
+# Values are floats>0. The default=6
+# 
+# -m method ... METHOD is the displacement method. Choices are: 1, 2 or 3. 
+# Two displacement maps are created from sine waves along the x and along 
+# the y direction. Each may then be rotated 45 degrees. With method=1, the  
+# x and y displacement maps are merged and the merged map is used for the 
+# both the x and y displacements. With method=2, the x and y displacement 
+# maps are not merged and are used for the x and y displacements, respectively. 
+# With method=3, the displacement maps are swapped and then used for the x 
+# and y displacements, respectively. The default=1.
+# 
+# -c color ... COLOR is the screen color when type=simple. Any valid IM 
+# color specification is allowed. The default=black.
+# See http://imagemagick.org/script/color.php
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set default values
+spacing=6				# screen spacing
+rotation="no"           # rotate 45 degrees; yes or no
+type="simple"	 		# simple or displace
+amount=6				# displacement amount
+method=1				# displace method: 1,2 or 3
+bcolor="black"			# simple type colorization
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 13 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		  -h|-help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-s)    # get spacing
+					   shift  # to get the next parameter - spread
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SPACING SPECIFICATION ---"
+					   checkMinus "$1"
+					   spacing=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$spacing" = "" ] && errMsg "SPACING=$spacing MUST BE A FLOAT"
+		   			   spacingtest=`echo "$spacing <= 0" | bc`
+					   [ $spacingtest -eq 1 ] && errMsg "--- SPACING=$spacing MUST BE A POSITIVE FLOAT ---"
+					   ;;
+				-a)    # get amount
+					   shift  # to get the next parameter - spread
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID AMOUNT SPECIFICATION ---"
+					   checkMinus "$1"
+					   amount=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$amount" = "" ] && errMsg "AMOUNT=$amount MUST BE A FLOAT"
+		   			   amounttest=`echo "$amount <= 0" | bc`
+					   [ $amounttest -eq 1 ] && errMsg "--- AMOUNT=$amount MUST BE A POSITIVE FLOAT ---"
+					   ;;
+				-t)    # get  type
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID TYPE SPECIFICATION ---"
+					   checkMinus "$1"
+					   type=`echo "$1" | tr '[A-Z]' '[a-z]'`
+					   case "$type" in 
+					   		simple|s) type="simple" ;;
+					   		displace|d) type="displace" ;;
+					   		*) errMsg "--- TYPE=$satmode IS AN INVALID VALUE ---" 
+					   	esac
+					   ;;
+				-m)    # get  method
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID METHOD SPECIFICATION ---"
+					   checkMinus "$1"
+					   method=`expr "$1" : '\([0-9]*\)'`
+					   [ "$method" = "" ] && errMsg "METHOD=$method MUST BE AN INTEGER"
+					   [ $method -ne 1 -a $method -ne 2 -a $method -ne 3 ] && errMsg "--- METHOD=$method MUST BE EITHER 1, 2 OR 3 ---"
+					   ;;
+				-c)    # get  color
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID COLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   bcolor="$1"
+					   ;;
+				-r)    # get  rotation
+					   rotation="yes"
+					   ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile
+	infile=$1
+	outfile=$2
+fi
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "NO INPUT FILE SPECIFIED"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "NO OUTPUT FILE SPECIFIED"
+
+inname=`convert $infile -format "%t" info:`
+
+# set up temporary images
+tmpA1="$dir/screen_$$.mpc"
+tmpB1="$dir/screen_$$.cache"
+tmp1="$dir/screen_1_$$.miff"
+tmp2="$dir/screen_2_$$.miff"
+trap "rm -f $tmpA1 $tmpB1 $tmp1 $tmp2; exit 0" 0
+trap "rm -f $tmpA1 $tmpB1 $tmp1 $tmp2; exit 1" 1 2 3 15
+
+# get im_version
+im_version=`convert -list configure | \
+	sed '/^LIB_VERSION_NUMBER /!d; s//,/;  s/,/,0/g;  s/,0*\([0-9][0-9]\)/\1/g' | head -n 1`
+
+# colorspace RGB and sRGB swapped between 6.7.5.5 and 6.7.6.7 
+# though probably not resolved until the latter
+# then -colorspace gray changed to linear between 6.7.6.7 and 6.7.8.2 
+# then -separate converted to linear gray channels between 6.7.6.7 and 6.7.8.2,
+# though probably not resolved until the latter
+# so -colorspace HSL/HSB -separate and -colorspace gray became linear
+# but we need to use -set colorspace RGB before using them at appropriate times
+# so that results stay as in original script
+# The following was determined from various version tests using screeneffects.
+# with IM 6.7.4.10, 6.7.6.10, 6.7.9.0
+if [ "$im_version" -lt "06070607" -o "$im_version" -gt "06070707" ]; then
+	setcspace="-set colorspace RGB"
+else
+	setcspace=""
+fi
+# no need for setcspace for grayscale or channels after 6.8.5.4
+if [ "$im_version" -gt "06080504" ]; then
+	setcspace=""
+fi
+
+
+# read the input image into the temp files and test validity.
+convert -quiet -regard-warnings "$infile" +repage "$tmpA1" ||
+	errMsg "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE  ---"
+
+
+# get image dimensions
+ww=`convert $tmpA1 -ping -format "%w" info:`
+hh=`convert $tmpA1 -ping -format "%h" info:`
+
+# get max dimension and multiply by sqrt(2) to allow for 45 degree rotation of screen
+maxdim=`convert xc: -format "%[fx:sqrt(2)*max($ww,$hh)]" info:`
+
+# invert spacing to frequency for sine wave
+xf=`convert xc: -format "%[fx:$ww/$spacing]" info:`
+yf=`convert xc: -format "%[fx:$hh/$spacing]" info:`
+
+# use average frequency so that pattern has same x and y spacing
+avef=`convert xc: -format "%[fx:0.5*($xf+$yf)]" info:`
+xf=$avef
+yf=$avef
+
+
+# create screen mesh
+if [ "$rotation" = "no" ]; then
+	convert -size ${hh}x${ww} gradient:"gray(255)-gray(0)" -rotate 90 \
+		-function sinusoid "$xf,0,.5,.5" $tmp1
+	convert -size ${ww}x${hh} gradient:"gray(255)-gray(0)" -rotate 180 \
+		-function sinusoid "$yf,0,.5,.5" $tmp2
+
+elif [ "$rotation" = "yes" ]; then
+	convert -size ${maxdim}x${maxdim} gradient:"gray(255)-gray(0)" \
+		-distort SRT -45 \
+		-gravity center -crop ${ww}x${hh}+0+0 +repage \
+		-contrast-stretch 0 -function sinusoid "$xf,0,.5,.5" $tmp1
+	convert -size ${maxdim}x${maxdim} gradient:"gray(255)-gray(0)" \
+		-distort SRT 45 \
+		-gravity center -crop ${ww}x${hh}+0+0 +repage \
+		-contrast-stretch 0 -function sinusoid "$yf,0,.5,.5" $tmp2
+fi
+
+
+# composite color screen with image
+if [ "$type" = "simple" ]; then
+	if [ "$im_version" -ge "06060904" ]; then 
+		convert $tmp1 $tmp2 -evaluate-sequence mean -contrast-stretch 0 $tmp1
+	else
+		convert $tmp1 $tmp2 -average -contrast-stretch 0 $tmp1
+	fi
+	convert $infile \( $tmp1 +level-colors ${bcolor},white \) $tmp1 \
+		 $setcspace -compose multiply -composite $outfile
+
+elif [ "$type" = "displace" -a "$method" = "1" ]; then
+	if [ "$im_version" -ge "06060904" ]; then 
+		convert $tmp1 $tmp2 -evaluate-sequence mean -contrast-stretch 0 $tmp1
+	else
+		convert $tmp1 $tmp2 -average -contrast-stretch 0 $tmp1
+	fi
+	if [ "$im_version" -lt "06050304" ]; then
+		composite -displace ${amount}x${amount} $tmp1 $tmpA1 $outfile
+	else
+		convert $tmpA1 $tmp1 $setcspace -define compose:args=${amount}x${amount} \
+			-compose displace -composite $outfile
+	fi
+elif [ "$type" = "displace" -a "$method" = "2" ]; then
+	if [ "$im_version" -lt "06050304" ]; then
+		composite -displace ${amount}x${amount} $tmp1 $tmpA1 $tmp2 $outfile
+	else
+		convert $tmpA1 $tmp1 $tmp2 -define compose:args=${amount}x${amount} \
+			-compose displace -composite $outfile
+	fi
+elif [ "$type" = "displace" -a "$method" = "3" ]; then
+	if [ "$im_version" -ge "06060904" ]; then 
+		convert $tmp1 $tmp2 -evaluate-sequence mean -contrast-stretch 0 $tmp1
+	else
+		convert $tmp1 $tmp2 -average -contrast-stretch 0 $tmp1
+	fi
+		if [ "$im_version" -lt "06050304" ]; then
+		composite -displace ${amount}x${amount} $tmp2 $tmpA1 $tmp1 $outfile
+	else
+		convert $tmpA1 $tmp2 $tmp1 -define compose:args=${amount}x${amount} \
+			-compose displace -composite $outfile
+	fi
+
+fi
+exit 0

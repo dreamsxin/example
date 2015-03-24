@@ -1,0 +1,299 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 2/26/2009 .......... revised 6/14/2013
+#
+# USAGE: tricolorize [-l lcolor] [-m mcolor] [-h hcolor] [-c contrast] [-o offset] [-t type] infile outfile [lutfile]
+# USAGE: tricolorize [-l lcolor] [-m mcolor] [-h hcolor] [-c contrast] [-o offset] [-t type] lutfile
+# USAGE: tricolorize [-help]
+#
+# OPTIONS:
+#
+# -l      lcolor             Color for low end of grayscale; Any valid IM color is allowed;
+#                            The default=black
+# -m      mcolor             Color for mid range of grayscale;  Any valid IM color is allowed;
+#                            The default=gray50
+# -h      hcolor             Color for high end of grayscale; Any valid IM color is allowed; 
+#                            The default=white
+# -c      contrast           percent contrast change; integers; -100<=contrast<=100;
+#                            default=0
+# -o      offset             percent color offset; integers; -100<=offset<=100; 
+#                            default=0
+# -t      type				 type of look up table (lut) smoothing/interpolation; choices are: 
+#                            cubic, quadratic, gaussian, triangle, point; default=triangle
+#
+###
+#
+# NAME: TRICOLORIZE 
+# 
+# PURPOSE: To smoothly colorize a grayscale image with either one, two or three different colors.
+# 
+# DESCRIPTION: TRICOLORIZE smoothly colorizes a grayscale image with either one, two or three 
+# different colors. If the input image is color, it will be converted to grayscale first.
+# Using an appropriate mid color with low color of black and high color of white will allow 
+# one to tint an image. This achieves the same result as my tintilize script, except the default 
+# type there is quadratic. The script generates a color look up table (lut) and applies it
+# against the grayscale version of the image. The lut can be saved, if desired, for future use 
+# and will have a size of 256x20 pixels.
+# 
+# 
+# OPTIONS: 
+#
+# -l lcolor ... LCOLOR is the color to use at the low end of the grayscale. The default=black. 
+# Any valid IM color is allowed. See http://imagemagick.org/script/color.php
+# 
+# -m mcolor ... MCOLOR is the color to use in the mid grayscale range. The default=gray50. 
+# Any valid IM color is allowed. See http://imagemagick.org/script/color.php
+# For tinting, a good choice of colors may be specified as hsl with saturation about 25% 
+# and lightness about 50% and your choice of hue. For reference,  
+# see http://homepages.cwi.nl/~steven/css/hsl-examples.html
+# 
+# -h hcolor ... HCOLOR is the color to use at the high end of the grayscale. The default=white. 
+# Any valid IM color is allowed. See http://imagemagick.org/script/color.php
+# 
+# -c contrast ... CONTRAST is the percent change in color contrast. Values are integers such 
+# that -100<=offset<=100. The default=0.
+# 
+# -o offset ... OFFSET is the percent shift of the colors. Values are integers such 
+# that -100<=offset<=100. Positive values shift the colors towards the brighter end 
+# of the grayscale and negative values shift the colors towards the darker end of 
+# the grayscale. The default=0.
+# 
+# -t type ... TYPE of smoothing/interpolation of the colors to fill out the look up table. 
+# The choices are: cubic, gaussian, quadratic, triangle or point. The default=triangle.
+# 
+# IMPORTANT: Prior to IM 6.5.6-6, hue was specified in the range of 0-360, when 
+# saturation and lightness/brightness were either in the range of 0-255 or 
+# 0%-100%. Afterwards, hue was specified as percent when saturation and 
+# lightness/brightness were percent.
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set default values
+lcolor="black"				# lowtone color
+mcolor="gray50"				# midtone color
+hcolor="white"				# high color
+type="triangle"				# lut interpolation filter: cubic, quadratic, gaussian, triangle
+contrast=0					# percent color contrast
+offset=0					# percent color offset
+infile=""
+outfile=""
+lutfile=""
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 15 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		     -help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-l)    # get lcolor
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID LOW COLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   lcolor="$1"
+					   ;;
+				-m)    # get mcolor
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID MID COLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   mcolor="$1"
+					   ;;
+				-h)    # get hcolor
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID HIGH COLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   hcolor="$1"
+					   ;;
+				-c)    # get contrast
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   #errorMsg="--- INVALID CONTRAST SPECIFICATION ---"
+					   #checkMinus "$1"
+					   contrast=`expr "$1" : '\([-]*[0-9]*\)'`
+					   [ "$contrast" = "" ] && errMsg "--- CONTRAST=$contrast MUST BE AN INTEGER ---"
+		   			   contrasttestA=`echo "$contrast < -100" | bc`
+		   			   contrasttestB=`echo "$contrast > 100" | bc`
+					   [ $contrasttestA -eq 1 -o $contrasttestB -eq 1 ] && errMsg "--- CONTRAST=$contrast MUST BE AN INTEGER BETWEEN -100 AND 100 ---"
+					   ;;
+				-o)    # get offset
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   #errorMsg="--- INVALID OFFSET SPECIFICATION ---"
+					   #checkMinus "$1"
+					   offset=`expr "$1" : '\([-]*[0-9]*\)'`
+					   [ "$offset" = "" ] && errMsg "--- OFFSET=$offset MUST BE AN INTEGER ---"
+		   			   offsettestA=`echo "$offset < -100" | bc`
+		   			   offsettestB=`echo "$offset > 100" | bc`
+					   [ $offsettestA -eq 1 -o $offsettestB -eq 1 ] && errMsg "--- OFFSET=$offset MUST BE AN INTEGER BETWEEN -100 AND 100 ---"
+					   ;;
+				-t)    # type
+					   shift  # to get the next parameter - type
+					   # test if parameter starts with minus sign
+					   errorMsg="--- INVALID TYPE SPECIFICATION ---"
+					   checkMinus "$1"
+					   # test type values
+					   type="$1"
+					   case "$type" in
+							cubic|gaussian|quadratic|triangle|point) ;; # do nothing - valid type
+							*)  errMsg "--- TYPE=$type IS NOT A VALID VALUE ---" ;;
+					  esac
+					  ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile, outfile and lutfile
+	if [ $# -eq 3 ]; then
+		infile=$1
+		outfile=$2
+		lutfile=$3
+	elif [ $# -eq 2 ]; then
+		infile=$1
+		outfile=$2
+	elif [ $# -eq 1 ]; then
+		lutfile=$1
+	else
+		errMsg "--- INCONSISTENT NUMBER OF INPUT AND OUTPUT IMAGES SPECIFIED ---"
+	fi
+fi
+
+# test that infile provided
+[ "$outfile" != "" -a "$infile" = "" ] && errMsg "--- NO INPUT FILE SPECIFIED ---"
+
+# test that outfile provided
+[ "$infile" != "" -a "$outfile" = "" ] && errMsg "--- NO OUTPUT FILE SPECIFIED ---"
+
+
+# set up temp files
+tmpA="$dir/tricolorize_$$.mpc"
+tmpB="$dir/tricolorize_$$.cache"
+tmp0="$dir/tricolorize_0_$$.miff"
+trap "rm -f $tmpA $tmpB $tmp0; exit 0" 0
+trap "rm -f $tmpA $tmpB $tmp0; exit 1" 1 2 3 15
+
+# get im_version
+im_version=`convert -list configure | \
+	sed '/^LIB_VERSION_NUMBER /!d; s//,/;  s/,/,0/g;  s/,0*\([0-9][0-9]\)/\1/g' | head -n 1`
+
+# colorspace RGB and sRGB swapped between 6.7.5.5 and 6.7.6.7 
+# though probably not resolved until the latter
+# then -colorspace gray changed to linear between 6.7.6.7 and 6.7.8.2 
+# then -separate converted to linear gray channels between 6.7.6.7 and 6.7.8.2,
+# though probably not resolved until the latter
+# so -colorspace HSL/HSB -separate and -colorspace gray became linear
+# but we need to use -set colorspace RGB before using them at appropriate times
+# so that results stay as in original script
+# The following was determined from various version tests using tricolorize
+# with IM 6.7.4.10, 6.7.6.10, 6.7.9.0
+if [ "$im_version" -lt "06070607" -o "$im_version" -gt "06070707" ]; then
+	setcspace="-set colorspace RGB"
+else
+	setcspace=""
+fi
+# no need for setcspace for grayscale or channels after 6.8.5.4
+if [ "$im_version" -gt "06080504" ]; then
+	setcspace=""
+fi
+
+
+# test $infile and convert to grayscale 
+if convert -quiet -regard-warnings "$infile" $setcspace -colorspace gray +repage "$tmpA"
+	then
+	: ' Do Nothing '
+else
+	errMsg "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+fi
+
+
+# convert offset to pixels
+offset=`convert xc: -format "%[fx:$offset*128/100]" info:`
+
+# create lut
+convert -size 1x1 xc:$lcolor xc:$mcolor xc:$hcolor +append \
+	-filter $type -resize 256x1! \
+	$setcspace -contrast-stretch 0 \
+	-virtual-pixel edge -fx "u.p{(i-(w/2))*(100+$contrast)/(100)+(w/2)-$offset,j}" \
+	$tmp0
+
+
+
+# save lut
+if [ "$lutfile" != "" ]; then
+	convert $tmp0 -scale 256x20! $lutfile
+fi
+
+# apply lut
+if [ "$outfile" != "" ]; then
+	convert $tmpA $tmp0 -clut $outfile
+fi
+
+exit 0

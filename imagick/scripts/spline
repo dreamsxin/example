@@ -1,0 +1,965 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 8/23/2007 .......... revised 3/9/2011
+#
+# USAGE: spline [-s spline] [-t tension] [-b bias] [-e endmode] [-c curvecolor] [-p pointcolor] [-l linecolor] [-i interiorcolor] [-sw strokewidth] [-d widthxheight] [-bg bgcolor] "x1,y1 x2,y2 ..." [infile] outfile
+# USAGE: spline [-s spline] [-t tension] [-b bias] [-e endmode] [-c curvecolor] [-p pointcolor] [-l linecolor] [-i interiorcolor] [-sw strokewidth] [-d widthxheight] [-bg bgcolor] -f point_file [infile] outfile
+# USAGE: spline [-s spline] [-t tension] [-b bias] [-e endmode] [-c curvecolor] [-p pointcolor] [-l linecolor] [-i interiorcolor] [-sw strokewidth] [-d widthxheight] [-bg bgcolor] -j point_file [infile] outfile
+# USAGE: spline [-h or -help]
+#
+# OPTIONS:
+# 
+# "x1,y1 x2,y2 ..."         break point values of piece-wise linear transformation
+#                           enclosed in quotes; minimum of one (x,y) break point pair;
+#                           x corresponds to the graylevel in the input image;
+#                           y corresponds to the graylevel in the outut image;
+#                           x,y non-negative floats enclosed in quotes; 
+#                           number of points must be >= 4; MUST be specified 
+#                           just prior to infile outfile in the command line. 
+#                           list must be specified just prior to lutfile
+# -f     point_file         text file containing list of break points;
+#                           one x,y pair per line
+# -j     point_file         imageJ "pointpicker" plugin text file containing list of 
+#                           break points;
+#                           one x,y pair per line
+# -s     spline             spline type; bezier, bspline, cubic, hermite, kbs;
+#                           default=kbs
+# -t     tension            tension parameter for kbs spline; float; default=0
+# -b     bias               bias parameter for kbs spline; float; default=0
+# -e     endmode            end mode for the curve; choices are: none (N), 
+#                           duplicate (D), extend (E), close (C); default=N
+# -c     curvecolor         color for drawing spline curve; default=red
+# -p     pointcolor         color for drawing original points; if not supplied, 
+#                           original points will not be drawn
+# -l     linecolor          color for drawing lines between original points; 
+#                           if not supplied, lines will not be drawn
+# -i     interiorcolor      interior fill color; only allowed for closed curves;
+#                           if not supplied, then the closed curve will not be filled
+# -sw    strokewidth        strokewidth for the curve; default=1
+# -d     widthxheight       if no input image is supplied, then widthxheight will
+#                           create an empty canvas of of size width x height with 
+#                           background color specified the -bg bgcolor option
+# -bg    bgcolor            background color to use when no input image is supplied
+#                           
+#                         
+###
+#
+# NAME: SPLINE
+#
+# PURPOSE: To draw a spline curve on an image based upon supplied points.
+#
+# DESCRIPTION: SPLINE draws a spline curve on an image based upon user supplied 
+# points from a supplied list in the command line or from a file with one point 
+# per line. Several spline types are available which include both interpolating 
+# splines that pass through the supplied points and approximating splines that do 
+# not pass through the points. The spline types are: bezier (approximating), 
+# bspline (approximating), cubic (interpolating), hermite (interpolating) and 
+# kbs (interpolating). Options allow the original points and/or lines between 
+# the original points to be drawn in addition to the splined curve.
+# 
+# OPTIONS: 
+# 
+# "x1,y1 x2,y2" ... List of x,y points that define either the knots or the 
+# control points for the knots. The x,y coordinates allow float values. The 
+# number of supplied points must be at least 4. For most splines (except 
+# bezier) they are processed four at a time, then shifted by one and that 
+# set of four processed. Within each set of four the curve is drawn for the 
+# middle two points. For bezier, they are again processed in groups of four, 
+# but the curve is drawn between the first and fourth point, then shifted 
+# by 3 to get the next set of four, such that the fourth point of the 
+# previous set becomes the first point in the current set. For the bezier 
+# spline the number of points must be 4 or a multiple of 4 less 1. 
+# IMPORTANT: the sequence of points MUST be specified just prior to 
+# infile outfile in the command line.
+# 
+# -f point_file ... point-file is a text file containing the list of break 
+# points, one x,y pair per line.
+# 
+# -j point_file ... point-file is a text file containing the list of break 
+# points, one x,y pair per line in the imageJ "pointpicker" plugin format.
+# 
+# -s  spline ... SPLINE is the type of spline to use. All but the cubic are 
+# derived from the fundamental Hermite spline that uses 2 knots and 2 
+# tangent values at the knots. The various splines below (except cubic) 
+# convert the tangent into either control points or other knot values in 
+# order to avoid having to specify a tangent directly. The choices are:
+# 
+# 1) bezier: an approximating spline that does not pass through the supplied 
+# points. The supplied points are specified as combinations of knots (start 
+# and end points) and control points whose vectors (Cb-Kb) and (Ke-Ce) determine 
+# the tangent direction at the given knots. A group of 4 points must be specified  
+# in the order of Kb Cb Ce Ke and 7 or more points as K C C K C C K ... 
+# where Kb is the begining knot, Cb is the beginning control point for that knot,
+# Ke is the end knot and Ce is the end control point for that knot.
+# 
+# 2) bspline: an approximating spline that does not pass through the supplied 
+# points. All supplied points are knots and the curve will pass near the knots. 
+# This spline has first and second derivative continuity at the knots. Therefore 
+# this is a very good interpolating spline to use if you want little user 
+# interaction to control shape and curvature and still get a very smooth curve, 
+# but it will not pass through the supplied points.
+# 
+# 3) cubic: an interpolating spline that does pass through the supplied points. 
+# All supplied points are knots. This spline has only first derivative continuity 
+# at the knots and thus can have rather strange curvature.
+# 
+# 4) hermite: an interpolating spline that does pass through the supplied points.
+# All supplied points are knots. This is a special case of the general hermite 
+# spline such that the tangent at the knots is determined by the direction between 
+# successive knots. Thus, this spline will not generally have first derivative 
+# continuity at the knots, i.e. it will not have smooth continuity at the knots.
+# 
+# 5) kbs (Kochaneck-Bartels Spline): an interpolating spline that does pass 
+# through the supplied points. In addition this spline has optional tension and 
+# bias controls. Positive tension makes the spline tighter (approaches straight lines) 
+# and negative tension makes the spline broader or more rounded. Positive bias shifts 
+# the curve counter clockwise relative the knot. Negative bias shifts the curve  
+# clockwise relative to the knot. With zero bias, the kbs spline is identical 
+# to the cardinal spline (which also allows tension). With both zero bias and 
+# zero tension, the kbs spline is identical to the Catmull-Rom spline. The kbs  
+# spline has only first derivative continuity at the knots, but is generally a 
+# good interpolating spline to use if you want little user interaction and still 
+# get a smooth curve that does pass through the supplied points.
+# 
+# -t tension ... TENSION is use only with the kbs spline and controls the degree 
+# of tightness or roundness of the spline curve. Positive tension makes the 
+# curve tighter (i.e. approaches straight lines) and negative tension makes the 
+# curve broader or rounder. The default is 0.
+# 
+# -b bias ... BIAS is used only with the kbs spline and controls the shift of 
+# the curve relative the the supplied point. Positive bias shifts the curve 
+# forward relative to the supplied points and negative bias shifts the curve 
+# backward relative to the supplied points. The default is 0.
+# 
+# -e endmode ... ENDMODE defines how to treak the region near the first and
+# last knot in the list of supplied points. The default=none and is the only 
+# option allowed for the bezier spline. For the other splines, the choices are:
+# 
+# 1) none or N: this will lead to the region between the first and second points  
+# being ignored and likewise the region between the next to last and last points 
+# being ignored. For all but the bezier spline, users should augment the point list 
+# with their own extra beginning and ending point in order to allow the curve to be 
+# drawn through all the un-augmented list of points. As the bezier spline draws 
+# between the first and last point of each group of four points, augmenting is 
+# not needed and this option should be used. This is the default value.
+# 
+# 2) duplicate or D: this will duplicate the first point and add it to the very 
+# beginning of the sequence of supplied points and also duplicate the last point 
+# and add it to the very end of the sequence of supplied points. The result will 
+# differ only slightly from the extend option only on the first and last segment.
+# 
+# 3) extend or E: this will add an extra point at the beginning and end of the 
+# sequence of supplied points by extending the line between the first two points
+# backward behind the first point and likewise by extending the line between the 
+# last two points forward beyond the last point. The result will differ only 
+# slightly from the duplicate option only on the first and last segment.
+# 
+# 4) close or C: this means that the curve should be closed. Thus the region 
+# between the first and last supplied points should be drawn.
+# 
+# -c curvecolor ... CURVECOLOR is the color to use to draw the splined curve. Any 
+# valid IM color is allowed. Enclose the color in double quotes if not a 
+# color name. The default is red.
+# 
+# -p pointcolor ... POINTCOLOR is the color to use to draw the supplied points 
+# (in addition to the curve). Points will be drawn as 3-pixel diameter circles. 
+# If this option is not suppled, then no points will be drawn. Thus there is 
+# no default color for this option. Any valid IM color is allowed. Enclose the 
+# color in double quotes if not a color name.
+# 
+# -l linecolor ... LINECOLOR is the color to use to draw the lines between the 
+# supplied points (in addition to the curve). If this option is not suppled, 
+# then no points will be drawn. Thus there is no default color for this option.
+# Any valid IM color is allowed. Enclose the color in double quotes if not a 
+# color name.
+# 
+# -i interiorcolor ... INTERIORCOLOR is the color to use to fill the inside  
+# of closed curves. If this option is not suppled, the closed curve will not 
+# be filled. Thus there is no default color for this option. Any valid IM color 
+# is allowed. Enclose the color in double quotes if not a color name.
+#
+# -sw strokewidth ... STROKEWIDTH is the width of the line used to draw the curve. 
+# The value may be a float > 0. The default is 1.
+# 
+# -d widthxheight ... WIDTHxHEIGHT is the desired width and height to use for  
+# the canvas when no input image is provided. This parameter MUST be provided 
+# if no input image is supplied.
+# 
+# -bg bgcolor ... BGCOLOR is the color to use for the canvas background when 
+# no input image is provided. Any valid IM color is allowed. Enclose the color 
+# in double quotes if not a color name. The default is white.
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, nor that 
+# trapping of inconsistent parameters is complete and foolproof. Use At Your 
+# Own Risk.
+# 
+######
+# 
+
+# set default values
+spline="kbs"            # spline type
+tension=0               # kbs tension
+bias=0                  # kbs bias
+strokewidth=1           # strokewidth
+endmode="E"             # end condition
+ccolor="red"            # curve color
+pcolor=""               # point color; "" means do not draw points
+lcolor=""               # line color; "" means do not draw lines
+icolor=""               # interior fill color for closed curve; "" means no fill
+bgcolor="white"			# canvas background color
+precision=1				# decimal precision
+pinc=1					# increment in pixels
+dimension=""            # initialize as test if input provided
+prad=2					# point radius
+
+
+# set flag if want to see listing of curve points to terminal
+list="no"				# yes or no
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+# function to report error messages, usage and exit
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# function to test if valid float point pair
+testFloatPair()
+	{
+	v1=`echo $1 | cut -d, -f1`
+	v2=`echo $1 | cut -d, -f2`
+	test1=`expr "$v1" : '^[-.0-9][.0-9]*$'`
+	test2=`expr "$v2" : '^[-.0-9][.0-9]*$'`
+	[ $test1 -eq 0 -o $test2 -eq 0 ] && errMsg "$1 IS NOT A VALID POINT PAIR"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 27 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		  -h|-help)    # help information
+					   echo ""
+					   usage2
+					   exit 0  ;;
+				-s)    # get  spline
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SPLINE SPECIFICATION ---"
+					   checkMinus "$1"
+						case "$1" in
+						 bezier)		spline="$1";;
+						 bspline)		spline="$1";;
+						 cubic)			spline="$1";;
+						 hermite)		spline="$1";;
+						 kbs)			spline="$1";;
+						 *)         	errMsg="--- UNKNOWN SPLINE ---"
+						esac
+						   ;;
+				-e)    # get  endmode
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID ENDMODE SPECIFICATION ---"
+					   checkMinus "$1"
+						case "$1" in
+						 none)			endmode="none";;
+						 n)				endmode="none";;
+						 N)				endmode="none";;
+						 duplicate)		endmode="duplicate";;
+						 d)				endmode="duplicate";;
+						 D)				endmode="duplicate";;
+						 extend)		endmode="extend";;
+						 e)				endmode="extend";;
+						 E)				endmode="extend";;
+						 close)			endmode="close";;
+						 c)				endmode="close";;
+						 C)				endmode="close";;
+						 *)         	errMsg="--- UNKNOWN ENDMODE ---"
+						esac
+					   ;;
+				-f)    # simple text file with points, one per line
+					   opt="-f"
+					   shift  # to get the next parameter - point_file
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INCORRECT POINT_FILE SPECIFICATION ---"
+					   checkMinus "$1"
+					   point_file="$1"
+					   #test if point_file is a valid file
+					   [ -f $point_file -a -r $point_file -a -s $point_file ] || errMsg "--- POINT FILE $point_file DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+					   ;;
+				-j)    # imageJ "pointpicker" format text file with points, one per line
+					   opt="-j"
+					   shift  # to get the next parameter - point_file
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INCORRECT IMAGEJ POINTPICKER POINT_FILE SPECIFICATION ---"
+					   checkMinus "$1"
+					   point_file="$1"
+					   #test if point_file is a valid file
+					   [ -f $point_file -a -r $point_file -a -s $point_file ] || errMsg "--- POINT FILE $point_file DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+					   ;;
+				-t)    # get tension
+					   shift  # to get the next parameter - point_file
+					   tension=`expr "$1" : '\([-.0-9]*\)'`
+					   [ "$tension" = "" ] && errMsg "--- TENSION=$tension MUST BE A NUMERICAL VALUE ---"
+					   ;;
+				-b)    # get bias
+					   shift  # to get the next parameter - point_file
+					   bias=`expr "$1" : '\([-.0-9]*\)'`
+					   [ "$bias" = "" ] && errMsg "--- BIAS=$bias MUST BE A NUMERICAL VALUE ---"
+					   ;;
+			   -sw)    # get strokewidth
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID STROKEWIDTH SPECIFICATION ---"
+					   checkMinus "$1"
+					   strokewidth=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$strokewidth" = "" ] && errMsg "--- STROKEWIDTH=$strokewidth MUST BE A NON-NEGATIVE FLOAT ---"
+					   strokewidthtestA=`echo "$strokewidth <= 0" | bc`
+					   [ $strokewidthtestA -eq 1 ] && errMsg "--- STROKEWIDTH=$strokewidth MUST BE A FLOAT GREATER THAN 0 ---"
+					   ;;
+				-d)    # widthxheight parameter
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INCORRECT DIMENSION WIDTHxHEIGHT SPECIFICATION ---"
+					   checkMinus "$1"
+					   # separate width and height and test for validity
+					   dimension=`expr "$1" : '^[0-9][0-9]*x[0-9][0-9]*$'`
+					   [ $dimension -eq 0 ] && errMsg "--- WIDTH AND/OR HEIGHT ARE NOT INTEGERS ---"
+					   width=`echo "$1" | cut -dx -f1`
+					   height=`echo "$1" | cut -dx -f2`
+					   ;;
+			   -bg)    # get  bgcolor
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID BACKGROUND COLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   bgcolor="$1"
+					   ;;
+			   	-c)    # get  curvecolor
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID CURVE COLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   ccolor="$1"
+					   ;;
+			   	-p)    # get  pointcolor
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID POINT COLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   pcolor="$1"
+					   ;;
+			   	-l)    # get  linecolor
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID LINE COLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   lcolor="$1"
+					   ;;
+			   	-i)    # get  interiorcolor
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID INTERIOR COLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   icolor="$1"
+					   ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+				 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+fi
+
+# extract and test point pair values
+if [ "$opt" = "-f" -o "$opt" = "-j" ]
+	then
+	# get infile and outfile as the last arguments left
+	if [ "$dimension" = "" ]; then
+		infile=$1
+		outfile=$2
+	else
+		#no infile provided
+		outfile=$1
+	fi
+	# put the file with line breaks into parm
+	if [ "$opt" = "-f" ]; then
+		parms=`cat "$point_file"`
+	elif [ "$opt" = "-j" ]; then
+		parms=`cat "$point_file" | sed -n '2,$s/^[ ]*[0-9]*[ ]*\([0-9]*\)[ ]*\([0-9]*\).*$/\1,\2/p'`
+	fi
+	# strip the line breaks (works ONLY if $parm is NOT put into quotes "$parm")
+	parm=`echo $parms | grep '.*'`
+	# first pattern below replaces all occurrences of commas and spaces with a space => 1 2 3 4 5 6
+	# second pattern below replaces the first occurrence of a space with a comma => 1,2[ 3 4][ 5 6] - ignore [], they are for emphasis only
+	# third pattern below looks for all space number space number pairs and replaces them with a space followed by number1,number2 => 1,2 3,4 5,6
+	set - `echo "$parms" | sed 's/[, ][, ]*/ /g; s/ /,/; s/ \([^ ]*\) \([^ ]*\)/ \1,\2/g'`
+	# test for valid integers for x and y
+	# keep all points from file
+	index=0
+	plist=""
+	while [ $# -gt 0 ]
+		do
+		testFloatPair $1
+		plist="$plist $1"
+		shift
+		index=`expr $index + 1`
+	done
+	#remove leading space
+	plist=`echo "$plist" | sed -n 's/ [ ]*\(.*\)/\1/p'`
+	[ "$plist" = "" ] && errMsg "--- NO POINT PAIRS WERE PROVIDED ---"
+else
+	# get plist, infile and outfile
+	if [ "$dimension" = "" ]; then
+		parms="$1"
+		infile="$2"
+		outfile="$3"
+	else
+		#no infile provided
+		parms="$1"
+		outfile="$2"
+	fi
+	# first pattern below replaces all occurrences of commas and spaces with a space => 1 2 3 4 5 6
+	# second pattern below replaces the first occurrence of a space with a comma => 1,2[ 3 4][ 5 6] - ignore [], they are for emphasis only
+	# third pattern below looks for all space number space number pairs and replaces them with a space followed by number1,number2 => 1,2 3,4 5,6
+	set - `echo "$parms" | sed 's/[, ][, ]*/ /g; s/ /,/; s/ \([^ ]*\) \([^ ]*\)/ \1,\2/g'`
+	# test for valid integers for x and y
+	index=0
+	plist=""
+	while [ $# -gt 0 ]
+		do
+		testFloatPair $1
+		plist="$plist $1"
+		shift
+		index=`expr $index + 1`
+	done
+	#remove leading space from plist
+	plist=`echo "$plist" | sed -n 's/ [ ]*\(.*\)/\1/p'`
+	[ "$plist" = "" ] && errMsg "--- NO POINT PAIRS WERE PROVIDED ---"
+fi
+
+# setup temporary images and auto delete upon exit
+# use mpc/cache to hold input image temporarily in memory
+tmpA="$dir/spline_$$.mpc"
+tmpB="$dir/spline_$$.cache"
+
+# remove temporaries
+trap "rm -f $tmpA $tmpB; exit 0" 0
+trap "rm -f $tmpA $tmpB; exit 1" 1 2 3 15
+
+# test that infile provided
+[ "$dimension" = "" -a "$infile" = "" ] && errMsg "--- NO INPUT FILE SPECIFIED ---"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "--- NO OUTPUT FILE SPECIFIED ---"
+
+# test that last point pair not used instead of infile
+test=`expr "$infile" : '^[0-9]*,.*$'`
+[ $test -gt 0 ] && errMsg "--- INPUT/OUTPUT FILES IMPROPERLY SPECIFIED ---"
+
+# test input image
+if [ "$dimension" = "" ]; then
+	# infile provided
+	if convert -quiet -regard-warnings "$infile" +repage "$tmpA"
+		then
+		width=`convert $tmpA -format %w info:`
+		height=`convert $tmpA -format %h info:`		
+		else
+			errMsg "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+	fi
+else
+	# no infile provided but use width and height and bgcolor supplied
+	convert -size ${width}x${height} xc:"$bgcolor" "$tmpA"
+fi
+
+# CUBIC SPLINES USING PARAMETRIC FORMAT
+# x=a0+a1*s+a2*s^2+a3*s^3
+# y=b0+b1*s+b2*s^2+b3*s^3
+# Q=C¥S; where Q=(x;y)=polynomial coordinate (column) vector
+# and C=(a3 a2 a1 a0; b3 b2 b1 b0)=coefficient matrix with a's and b's as rows; 
+# and S=(s^3 s^2 s 1)=parametric (row) vector
+
+# spline formulation often represented as: Q=S¥M¥V
+# where M=matrix which depends upon the type of spline 
+# and V is the control (column) vector (often either a set of knots or derivatives; knots being data points)
+# x=(s^3 s^2 s 1)¥M¥Vx where Vx is (column) vector of four components (knots, tangents or contol point)
+# y=(s^3 s^2 s 1)¥M¥Vx where Vx is (column) vector of four components (knots, tangents or control points)
+# (alternate form is P=Vt¥Mt*Vt; Vt=V transposed so is a row vector; Mt=M transposed)
+
+# see references:
+# http://icie.cs.byu.edu/UIBook/12-2DGeometry.pdf
+# http://www.cs.cornell.edu/Courses/cs465/2004fa/lectures/15splines/15splines.pdf
+# http://evasion.inrialpes.fr/Membres/Francois.Faure/enseignement/M2R-Animation/interpolation.pdf
+# http://www.csie.ntu.edu.tw/~cyy/amt/lec03.ppt
+# http://www.cg.tuwien.ac.at/courses/Animation/c.ps
+# http://cubic.org/docs/hermite.htm
+# http://local.wasp.uwa.edu.au/~pbourke/other/interpolation/
+# http://wiki.tcl.tk/10530
+
+# splines can be interpolating (through knots and usually only c0 and c1 continuity) 
+# or appoximating (near control points and usually c0, c1 and c2 continuity)
+# data values are either knots (to be preserved), tangents at knots, or control points
+
+# Hermite: (basis for most of the following cubic splines)
+# V is composed of two knots and two tangents at those knots;
+# V=(Ka Kb Ta Tb)
+#  2 -2  1  1
+# -3  3 -2 -1
+#  0  0  1  0
+#  1  0  0  0
+# special case 
+# use tangents as just vectors between successive points (only c0 continuity)
+# so if given 4 knots (K0 K1 K2 K3) and interpolate between K1 and K2
+# use V=(K1 K2 T1 T2); where tangents are now
+# T1=(K1-K0)
+# T2=(K3-K2)
+# note must select first two value to interpolate rather than middle two values
+
+# Bezier: (approximating; c0, c1 and c2 continuity)
+# V is composed of two end knots and two tangents at those knots;
+# but tangents are T0=3*(C0-K0) and T1=3*(C1-K1) where C0 and C1 are control points
+# so reformulate in terms of these control points rather than the tangents
+# V=(K0 C0 C1 K1)
+# -1  3 -3  1
+#  3 -6  3  0
+# -3  3  0  0
+#  1  0  0  0
+# note must reformat data also so that:
+# so that select first and last value to interpolate rather than middle two values
+# skip the two control points to get to the next set of 4 values to use, 
+# i.e. does not increment data values by 1 but by 3
+
+# Cardinal (Catmull-Rom with Tension): (interpolating; c0 and c1 continuity)
+# V is composed of two knots and two tangents at those knots;
+# but tangents are generalization of Catmull-Rom, i.e.
+# tangents are constant fraction, f, times the vector between previous and following knots; 
+# note: f acts like tension: f<0.5 => sharper curves; f>0.5 => broader curves
+# so if given 4 knots (K0 K1 K2 K3) and interpolate between K1 and K2
+# T1=f*(K2-K0)
+# T2=f*(K3-K1)
+# and use Hermite matrix above with V=V=(K1 K2 T1 T2)
+# note must select first two value to interpolate rather than middle two values
+# note: can make cardinal behave like KBS with b=0, if replace f with (1-t)/2
+# alternate
+# fold parameter into matrix as was done with Catmull-Rom below
+# thus can reformulate V as vector of knots only
+# V=(K0 K1 K2 K3); and interpolate between K1 and K2
+# -f (2-f)  (f-2) f
+# 2f (f-3) (3-2f) 0
+# -f   0     -f   0
+#  0   1      0   0
+
+# Catmull-Rom (Catrom): (interpolating; c0, c1 continuous)
+# V is composed of two knots and two tangents at those knots;
+# but tangents at a knot are set to half the vector between the previous and following knots
+# so if given 4 knots (K0 K1 K2 K3) and interpolate between K1 and K2
+# T1=(K2-K0)/2
+# T2=(K3-K1)/2
+# thus subset of cardinal spline with f=0.5
+# and use Hermite matrix above with V=V=(K1 K2 T1 T2)
+# note must select first two value to interpolate rather than middle two values
+# or 
+# can reformulate V as vector of knots only
+# V=(K0 K1 K2 K3); and interpolate between K1 and K2
+# -1  3 -3  1
+#  2 -5  4 -1
+# -1  0  1  0
+#  0  2  0  0
+
+# Hermite with tension and bias (Kochaneck-Bartels Spline or KBS): (interpolating; c0 and c1 continuity)
+# so if given 4 knots (K0 K1 K2 K3) and interpolate between K1 and K2
+# T1=(1-t)(1-b)(K2-K1)/2 + (1-t)(1+b)(K1-K0)/2
+# T2=(1-t)(1-b)(K3-K2)/2 + (1-t)(1+b)(K2-K1)/2
+# and use Hermite matrix above with V=V=(K1 K2 T1 T2)
+# t>0 => tighter curves; t<0 => broader curves
+# b>0 => shifts curve forward relative to knots; b<0 => shifts curve backward relative to knots
+# with t=0;b=0 get same result as Catmull-Rom or Cardinal with f=0.5
+# t>0 is like f<0.5; t<0 is like f>0.5;  by comparison we see (1-t)/2=f if b=0
+# note must select first two value to interpolate rather than middle two values
+
+# B-Spline (approximating; slope and acceleration continuous: c0, c1, c2)
+# V is composed of four control points; 
+# V=(C0 C1 C2 C3); approximating between C1 and C2
+# 1/6 of following
+# -1  3 -3  1
+#  3 -6  3  0
+# -3  0  3  0
+#  1  4  1  0
+
+# Cubic (interpolating)
+# not derived from Hermite, but from solving simultaneous equations)
+# V is composed of four knots;
+# V=(K0 K1 K2 K3)
+# -1  1 -1  1 
+#  1 -1  0 -a3=(m00¥Vx)
+# -1  0  1  0
+#  0  1  0  0
+
+bezier()
+	{
+	a3=`convert xc: -format "%[fx:(-$x0+3*$x1-3*$x2+$x3)]" info:`
+	a2=`convert xc: -format "%[fx:(3*$x0-6*$x1+3*$x2)]" info:`
+	a1=`convert xc: -format "%[fx:(-3*$x0+3*$x1)]" info:`
+	a0=$x0
+	b3=`convert xc: -format "%[fx:(-$y0+3*$y1-3*$y2+$y3)]" info:`
+	b2=`convert xc: -format "%[fx:(3*$y0-6*$y1+3*$y2)]" info:`
+	b1=`convert xc: -format "%[fx:(-3*$y0+3*$y1)]" info:`
+	b0=$y0
+	#swap P0->P1; P3->P2 as need to interpolate between P0 and P3
+	x1=$x0
+	y1=$y0
+	x2=$x3
+	y2=$y3
+	}
+	
+bspline()
+	{
+	a3=`convert xc: -format "%[fx:(-$x0+3*$x1-3*$x2+$x3)/6]" info:`
+	a2=`convert xc: -format "%[fx:(3*$x0-6*$x1+3*$x2)/6]" info:`
+	a1=`convert xc: -format "%[fx:(-$x0+$x2)/2]" info:`
+	a0=`convert xc: -format "%[fx:($x0+4*$x1+$x2)/6]" info:`
+	b3=`convert xc: -format "%[fx:(-$y0+3*$y1-3*$y2+$y3)/6]" info:`
+	b2=`convert xc: -format "%[fx:(3*$y0-6*$y1+3*$y2)/6]" info:`
+	b1=`convert xc: -format "%[fx:(-$y0+$y2)/2]" info:`
+	b0=`convert xc: -format "%[fx:($y0+4*$y1+$y2)/6]" info:`
+	}
+
+cubic()
+	{
+	a3=`convert xc: -format "%[fx:$x3-$x2-$x0+$x1]" info:`
+	a2=`convert xc: -format "%[fx:$x0-$x1-$a3]" info:`
+	a1=`convert xc: -format "%[fx:$x2-$x0]" info:`
+	a0=$x1
+	b3=`convert xc: -format "%[fx:$y3-$y2-$y0+$y1]" info:`
+	b2=`convert xc: -format "%[fx:$y0-$y1-$b3]" info:`
+	b1=`convert xc: -format "%[fx:$y2-$y0]" info:`
+	b0=$y1
+	}
+
+hermite()
+	{
+	# V=(K0 K1 K2 K3) is supplied, but we need V=(K0 K1 T0 T1)
+	t1x=`convert xc: -format "%[fx:($x1-$x0)]" info:`
+	t1y=`convert xc: -format "%[fx:($y1-$y0)]" info:`
+	t2x=`convert xc: -format "%[fx:($x3-$x2)]" info:`
+	t2y=`convert xc: -format "%[fx:($y3-$y2)]" info:`
+	# replace p0 with p1 and p1 with p2
+	x0=$x1
+	y0=$y1
+	x1=$x2
+	y1=$y2
+	# replace p2 with t1 and p3 with t2
+	x2=$t1x
+	y2=$t1y
+	x3=$t2x
+	y3=$t2y
+	a3=`convert xc: -format "%[fx:(2*$x0-2*$x1+$x2+$x3)]" info:`
+	a2=`convert xc: -format "%[fx:(-3*$x0+3*$x1-2*$x2-$x3)]" info:`
+	a1=$x2
+	a0=$x0
+	b3=`convert xc: -format "%[fx:(2*$y0-2*$y1+$y2+$y3)]" info:`
+	b2=`convert xc: -format "%[fx:(-3*$y0+3*$y1-2*$y2-$y3)]" info:`
+	b1=$y2
+	b0=$y0
+	}
+
+kbs()
+	{
+	# V=(K0 K1 K2 K3) is supplied, but we need V=(K0 K1 T0 T1)
+	t1x=`convert xc: -format "%[fx:(1-$tension)*(1-$bias)*($x2-$x1)/2 + (1-$tension)*(1+$bias)*($x1-$x0)/2]" info:`
+	t1y=`convert xc: -format "%[fx:(1-$tension)*(1-$bias)*($y2-$y1)/2 + (1-$tension)*(1+$bias)*($y1-$y0)/2]" info:`
+	t2x=`convert xc: -format "%[fx:(1-$tension)*(1-$bias)*($x3-$x2)/2 + (1-$tension)*(1+$bias)*($x2-$x1)/2]" info:`
+	t2y=`convert xc: -format "%[fx:(1-$tension)*(1-$bias)*($y3-$y2)/2 + (1-$tension)*(1+$bias)*($y2-$y1)/2]" info:`
+	# replace p0 with p1 and p1 with p2
+	x0=$x1
+	y0=$y1
+	x1=$x2
+	y1=$y2
+	# replace p2 with t1 and p3 with t2
+	x2=$t1x
+	y2=$t1y
+	x3=$t2x
+	y3=$t2y
+	a3=`convert xc: -format "%[fx:(2*$x0-2*$x1+$x2+$x3)]" info:`
+	a2=`convert xc: -format "%[fx:(-3*$x0+3*$x1-2*$x2-$x3)]" info:`
+	a1=$x2
+	a0=$x0
+	b3=`convert xc: -format "%[fx:(2*$y0-2*$y1+$y2+$y3)]" info:`
+	b2=`convert xc: -format "%[fx:(-3*$y0+3*$y1-2*$y2-$y3)]" info:`
+	b1=$y2
+	b0=$y0
+	}
+
+# function to spline interpolate between two x,y pairs
+spline_interp()
+	{
+	pair0="$1"
+	pair1="$2"
+	pair2="$3"
+	pair3="$4"
+	x0=`echo "$pair0" | cut -d, -f1`
+	y0=`echo "$pair0" | cut -d, -f2`
+	x1=`echo "$pair1" | cut -d, -f1`
+	y1=`echo "$pair1" | cut -d, -f2`
+	x2=`echo "$pair2" | cut -d, -f1`
+	y2=`echo "$pair2" | cut -d, -f2`
+	x3=`echo "$pair3" | cut -d, -f1`
+	y3=`echo "$pair3" | cut -d, -f2`
+	$spline
+
+	#set range as distance in pixels between points over which to interpolate 
+	# and convert to integer counts (numinc) and float pixinc so ends exactly on knot
+	range=`convert xc: -format "%[fx:hypot($x2-$x1,$y2-$y1)]" info:`
+	numinc=`convert xc: -format "%[fx:floor($range/$pinc)]" info:`
+	pinc=`convert xc: -format "%[fx:$range/$numinc]" info:`
+	
+	# threshold a and b coefs as -fx will produce scientific notation for values very near 0 that bc will not understand
+	a3=`convert xc: -format "%[fx:abs($a3)<=0.99999?0:$a3]" info:`
+	a2=`convert xc: -format "%[fx:abs($a2)<=0.99999?0:$a2]" info:`
+	a1=`convert xc: -format "%[fx:abs($a1)<=0.99999?0:$a1]" info:`
+	a0=`convert xc: -format "%[fx:abs($a0)<=0.99999?0:$a0]" info:`
+	b3=`convert xc: -format "%[fx:abs($b3)<=0.99999?0:$b3]" info:`
+	b2=`convert xc: -format "%[fx:abs($b2)<=0.99999?0:$b2]" info:`
+	b1=`convert xc: -format "%[fx:abs($b1)<=0.99999?0:$b1]" info:`
+	b0=`convert xc: -format "%[fx:abs($b0)<=0.99999?0:$b0]" info:`
+	
+	# start interpolation of points
+	s=0
+	# only use <= for last sequence so do not get duplicate points where sequences overlap
+	if [ "$last" = "true" ]; then 
+		op="<="
+	else
+		op="<"
+	fi
+	points1=`awk -v range=$range -v numinc="$numinc" -v pinc="$pinc" -v op="$op" -v a0="$a0" \
+	-v a1="$a1" -v a2="$a2" -v a3="$a3" -v b0="$b0" -v b1="$b1" -v b2="$b2" -v b3="$b3" \
+	'BEGIN { if ( op=="<=" ) { for (s=0; s <= numinc; s++) \
+	{ s1=s*pinc/range; s2=s1*s1; s3=s2*s1; print a3*s3+a2*s2+a1*s1+a0, b3*s3+b2*s2+b1*s1+b0; }; } \
+	else { for (s=0; s < numinc; s++) \
+	{ s1=s*pinc/range; s2=s1*s1; s3=s2*s1; print a3*s3+a2*s2+a1*s1+a0, b3*s3+b2*s2+b1*s1+b0; }; } }' |\
+	while read x y; do
+	echo "$x,$y"
+	done`
+	# insert line break before each new section
+	points="$points
+$points1"
+	}
+
+# process data
+echo ""
+
+# convert pair list into array
+pairArray=($plist)
+np=${#pairArray[*]}
+npm1=`expr $np - 1`
+npm2=`expr $np - 2`
+
+# separate x and y components of pairArray
+i=0
+while [ $i -lt $np ]; do
+	xArray[$i]=`echo "${pairArray[$i]}" | cut -d, -f1`
+	yArray[$i]=`echo "${pairArray[$i]}" | cut -d, -f2`
+	i=`expr $i + 1`
+done
+
+if [ "$spline" = "bezier" ];then
+	[ "$endmode" != "none" ] && errMsg="--- ENDMODE MUST BE NONE FOR THE BEZIER SPLINE ---"
+else
+	if [ "$endmode" = "duplicate" ]; then
+		# augment pairArray with duplicate of first and last point at corresponding end
+		newplist="${pairArray[0]} $plist ${pairArray[$npm1]}"
+		pairArray=($newplist)
+		np=${#pairArray[*]}
+		npm1=`expr $np - 1`
+	elif [ "$endmode" = "extend" ]; then
+		# augment pairArray with linearly extended first and last point
+		pleftx=`echo "scale=6; 2*${xArray[0]}-${xArray[1]}/1" | bc`
+		plefty=`echo "scale=6; 2*${yArray[0]}-${yArray[1]}/1" | bc`
+		prightx=`echo "scale=6; 2*${xArray[$npm1]}-${xArray[$npm2]}/1" | bc`
+		prighty=`echo "scale=6; 2*${yArray[$npm1]}-${yArray[$npm2]}/1" | bc`
+		newplist="$pleftx,$plefty $plist $prightx,$prighty"
+		pairArray=($newplist)
+		np=${#pairArray[*]}
+		npm1=`expr $np - 1`
+	elif [ "$endmode" = "close" ]; then
+		# augment pair Array with last point at beginning and first two points at end
+		newplist="${pairArray[$npm1]} $plist ${pairArray[0]} ${pairArray[1]}"
+		pairArray=($newplist)
+		np=${#pairArray[*]}
+		npm1=`expr $np - 1`
+	fi
+fi
+
+# count number of segments
+if [ "$spline" = bezier ]; then
+	test=`convert xc: -format "%[fx:mod($np-4,3)]" info:`
+	[ $test -ne 0 ] && errMsg "--- NUMBER OF POINTS NOT BEZIER COMPLIANT ---"
+	numseg=`convert xc: -format "%[fx:(($np-4)/3)+1]" info:`
+else
+	numseg=`expr $np - 3`
+fi
+
+# process pair list
+points=""
+last="false"
+j=0
+k=1
+l=2
+m=3
+seg=1
+while [ $m -le $npm1 ]; do
+	[ $m -eq $npm1 ] && last="true"
+
+#echo ""
+#echo "j=$j; k=$k; l=$l; m=$m"
+#echo "${pairArray[$j]} ${pairArray[$k]} ${pairArray[$l]} ${pairArray[$m]}"
+
+	echo "Processing Segment $seg Out Of $numseg Segments"
+	spline_interp ${pairArray[$j]} ${pairArray[$k]} ${pairArray[$l]} ${pairArray[$m]}
+	if [ "$spline" = "bezier" ]; then
+		j=`expr $j + 3`
+		k=`expr $j + 1`
+		l=`expr $k + 1`
+		m=`expr $l + 1`
+	else
+		j=$k
+		k=$l
+		l=$m
+		m=`expr $m + 1`
+	fi
+	seg=`expr $seg + 1`
+done
+echo ""
+
+#edit control points to add leading 0, due to bug
+points=`echo "$points" | sed 's/[ ][ ]*\./ 0./g'`
+points=`echo "$points" | sed 's/,\./,0./g'`
+points=`echo "$points" | sed 's/-\./-0./g'`
+
+if [ "$list" = "yes" ]; then
+	echo "plist=$plist"
+	echo ""
+	echo "newplist=$newplist"
+	echo ""
+	echo "points=$points"
+	pointsArray=($points)
+	pnum=${#pointsArray[*]}
+	echo "pnum=$pnum"
+	echo ""
+fi
+
+# draw curve and optionally points or lines on image
+# create transparent image with curve and optionally lines and points drawn using MVG
+( echo "viewbox 0 0 $width $height"
+# specify background image
+echo "image over 0,0 $width $height '$tmpA'"
+# draw curve
+if [ "$icolor" = "" ]; then
+	echo "fill none stroke $ccolor stroke-width $strokewidth polyline $points"
+else
+	echo "fill $icolor stroke $ccolor stroke-width $strokewidth polyline $points"
+fi
+# draw optional lines
+if [ "$spline" = "bezier" -a "$lcolor" != "" ]; then
+	# set up list of tangent lines to draw from original set of points
+	pArray=($plist)
+	nps=${#pArray[*]}
+	num=`convert xc: -format "%[fx:2*$numseg]" info:`
+	nm1=`expr $num - 1`
+	i=0
+	j=1
+	c=0
+	skip=2
+	while [ $c -lt $num ]; do
+		# add exclamation so that can change to new line later
+		if [ $c -ne $nm1 ]; then 
+			lineArray[$c]="${pArray[$i]} ${pArray[$j]}!"
+		else
+			lineArray[$c]="${pArray[$i]} ${pArray[$j]}"
+		fi
+		i=`expr $i + $skip`
+		j=`expr $j + $skip`
+		c=`expr $c + 1`
+		# alternate skips of 2 and 1
+		if [ $skip -eq 2 ]; then
+			skip=1
+		else
+			skip=2
+		fi
+	done
+	# draw line
+	echo "fill none stroke $lcolor"
+	# note: add new line so that can use "read" to make each echo a new row in mvg file
+	# \012 is octal for new line
+	for theline in "${lineArray[*]}"; do
+		echo "$theline" | tr "!" "\012" | \
+		while read p1 p2; do
+			echo "line $p1 $p2"
+		done
+	done
+else
+	if [ "$lcolor" != "" -a "$endmode" = "close" ]; then
+		echo "fill none stroke $lcolor polygon $plist"
+	elif [ "$lcolor" != "" -a "$endmode" != "close" ]; then
+		echo "fill none stroke $lcolor polyline $plist"
+	fi
+fi
+# draw optional points
+if [ "$pcolor" != "" ]; then
+	echo "fill $pcolor stroke $pcolor"
+	# note: add new line so that can use "read" to make each echo a new row in mvg file
+	# \012 is octal for new line
+	echo "$plist" | tr " ," "\012 " | \
+	while read x y; do
+		xx=`convert xc: -format '%[fx:'"$x"'+'"$prad"']' info:`
+		echo "circle $x,$y $xx,$y"
+	done
+fi
+) | convert mvg:- $outfile
+exit 0

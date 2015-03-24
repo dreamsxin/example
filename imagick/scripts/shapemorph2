@@ -1,0 +1,313 @@
+#!/bin/sh
+# 
+# Developed by Fred Weinhaus and Anthony Thyssen 3/6/2012 .....revised 3/14/2012
+# 
+# USAGE: shapemorph2 -c1 cpts1 -c2 cpts2 [-f frames] [-d delay] [-p pause] [-b bcolor] [-r] infile1 infile2 outfile
+#        shapemorph2 [-h|-help]
+# 
+# OPTIONS:
+# 
+# -c1     cpts1     control point x,y coordinates in infile1
+# -c2     cpts2     control point x,y coordinates in infile1
+# -f      frames    number of frames in animation; frames>1; default=20
+# -d      delay     delay between frames; delay>0; default=10
+# -p      pause     pause delay for two undistorted input images;
+#                   pause>0; default=100
+# -b      bcolor    background color when morph distortion goes off the images;
+#                   default=black
+# -r                reverse the animation sequence and append it to the end
+# 
+###
+#
+# NAME: SHAPEMORPH2
+# 
+# PURPOSE: To create a shape morphing animation sequence between two images.
+# 
+# DESCRIPTION: SHAPEMORPH2 creates a shape morphing animation sequence between
+# two images using multiple corresponding control point specified from each of 
+# the two input images. The control point along with the fixed corners actually 
+# form the control points that are used to fill out X and Y displacement maps 
+# (images) that are then used to transform the geometry of each image to the 
+# other. The corresponding frames from the transformation of each image are then 
+# blended proportional to the progression of frames.
+# 
+# OPTIONS:
+# 
+# -c1 cpts1 ... CPTS1 is a list of the x,y pairs of control points for infile1.
+# This argument is mandatory and must have atleast one x,y pair. Points must be
+# listed in the same order as the corresponding points in infile2.
+# 
+# -c2 cpts2 ... CPTS2 is a list of the x,y pairs of control points for infile1.
+# This argument is mandatory and must have atleast one x,y pair. Points must be
+# listed in the same order as the corresponding points in infile1.
+# 
+# -f frames ... FRAMES is the total number of frames in the animation (including
+# infile1 and infile2 as the start and end frames. Values are integers > 1. The
+# default is 20.
+# 
+# -d delay ... DELAY between frames. Values are integers>0. The default=10
+# 
+# -p pause ... PAUSE is the delay to use for the first and last frame of the
+# animation, i.e. the delay for each of the input images. The default=100
+# 
+# -b bgcolor ... BGCOLOR is the background color to use when the morph 
+# distortion goes off either image. The default=black. A value of none 
+# can be used for transparency for the background.
+# 
+# -r ... If supplied, then reverse the animation sequence, remove the first and
+# last frames of the reversed sequence and append these reversed frames to
+# the end of the animation.
+# 
+# REQUIREMENTS: IM 6.4.2-4 or higher due to the use of -distort shepards.
+# 
+# CAVEAT: No guarantee that this script will work on all platforms,
+# nor that trapping of inconsistent parameters is complete and
+# foolproof. Use At Your Own Risk.
+# 
+######
+# 
+
+# set default values
+frames=20
+delay=10
+pause=100
+bcolor="black"
+reverse="no"
+monitor=""
+cpts1=""
+cpts2=""
+
+# set directory for temporary files
+tmpdir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage() {
+  echo >&2 "$PROGNAME:" "$@"
+  sed >&2 -n '/^###/q; /^#/!q; s/^#//; s/^ //; 4,$p' "$PROGDIR/$PROGNAME"
+  exit 10
+}
+usage_verbose() {
+  echo >&2 "$PROGNAME:" "$@"
+  sed >&2 -n '/^######/q; /^#/!q; s/^#*//; s/^ //; 4,$p' "$PROGDIR/$PROGNAME"
+  exit 10
+}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus() {
+  test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+  [ $test -eq 1 ] && usage "$errorMsg"
+}
+
+# test for correct number of arguments and get values
+[ $# -eq 0 ] && usage_verbose
+[ $# -gt 16 ] && usage "Too Many Arguments"
+
+while [ $# -gt 0 ]; do
+  # get parameter values
+  case "$1" in
+    -h|-help) usage_verbose ;;  # verbose help message
+    -r) reverse="yes" ;;        # set frame reversal append
+   -c1) # get cpts1
+        shift  # to get the next parameter
+        cpts1="$1"
+        ;;
+   -c2) # get cpts2
+        shift  # to get the next parameter
+        cpts2="$1"
+        ;;
+    -f) # get frames
+        shift  # to get the next parameter - frames
+        # test if parameter starts with minus sign
+        errorMsg="Invalid Frames Specification"
+        checkMinus "$1"
+        frames=`expr "$1" : '\([0-9]*\)'`
+        [ "$frames" = "" ] && usage "Frames=\"$frames\" must be an integer"
+        framestest=`echo "$frames <= 1" | bc`
+        [ $framestest -eq 1 ] &&
+           usage "Frames=\"$frames\" must be an integer greater than 1"
+        ;;
+    -d) # get delay
+        shift  # to get the next parameter - delay
+        # test if parameter starts with minus sign
+        errorMsg="Invalid Delay specification"
+        checkMinus "$1"
+        delay=`expr "$1" : '\([0-9]*\)'`
+        [ "$delay" = "" ] && usage "delay=\"$delay\" must be an integer"
+        delaytest=`echo "$delay < 1" | bc`
+        [ $delaytest -eq 1 ] &&
+           usage "delay=\"$delay\" must be a positive integer"
+        ;;
+    -p) # get pause
+        shift  # to get the next parameter - pause
+        # test if parameter starts with minus sign
+        errorMsg="Invalid pause specification"
+        checkMinus "$1"
+        pause=`expr "$1" : '\([0-9]*\)'`
+        [ "$pause" = "" ] &&
+           usage "pause=\"$pause\" must be a non-negative integer"
+        ;;
+    -b) # get bgcolor
+        shift  # to get the next parameter
+        bcolor="$1"
+        ;;
+    --) shift; break ;;                    # End of options
+    -)  break ;;                           # STDIN and end of arguments
+    -*) usage "Unknown Option \"$1\"" ;;
+    *)  break ;;
+  esac
+  shift   # next option
+done
+
+# getinfile1, infile2 and outfile
+infile1="$1"
+infile2="$2"
+outfile="$3"
+
+# test that coordinates are specified correctly
+if [ "$cpts1" = "" -a "$cpts2" = "" ]; then
+  usage "--- NO CONTROL POINTS WERE SPECIFIED ---"
+else
+c1_Arr=(`echo $cpts1 | sed 's/[, ][, ]*/ /g; s/ /,/; s/ \([^ ]*\) \([^ ]*\)/ \1,\2/g'`)
+c2_Arr=(`echo $cpts2 | sed 's/[, ][, ]*/ /g; s/ /,/; s/ \([^ ]*\) \([^ ]*\)/ \1,\2/g'`)
+num1=${#c1_Arr[*]}
+num2=${#c2_Arr[*]}
+[ $num1 -ne $num2 ] && usage "--- INCONSISTENT NUMBER OF CPTS1 AND CPTS2 ---"
+fi
+
+# test all images are provided
+[ "$infile1" = "" ] && usage "No input file 1 specified ---"
+[ "$infile2" = "" ] && usage "No input file 2 specified ---"
+[ "$outfile" = "" ] && usage "No output file specified ---"
+
+# get im version to use for switching methods depending upon version
+im_version=`convert -list configure | \
+	sed '/^LIB_VERSION_NUMBER /!d;  s//,/;  s/,/,0/g;  s/,0*\([0-9][0-9]\)/\1/g' | head -n 1`
+
+[ "$im_version" -lt "06040204" ] && usage "--- IM 6.4.2.4 OR HIGHER REQUIRED ---"
+
+
+# Setup directory for temporary files
+# On exit remove ALL -- the whole directory of temporary images
+dir="$tmpdir/$PROGNAME.$$"
+trap "rm -rf $dir; exit 0" 0
+trap "rm -rf $dir; exit 1" 1 2 3 15
+mkdir "$dir" || {
+  echo >&2 "$PROGNAME: Unable to create working dir \"$dir\" -- ABORTING"
+  exit 10
+}
+
+# test input images
+convert -quiet -regard-warnings -delay $delay "$infile1" +repage "$dir/A.mpc" ||
+  usage "--- FAILED TO READ \"$infile1\" ---"
+
+convert -quiet -regard-warnings -delay $delay "$infile2" +repage "$dir/B.mpc" ||
+  usage "--- FAILED TO READ \"$infile2\" ---"
+
+
+# get image sizes and test if same size
+aw=`convert $dir/A.mpc -format %w info:`
+ah=`convert $dir/A.mpc -format %h info:`
+bw=`convert $dir/B.mpc -format %w info:`
+bh=`convert $dir/B.mpc -format %h info:`
+if [ $aw -eq $bw -a $ah -eq $bh ]; then
+  ww=$aw
+  hh=$ah
+else
+  usage "--- INPUT IMAGES ARE NOT THE SAME SIZE ---"
+fi
+
+# get last pixel in image (for corners)
+wm1=$((ww - 1))
+hm1=$((hh - 1))
+
+# set corner control points as fixed
+corners="0,0 0,0  $wm1,0 $wm1,0  $wm1,$hm1 $wm1,$hm1  0,$hm1 0,$hm1"
+
+# create array of increments on differences between corresponding control pts
+for ((i=0; i<num1; i++)); do
+	x1_Arr[$i]=`echo ${c1_Arr[$i]} | cut -d, -f1`
+	y1_Arr[$i]=`echo ${c1_Arr[$i]} | cut -d, -f2`
+	x2_Arr[$i]=`echo ${c2_Arr[$i]} | cut -d, -f1`
+	y2_Arr[$i]=`echo ${c2_Arr[$i]} | cut -d, -f2`
+	# increment on current destination coordinates
+	iter=$((frames - 1))
+	dx_Arr[$i]=`convert xc: -format "%[fx:(${x2_Arr[$i]}-${x1_Arr[$i]})/$iter]" info:`
+	dy_Arr[$i]=`convert xc: -format "%[fx:(${y2_Arr[$i]}-${y1_Arr[$i]})/$iter]" info:`
+done
+
+
+# initial coord for destination for both images
+cpx_Arr=(${x1_Arr[*]})
+cpy_Arr=(${y1_Arr[*]})
+
+
+# do geometric warping and intensity blending
+echo ""
+echo "Processing $frames Frames:"
+
+# add infile1 as first (zeroth) frame
+echo "0 (start image)"
+convert -delay $pause $dir/A.mpc $dir/result.miff
+
+
+for ((i=1; i<iter; i++)); do
+	echo "$i"
+	
+	# set up iteration
+	blend=`convert xc: -format "%[fx:100*$i/$iter]" info:`
+	
+	cpointsb="$corners"
+	cpointsa="$corners"
+	# new same locations for a given iteration used for both images
+	for ((j=0; j<num1; j++)); do
+		cpx_Arr[$j]=`convert xc: -format "%[fx:${cpx_Arr[$j]}+${dx_Arr[$j]}]" info:`
+		cpy_Arr[$j]=`convert xc: -format "%[fx:${cpy_Arr[$j]}+${dy_Arr[$j]}]" info:`
+	
+		# interate new control points for infile 2 (B)
+		cpointsb="$cpointsb  ${x2_Arr[$j]},${y2_Arr[$j]} ${cpx_Arr[$j]},${cpy_Arr[$j]}"
+		
+		# interate new control points for infile 1 (A)
+		cpointsa="$cpointsa  ${x1_Arr[$j]},${y1_Arr[$j]} ${cpx_Arr[$j]},${cpy_Arr[$j]}"
+	done
+	
+	# NOTE: A multi-image miff is just a concatanation of images!
+	# This makes it easy to form pipelined commands.
+	
+	( 
+	# ( ... ) is a subshell to allow two miff:- to be used as multi-image miff
+	
+	# Warp each image using -distort shepards.
+	
+	# transform B to A
+	convert $dir/B.mpc -virtual-pixel background -background "$bcolor" \
+		-distort shepards "$cpointsb" miff:-
+	
+	# transform A to B
+	convert $dir/A.mpc -virtual-pixel background -background "$bcolor" \
+		-distort shepards "$cpointsa" miff:-
+	
+	# blend the displaced images
+	) | composite - -blend ${blend}% miff:- >> $dir/result.miff
+	
+	# alternate more current method but limited to IM 6.5.3-4 or higher
+	# convert - +swap -compose blend -define compose:args=${blend} -composite miff:- >> $dir/result.miff
+	
+	
+done
+
+# add infile2 as last frame
+echo "$i (end image)"
+convert -delay $pause $dir/B.mpc miff:- >> $dir/result.miff
+
+# reverse and append if desired
+if [ "$reverse" = "yes" ]; then
+  convert $dir/result.miff \( -clone -2-1 \) -loop 0 $outfile
+else
+  convert $dir/result.miff -loop 0 $outfile
+fi
+
+exit 0

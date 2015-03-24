@@ -1,0 +1,416 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 3/11/2008 .......... revised 3/29/2013
+#
+# USAGE: picframe [-f frameid] [-m mattesize] [-c mattecolor] [-b bordersize] [-s shade] [-a adjust] [-o opacity ] [-d distance] infile outfile
+# USAGE: picframe [-h or -help]
+#
+# OPTIONS:
+#
+# -f      frameid            id number of picture frame; Value are 
+#                            between 1 and number of png files in 
+#                            picframecorners directory; default=1;
+#                            see below for id to name correspondences
+# -m      mattesize          surrounding matte thickness in pixels; 
+#                            default=0 or no matte
+# -c      mattecolor         color to use for surrounding matte
+#                            default=cornsilk
+# -b      bordersize         thickness of black border between image and matte
+#                            default=0 or no border
+# -s      shade              percent shading to add to the border; 
+#                            shade ranges from 1 to 100; integer; default=0
+# -a      adjust             adjust the brightness, saturation and hue of 
+#                            the frame. This is useful as shading reduces the 
+#                            saturation. Values are expressed as three integers 
+#                            percentage changes separated by commas. See -modulate.
+#                            Default is 100,100,100 for no change.
+# -o      opacity            inner shadow opacity for upper and left sides; 
+#                            0<=integer<=100; default=50
+# -d      distance           inner shaddow distance in pixels for upper and 
+#                            left sides; integer>=0; if distance=0, then no 
+#                            shadow will created; default=0
+#                            
+#
+###
+#
+# NAME: PICFRAME 
+# 
+# PURPOSE: To add a picture frame around and image.
+# 
+# DESCRIPTION: PICFRAME adds a picture frame around an image using pictures 
+# of actual frames. There is an option to add a black border around the image 
+# and/or a colored matte.
+# 
+# 
+# OPTIONS: 
+# 
+# -f frameid ... FRAMEID is the id number for the picture frame. The following  
+# id and frame types are allowd: 1) oak, 2) rustic mahogany, 3) light rosewood, 
+# 4) light gold, 5) dark rosewood, 6) gold finish, 7) ornate rosewood, 
+# 8) onate silver, 9) ornate walnut, 10) maple, 11) ornate gold and 12) mahogany.
+# The default is 1) oak.
+# 
+# -m mattesize ... MATTESIZE is the thicknesses in pixels for the optional matte  
+# around the image. The default is 0 or no matte.
+# 
+# -c mattecolor ... MATTECOLOR is the color of the optional matte surrounding the   
+# image. Any IM color specification is valid. Be sure to enclose it in double quotes. 
+# The default is cornsilk. For colornames see http://imagemagick.org/script/color.php
+#
+# -b bordersize ... BORDERSIZE is the thickness of the optional black border around 
+# the image. The default is 0 or no black border.
+#
+# -s shade ... SHADE is the percentage shading from an upper left light source. Values 
+# range from 0 to 100. Default is 0 or no shading.
+# 
+# -a adjust ... ADJUST affects the brightness, saturation and hue of the frame. It is 
+# represented as three integer representing percentage changes separated by commas. 
+# This is useful as shading decreases the saturation of the frame. Values greater/less 
+# than 100 for the brightness and saturation will increase/decrease them. Values 
+# greater/less than 100 for the hue will shift the color towards the green/red. A 
+# value of 100,100,100 is the default and will make no change.
+# 
+# -o opacity ... OPACITY is the inner shadow opacity for upper and left sides. 
+# Values are integers between 0 and 100. The default=50.
+# 
+# -d distance ... DISTANCE is the inner shaddow distance in pixels for upper and 
+# left sides. Values are integers>=0. If distance=0, then no shadow will created.
+# The default=0
+# 
+# NOTE: Be sure to download the picframecorners folder and place it where you want it. 
+# Then modify the framedir location in the defaults section just below to point 
+# to where you have placed the brcorners folder.
+# 
+# If you want to add your own frames, simply cut out a square section of the 
+# lower right corner of a picture frame whose dimensions are the thickness of 
+# the frame and place it in the picframecorners directory with a name of 
+# "brcorner#.png" where # is the next available integer. All picture corners 
+# must be in PNG format.
+# 
+# Thanks to Anthony Thyssen for the shading technique. See 
+# http://www.imagemagick.org/Usage/thumbnails/#frame_edge
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set default values
+# BE SURE TO SET THE FRAMEDIR FOLDER FOR YOUR ACTUAL LOCATION
+framedir="/Users/fred/Applications/ImageMagick-Scripts/bin/picframecorners"
+frameid=1
+mattesize=0
+mattecolor="cornsilk"
+bordersize=0
+bordercolor="black"
+shade=0
+adjust="100,100,100"
+opacity=50
+distance=0
+
+# count number of picture frame styles
+maxframes=`ls -l $framedir | sed -n 's/\(.*\.png\)/\1/p' | wc -l`
+
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 18 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		  -h|-help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-f)    # frameid
+					   shift  # to get the next parameter - fuzzval
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID FRAMEID SPECIFICATION ---"
+					   checkMinus "$1"
+					   frameid=`expr "$1" : '\([0-9]*\)'`
+					   [ "$frameid" = "" ] && errMsg "--- FRAMEID=$frameid MUST BE A POSITIVE INTEGER ---"
+					   frameidtest=`echo "$frameid > $maxframes" | bc`
+					   [ $frameidtest -eq 1 ] && errMsg "--- FRAMEID=$frameid MUST BE AN INTEGER BETWEEN 1 AND 12 ---"
+					   ;;
+				-m)    # mattesize
+					   shift  # to get the next parameter - fuzzval
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID MATTESIZE SPECIFICATION ---"
+					   checkMinus "$1"
+					   mattesize=`expr "$1" : '\([0-9]*\)'`
+					   [ "$mattesize" = "" ] && errMsg "--- MATTESIZE=$mattesize MUST BE A NON-NEGATIVE INTEGER ---"
+					   ;;
+				-c)    # get mattecolor
+					   shift  # to get the next parameter - lineval
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID MATTECOLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   mattecolor="$1"
+					   ;;
+				-b)    # bordersize
+					   shift  # to get the next parameter - fuzzval
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID BORDERSIZE SPECIFICATION ---"
+					   checkMinus "$1"
+					   bordersize=`expr "$1" : '\([0-9]*\)'`
+					   [ "$bordersize" = "" ] && errMsg "--- BORDERSIZE=$bordersize MUST BE A NON-NEGATIVE INTEGER ---"
+					   ;;
+				-s)    # shade
+					   shift  # to get the next parameter - shade
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SHADE SPECIFICATION ---"
+					   checkMinus "$1"
+					   shade=`expr "$1" : '\([0-9]*\)'`
+					   [ "$shade" = "" ] && errMsg "--- SHADE=$shade MUST BE A NON-NEGATIVE INTEGER ---"
+				   	   shadetestA=`echo "$shade < 0" | bc`
+				   	   shadetestB=`echo "$shade > 100" | bc`
+				   	   [ $shadetestA -eq 1 -o $shadetestB -eq 1 ] && errMsg "--- SHADE=$shade MUST BE A NON-NEGATIVE INTEGER BETWEEN 0 AND 100 ---"					   
+					   ;;
+	   			-a)    # adjust
+					   shift  # to get the next parameter - adjust
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID ADJUST SPECIFICATION ---"
+					   checkMinus "$1"
+		 			   adjust=`expr "$1" : '\([0-9]*,[0-9]*,[0-9]*\)'`
+					   [ "$adjust" = "" ] && errMsg "--- ADJUST=$adjust MUST BE THREE NON-NEGATIVE INTEGERS SEPARATED BY COMMAS ---"
+		 			   ;;
+				-o)    # opacity
+					   shift  # to get the next parameter - opacity
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID OPACITY SPECIFICATION ---"
+					   checkMinus "$1"
+					   opacity=`expr "$1" : '\([0-9]*\)'`
+					   [ "$opacity" = "" ] && errMsg "--- OPACITY=$opacity MUST BE A NON-NEGATIVE INTEGER ---"
+				   	   testA=`echo "$opacity < 0" | bc`
+				   	   testB=`echo "$opacity > 100" | bc`
+				   	   [ $testA -eq 1 -o $testB -eq 1 ] && errMsg "--- OPACITY=$opacity MUST BE A NON-NEGATIVE INTEGER BETWEEN 0 AND 100 ---"					   
+					   ;;
+				-d)    # distance
+					   shift  # to get the next parameter - distance
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID DISTANCE SPECIFICATION ---"
+					   checkMinus "$1"
+					   distance=`expr "$1" : '\([0-9]*\)'`
+					   [ "$distance" = "" ] && errMsg "--- DISTANCE=$distance MUST BE A NON-NEGATIVE INTEGER ---"
+					   ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile
+	infile=$1
+	outfile=$2
+fi
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "NO INPUT FILE SPECIFIED"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "NO OUTPUT FILE SPECIFIED"
+
+
+tmpA="$dir/picframe_$$.mpc"
+tmpB="$dir/picframe_$$.cache"
+tmp0A="$dir/picframe_0_$$.mpc"
+tmp0B="$dir/picframe_0_$$.cache"
+tmp1A="$dir/picframe_1_$$.mpc"
+tmp1B="$dir/picframe_1_$$.cache"
+tmp2A="$dir/picframe_2_$$.mpc"
+tmp2B="$dir/picframe_2_$$.cache"
+tmp3A="$dir/picframe_3_$$.mpc"
+tmp3B="$dir/picframe_3_$$.cache"
+trap "rm -f $tmpA $tmpB $tmp0A $tmp0B $tmp1A $tmp1B $tmp2A $tmp2B $tmp3A $tmp3B; exit 0" 0
+trap "rm -f $tmpA $tmpB $tmp0A $tmp0B $tmp1A $tmp1B $tmp2A $tmp2B $tmp3A $tmp3B; exit 1" 1 2 3 15
+
+# test infile
+if convert -quiet -regard-warnings "$infile" +repage "$tmp0A"
+	then
+	w1=`identify -format %w $tmp0A`
+	h1=`identify -format %h $tmp0A`
+else
+	errMsg "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+fi
+
+# get im version
+im_version=`convert -list configure | \
+	sed '/^LIB_VERSION_NUMBER /!d; s//,/;  s/,/,0/g;  s/,0*\([0-9][0-9]\)/\1/g' | head -n 1`
+
+
+# get frame bottom right (SouthEast) corner image
+brcorner="${framedir}/brcorner$frameid.png"
+if convert -quiet -regard-warnings "$brcorner" +repage "$tmpA"
+	then
+	w2=`identify -format %w $tmpA`
+	h2=`identify -format %h $tmpA`
+else
+	errMsg "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+fi
+
+#compute center section width and height
+w3=`expr $w1 + 2 \* $bordersize + 2 \* $mattesize`
+h3=`expr $h1 + 2 \* $bordersize + 2 \* $mattesize`
+
+#compute outfile image size
+w4=`expr $w3 + 2 \* $w2`
+h4=`expr $h3 + 2 \* $h2`
+
+# compute frame non-corner sections resize values
+size1="${w3}x${h2}!"
+size2="${w2}x${h3}!"
+
+# set up modulate
+if [ "$adjust" = "100,100,100" ]
+	then
+	modulate=""
+else
+	modulate="-modulate $adjust"
+fi
+
+if [ $shade -eq 100 ]
+	then
+	convert -size ${w3}x${h3} xc:none -bordercolor none \
+          -compose Dst -frame ${w2}x${h2}+0+${w2}  $tmp3A
+elif [ $shade -lt 100 ]
+	then
+	convert \( -size ${w4}x${h4} xc:white \) \
+		\( $tmpA -rotate 180 \) -gravity NorthWest -composite \
+		\( $tmpA[1x${h2}+0+0] -scale $size1 -flip \) -gravity North -composite \
+		\( $tmpA -flip \) -gravity NorthEast -composite \
+		\( $tmpA[${w2}x1+0+0] -scale $size2 -flop \) -gravity West -composite \
+		\( $tmpA[${w2}x1+0+0] -scale $size2 \) -gravity East -composite \
+		\( $tmpA -flop \) -gravity SouthWest -composite \
+		\( $tmpA[1x${h2}+0+0] -scale $size1 \) -gravity South -composite \
+		\( $tmpA \) -gravity SouthEast -composite \
+		$tmp1A
+	if [ $shade -eq 0 ]
+		then
+		convert \( $tmp1A $modulate \) \
+		\( $tmp0A -bordercolor black -border ${bordersize}x${bordersize} \
+			-bordercolor $mattecolor -border ${mattesize}x${mattesize} \) \
+			-gravity Center -composite \
+			$tmp3A
+	else
+		convert -size ${w3}x${h3} xc:none -bordercolor none \
+			-compose Dst -frame ${w2}x${h2}+0+${w2} $tmp2A
+		if [ "$im_version" -lt "06050304" ]; then
+			composite -blend $shade% $tmp2A $tmp1A $tmp1A
+		else
+			convert $tmp1A $tmp2A -define compose:args=$shade% \
+				-compose blend -composite $tmp1A
+		fi
+		convert \( $tmp1A -modulate $adjust \) \
+		\( $tmp0A -bordercolor black -border ${bordersize}x${bordersize} \
+			-bordercolor $mattecolor -border ${mattesize}x${mattesize} \) \
+			-gravity Center -composite \
+		$tmp3A
+	fi
+fi
+
+# add shadow
+if [ "$distance" != "0" ]; then
+	border=`convert xc: -format "%[fx:$distance/2]" info:`
+	offset=`convert xc: -format "%[fx:round($distance+$border)]" info:`
+	www=$((w3+distance))
+	hhh=$((h3+distance))
+	# read framed image
+	# make new white image and add black border of size=distance
+	# convert white to transparent and (important) convert to transparent black
+	# add shadow
+	# crop to input size
+	# center composite over input
+	convert $tmp3A \
+		\( -size ${w3}x${h3} xc:white -bordercolor black -border $distance  \
+			-transparent white -background black -alpha background  \
+			-shadow ${opacity}x${border}+${distance}+${distance} \
+			-crop ${w3}x${h3}+${offset}+${offset} +repage \) \
+		-gravity center -compose over -composite $outfile
+
+: <<COMMENT
+# alternate better looking shadow, but slower (due to extra blur)
+	opacity=`convert xc: -format "%[fx:min($opacity+5,100)/100]" info:`
+	blur=`convert xc: -format "%[fx:$distance/2]" info:`
+	# readjust distance to shorten due to extra blur
+	distance=`convert xc: -format "%[fx:round(0.85*$distance)]" info:`
+	www=$((w3+distance))
+	hhh=$((h3+distance))
+	# read framed image
+	# make new white image and set virtual-pixel to black
+	# convert white to transparent and (important) convert to transparent black
+	# add shadow by using -motion-blur, but need to post blur, because motion-blur leave a slight white diagonal in the corner
+	# enable alpha channel and multiply by opacity (converted to fraction)
+	# crop to input size
+	# center composite over input
+	convert $tmp3A \
+		\( -size ${www}x${hhh} xc:white -virtual-pixel black \
+			-transparent white -background black -alpha background \
+			-channel rgba -motion-blur 0x${distance}+225 -blur 0x$blur  \
+			-alpha on -channel A -evaluate multiply $opacity +channel \
+			-crop ${w3}x${h3}+0+0 +repage  \) \
+		-gravity center -compose over -composite $outfile		
+COMMENT
+
+
+else
+	convert $tmp3A $outfile
+fi
+exit 0

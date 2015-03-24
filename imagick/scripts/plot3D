@@ -1,0 +1,762 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 8/5/2014 .......... revised 8/5/2014
+#
+# USAGE: plot3D [-w width] [-h height] [-c channel] [-a autolevel] [-ti title]
+# [-f format] [-s skip] [-pn pan] [-tl tilt] [-xy xyplane] [-b box] [-tc tics]
+# [-lb label] [-g grid] [-k key] [-xs xscale] [-ys yscale] [-xo xoffset] 
+# [-yo yoffset] [-z zlog] [-lc linecolor] [-p palettefile] infile [outfile]
+#
+# USAGE: plot3D [-help]
+#
+# -w     width           width of output image; default=500
+# -h     height          height of output image: default=500
+# -c     channnel        channel of input image to use; options are: red, green, 
+#                        blue, alpha, cyan, magenta, yellow, black, gray, color;
+#                        (gray is image converted to grayscale),
+#                        (color is full color image; format=1,5 only); 
+#                        default=gray
+# -a     autolevel       apply -auto-level to the input image; on or off;
+#                        default=off
+# -ti    title           title to use for the graph; default=no title
+# -f     format          format (type) of graph; choices are: 
+#                        1 (pseudocolor),
+#                        2 (pseudocolor with image at bottom), 
+#                        3 (pseudocolor with contours at top),
+#                        4 (pseudocolor with lines overlaid)
+#                        5 (lines only); default=1
+# -s     skip            pixel skip amount for format=4 and 5; integer>0; 
+#                        default=3
+# -pn    pan             pan angle for plot; clockwise rotation; 0<integer<360;
+#                        default=330
+# -tl    tilt            tilt angle for plot; 0 is face on to the image, i.e., 
+#                        looking down the z axis. 90 is the z axis in the plane 
+#                        of the output image; 0<integer<90; default=60
+# -xy    xyplane         location of xy axes (and grid with tics and lines); 
+#                        top or bottom; default=top
+# -b     box             box around graph; full, axes (only), none; 
+#                        default=full
+# -tc    tics            show tics; on or off; default=on
+# -lb    label           show x,y,z axes labels; on or off; default=on
+# -g     grid            show grid lines; xy, back, off; xy is only on the 
+#                        xy plane, back is also the back faces; default=xy
+# -k     key             show palette color key; on or off; default=on
+# -p     palettefile     colorizing palette; choices are RGB1, RGB2, gray or 
+#                        or user supplied text file listing the r,g,b colors; 
+#                        default=RGB1
+# -lc    linecolor       overlay line color for format=4; colorname or hex;
+#                        default=white
+# -xs    xscale          scaling factor for the graph in the horizontal output
+#                        dimension; float>0; default=1
+# -ys    yscale          scaling factor for the graph in the vertical output
+#                        dimension; float>0; default=1
+# -xo    xoffset         offset for the graph in the horizontal output
+#                        dimension; positive (up) or negative (down) float; 
+#                        default=0
+# -yo    yoffset         offset for the graph in the vertical output
+#                        dimension; positive (up) or negative (down) float; 
+#                        default=0
+# -z     zlog            apply log scaling to z (intensity) data; on or off; 
+#                        default=off; only valid for format=1,4,5
+# outfile             	 if not specified, outfile will be named from the 
+#                        infile name with _graph.gif appended
+#
+###
+#
+# NAME: PLOT3D 
+# 
+# PURPOSE: To generate a 3D plot of a single channel or grayscale image. 
+# 
+# DESCRIPTION: PLOT3D generates a 3D plot of a single channel or grayscale 
+# image. The plot will be in pseudocolor or line format. A color image may 
+# be used to see each channel plotted on the same graph.
+# 
+# 
+# OPTIONS: 
+# 
+# -w width ... WIDTH of output image. The default=500.
+# 
+# -h height ... HEIGHT of output image: The default=500.
+# 
+# -c channnel ... CHANNEL of input image to use. The options are: red, green, 
+# blue, alpha, cyan, magenta, yellow, black, gray, color. (gray is image 
+# converted to grayscale). (color is full color image; format=1,5 only). 
+# The default=gray.
+# 
+# -a autolevel ... AUTOLEVEL is used to apply -auto-level to the input image. 
+# Choices are on or off. The default=off.
+# 
+# -ti title ... TITLE to use for the graph. The default is no title.
+# 
+# -f format ... FORMAT (type) of graph to create. The choices are: 
+# 1 (pseudocolor), 2 (pseudocolor with image at bottom), 
+# 3 (pseudocolor with contours at top), 4 (pseudocolor with lines overlaid),
+# 5 (lines only). The default=1.
+# 
+# -s skip ... SKIP is the pixel skip amount for format=4 and 5. Values are 
+# integer>0. The default=3.
+# 
+# -pn pan ... PAN angle for the plot. Clockwise rotation. Values are 
+# 0<integer<360. The default=330.
+# 
+# -tl tilt ... TILT angle for plot. 0 is face on to the image, i.e., 
+# looking down the z axis. 90 is the z axis in the plane of the output image. 
+# Values are 0<integer<90. The default=60.
+# 
+# -xy xyplane ... XYPLANE is the location of xy axes (and grid with tics and 
+# lines). Choices are: top or bottom. The default=top.
+# 
+# -b box ... BOX around graph. Choices are: full, axes (only), none. 
+# The default=full.
+# 
+# -tc tics ... show TICS. Choices are: on or off. The default=on.
+# 
+# -lb label ... show x,y,z axes LABELs. Choices are on or off. The default=on.
+# 
+# -g grid ... show GRID lines. Choices are xy, back, off. xy is only on the 
+# on the xy plane, back is also the back faces. The default=xy.
+# 
+# -k key ... show palette color KEY. Choices are: on or off. The default=on.
+# 
+# -p palettefile ... PALETTEFILE is the colorizing palette. Choices are RGB1, 
+# RGB2, gray user supplied text file listing the r,g,b colors. The default=RGB1.
+# RGB1 colors (black, dark-violet, blue, cyan, green, yellow, orange, red).
+# RGB2  colors (red, yellow, green, cyan, blue, magenta). The text file should 
+# be either 3 or 4 space delimited values in the range 0-255 (or 0 to 1) with 
+# one set per row. The first column can be left off if equal spacing of the 
+# colors is desired. It can also be simply a range from 0 incremented by 1 for 
+# equal spacing of the colors. Otherwise, the first column is the intensity 
+# level where each color should show in the palette.
+# 
+# -lc linecolor ... LINECOLOR is the overlay line color for format=4. Values 
+# may be gnuplot colornames or hex values. The default=white.
+# 
+# -xs xscale ... XSCALE is the scaling factor for the graph in the horizontal 
+# output dimension. Value are floats>0. The default=1.
+#
+# -ys yscale ... YSCALE is the scaling factor for the graph in the vertical 
+# output dimension. Values are floats>0. The default=1.
+# 
+# -xo xoffset ... XOFFSET is the offset for the graph in the horizontal output
+# dimension. Value may be positive (up), zero, or negative (down) floats.  
+# The default=0.
+#
+# -yo yoffset ... YOFFSET is the offset for the graph in the vertical output
+# dimension. Values may be  positive (up), zero, or negative (down) floats. 
+# The default=0.
+# 
+# -z zlog ... ZLOG is used to apply log scaling to z (intensity) data. Choices 
+# are: on or off. The default=off. This argument is only valid for format=1,4,5.
+# 
+# outfile ... if not specified, the outfile will be named from the infile name 
+# with _3Dgraph.gif appended.
+# 
+# REQUIREMENTS: Needs GNUPLOT (4.6). I cannot guarantee it will work on older 
+# versions, but it may. Also libgd may be needed by GNUPLOT for proper rendering 
+# of fonts in PNG output.
+#
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set default values
+width=500			# output width; default=500
+height=500			# output height; default=500
+channel="gray"		# select image channel; red, green, blue, alpha, cyan, magenta, yellow, black, gray, color; default=gray
+autolevel="off"		# apply autolevel to channels (on/off); default=off
+title=""		    # plot title (use -ti)
+format="1"			# format of plot: 1 (pseudocolor), 2 (pseudocolor with image at bottom), 
+#                     3 (pseudocolor with contours at top, 4 (pseudocolor with lines), 5 (lines only); default=1
+#                     only options 1 and 5 allowed for color channel mode (keep all non-alpha channels as multiplot)
+skip="3"			# skip factor for pixels and lines for format=4 and 5; integer>0; default=3
+pan=330				# pan angle around z axis; default=330 (use -pn|-pan); 0<=integer<=360
+tilt=60				# tilt angle around x axis; default=60 (use -tl|-tlt|-tilt); 0<=integer<=90
+xyplane="top"		# location of xy axes, grid with tics and lines; top or bottom; default=top
+box="full"			# box around graph; full, axes (only), none
+tics="on"			# show tics (on/off); default=on (use -tc)
+labels="on"			# show x,y,z axes labels (on/off); default=on (use -lb)
+grid="xy"			# enable grid lines (xy/back/off); default=xy
+key="on"			# show palette color key (on/off); default=on
+xscale=1			# x output scale
+yscale=1			# y output scale
+xoffset=0			# x output offset (only for multiplot color image)
+yoffset=0			# y output offset (only for multiplot color image)
+zlog="off"			# apply log scaling to z (intensity) data (on/off) default=off; only valid for format=1,4,5
+linecolor="white"	# overlay line color; default=white (use -lc); colorname or hex
+palettefile="RGB1"	# palette; RGB1, RGB2, gray or text palettefile  (use -pf)
+					# or RGB1 colors (black, dark-violet, blue, cyan, green, yellow, orange, red); default
+					# or RGB2  colors (red, yellow, green, cyan, blue, magenta)
+					# text file with optional # comment followed by line for each index and rgb color triplet; values can be 0 to 1 or 0 to 255
+
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 46 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		     -help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-w)    # get width
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID WIDTH SPECIFICATION ---"
+					   checkMinus "$1"
+					   width=`expr "$1" : '\([0-9]*\)'`
+					   [ "$width" = "" ] && errMsg "--- WIDTH=$width MUST BE AN INTEGER ---"
+					   test=`echo "$width < 1" | bc`
+					   [ $test -eq 1 ] && errMsg "--- WIDTH=$width MUST BE A POSITIVE INTEGER ---"
+					   ;;
+				-h)    # get height
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID HEIGHT SPECIFICATION ---"
+					   checkMinus "$1"
+					   height=`expr "$1" : '\([0-9]*\)'`
+					   [ "$height" = "" ] && errMsg "--- HEIGHT=$height MUST BE AN INTEGER ---"
+					   test=`echo "$height < 1" | bc`
+					   [ $test -eq 1 ] && errMsg "--- HEIGHT=$height MUST BE A POSITIVE INTEGER ---"
+					   ;;
+				-c)    # get channel
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID CHANNEL SPECIFICATION ---"
+					   checkMinus "$1"
+					   channel=`echo "$1" | tr "[:upper:]" "[:lower:]"`
+					   case "$channel" in
+					   		red) ;;
+					   		green) ;;
+					   		blue) ;;
+					   		alpha) ;;
+					   		cyan) ;;
+					   		magenta) ;;
+					   		yellow) ;;
+					   		black) ;;
+					   		gray) ;;
+					   		color) ;;
+					   		*) errMsg "--- CHANNEL=$channel IS NOT A VALID CHOICE ---" ;;
+					   esac
+					   ;;
+				-a)    # get autolevel
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID AUTOLEVEL SPECIFICATION ---"
+					   checkMinus "$1"
+					   autolevel=`echo "$1" | tr "[:upper:]" "[:lower:]"`
+					   case "$autolevel" in
+					   		on) ;;
+					   		off) ;;
+					   		*) errMsg "--- AUTOLEVEL=$autolevel IS NOT A VALID CHOICE ---" ;;
+					   esac
+					   ;;
+				-ti)   # get title
+					   shift  # to get the next parameter
+					   title="$1"
+					   ;;
+				-f)    # get format
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID FORMAT SPECIFICATION ---"
+					   checkMinus "$1"
+					   format=`expr "$1" : '\([1-5]\)'`
+					   [ "$format" = "" ] && errMsg "--- FORMAT=$format MUST BE AN INTEGER BETWEEN 1 AND 5 ---"
+					   ;;
+				-s)    # get skip
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SKIP SPECIFICATION ---"
+					   checkMinus "$1"
+					   skip=`expr "$1" : '\([0-9]*\)'`
+					   [ "$skip" = "" ] && errMsg "--- SKIP=$skip MUST BE AN INTEGER ---"
+					   test=`echo "$skip < 1" | bc`
+					   [ $test -eq 1 ] && errMsg "--- SKIP=$skip MUST BE A POSITIVE INTEGER ---"
+					   ;;
+				-pn)   # get pan
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID PAN SPECIFICATION ---"
+					   checkMinus "$1"
+					   pan=`expr "$1" : '\([0-9]*\)'`
+					   [ "$pan" = "" ] && errMsg "--- PAN=$pan MUST BE AN INTEGER ---"
+					   test1=`echo "$pan < 0" | bc`
+					   test2=`echo "$pan > 360" | bc`
+					   [ $test1 -eq 1 -o $test2 -eq 1 ] && errMsg "--- PAN=$pan MUST BE A POSITIVE INTEGER BETWEEN 0 AND 360 ---"
+					   ;;
+				-tl)   # get tilt
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID TILT SPECIFICATION ---"
+					   checkMinus "$1"
+					   tilt=`expr "$1" : '\([0-9]*\)'`
+					   [ "$tilt" = "" ] && errMsg "--- TILT=$tilt MUST BE AN INTEGER ---"
+					   test1=`echo "$tilt < 0" | bc`
+					   test2=`echo "$tilt > 90" | bc`
+					   [ $test1 -eq 1 -o $test2 -eq 1 ] && errMsg "--- TILT=$tilt MUST BE A POSITIVE INTEGER BETWEEN 0 AND 00 ---"
+					   ;;
+				-xy)   # get xyplane
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID XYPLANE SPECIFICATION ---"
+					   checkMinus "$1"
+					   xyplane=`echo "$1" | tr "[:upper:]" "[:lower:]"`
+					   case "$xyplane" in
+					   		top) ;;
+					   		bottom) ;;
+					   		*) errMsg "--- XYPLANE=$xyplane IS NOT A VALID CHOICE ---" ;;
+					   esac
+					   ;;
+				-b)    # get box
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID BOX SPECIFICATION ---"
+					   checkMinus "$1"
+					   box=`echo "$1" | tr "[:upper:]" "[:lower:]"`
+					   case "$box" in
+					   		full) ;;
+					   		axes) ;;
+					   		none) ;;
+					   		*) errMsg "--- BOX=$box IS NOT A VALID CHOICE ---" ;;
+					   esac
+					   ;;
+				-tc)   # get tics
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID TICS SPECIFICATION ---"
+					   checkMinus "$1"
+					   tics=`echo "$1" | tr "[:upper:]" "[:lower:]"`
+					   case "$tics" in
+					   		on) ;;
+					   		off) ;;
+					   		*) errMsg "--- TICS=$tics IS NOT A VALID CHOICE ---" ;;
+					   esac
+					   ;;
+				-lb)   # get label
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID LABEL SPECIFICATION ---"
+					   checkMinus "$1"
+					   label=`echo "$1" | tr "[:upper:]" "[:lower:]"`
+					   case "$label" in
+					   		on) ;;
+					   		off) ;;
+					   		*) errMsg "--- LABEL=$label IS NOT A VALID CHOICE ---" ;;
+					   esac
+					   ;;
+				-g)    # get grid
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID GRID SPECIFICATION ---"
+					   checkMinus "$1"
+					   grid=`echo "$1" | tr "[:upper:]" "[:lower:]"`
+					   case "$grid" in
+					   		xy) ;;
+					   		back) ;;
+					   		off) ;;
+					   		*) errMsg "--- GRID=$grid IS NOT A VALID CHOICE ---" ;;
+					   esac
+					   ;;
+				-k)    # get key
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID KEY SPECIFICATION ---"
+					   checkMinus "$1"
+					   key=`echo "$1" | tr "[:upper:]" "[:lower:]"`
+					   case "$key" in
+					   		on) ;;
+					   		off) ;;
+					   		*) errMsg "--- KEY=$key IS NOT A VALID CHOICE ---" ;;
+					   esac
+					   ;;
+				-xs)   # get xscale
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID XSCALE SPECIFICATION ---"
+					   checkMinus "$1"
+					   xscale=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$xscale" = "" ] && errMsg "--- XSCALE=$xscale MUST BE A FLOAT ---"
+					   test1=`echo "$xscale <= 0" | bc`
+					   [ $test1 -eq 1 ] && errMsg "--- XSCALE=$xscale MUST BE A FLOAT GREATER THAN ZERO---"
+					   ;;
+				-ys)   # get yscale
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID YSCALE SPECIFICATION ---"
+					   checkMinus "$1"
+					   yscale=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$yscale" = "" ] && errMsg "--- YSCALE=$yscale MUST BE A FLOAT ---"
+					   test1=`echo "$yscale <= 0" | bc`
+					   [ $test1 -eq 1 ] && errMsg "--- YSCALE=$yscale MUST BE A FLOAT GREATER THAN ZERO---"
+					   ;;
+				-xo)   # get xoffset
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID XOFFSET SPECIFICATION ---"
+					   #checkMinus "$1"
+					   xoffset=`expr "$1" : '\([-.0-9]*\)'`
+					   [ "$xoffset" = "" ] && errMsg "--- XOFFSET=$xoffset MUST BE A FLOAT ---"
+					   ;;
+				-yo)   # get yoffset
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID YOFFSET SPECIFICATION ---"
+					   #checkMinus "$1"
+					   yoffset=`expr "$1" : '\([-.0-9]*\)'`
+					   [ "$yoffset" = "" ] && errMsg "--- YOFFSET=$yoffset MUST BE A FLOAT ---"
+					   ;;
+				-z)    # get zlog
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID ZLOG SPECIFICATION ---"
+					   checkMinus "$1"
+					   zlog=`echo "$1" | tr "[:upper:]" "[:lower:]"`
+					   case "$zlog" in
+					   		on) ;;
+					   		off) ;;
+					   		*) errMsg "--- ZLOG=$zlog IS NOT A VALID CHOICE ---" ;;
+					   esac
+					   ;;
+				-p)    # get palettefile
+					   shift  # to get the next parameter
+					   palettefile="$1"
+					   ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+				*)     # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile
+	infile=$1
+	outfile=$2
+fi
+#
+# test that infile provided
+[ "$infile" = "" ] && errMsg "--- NO INPUT FILE SPECIFIED ---"
+# test that outfile provided
+if [ "$outfile" = "" ]
+	then
+	# get infile name before suffix
+	inname=`convert "$infile" -format "%t" info:`
+	gg="_graph"
+	outfile="$inname$gg.gif"
+fi
+
+# setup temporary images
+tmpA0="$dir/plot3D_0_$$.png"
+tmpA1="$dir/plot3D_1_$$.png"
+tmpA2="$dir/plot3D_2_$$.png"
+tmpA3="$dir/plot3D_3_$$.png"
+trap "rm -f $tmpA0 $tmpA1 $tmpA2 $tmpA3; exit 0" 0
+trap "rm -f $tmpA0 $tmpA1 $tmpA2 $tmpA3; exit 1" 1 2 3 15
+
+# set up autolevel processing
+if [ "$autolevel" = "on" ]; then 
+	aproc="-auto-level"
+else
+	aproc=""
+fi
+
+# set up processing
+if [ "$channel" = "gray" ]; then
+	proc="-alpha off -colorspace gray $aproc"
+elif [ "$channel" != "color" ]; then
+	proc="-channel $channel -separate +channel $aproc"
+fi
+
+# get for colorspace
+data=`identify -verbose "$infile"`
+colorspace=`echo "$data" | sed -n 's/^.*Colorspace: \([^ ]*\).*$/\1/p'`
+[ "$colorspace" = "Gray" ] && channel="gray"
+#echo $colorspace
+
+# read input image
+if [ -f "$infile" -a -e "$infile" -a -r "$infile" -a -s "$infile" ]; then
+	if [ "$channel" = "color" -a "$colorspace" = "CMYK" ]; then
+		convert -quiet "$infile" -alpha off -channel c -separate +channel $aproc -depth 8 +repage $tmpA0
+		convert -quiet "$infile" -alpha off -channel m -separate +channel $aproc -depth 8 +repage $tmpA1
+		convert -quiet "$infile" -alpha off -channel y -separate +channel $aproc -depth 8 +repage $tmpA2
+		convert -quiet "$infile" -alpha off -channel k -separate +channel $aproc -depth 8 +repage $tmpA3
+	elif [ "$channel" = "color" -a "$colorspace" = "sRGB" ]; then
+		convert -quiet "$infile" -alpha off -channel r -separate +channel $aproc -depth 8 +repage $tmpA0
+		convert -quiet "$infile" -alpha off -channel g -separate +channel $aproc -depth 8 +repage $tmpA1
+		convert -quiet "$infile" -alpha off -channel b -separate +channel $aproc -depth 8 +repage $tmpA2
+	else
+		convert -quiet "$infile" $proc -depth 8 +repage $tmpA0
+	fi
+else
+	errMSG  "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE  ---"
+fi
+
+# get width, height and half dimensions
+ww=`identify -ping -format "%w" $tmpA0`
+hh=`identify -ping -format "%h" $tmpA0`
+ww2=`convert xc: -format "%[fx:round($ww/2)]" info:`
+hh2=`convert xc: -format "%[fx:round($hh/2)]" info:`
+
+# create default palettefile
+
+
+gnuplot<<EOF
+
+# set terminal size and background color and medium font size
+set terminal png medium size $width,$height background rgb "white"
+
+# set title
+if ( "$title" ne "" ) { 
+	set title "$title" }
+else { 
+	unset title }
+
+# set output file
+set output "$outfile"
+
+# set border color to white (note each border is a number: 1,2,4,8...; (12 edges * 8 bits);)
+if ( "$box" eq "full" ) {
+	set border 4095 linecolor rgb "black" }
+if ( "$box" eq "axes" ) {
+	set border 31 linecolor rgb "black" }
+if ( "$box" eq "none" ) {
+	unset border; unset xlabel; unset ylabel; unset zlabel; unset tics }
+
+# set axis labels
+if ( "$labels" eq "on" ) {
+	set xlabel "X"; set ylabel "Y"; set zlabel "Z" }
+
+# set axis tics
+if ( "$tics" eq "on" ) {
+	set xtics textcolor rgb "black"
+	set ytics textcolor rgb "black"
+	set ztics textcolor rgb "black" }
+else {
+	unset tics }
+
+# enable grid
+if ( "$grid" eq "xy" ) {
+	set grid front }
+if ( "$grid" eq "back" ) {
+	set grid front xtics ytics ztics }
+if ( "$grid" ne "xy" && "$grid" ne "back" ) {
+	unset grid }
+
+# set xyplane grid location
+#if ( "$xyplane" eq "none" ) {
+#	unset tics; unset xlabel; unset ylabel; unset zlabel; unset grid; unset xyplane; unset border }
+if ( "$xyplane" eq "top" ) { 
+	set xyplane at 255 }
+if ( "$xyplane" eq "bottom" ) { 
+	set xyplane at 0 }
+
+# unset key
+set nokey
+
+# set x range
+set xrange [0:$ww]
+
+# set y range with reverse on y for image input
+set yrange [0:$hh] reverse
+
+# set zrange
+set zrange [0:255]
+
+# turn surface on
+set surface
+
+# set hidden surface
+set hidden3d
+
+# set view angles x and z rotations and scales
+set view $tilt,$pan,$xscale,$yscale
+
+# set up pseudocolor plots
+# set range of palette
+set cbrange [0:255]
+
+# set palette colors
+if ( "$palettefile" eq "RGB1"  ) {
+	set palette model RGB defined ( 0 "black", 1 "dark-violet", 2 "blue", 3 "cyan", 4 "green", 5 "yellow", 6 "orange", 7 "red" ) }
+if ( "$palettefile" eq "RGB2"  ) {
+	set palette model RGB defined ( 0 "red", 1 "yellow", 2 "green", 3 "cyan", 4 "blue", 5 "magenta" ) }
+if ( "$palettefile" eq "gray" ) {
+	set palette gray }
+if ( "$palettefile" ne "RGB1" && "$palettefile" ne "RGB2" && "$palettefile" ne "gray" ) {
+	set palette model RGB file "$palettefile" }
+
+# disable key if desired
+if ( "$key" ne "on" ) { 
+	unset colorbox }
+
+if ( "$format" eq "1" && "$channel" ne "color" ) {
+# plot 3D image with pseudocolor
+	if ( "$zlog" eq "on" ) {
+		set zrange [1:255]
+		set logscale z }
+# add flipy for image input in addition to reverse above
+splot "$tmpA0" binary filetype=png flipy with pm3d }
+#
+if ( "$format" eq "2" && "$channel" ne "color" ) {
+# plot 2D image at bottom and 3D image both with pseudocolor
+set zrange [-255:255]
+# add flipy for image input in addition to reverse above
+# add center coordinates
+splot "$tmpA0" binary filetype=png center=($ww2,$hh2,-255) flipy with image, \
+      "$tmpA0" binary filetype=png flipy with pm3d }
+
+if ( "$format" eq "3" && "$channel" ne "color" ) {
+# plot 3D image in pseudocolor with contours at top
+# shift xy plane to top 
+set xyplane at 255
+# turn on contours
+set contours base
+#set cntrparam levels
+set cntrparam levels incremental 0,32
+set linetype 1 linewidth 2
+# add flipy for image input in addition to reverse above
+# add palette to get the contours the same colors as the 3D pseudocolored data
+splot "$tmpA0" binary filetype=png flipy with pm3d linetype 1 palette }
+
+if ( "$format" eq "4" && "$channel" ne "color" ) {
+# plot 3D image with pseudocolor and overlay lines
+	if ( "$zlog" eq "on" ) {
+		set zrange [1:255]
+		set logscale z }
+set style line 100 linetype rgb "$linecolor"
+set pm3d hidden3d 100
+# add flipy for image input in addition to reverse above
+splot "$tmpA0" binary filetype=png flipy every $skip:$skip with pm3d }
+
+if ( "$format" eq "5" && "$channel" ne "color" ) {
+# plot 3D image using only lines
+	if ( "$zlog" eq "on" ) {
+		set zrange [1:255]
+		set logscale z }
+# add flipy for image input in addition to reverse above
+splot "$tmpA0" binary filetype=png flipy every $skip:$skip with lines }
+
+if ( "$format" eq "1" && "$channel" eq "color" && "$colorspace" ne "CMYK" ) {
+# plot 3D color image with peudocolor
+	if ( "$zlog" eq "on" ) {
+		set zrange [1:255]
+		set logscale z }
+set multiplot layout 3,1 scale $xscale,$yscale offset $xoffset,$yoffset title "$title"
+# add flipy for image input in addition to reverse above
+set title "Red Channel"
+splot "$tmpA0" binary filetype=png flipy with pm3d
+set title "Green Channel"
+splot "$tmpA1" binary filetype=png flipy with pm3d
+set title "Blue Channel"
+splot "$tmpA2" binary filetype=png flipy with pm3d
+unset multiplot }
+
+if ( "$format" eq "1" && "$channel" eq "color" && "$colorspace" eq "CMYK" ) {
+# plot 3D color image with peudocolor
+	if ( "$zlog" eq "on" ) {
+		set zrange [1:255]
+		set logscale z }
+set multiplot layout 3,1 scale $xscale,$yscale offset $xoffset,$yoffset title "$title"
+# add flipy for image input in addition to reverse above
+set title "Cyan Channel"
+splot "$tmpA0" binary filetype=png flipy with pm3d
+set title "Magenta Channel"
+splot "$tmpA1" binary filetype=png flipy with pm3d
+set title "Yellow Channel"
+splot "$tmpA2" binary filetype=png flipy with pm3d
+set title "Black Channel"
+splot "$tmpA3" binary filetype=png flipy with pm3d
+unset multiplot }
+
+if ( "$format" eq "5" && "$channel" eq "color" && "$colorspace" ne "CMYK" ) {
+# plot 3D color image with peudocolor
+	if ( "$zlog" eq "on" ) {
+		set zrange [1:255]
+		set logscale z }
+set multiplot layout 3,1 scale $xscale,$yscale offset $xoffset,$yoffset title "$title"
+# add flipy for image input in addition to reverse above
+set title "Red Channel"
+# add flipy for image input in addition to reverse above
+splot "$tmpA0" binary filetype=png flipy every $skip:$skip with lines
+set title "Green Channel"
+splot "$tmpA1" binary filetype=png flipy every $skip:$skip with lines
+set title "Blue Channel"
+splot "$tmpA2" binary filetype=png flipy every $skip:$skip with lines
+unset multiplot }
+
+if ( "$format" eq "5" && "$channel" eq "color" && "$colorspace" eq "CMYK" ) {
+# plot 3D color image with peudocolor
+	if ( "$zlog" eq "on" ) {
+		set zrange [1:255]
+		set logscale z }
+set multiplot layout 3,1 scale $xscale,$yscale offset $xoffset,$yoffset title "$title"
+# add flipy for image input in addition to reverse above
+set title "Cyan Channel"
+# add flipy for image input in addition to reverse above
+splot "$tmpA0" binary filetype=png flipy every $skip:$skip with lines
+set title "Magenta Channel"
+splot "$tmpA1" binary filetype=png flipy every $skip:$skip with lines
+set title "Yellow Channel"
+splot "$tmpA2" binary filetype=png flipy every $skip:$skip with lines
+set title "Black Channel"
+splot "$tmpA3" binary filetype=png flipy every $skip:$skip with lines
+unset multiplot }
+
+EOF
+
+exit 0

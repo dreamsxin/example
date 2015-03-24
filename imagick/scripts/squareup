@@ -1,0 +1,273 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 1/22/2008 .......... revised 1/22/2008
+#
+# USAGE: squareup [-s size] [-m mode] [-c color] [-g gravity] [-f filter] infile outfile
+# USAGE: squareup [-h or -help]
+#
+# OPTIONS:
+#
+# -s      size           desired size; value in pixels or value% as scale factor;
+#                        default is same size as input.
+# -m      mode           pad or crop; default is pad
+# -c      color          background color if pad; any IM color specification 
+#                        or none or trans for transparent; default is black
+# -g      gravity        gravity location for cropped area; North, East, South 
+#                        West or Center; default is Center
+# -f      filter         resize filter; any valid IM filter; default is Lanczos
+#
+###
+#
+# NAME: SQUAREUP
+# 
+# PURPOSE: To resize an image and square it up either by padding or cropping.
+# 
+# DESCRIPTION: SQUAREUP resizes an image and squares it up either by padding it 
+# with a constant background color or transparent background or crops it. If 
+# padded, the larger dimension will be resized and the smaller dimension will be 
+# padded. If cropped, the smaller dimension will be resized and the larger 
+# dimension will be cropped. The result will be a square image, i.e. the 
+# width and height will be identical.
+# 
+# 
+# OPTIONS: 
+# 
+#
+# -s size ... SIZE specifies the desired output size. The value may be specified 
+# as an integer either in pixels or as floating point scale factor in percent 
+# (including the % symbol). The default, if left off, is to keep the image the 
+# same size.
+#
+# -m mode ... MODE specifies to either pad or crop the image to square it off. 
+# The default is pad.
+#
+# -c color ... COLOR specifies the background color to use when mode=pad. Any 
+# valid IM color specification may be used. To make the background transparent, 
+# set the color either to none or trans. The default is black.
+# 
+# -g gravity ... GRAVITY is the region of the image to use when mode=crop. 
+# Values may be North, East, South, West or Center. The default is Center.
+#
+# -f filter ... FILTER is any valid IM resize filter. The default is Lanczos.
+#
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set default values
+size=""				# size in pixels or %
+mode="pad"			# mode: pad or crop
+bgcolor="black"		# color or none for transparent
+gravity="center"	# gravity location
+filter="lanczos"	# resize filter (default=lanczos)
+
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 12 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		  -h|-help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-s)    # get size
+					   shift  # to get the next parameter - size
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SIZE SPECIFICATION ---"
+					   checkMinus "$1"
+					   # test size values
+					   size=`expr "$1" : '\([.0-9%]*\)'`
+					   [ "$size" = "" ] && errMsg "SIZE=$size IS NOT A NUMBER"
+					   ;;
+		 		-m)    # mode
+					   shift  # to get the next parameter - mode
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID MODE SPECIFICATION ---"
+					   checkMinus "$1"
+					   # test mode values
+					   mode="$1"
+					   [ "$mode" != "pad" -a "$mode" != "crop" ] && errMsg "--- MODE=$mode IS NOT A VALID VALUE ---"
+					   ;;
+		 		-c)    # region
+					   shift  # to get the next parameter - color
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID BACKGROUND COLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   bgcolor="$1"
+					   ;;
+		 		-g)    # gravity
+					   shift  # to get the next parameter - gravity
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID GRAVITY SPECIFICATION ---"
+					   checkMinus "$1"
+					   # test gravity values
+					   gravity="$1"
+					   [ "$gravity" != "North" -a "$gravity" != "north" -a "$gravity" != "East" -a "$gravity" != "east" -a "$gravity" != "South" -a "$gravity" != "south" -a "$gravity" != "West" -a "$gravity" != "west" -a "$gravity" != "Center" -a "$gravity" != "center" ] && errMsg "--- GRAVITY=$gravity IS NOT A VALID VALUE ---"
+					   ;;
+				-f)    # get filter
+					   shift  # to get the next parameter - filter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID FILTER SPECIFICATION ---"
+					   checkMinus "$1"
+					   filter="$1"
+					   ;;
+ 				 -)    # STDIN, end of arguments
+  				 	   break
+  				 	   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;					   
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile
+	infile=$1
+	outfile=$2
+fi
+
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "NO INPUT FILE SPECIFIED"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "NO OUTPUT FILE SPECIFIED"
+
+# setup temporary images and auto delete upon exit
+# use mpc/cache to hold input image temporarily in memory
+tmpA="$dir/squareup_$$.mpc"
+tmpB="$dir/squareup_$$.cache"
+trap "rm -f $tmpA $tmpB; exit 0" 0
+trap "rm -f $tmpA $tmpB; exit 1" 1 2 3 15
+
+# test if infile exists and compute dimensions
+if convert -quiet -regard-warnings "$infile" +repage "$tmpA"
+	then
+	width=`identify -format "%w" $tmpA`
+	height=`identify -format "%h" $tmpA`
+else
+	errMsg "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+fi
+
+# compute max and min dimensions
+if [ $width -gt $height ]
+	then
+	max=$width
+	min=$height	
+else
+	max=$height
+	min=$width
+fi
+
+if [ "$size" = "" -a "$mode" = "pad" ]
+	then 
+	dim=$max
+elif [ "$size" = "" -a "$mode" = "crop" ]
+	then 
+	dim=$min
+else
+	# get % value if specified from size
+	factor=`echo "$size" | sed -n 's/\([.0-9]*\)%$/\1/ p'`
+
+	if [ "$factor" = "" ]
+		then
+		# test if contains a period
+		factor2=`echo "$size" | sed -n 's/\([0-9]*[.][0-9]*\)$/\1/ p'`
+	    [ "$factor2" != "" ] && errMsg "SIZE=$size IS NOT AN INTEGER"
+	fi
+
+	# compute pixel equivalent desired size
+	if [ "$factor" = "" -a "$mode" = "pad" ]
+		then
+		dim=$size
+		[ $width -gt $height ] && scale="${dim}x" || scale="x${dim}"
+	elif [ "$factor" = "" -a "$mode" = "crop" ]
+		then
+		dim=$size
+		[ $width -gt $height ] && scale="x${dim}" || scale="${dim}x"
+	elif [ "$mode" = "pad" ]
+		then
+		dim=`echo "scale=0; $factor * $max / 100" | bc`
+		[ $width -gt $height ] && scale="${dim}x" || scale="x${dim}"
+	elif [ "$mode" = "crop" ]
+		then
+		dim=`echo "scale=0; $factor * $min / 100" | bc`
+		[ $width -gt $height ] && scale="x${dim}" || scale="${dim}x"
+	fi
+fi
+
+# convert trans to none for bgcolor so that background is transparent
+[ "$bgcolor" = "trans" ] && bgcolor="none"
+
+# add resize if size != ""
+[ "$size" = "" ] && resize="" || resize="-filter $filter -resize $scale"
+
+# process image
+if [ "$mode" = "pad" ]
+	then
+	convert \( -size ${dim}x${dim} xc:$bgcolor \) \( $resize $tmpA \) \
+		-gravity $gravity -composite +repage $outfile
+elif [ "$mode" = "crop" ]
+	then
+	convert $tmpA $resize -gravity $gravity \
+		-crop ${dim}x${dim}+0+0 +repage $outfile
+fi
+exit 0

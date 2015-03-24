@@ -1,0 +1,691 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 5/29/2009 .......... revised 2/22/2015
+#
+# USAGE: whiteboard  [-c coords] [-a aspect ] [-m magnify] [-d dimensions] 
+# [-e enhance ] [-f filtersize] [-o offset] [-t threshold]  [-s sharpen] 
+# [-S saturation] [-w whitecolor] [-p percent] infile outfile
+# USAGE: whiteboard [-help]
+#
+# OPTIONS:
+#
+# -c      coords            a list of the four x,y coordinates of the corner of 
+#                           the whiteboard in the picture ordered clockwise 
+#                           from the upper left corner. The default is the 
+#                           four corners of the input image.
+# -a      aspect            width-to-height aspect ratio of actual whiteboard; 
+#                           typical aspect ratios are: 2 (2:1), 1.5 (3:2) and 
+#                           1.33 (4:3); floats>0; The default is computed 
+#                           automatically
+# -m      magnify           ouptut image magnification (or minification) factor 
+#                           applied to automatically computed dimensions; float>0; 
+#                           values>1 are magnify; values<1 are minify; 
+#                           default=1 (no change)
+# -d      dimensions        desired dimension(s) of the output; choices are: 
+#                           WIDTH, xHEIGHT or WIDTHxHEIGHT; if either of the 
+#                           first two, then the other will be computed from the 
+#                           aspect ratio and magnify will be ignored; if the latter, 
+#                           then both aspect and magnify will be ignored; default is 
+#                           to ignore dimensions and use aspect and magnify
+# -e      enhance	        enhance image brightness before cleaning background;
+#                           choices are: none, stretch, whitebalance or both; 
+#                           default=both
+# -f      filtersize        size of processing filter to clean up background;
+#                           integer>0; default=15
+# -o      offset            offset of filter in percent to reduce noise;
+#                           integer>=0; default=5
+# -t      threshold			text smoothing threshold; 0<=threshold<=100; 
+#                           nominal value is about 50; default is no smoothing
+# -s      sharpamt          sharpening amount in pixels; float>=0; 
+#                           nominal about 1; default=0
+# -S      saturation        color saturation expressed as percent; integer>=0; 
+#                           default=200 (double saturation)
+# -w      whitecolor        desired color for whiteboard background;
+#                           default=white
+# -p      percent           percent near white to use for white balancing;
+#                           float>=0; default=0.01
+#
+###
+#
+# NAME: WHITEBOARD
+# 
+# PURPOSE: To process a picture of a whiteboard to clean up the background 
+# and correct the perspective.
+# 
+# DESCRIPTION: WHITEBOARD processses a picture of a whiteboard with writing 
+# on it to clean up the background and correct the perspective. The four 
+# corners of the actual interior of the whiteboard in the picture must be 
+# supplied in order to correct the perspective.
+# 
+# OPTIONS: 
+# 
+# -c coords ... COORDS is a list of the four x,y coordinates of the corner of 
+# the whiteboard in the picture ordered clockwise startin with the upper left 
+# corner, e.g. "x1,y1 x2,y2 x3,y3 x4,y4". The default will be the four corners 
+# of the input image and thus will not trim any existing border or area outside 
+# the whiteboard, nor will it correct any perspective distortion.
+# 
+# -a aspect ... ASPECT is the width-to-height aspect ratio of actual whiteboard. 
+# Typical values are: 2 (2:1), 1.5 (3:2) and 1.33 (4:3). Values are floats>0. 
+# The default is computed automatically.
+# 
+# -m magnify ... MAGNIFY is the output image magnification (or minification) factor 
+# Values are floats>0. Values larger than 1 will magnify. Values less than 1 will 
+# minify. The default=1 and will produce an output whose height is the length of the 
+# left edge as defined by the supplied coordinates and whose width=height*aspect. A 
+# value of 2 will be twice that size and a value of 0.5 will be half that size. If 
+# no coordinates are supplied, then the width and height will be those of the 
+# input image multiplied by the magnify factor.
+# 
+# -d dimensions ... DIMENSIONS are the desired dimension(s) of the output image. 
+# Choices are: WIDTH, xHEIGHT or WIDTHxHEIGHT; if either of the first two options 
+# are selected, then the other dimension will be computed from the aspect ratio 
+# and magnify will be ignored. If the latter option is selected, then both aspect 
+# and magnify will be ignored. If no coordinates are supplied, then the input image 
+# aspect ratio will be use. The default is to ignore dimensions and use the aspect
+# and magnify. 
+# 
+# -e enhance ... Enhance image brightness before cleaning background. The choices 
+# are: none, stretch, white balance or both. The default=none.
+# 
+# -f filtersize ... FILTERSIZE is the size of the filter used to clean up the 
+# background. Values are integers>0. The filtersize needs to be larger than 
+# the thickness of the writing, but the smaller the better beyond this. Making it 
+# larger will increase the processing time and may lose text. The default is 15. 
+#
+# -o offset ... OFFSET is the offset threshold in percent used by the filter  
+# to eliminate noise. Values are integers>=0. Values too small will leave much 
+# noise and artifacts in the result. Values too large will remove too much 
+# text leaving gaps. The default is 5. 
+# 
+# -t threshold ... THRESHOLD is the text smoothing threshold. Values are integers 
+# between 0 and 100. Smaller values smooth/thicken the text more. Larger values 
+# thin, but can result in gaps in the text. Nominal value is in the middle at 
+# about 50. The default is to disable smoothing.
+#
+# -s sharpamt ... SHARPAMT is the amount of sharpening to be applied to the 
+# resulting image in pixels. Values are floats>=0. If used, it should be small 
+# (suggested about 1). The default=0 (no sharpening). 
+# 
+# -S saturation ... SATURATION is the desired color saturation of the text 
+# expressed as a percentage. Values are integers>=0. A value of 100 means 
+# no change. The default=200. Larger values will make the text colors more 
+# saturated.
+# 
+# -w whitecolor ... WHITECOLOR is the desired background color of the whiteboard 
+# after it has been cleaned up. Any valid IM color may be use. The default is white.
+# 
+# -p percent ... PERCENT near white to use for white balancing; float>=0; 
+# default=0.01
+# 
+# NOTE: For coordinate selection, one can use the IM display function and 
+# on the Mac option-rightmousebutton hold and drag to display coordinates. 
+# I am not sure what the equivalent is on other systems. Possibly middle 
+# mouse button.
+# 
+# NOTE: Requires IM 6.3.6-0 or higher only if control points are supplied or  
+# magnification is not equal to 1, due to the control point ordering for the 
+# perspective and also due to the use of -set option:distort:viewport. 
+#
+# Thanks to Jens Mueller for suggesting this function and supplying references to examples.
+# 
+# REFERENCES:
+# http://www.sagenb.org/home/pub/704/
+# http://research.microsoft.com/users/zhang/Papers/WhiteboardRectification.pdf
+# http://research.microsoft.com/en-us/um/people/zhang/papers/tr03-39.pdf
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set default values
+coords=""			# 4 pairs of x,y coordinates
+aspect=""			# typical width-to-height ratios of 1, 2, 1.5 or 1.33
+magnify=1			# magnification of image size from computed dimensions
+dimensions=""		# output image dimension(s)
+enhance="none"		# none, stretch, normalize
+filtersize=15		# local area filter size
+offset=5			# local area offset to remove "noise"; too small-get noise, too large-lose text
+threshold=""        # smoothing threshold
+sharpamt=0			# sharpen sigma
+saturation=200		# color saturation percent; 100 is no change
+wcolor="white"		# color for output whiteboard background
+bluramt=0.2			# blur sigma for use with smoothing threshold
+percent=0.01		# percent close to white for white balancing 
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# function to test if valid float point pair
+testIntegerPair()
+	{
+	v1=`echo $1 | cut -d, -f1`
+	v2=`echo $1 | cut -d, -f2`
+	test1=`expr "$v1" : '^[0-9][0-9]*$'`
+	test2=`expr "$v2" : '^[0-9][0-9]*$'`
+	[ $test1 -eq 0 -o $test2 -eq 0 ] && errMsg "$1 IS NOT A VALID POINT PAIR"
+	}
+
+# function to get channel mean
+getChannelMean()
+	{
+	img="$1"
+	# get im version
+	if [ "$im_version" -ge "06030901" ]
+		then 
+		mean=`convert $img -format "%[mean]" info:`
+		mean=`convert xc: -format "%[fx:100*$mean/quantumrange]" info:`
+	else
+		data=`convert $img -verbose info:`
+		mean=`echo "$data" | sed -n 's/^.*[Mm]ean:.*[(]\([0-9.]*\).*$/\1/p ' | head -1`
+		mean=`convert xc: -format "%[fx:100*$mean]" info:`
+	fi
+	}
+
+# function to get average of near-white pixels
+getAverage()
+	{
+	getChannelMean "$1"
+	# get ave in range 0-100
+	# note both mean and mask_mean are in range 0-100
+	# note average of just near_white values mean of masked image divided by
+	# the fraction of white pixels (from mask)
+	# which is the mean in range 0 to 1 divided by 100
+	ave=`convert xc: -format "%[fx:100*$mean/$maskmean]" info:`
+	[ "$ave" = "0" -o "$ave" = "0.0" ] && ave=100
+	ratio=`convert xc: -format "%[fx:100/$ave]" info:`
+	diff=`convert xc: -format "%[fx:(100-$ave)]" info:`
+	}
+
+# function to perform whitebalance (taken from autowhite script)
+whiteBalance()
+	{
+	img="$1"
+	# get image size
+	ww=`convert $img -format "%w" info:`
+	hh=`convert $img -format "%h" info:`
+	# separate channels
+	convert $tmpA1 $setcspace -channel R -separate $tmpR1
+	convert $tmpA1 $setcspace -channel G -separate $tmpG1
+	convert $tmpA1 $setcspace -channel B -separate $tmpB1
+	# get mask of top percent closest to white
+	# approximation using negated saturation and brightness channels multiplied
+	convert $tmpA1 $setcspace -colorspace HSB -channel G -negate -channel GB -separate \
+		-compose multiply -composite +channel \
+		$setcspace -contrast-stretch 0,${percent}% -fill black +opaque white \
+		$tmpM1
+	# get mean of mask
+	getChannelMean "$tmpM1"
+	maskmean=$mean
+	# use mask image to isolate user supplied percent of pixels closest to white
+	# then get ave graylevel for each channel of mask selected pixels
+	convert $tmpR1 $tmpM1 -compose multiply -composite $tmpT1
+	getAverage "$tmpT1"
+	redratio=$ratio
+	convert $tmpG1 $tmpM1 -compose multiply -composite $tmpT1
+	getAverage "$tmpT1"
+	greenratio=$ratio
+	convert $tmpB1 $tmpM1 -compose multiply -composite $tmpT1
+	getAverage "$tmpT1"
+	blueratio=$ratio
+	# process image
+	if [ "$im_version" -lt "06060100" ]; then	
+		convert $tmpA1 -recolor "$redratio 0 0 0 $greenratio 0 0 0 $blueratio" $tmpA1
+	else
+		convert $tmpA1 -color-matrix "$redratio 0 0 0 $greenratio 0 0 0 $blueratio" $tmpA1
+	fi	
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 26 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		  -h|-help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+			   	-c)    # get coords
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID COORDS SPECIFICATION ---"
+					   checkMinus "$1"
+					   coords="$1"
+					   ;;
+			   	-w)    # get wcolor
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID WHITE COLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   wcolor="$1"
+					   ;;
+				-a)    # get aspect ratio
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID ASPECT SPECIFICATION ---"
+					   checkMinus "$1"
+					   aspect=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$aspect" = "" ] && errMsg "--- ASPECT=$aspect MUST BE A NON-NEGATIVE FLOAT ---"
+					   aspecttest=`echo "$aspect <= 0" | bc`
+					   [ $aspecttest -eq 1 ] && errMsg "--- ASPECT=$aspect MUST BE A FLOAT GREATER THAN 0 ---"
+					   ;;
+				-m)    # get magnify
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID MAGNIFY SPECIFICATION ---"
+					   checkMinus "$1"
+					   magnify=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$magnify" = "" ] && errMsg "--- MAGNIFY=$magnify MUST BE A NON-NEGATIVE FLOAT ---"
+					   magnifytest=`echo "$magnify <= 0" | bc`
+					   [ $magnifytest -eq 1 ] && errMsg "--- MAGNIFY=$magnify MUST BE A FLOAT GREATER THAN 0 ---"
+					   ;;
+				-d)    # get dimensions
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID DIMENSIONS SPECIFICATION ---"
+					   checkMinus "$1"
+					   dimensions="$1"
+					   dimensions="${dimensions}x"
+					   dimensions=`expr "$dimensions" : '\([x0-9]*\)'`
+					   numdim=`echo "$dimensions" | tr "x" " " | wc -w` 
+					   [ "$dimensions" = "" ] && errMsg "--- ONE OR TWO DIMENSIONS MUST BE PROVIDED ---"
+					   [ $numdim -ne 1 -a $numdim -ne 2 ] && errMsg "--- ONE OR TWO DIMENSIONS MUST BE PROVIDED ---"
+					   ww=`echo "$dimensions" | cut -dx -f1`
+					   hh=`echo "$dimensions" | cut -dx -f2`
+					   ;;
+			   	-e)    # get enhance
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID ENHANCE SPECIFICATION ---"
+					   checkMinus "$1"
+					   enhance="$1"
+					   case "$1" in
+					   		none) ;;
+					   		stretch) ;;
+					   		whitebalance) ;;
+					   		both) ;;
+					   		*) errMsg "--- ENHANCE=$enhance IS NOT A VALID CHOICE ---" ;;
+					   esac
+					   ;;
+				-f)    # get filtersize
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID FILTERSIZE SPECIFICATION ---"
+					   checkMinus "$1"
+					   filtersize=`expr "$1" : '\([0-9]*\)'`
+					   [ "$filtersize" = "" ] && errMsg "--- FILTERSIZE=$filtersize MUST BE A NON-NEGATIVE INTEGER ---"
+					   filtersizetest=`echo "$filtersize < 1" | bc`
+					   [ $filtersizetest -eq 1 ] && errMsg "--- FILTERSIZE=$filtersize MUST BE AN INTEGER GREATER THAN 0 ---"
+					   ;;
+				-o)    # get offset
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID OFFSET SPECIFICATION ---"
+					   checkMinus "$1"
+					   offset=`expr "$1" : '\([0-9]*\)'`
+					   [ "$offset" = "" ] && errMsg "--- OFFSET=$offset MUST BE A NON-NEGATIVE INTEGER ---"
+					   ;;
+				-t)    # get threshold
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID THRESHOLD SPECIFICATION ---"
+					   checkMinus "$1"
+					   threshold=`expr "$1" : '\([0-9]*\)'`
+					   [ "$threshold" = "" ] && errMsg "--- THRESHOLD=$threshold MUST BE A NON-NEGATIVE INTEGER ---"
+					   thresholdtestA=`echo "$threshold < 0" | bc`
+					   thresholdtestB=`echo "$threshold > 100" | bc`
+					   [ $thresholdtestA -eq 1 -o $thresholdtestB -eq 1 ] && errMsg "--- THRESHOLD=$threshold MUST BE AN INTEGER GREATER BETWEEN 0 AND 100 ---"
+					   ;;
+				-s)    # get sharpamt
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SHARPAMT SPECIFICATION ---"
+					   checkMinus "$1"
+					   sharpamt=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$sharpamt" = "" ] && errMsg "--- SHARPAMT=$sharpamt MUST BE A NON-NEGATIVE FLOAT ---"
+					   ;;
+				-S)    # get saturation
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SATURATION SPECIFICATION ---"
+					   checkMinus "$1"
+					   saturation=`expr "$1" : '\([0-9]*\)'`
+					   [ "$saturation" = "" ] && errMsg "--- SATURATION=$saturation MUST BE A NON-NEGATIVE INTEGER ---"
+					   ;;
+				-p)    # get percent
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID PERCENT SPECIFICATION ---"
+					   checkMinus "$1"
+					   percent=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$percent" = "" ] && errMsg "--- PERCENT=$percent MUST BE A NON-NEGATIVE FLOAT ---"
+					   ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile
+	infile=$1
+	outfile=$2
+fi
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "NO INPUT FILE SPECIFIED"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "NO OUTPUT FILE SPECIFIED"
+
+tmpA1="$dir/autowhite_1_$$.mpc"
+tmpA2="$dir/autowhite_1_$$.cache"
+tmpM1="$dir/autowhite_M_$$.mpc"
+tmpM2="$dir/autowhite_M_$$.cache"
+tmpT1="$dir/autowhite_T_$$.mpc"
+tmpT2="$dir/autowhite_T_$$.cache"
+tmpR1="$dir/autowhite_R_$$.mpc"
+tmpR2="$dir/autowhite_R_$$.cache"
+tmpG1="$dir/autowhite_G_$$.mpc"
+tmpG2="$dir/autowhite_G_$$.cache"
+tmpB1="$dir/autowhite_B_$$.mpc"
+tmpB2="$dir/autowhite_B_$$.cache"
+trap "rm -f $tmpA1 $tmpA2 $tmpM1 $tmpM2 $tmpT1 $tmpT2 $tmpR1 $tmpR2 $tmpG1 $tmpG2 $tmpB1 $tmpB2; exit 0" 0
+trap "rm -f $tmpA1 $tmpA2 $tmpM1 $tmpM2 $tmpT1 $tmpT2 $tmpR1 $tmpR2 $tmpG1 $tmpG2 $tmpB1 $tmpB2; exit 1" 1 2 3 15
+
+# get im_version
+im_version=`convert -list configure | \
+	sed '/^LIB_VERSION_NUMBER /!d; s//,/;  s/,/,0/g;  s/,0*\([0-9][0-9]\)/\1/g' | head -n 1`
+
+# colorspace RGB and sRGB swapped between 6.7.5.5 and 6.7.6.7 
+# though probably not resolved until the latter
+# then -colorspace gray changed to linear between 6.7.6.7 and 6.7.8.2 
+# then -separate converted to linear gray channels between 6.7.6.7 and 6.7.8.2,
+# though probably not resolved until the latter
+# so -colorspace HSL/HSB -separate and -colorspace gray became linear
+# but we need to use -set colorspace RGB before using them at appropriate times
+# so that results stay as in original script
+# The following was determined from various version tests using whiteboard
+# with IM 6.7.4.10, 6.7.6.10, 6.7.9.1
+if [ "$im_version" -lt "06070607" -o "$im_version" -gt "06070707" ]; then
+	setcspace="-set colorspace RGB"
+else
+	setcspace=""
+fi
+# no need for setcspace for grayscale or channels after 6.8.5.4
+if [ "$im_version" -gt "06080504" ]; then
+	setcspace=""
+fi
+
+
+# read the input image into the TMP cached image.
+convert -quiet -regard-warnings "$infile" +repage "$tmpA1" ||
+	errMsg "--- FILE $infile NOT READABLE OR HAS ZERO SIZE ---"
+
+# get im_version
+im_version=`convert -list configure | \
+sed '/^LIB_VERSION_NUMBER /!d;  s//,/;  s/,/,0/g;  s/,0*\([0-9][0-9]\)/\1/g' | head -n 1`
+
+# get input image size and center
+w=`convert -ping $tmpA1 -format "%w" info:`
+h=`convert -ping $tmpA1 -format "%h" info:`
+cx=`convert xc: -format "%[fx:$w/2]" info:`
+cy=`convert xc: -format "%[fx:$h/2]" info:`
+
+if [ "$coords" != "" ]; then
+	# separate input coords
+	# first pattern below replaces all occurrences of commas and spaces with a space => 1 2 3 4 5 6
+	# second pattern below replaces the first occurrence of a space with a comma => 1,2[ 3 4][ 5 6] - ignore [], they are for emphasis only
+	# third pattern below looks for all space number space number pairs and replaces them with a space followed by number1,number2 => 1,2 3,4 5,6
+	set - `echo "$coords" | sed 's/[, ][, ]*/ /g; s/ /,/; s/ \([^ ]*\) \([^ ]*\)/ \1,\2/g'`
+	
+	# test for valid integers for x and y
+	index=0
+	plist=""
+	while [ $# -gt 0 ]
+		do
+		testIntegerPair $1
+		plist="$plist $1"
+		shift
+		index=`expr $index + 1`
+	done
+	
+	#remove leading space from plist
+	plist=`echo "$plist" | sed -n 's/ [ ]*\(.*\)/\1/p'`
+	
+	# test validity
+	[ "$plist" = "" ] && errMsg "--- NO POINTS WERE PROVIDED ---"
+	[ $index -ne 4 ] && errMsg "--- FOUR AND ONLY FOUR POINTS MUST BE PROVIDED ---"
+	
+	# put list into an array
+	pArray=($plist)
+	
+	# separate x,y coordinates
+	x1=`echo "${pArray[0]}," | cut -d, -f1`
+	y1=`echo "${pArray[0]}," | cut -d, -f2`
+	x2=`echo "${pArray[1]}," | cut -d, -f1`
+	y2=`echo "${pArray[1]}," | cut -d, -f2`
+	x3=`echo "${pArray[2]}," | cut -d, -f1`
+	y3=`echo "${pArray[2]}," | cut -d, -f2`
+	x4=`echo "${pArray[3]}," | cut -d, -f1`
+	y4=`echo "${pArray[3]}," | cut -d, -f2`
+	
+	# compute the aspect ratio if not provided
+	if [ "$aspect" = "" ]; then
+		m1x=$x4
+		m1y=$y4
+		m2x=$x3
+		m2y=$y3
+		m3x=$x1
+		m3y=$y1
+		m4x=$x2
+		m4y=$y2
+		# get centroid of quadrilateral
+		ccx=`convert xc: -format "%[fx:($m1x+$m2x+$m3x+$m4x)/4]" info:`
+		ccy=`convert xc: -format "%[fx:($m1y+$m2y+$m3y+$m4y)/4]" info:`
+		# convert to proper x,y coordinates relative to center
+		m1x=`convert xc: -format "%[fx:$m1x-$ccx]" info:`
+		m1y=`convert xc: -format "%[fx:$ccy-$m1y]" info:`
+		m2x=`convert xc: -format "%[fx:$m2x-$ccx]" info:`
+		m2y=`convert xc: -format "%[fx:$ccy-$m2y]" info:`
+		m3x=`convert xc: -format "%[fx:$m3x-$ccx]" info:`
+		m3y=`convert xc: -format "%[fx:$ccy-$m3y]" info:`
+		m4x=`convert xc: -format "%[fx:$m4x-$ccx]" info:`
+		m4y=`convert xc: -format "%[fx:$ccy-$m4y]" info:`
+		#simplified equations, assuming u0=0, v0=0, s=1
+		k2=`echo "scale=5; (($m1y - $m4y)*$m3x - ($m1x - $m4x)*$m3y + $m1x*$m4y - $m1y*$m4x)/(($m2y- $m4y)*$m3x - ($m2x - $m4x)*$m3y + $m2x*$m4y - $m2y*$m4x)" | bc`
+		k3=`echo "scale=5; (($m1y - $m4y)*$m2x - ($m1x - $m4x)*$m2y + $m1x*$m4y - $m1y*$m4x)/(($m3y- $m4y)*$m2x - ($m3x - $m4x)*$m2y + $m3x*$m4y - $m3y*$m4x)" | bc`
+		ff=`echo "scale=5; (($k3*$m3y - $m1y)*($k2*$m2y - $m1y) + ($k3*$m3x - $m1x)*($k2*$m2x- $m1x))/(($k3 - 1)*($k2 - 1))" | bc`
+		if [ "$ff" = "" ]; then
+			errMsg "--- ASPECT RATIO CANNOT BE DETERMINED ---"
+		else
+			# sqrt( $ff*$ff) = abs($ff)
+			f=`echo "scale=5; sqrt( sqrt( $ff*$ff) )" | bc`
+			aspect=`echo "scale=5; sqrt((($k2 - 1)^2 + ($k2*$m2y - $m1y)^2/$f^2 + ($k2*$m2x - $m1x)^2/$f^2)/(($k3 - 1)^2 + ($k3*$m3y - $m1y)^2/$f^2 + ($k3*$m3x - $m1x)^2/$f^2))" | bc`
+		fi
+	fi
+
+	if [ "$dimensions" != "" -a "$ww" = "" -a "$hh" != "" ]; then
+		# compute output size from aspect ratio and hh
+		height=$hh
+		width=`convert xc: -format "%[fx:$height*$aspect]" info:`
+	elif [ "$dimensions" != "" -a "$ww" != "" -a "$hh" = "" ]; then
+		# compute output size from aspect ratio and ww
+		width=$ww
+		height=`convert xc: -format "%[fx:$width/$aspect]" info:`
+	elif [ "$dimensions" != "" -a "$ww" != "" -a "$hh" != "" ]; then
+		# output size is ww x hh
+		width=$ww
+		height=$hh		
+	else
+		# compute output size from aspect ratio, magnify and left edge
+		height=`convert xc: -format "%[fx:$magnify*hypot(($x1-$x4),($y1-$y4))]" info:`
+		width=`convert xc: -format "%[fx:$aspect*$height]" info:`
+	fi
+	
+	# compute corresponding corners of output image
+	xx1=0
+	yy1=0
+	xx2=$width
+	yy2=0
+	xx3=$width
+	yy3=$height
+	xx4=0
+	yy4=$height
+	
+	# setup perspective conjugate control points src,dst pairs
+	coords="$x1,$y1 $xx1,$yy1  $x2,$y2 $xx2,$yy2  $x3,$y3 $xx3,$yy3  $x4,$y4 $xx4,$yy4"
+#echo "coords=$coords"
+else
+	if [ "$dimensions" != "" -a "$ww" = "" -a "$hh" != "" ]; then
+		# compute output size from aspect ratio and hh
+		aspect=`convert xc: -format "%[fx:$w/$h]" info:`
+		height=$hh
+		width=`convert xc: -format "%[fx:$height*$aspect]" info:`
+		magx=`convert xc: -format "%[fx:$width/$w]" info:`
+		magy=`convert xc: -format "%[fx:$height/$h]" info:`
+	elif [ "$dimensions" != "" -a "$ww" != "" -a "$hh" = "" ]; then
+		# compute output size from aspect ratio and ww
+		aspect=`convert xc: -format "%[fx:$w/$h]" info:`
+		width=$ww
+		height=`convert xc: -format "%[fx:$width/$aspect]" info:`
+		magx=`convert xc: -format "%[fx:$width/$w]" info:`
+		magy=`convert xc: -format "%[fx:$height/$h]" info:`
+	elif [ "$dimensions" != "" -a "$ww" != "" -a "$hh" != "" ]; then
+		# output size is ww x hh
+		width=$ww
+		height=$hh
+		magx=`convert xc: -format "%[fx:$width/$w]" info:`
+		magy=`convert xc: -format "%[fx:$height/$h]" info:`
+	else
+		# use image width and height multiplied by magnify
+		width=`convert xc: -format "%[fx:$magnify*$w]" info:`
+		height=`convert xc: -format "%[fx:$magnify*$h]" info:`
+	fi
+
+	# compute offsets for virtual canvas
+	delx=`convert xc: -format "%[fx:($w-$width)/2]" info:`
+	dely=`convert xc: -format "%[fx:($h-$height)/2]" info:`
+	signx=`convert xc: -format "%[fx:sign($delx)]" info:`
+	signy=`convert xc: -format "%[fx:sign($dely)]" info:`
+	[ "$signx" = "-1" ] && delx="$delx" || delx="+$delx"
+	[ "$signy" = "-1" ] && dely="$dely" || dely="+$dely"
+fi
+
+# setup sharpening
+if [ "$sharpamt" = "0" -o "$sharpamt" = "0.0" ]; then
+	sharpening=""
+else
+	sharpening="-sharpen 0x${sharpamt}"
+fi
+
+# setup blurring
+if [ "$threshold" = "" ]; then
+	blurring=""
+else
+	bluramt=`convert xc: -format "%[fx:$threshold/100]" info:`
+	blurring="-blur ${bluramt}x65535 -level ${threshold}x100%"
+fi
+
+# setup modulation
+if [ $saturation -eq 100 ]; then
+	modulation=""
+else
+	modulation="-modulate 100,$saturation"
+fi
+
+# do enhance
+if [ "$enhance" = "stretch" ]; then
+	convert $tmpA1 $setcspace -contrast-stretch 0 $tmpA1
+elif [ "$enhance" = "whitebalance" ]; then
+	whiteBalance "$tmpA1"
+elif [ "$enhance" = "both" ]; then
+	convert $tmpA1 $setcspace -contrast-stretch 0 $tmpA1	
+	whiteBalance "$tmpA1"
+fi
+
+# process image
+if [ "$coords" = "" -a "$magnify" = "1" -a "$dimensions" = "" ]; then
+	convert \( $tmpA1 \) \
+		\( -clone 0 -colorspace gray -negate -lat ${filtersize}x${filtersize}+${offset}% $setcspace -contrast-stretch 0 $blurring \) \
+		-compose copy_opacity -composite -fill "$wcolor" -opaque none +matte \
+		$sharpening $modulation \
+		$outfile
+elif [ "$coords" = "" -a "$magnify" != "1" ]; then
+	convert \( $tmpA1 -virtual-pixel white -set option:distort:viewport ${width}x${height}${delx}${dely} -distort SRT "$magnify 0" \) \
+		\( -clone 0 -colorspace gray -negate -lat ${filtersize}x${filtersize}+${offset}% $setcspace -contrast-stretch 0 $blurring \) \
+		-compose copy_opacity -composite -fill "$wcolor" -opaque none +matte \
+		$sharpening $modulation \
+		$outfile
+elif [ "$coords" = "" -a "$dimensions" != "" ]; then
+	convert \( $tmpA1 -virtual-pixel white -set option:distort:viewport ${width}x${height}${delx}${dely} -distort SRT "$cx,$cy $magx,$magy 0" \) \
+		\( -clone 0 -colorspace gray -negate -lat ${filtersize}x${filtersize}+${offset}% $setcspace -contrast-stretch 0 $blurring \) \
+		-compose copy_opacity -composite -fill "$wcolor" -opaque none +matte \
+		$sharpening $modulation \
+		$outfile
+elif [ "$coords" != "" ]; then
+	convert \( $tmpA1 -virtual-pixel white -set option:distort:viewport ${width}x${height}+0+0 -distort perspective "$coords" \) \
+		\( -clone 0 -colorspace gray -negate -lat ${filtersize}x${filtersize}+${offset}% $setcspace -contrast-stretch 0 $blurring \) \
+		-compose copy_opacity -composite -fill "$wcolor" -opaque none +matte \
+		$sharpening $modulation \
+		$outfile
+else
+	errMsg = "--- INVALID SITUATION ---"
+fi
+exit 0

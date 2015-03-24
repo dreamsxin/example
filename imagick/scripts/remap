@@ -1,0 +1,322 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 10/21/2011 .......... revised 7/6/2012
+# 
+# USAGE: remap [-n numcolors ] [-m metric] [-s] infile mapfile outfile
+# USAGE: remap [-h or -help]
+# 
+# OPTIONS:
+#
+# -n     numcolors      desired number of colors, if the input image
+#                       has more than 256 unique colors; 
+#                       0<integer<=256; default is to use the number
+#                       of input colors if <= 256, otherwise 24
+# -m     metric         colorspace distance metric; choices are:
+#                       RGB or RGBL (luminance weighted RGB);
+#                       default=RGB
+# -s                    show/display textual data to the terminal
+# 
+###
+# 
+# NAME: REMAP
+# 
+# PURPOSE: To remap the colors in an image using a 3D color distance 
+# metric relative to a color table map image.
+# 
+# DESCRIPTION: REMAP remaps colors in an image using a 3D color distance
+# metric relative to a (map) color table image. The mapfile is an image
+# that contains only the desired output colors. The infile should contain
+# a limited number of colors, less than or equal to 256. However, it may
+# take a long time to process with 256 colors and generally will not
+# more produce results much different than much fewer colors, certainly  
+# no more colors than are in the mapfile.
+# 
+# The RGB distance metric is
+# dist=sqrt(rdiff^2+gdiff^2+bdiff^2), where the diffs are the channel
+# differences between the infile color and the mapfile color.
+# 
+# The RGBL distance metric is 
+# dist=sqrt((0.299*rdiff^2+0.587gdiff^2+0.114*bdiff^2)*0.75+ldiff^2)),
+# where ldiff is the difference in Rec601 luminosity value between the 
+# infile color and the mapfile color, with lum=(0.299*R+0.587G+0.114*B).
+# 
+# Arguments: 
+# 
+# -n numcolors ... NUMCOLORs is the desired number of colors. If the 
+# input image has more than 256 unique colors, then the image will 
+# use -colors numcolors to reduce the number of colors. Values are 
+# 0<integer<=256. The default is to use the number of input colors, 
+# if it is less than or equal to 256, otherwise 24.
+# 
+# -m metric ... METRIC is the colorspace distance metric. The choices 
+# are: RGB or RGBL (luminance weighted RGB). The default=RGB
+# 
+# -s ... SHOW/display textual data to the terminal
+# 
+# Limitation: The script only works for fully opaque images and mapimages.
+# 
+# References:
+# http://bisqwit.iki.fi/story/howto/dither/jy/
+# http://en.wikipedia.org/wiki/X11_color_names
+# http://www.imagemagick.org/discourse-server/viewtopic.php?f=3&t=19646#p77472
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set default values
+ncolors=""		# number of desired colors; defaults to 24
+metric="rgb"	# distance metric; rgb or rgbl
+show="no"		# show info to terminal
+
+# set directory for temporary files
+tmpdir="." 		# suggestions are tmpdir="." or tmpdir="/tmp"
+
+dir="$tmpdir/REMAP.$$"
+
+mkdir "$dir" || errMsg "--- FAILED TO CREATE TEMPORARY FILE DIRECTORY ---"
+trap "rm -rf $dir; exit 0" 0
+trap "rm -rf $dir; exit 1" 1 2 3 15
+
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+	echo ""
+	usage2
+	exit 0
+elif [ $# -gt 8 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+		# get parameters
+		case "$1" in
+	  -h|-help)    # help information
+				   echo ""
+				   usage2
+				   ;;
+		 	-m)    # metric
+				   shift  # to get the next parameter
+				   # test if parameter starts with minus sign 
+				   errorMsg="--- INVALID METRIC SPECIFICATION ---"
+				   checkMinus "$1"
+				   # test mode values
+				   metric="$1"
+				   metric=`echo "$metric" | tr "[:upper:]" "[:lower:]"`
+				   case "$metric" in 
+						rgb) metric="rgb" ;;
+						rgbl) metric="rgbl" ;;
+						*) errMsg "--- METRIC=$metric IS AN INVALID VALUE ---" 
+					esac
+				   ;;
+			-n)    # get ncolors
+				   shift  # to get the next parameter
+				   # test if parameter starts with minus sign 
+				   errorMsg="--- INVALID NUMCOLORS SPECIFICATION ---"
+				   checkMinus "$1"
+				   ncolors=`expr "$1" : '\([0-9]*\)'`
+				   [ "$ncolors" = "" ] && errMsg "--- NUMCOLORS=$ncolors MUST BE A NON-NEGATIVE INTEGER VALUE (with no sign) ---"
+				   test1=`echo "$ncolors < 1" | bc`
+				   test2=`echo "$ncolors > 256" | bc`
+				   [ $test1 -eq 1 -o $test2 -eq 1 ] && errMsg "--- NUMCOLORS=$ncolors MUST BE AN INTEGER BETWEEN 1 AND 256 ---"
+				   ;;
+			-s)    # set show
+				   show="yes"
+				   ;;
+			 -)    # STDIN and end of arguments
+				   break
+				   ;;
+			-*)    # any other - argument
+				   errMsg "--- UNKNOWN OPTION ---"
+				   ;;
+			*)     # end of arguments
+				   break
+				   ;;
+		esac
+		shift   # next option
+	done
+	# get infile and outfile
+	infile=$1
+	mapfile=$2
+	outfile=$3
+fi
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "--- NO INPUT FILE SPECIFIED ---"
+
+# test that mapfile provided
+[ "$mapfile" = "" ] && errMsg "--- NO MAPFILE FILE SPECIFIED ---"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "--- NO OUTPUT FILE SPECIFIED ---"
+
+
+	
+
+# NOTE: need to add -depth 8 before saving to mpc as it normally is 16-bits vs 8-bits for miff
+# Assumes images are RGB or sRGB
+
+# test input image
+convert -quiet -regard-warnings "$infile" -alpha off +repage -depth 8 "$dir/tmpA.mpc" ||
+	errMsg "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+
+
+# test color table mapfile image
+convert -quiet -regard-warnings "$mapfile" -alpha off -depth 8 +repage "$dir/tmpM.mpc" ||
+	errMsg "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+
+
+OLDIFS=$IFS
+
+# get colors from mapimage
+mapcolorArr=(`convert $dir/tmpM.mpc -alpha off -depth 8 -format %c -define histogram:unique-colors=true histogram:info:- | \
+	sed -n 's/^.*: *[(]\(.*\)[)].*#.*$/\1/p' | sed 's/ *//g'`)
+#echo "${mapcolorArr[*]}"
+nmapcolors="${#mapcolorArr[*]}"
+[ "$show" = "yes" ] && echo ""
+[ "$show" = "yes" ] && echo "number of mapcolors = $nmapcolors"
+
+
+# get original number of colors of image
+numoriginalcolors=`convert $dir/tmpA.mpc -format "%k" info:`
+[ "$show" = "yes" ] && echo "number of original colors=$numoriginalcolors"
+
+
+# reduce colors if more than 256 and ncolors not provided
+if [ "$ncolors" = "" -a $numoriginalcolors -gt 256 ]; then
+	ncolors=24
+	convert $dir/tmpA.mpc +dither -colors $ncolors -depth 8 $dir/tmpA.mpc
+elif [ "$ncolors" = "" -a $numoriginalcolors -le 256 ]; then
+	ncolors=$numoriginalcolors
+	convert $dir/tmpA.mpc +dither -colors $ncolors -depth 8 $dir/tmpA.mpc
+elif [ "$ncolors" != "" ]; then
+	convert $dir/tmpA.mpc +dither -colors $ncolors -depth 8 $dir/tmpA.mpc
+fi
+
+# get number of reduced rgb image colors
+colorArr=(`convert $dir/tmpA.mpc -alpha off -depth 8 -format %c -define histogram:unique-colors=true histogram:info:- | \
+	sed -n 's/^.*: *[(]\(.*\)[)].*#.*$/\1/p' | sed 's/ *//g'`)
+#echo "${colorArr[*]}"
+ncolors="${#colorArr[*]}"
+[ "$show" = "yes" ] && echo "number of reduced colors = $ncolors"
+
+# output color reduced image for testing
+convert $dir/tmpA.mpc ${inname}_remap_reduced.png
+
+# create colorlist from both arrays
+colorlist=":${colorArr[*]}:${mapcolorArr[*]}:"
+#echo "$colorlist"
+
+# get matching color indices
+# note because of colons in colorlist, there are 3 items when split, #1 is empty, 
+# so we use #2 and #3
+IFS=":"
+
+if [ "$metric" = "rgb" ]; then
+	pairlist=`for color in $colorlist; do
+	echo "$color" 
+	done |\
+	awk ' { FS="x"; j=NR; Arr[j]=$1; split(Arr[2], colorArr, " "); split(Arr[3], mapcolorArr, " "); }
+	END { FS=" ";
+	for (j in colorArr) 
+	{ mindist=1000000; k=1; for (i in mapcolorArr) 
+	{ split(colorArr[j], c, ","); split(mapcolorArr[i], m, ","); 
+	dist=sqrt( (c[1]-m[1])*(c[1]-m[1])+(c[2]-m[2])*(c[2]-m[2])+(c[3]-m[3])*(c[3]-m[3]) );
+	if ( dist<mindist) { mindist=dist; k=i; cc="rgb("c[1]","c[2]","c[3]")"; mm="rgb("m[1]","m[2]","m[3]")"; } } print cc":"mm; }
+	} '`
+
+elif [ "$metric" = "rgbl" ]; then
+	pairlist=`for color in $colorlist; do
+	echo "$color" 
+	done |\
+	awk ' { FS="x"; j=NR; Arr[j]=$1; split(Arr[2], colorArr, " "); split(Arr[3], mapcolorArr, " "); }
+	END { FS=" ";
+	for (j in colorArr) 
+	{ mindist=1000000; k=1; for (i in mapcolorArr) 
+	{ split(colorArr[j], c, ","); split(mapcolorArr[i], m, ","); 
+	clum=0.299*c[1]+0.587*c[2]+0.114*c[3]; mlum=0.299*m[1]+0.587*m[2]+0.114*m[3];
+	dist=sqrt( (0.299*(c[1]-m[1])*(c[1]-m[1])+0.587*(c[2]-m[2])*(c[2]-m[2])+0.114*(c[3]-m[3])*(c[3]-m[3]))*.75 + (clum-mlum)*(clum-mlum) );
+	if ( dist<mindist) { mindist=dist; k=i; cc="rgb("c[1]","c[2]","c[3]")"; mm="rgb("m[1]","m[2]","m[3]")"; } } print cc":"mm; }
+	} '`
+fi
+
+IFS=$OLDIFS
+pairArr=($pairlist)
+#echo "${pairArr[*]}"
+#numpairs="${#pairArr[*]}"
+#echo "numpairs=$numpairs"
+
+
+# do remapping
+[ "$show" = "yes" ] && echo ""
+[ "$show" = "yes" ] && echo "Remapping Image"
+dim=`convert $dir/tmpA.mpc -format "%wx%h" info:`
+convert -size $dim xc:none -depth 8 $dir/tmpO.mpc
+# map the colors in the image
+i=1
+for colorpair in ${pairArr[*]}; do
+	color1=`echo "$colorpair" | cut -d: -f1`
+	color2=`echo "$colorpair" | cut -d: -f2`
+	[ "$show" = "yes" ] && echo "$i: $color1 to $color2"
+	convert \( $dir/tmpA.mpc \
+		+transparent "$color1" \
+		-fill "$color2" -opaque "$color1" \) $dir/tmpO.mpc  \
+		-composite $dir/tmpO.mpc
+	i=`expr $i + 1`
+done
+convert $dir/tmpO.mpc $outfile
+
+
+if [ "$show" = "yes" ]; then
+	finalcolorlist=`convert $dir/tmpO.mpc -alpha off -depth 8 -format %c -define histogram:unique-colors=true histogram:info:- | \
+		sed -n 's/^.*: *[(]\(.*\)[)].*#.*$/rgb(\1)/p' | sed 's/ *//g'`
+	echo ""
+	echo "$finalcolorlist"
+	finalcolorArr=($finalcolorlist)
+	finalcolors="${#finalcolorArr[*]}"
+	echo "number of final colors = $finalcolors"
+	echo ""
+fi
+
+exit 0
+

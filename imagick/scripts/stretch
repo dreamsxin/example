@@ -1,0 +1,305 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 10/23/2008 .......... revised 6/14/2013
+#
+# USAGE: stretch [-c colormode] infile outfile
+# USAGE: stretch [-h or -help]
+#
+# OPTIONS:
+#
+# -c      colormode       colorspace/channel(s) to use to compute 
+#                         min and max statistics; choices are: 
+#                         global, intensity, luminance, lightness,  
+#                         rgb, sl; default=luminance
+#
+###
+#
+# NAME: STRETCH 
+# 
+# PURPOSE: To modify an image to automatically stretch the dynamic range  
+# between full black and white.
+# 
+# DESCRIPTION: STRETCH modifies an image to automatically stretch the
+# dynamic range between full black and white. No gamma correction is 
+# applied. The minimum and maximum values may be computed from 
+# various graylevel representations of the image or individually 
+# channel-by-channel. The script then passes these values to the IM 
+# function -level.
+# 
+# OPTIONS: 
+# 
+# -c colormode ... COLORMODE is the colorspace/channel(s) to use to compute
+# the minimum and maximum values. The choices are: global, intensity, 
+# luminance, lightness, rgb and sl. The default is luminance.
+# 
+# Global uses aggregate statistics from all the channels.
+# Intensity uses statistics from -colorspace Gray (Rec609Luma).
+# Luminance uses statistics from -colorspace Rec709Luma.
+# Lightness uses statistics from the lightness channel of -colorspace HSL.
+# RGB uses statistics independently from each channel of -colorspace sRGB/RGB.
+# SL uses statistics independently from each the S,L channels of -colorspace HSL.
+# See definitions at: 
+# http://www.imagemagick.org/script/command-line-options.php#colorspace
+# 
+# Note: generally there are only slight differences between the various 
+# non-rgb colormode results. Colormode=rgb can cause color balance shifts.
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set default values
+colormode="luminance"
+
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 4 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		  -h|-help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-c)    # get  colormode
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID COLORMODE SPECIFICATION ---"
+					   checkMinus "$1"
+					   colormode=`echo "$1" | tr '[A-Z]' '[a-z]'`
+					   case "$colormode" in 
+					   		global) ;;
+					   		intensity) ;;
+					   		luminance) ;;
+					   		lightness) ;;
+					   		rgb) ;;
+					   		sl) ;;
+					   		*) errMsg "--- COLORMODE=$colormode IS AN INVALID VALUE ---" 
+					   	esac
+					   ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile
+	infile=$1
+	outfile=$2
+fi
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "NO INPUT FILE SPECIFIED"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "NO OUTPUT FILE SPECIFIED"
+
+
+# setup temporary images
+tmpA1="$dir/stretch_1_$$.mpc"
+tmpA2="$dir/stretch_1_$$.cache"
+tmpI1="$dir/stretch_2_$$.mpc"
+tmpI2="$dir/stretch_2_$$.cache"
+tmpR1="$dir/stretch_R_$$.mpc"
+tmpR2="$dir/stretch_R_$$.cache"
+tmpG1="$dir/stretch_G_$$.mpc"
+tmpG2="$dir/stretch_G_$$.cache"
+tmpB1="$dir/stretch_B_$$.mpc"
+tmpB2="$dir/stretch_B_$$.cache"
+tmpH1="$dir/stretch_H_$$.mpc"
+tmpH2="$dir/stretch_H_$$.cache"
+tmpS1="$dir/stretch_S_$$.mpc"
+tmpS2="$dir/stretch_S_$$.cache"
+tmpL1="$dir/stretch_L_$$.mpc"
+tmpL2="$dir/stretch_L_$$.cache"
+trap "rm -f $tmpA1 $tmpA2 $tmpI1 $tmpI2 $tmpR1 $tmpR2 $tmpG1 $tmpG2 $tmpB1 $tmpB2 $tmpH1 $tmpH2 $tmpS1 $tmpS2 $tmpL1 $tmpL2; exit 0" 0
+trap "rm -f $tmpA1 $tmpA2 $tmpI1 $tmpI2 $tmpR1 $tmpR2 $tmpG1 $tmpG2 $tmpB1 $tmpB2 $tmpH1 $tmpH2 $tmpS1 $tmpS2 $tmpL1 $tmpL2; exit 1" 1 2 3 15
+
+
+# read input and convert to appropriate colorspace/channel
+if convert -quiet -regard-warnings "$infile" +repage "$tmpA1"
+	then
+	: ' do nothing '
+else
+	errMsg "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+fi
+
+im_version=`convert -list configure | \
+	sed '/^LIB_VERSION_NUMBER /!d; s//,/;  s/,/,0/g;  s/,0*\([0-9][0-9]\)/\1/g' | head -n 1`
+
+# colorspace swapped at IM 6.7.5.5, but not properly fixed until 6.7.6.6
+# before swap verbose info reported colorspace=RGB after colorspace=sRGB
+colorspace=`identify -ping -verbose $tmpA1 | sed -n 's/^.*Colorspace: \([^ ]*\).*$/\1/p'`
+type=`identify -ping -verbose $tmpA1 | sed -n 's/^.*Type: \([^ ]*\).*$/\1/p'`
+if [ "$colorspace" != "sRGB" -a "$colorspace" != "RGB" -a "$type" != "Grayscale" ]; then
+	errMsg "--- FILE $infile MUST BE COLORSPACE sRGB, RGB or Grayscale ---"	 
+fi
+
+# colorspace RGB and sRGB swapped between 6.7.5.5 and 6.7.6.7 
+# though probably not resolved until the latter
+# then -colorspace gray changed to linear between 6.7.6.7 and 6.7.8.2 
+# then -separate converted to linear gray channels between 6.7.6.7 and 6.7.8.2,
+# though probably not resolved until the latter
+# so -colorspace HSL/HSB -separate and -colorspace gray became linear
+# but we need to use -set colorspace RGB before using them at appropriate times
+# so that results stay as in original script
+# The following was determined from various version tests using stretch.
+# with IM 6.7.4.10, 6.7.6.10, 6.7.9.0
+if [ "$im_version" -lt "06070606" -o "$im_version" -gt "06070707" ]; then
+	cspace="RGB"
+else
+	cspace="sRGB"
+fi
+if [ "$im_version" -lt "06070607" -o "$im_version" -gt "06070707" ]; then
+	setcspace="-set colorspace RGB"
+else
+	setcspace=""
+fi
+# no need for setcspace for grayscale or channels after 6.8.5.4
+if [ "$im_version" -gt "06080504" ]; then
+	setcspace=""
+	cspace="sRGB"
+fi
+
+
+#convert image to RGB and separate channels according to colormode
+if [ "$colormode" = "global" ]; then
+	convert $tmpA1 $tmpI1
+elif [ "$colormode" = "intensity" ]; then
+	convert $tmpA1 $setcspace -colorspace Gray $tmpI1
+elif [ "$colormode" = "luminance" ]; then
+	convert $tmpA1 $setcspace -colorspace Rec709Luma $tmpI1
+elif [ "$colormode" = "lightness" ]; then
+	convert $tmpA1 $setcspace -colorspace HSL -channel B -separate $tmpI1
+elif [ "$colormode" = "rgb" ]; then
+	convert $tmpA1 $setcspace -channel R -separate $tmpR1
+	convert $tmpA1 $setcspace -channel G -separate $tmpG1
+	convert $tmpA1 $setcspace -channel B -separate $tmpB1
+elif [ "$colormode" = "sl" ]; then
+	convert $tmpA1 $setcspace -colorspace HSL -channel R -separate $tmpH1
+	convert $tmpA1 $setcspace -colorspace HSL -channel G -separate $tmpS1
+	convert $tmpA1 $setcspace -colorspace HSL -channel B -separate $tmpL1
+fi
+
+
+# get im version
+im_version=`convert -list configure | \
+sed '/^LIB_VERSION_NUMBER /!d;  s//,/;  s/,/,0/g;  s/,0*\([0-9][0-9]\)/\1/g' | head -n 1`
+
+getChannelStats()
+	{
+	img="$1"
+	# statistics computed as percent (of dynamic range) values
+	if [ "$im_version" -ge "06030901" ]
+		then 
+		min=`convert $img -format "%[min]" info:`
+		max=`convert $img -format "%[max]" info:`
+		min=`convert xc: -format "%[fx:100*$min/quantumrange]" info:`
+		max=`convert xc: -format "%[fx:100*$max/quantumrange]" info:`
+	else
+		data=`convert $img -verbose info:`
+		min=`echo "$data" | sed -n 's/^.*[Mm]in:.*[(]\([0-9.]*\).*$/\1/p ' | head -1`
+		max=`echo "$data" | sed -n 's/^.*[Mm]ax:.*[(]\([0-9.]*\).*$/\1/p ' | head -1`
+		min=`convert xc: -format "%[fx:100*$min]" info:`
+		max=`convert xc: -format "%[fx:100*$max]" info:`
+	fi
+	}
+
+
+# process image
+echo ""
+if [ "$colormode" != "rgb" -a "$colormode" != "sl" ]; then
+	getChannelStats "$tmpI1"
+	echo "min=$min%; max=$max%"
+	convert $tmpA1 -level ${min}%,${max}% $outfile
+elif [ "$colormode" = "rgb" ]; then
+	getChannelStats "$tmpR1"
+	echo "RED: min=$min%; max=$max%"
+	convert $tmpR1 -level ${min}%,${max}% $tmpR1
+	getChannelStats "$tmpG1"
+	echo "GREEN: min=$min%; max=$max%"
+	convert $tmpG1 -level ${min}%,${max}% $tmpG1
+	getChannelStats "$tmpB1"
+	echo "BLUE: min=$min%; max=$max%"
+	convert $tmpB1 -level ${min}%,${max}% $tmpB1
+	convert $tmpR1 $tmpG1 $tmpB1 -combine -colorspace $cspace $outfile
+elif [ "$colormode" = "sl" ]; then
+	getChannelStats "$tmpS1"
+	echo "SATURATION: min=$min%; max=$max%"
+	convert $tmpS1 -level ${min}%,${max}% $tmpS1
+	getChannelStats "$tmpL1"
+	echo "LIGHTNESS: min=$min%; max=$max%"
+	convert $tmpL1 -level ${min}%,${max}% $tmpL1
+	convert $tmpH1 -colorspace HSL \
+		$tmpH1 -compose CopyRed -composite \
+		$tmpS1 -compose CopyGreen -composite \
+		$tmpL1 -compose CopyBlue -composite \
+		-colorspace $cspace $outfile
+fi
+echo ""
+exit 0
+
+	
+
+
+

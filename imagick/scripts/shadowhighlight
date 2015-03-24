@@ -1,0 +1,371 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 4/14/2013 .......... revised 6/14/2013
+#
+# USAGE: shadowhighlight [-sa samount] [-sw swidth] [-sr sradius] 
+# [-ha hamount] [-hw hwidth] [-hr hradius] [-ma mamount] [-ca camount] 
+# [-bc bclip] [-wc wclip] infile outfile
+#
+# USAGE: shadowhighlight [h or -help]
+#
+# OPTIONS:
+#
+# -sa     samount     shadow amount; 0<=integer<=100; default=50
+# -sw     swidth      shadow tone width; 0<=integer<=100; default=50
+# -sr     sradius     shadow radius; float>=0; default=30
+# -ha     hamount     highlight amount; 0<=integer<=100; default=0
+# -hw     hwidth      highlight tone width; 0<=integer<=100; default=50
+# -hr     hradius     highlight radius; float>=0; default=30
+# -ma     mamount     midtone amount; -100<=integer<=100; default=0
+# -ca     camount     color correction amount; -100<=integer<=100; default=0
+# -bc     bclip       black clip percent; 0<=float<=100; default=0.01
+# -wc     wclip       white clip percent; 0<=float<=100; default=0.01
+#
+###
+#
+# NAME: SHADOWHIGHLIGHT 
+# 
+# PURPOSE: To adjust the tone in shadow and highlight areas of an image.
+# 
+# DESCRIPTION: SHADOWHIGHLIGHT adjusts the tone in shadow and highlight areas 
+# of an image. Shadow areas may be lightened and highlight areas darkened using 
+# the amount arguments. The tonal width arguments adjust the range of shadow 
+# and/or highlight tones that will be adjusted. The radius arguments adjust 
+# the regions around each pixel that are used to determine whether a pixel is 
+# shadow or highlight. All processing is done in the LAB colorspace. This 
+# script attempts to emulate the Photoshop function of the same name. 
+# 
+# OPTIONS: 
+#
+# -sa samount ... SAMOUNT is the shadow enhancement amount. Values are 
+# 0<=integers<=100. The default=50.
+# 
+# -sw swidth ... SWIDTH is the shadow tonal width. Values are 
+# 0<=integers<=100. The default=50.
+# 
+# -sr sradius ... SRADIUS is the shadow radius in pixels. Values are 
+# floats>=0. The default=30.
+# 
+# -ha samount ... HAMOUNT is the highlight enhancement amount. Values are 
+# 0<=integers<=100. The default=50.
+# 
+# -hw swidth ... HWIDTH is the highlight tonal width. Values are 
+# 0<=integers<=100. The default=50.
+# 
+# -Hr sradius ... HRADIUS is the highlight radius in pixels. Values are 
+# floats>=0. The default=30.
+# 
+# -ma samount ... MAMOUNT is the midtone enhancement amount. Values are 
+# -100<=integers<=100. The default=0.
+# 
+# -ca camount ... CAMOUNT is the color correction amount. Values are 
+# -100<=integers<=100. The default=0.
+# 
+# -bc bclip ... BCLIP is the black clip percent. Values are 0<=floats<=100. 
+# The default=0.01.
+#
+# -wc wclip ... WCLIP is the white clip percent. Values are 0<=floats<=100. 
+# The default=0.01.
+# 
+# REQUIREMENTS: IM 6.7.8.2 or higher, due to the use of the LAB colorspace. 
+# However, results were not stable until 6.7.8.8
+# 
+# REFERENCES: http://www.photoshopessentials.com/photo-editing/shadow-highlight/
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set defaults
+samt=50			# shadow amount; 0<=integer<=100			
+swid=50			# shadow tone width; 0<=integer<=100	
+srad=30			# shadow radius; float>=0
+hamt=0			# highlight amount; 0<=integer<=100	
+hwid=50			# highlight tone width; 0<=integer<=100	
+hrad=30			# highlight radius; float>=0
+mamt=0			# midtone amount; -100<=integer<=100	
+camt=0			# color correction amount; -100<=integer<=100	
+bclip=0.01		# black clip percent; 0<=float<=100
+wclip=0.01		# white clip percent; 0<=float<=100
+blend=50		# shadow highlight blend amount; 0<=integer<=100
+
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 22 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		  -h|-help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+			   -sa)    # get samt
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SAMOUNT SPECIFICATION ---"
+					   checkMinus "$1"
+					   samt=`expr "$1" : '\([0-9]*\)'`
+					   [ "$samt" = "" ] && errMsg "--- SAMOUNT=$samt MUST BE A NON-NEGATIVE INTEGER ---"
+		   			   testA=`echo "$samt > 100" | bc`
+					   [ $testA -eq 1 ] && errMsg "--- SAMOUNT=$samt MUST BE AN INTEGER BETWEEN 0 AND 100 ---"
+					   ;;
+			   -sw)    # get swid
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SWIDTH SPECIFICATION ---"
+					   checkMinus "$1"
+					   swid=`expr "$1" : '\([0-9]*\)'`
+					   [ "$swid" = "" ] && errMsg "--- SWIDTH=$swid MUST BE A NON-NEGATIVE INTEGER ---"
+		   			   testA=`echo "$swid > 100" | bc`
+					   [ $testA -eq 1 ] && errMsg "--- SWIDTH=$swid MUST BE AN INTEGER BETWEEN 0 AND 100 ---"
+					   ;;
+			   -sr)    # get srad
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SRADIUS SPECIFICATION ---"
+					   checkMinus "$1"
+					   srad=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$srad" = "" ] && errMsg "--- SRADIUS=$srad MUST BE A NON-NEGATIVE FLOAT ---"
+					   ;;
+			   -ha)    # get hamt
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID HAMOUNT SPECIFICATION ---"
+					   checkMinus "$1"
+					   hamt=`expr "$1" : '\([0-9]*\)'`
+					   [ "$hamt" = "" ] && errMsg "--- HAMOUNT=$hamt MUST BE A NON-NEGATIVE INTEGER ---"
+		   			   testA=`echo "$hamt > 100" | bc`
+					   [ $testA -eq 1 ] && errMsg "--- HAMOUNT=$hamt MUST BE AN INTEGER BETWEEN 0 AND 100 ---"
+					   ;;
+			   -hw)    # get hwid
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID HWIDTH SPECIFICATION ---"
+					   checkMinus "$1"
+					   hwid=`expr "$1" : '\([0-9]*\)'`
+					   [ "$hwid" = "" ] && errMsg "--- HWIDTH=$hwid MUST BE A NON-NEGATIVE INTEGER ---"
+		   			   testA=`echo "$hwid > 100" | bc`
+					   [ $testA -eq 1 ] && errMsg "--- HWIDTH=$hwid MUST BE AN INTEGER BETWEEN 0 AND 100 ---"
+					   ;;
+			   -hr)    # get hrad
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID HRADIUS SPECIFICATION ---"
+					   checkMinus "$1"
+					   hrad=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$hrad" = "" ] && errMsg "--- HRADIUS=$hrad MUST BE A NON-NEGATIVE FLOAT ---"
+					   ;;
+			   -ma)    # get mamt
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID MAMOUNT SPECIFICATION ---"
+					   checkMinus "$1"
+					   mamt=`expr "$1" : '\([0-9]*\)'`
+					   [ "$mamt" = "" ] && errMsg "--- MAMOUNT=$mamt MUST BE A NON-NEGATIVE INTEGER ---"
+		   			   testA=`echo "$mamt < -100" | bc`
+		   			   testB=`echo "$mamt > 100" | bc`
+					   [ $testA -eq 1 -o $testB -eq 1 ] && errMsg "--- MAMOUNT=$mamt MUST BE AN INTEGER BETWEEN -100 AND 100 ---"
+					   ;;
+			   -ca)    # get camt
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID CAMOUNT SPECIFICATION ---"
+					   checkMinus "$1"
+					   camt=`expr "$1" : '\([0-9]*\)'`
+					   [ "$camt" = "" ] && errMsg "--- CAMOUNT=$camt MUST BE A NON-NEGATIVE INTEGER ---"
+		   			   testA=`echo "$camt < -100" | bc`
+		   			   testB=`echo "$camt > 100" | bc`
+					   [ $testA -eq 1 -o $testB -eq 1 ] && errMsg "--- CAMOUNT=$camt MUST BE AN INTEGER BETWEEN -100 AND 100 ---"
+					   ;;
+			   -bc)    # get bclip
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID BCLIP SPECIFICATION ---"
+					   checkMinus "$1"
+					   bclip=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$bclip" = "" ] && errMsg "--- BCLIP=$bclip MUST BE A NON-NEGATIVE FLOAT ---"
+		   			   testA=`echo "$bclip > 100" | bc`
+					   [ $testA -eq 1 ] && errMsg "--- BCLIP=$bclip MUST BE A FLOAT BETWEEN 0 AND 100 ---"
+					   ;;
+			   -wc)    # get wclip
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID WCLIP SPECIFICATION ---"
+					   checkMinus "$1"
+					   wclip=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$wclip" = "" ] && errMsg "--- WCLIP=$wclip MUST BE A NON-NEGATIVE FLOAT ---"
+		   			   testA=`echo "$wclip > 100" | bc`
+					   [ $testA -eq 1 ] && errMsg "--- WCLIP=$wclip MUST BE A FLOAT BETWEEN 0 AND 100 ---"
+					   ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile
+	infile=$1
+	outfile=$2
+fi
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "--- NO INPUT FILE SPECIFIED ---"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "--- NO OUTPUT FILE SPECIFIED ---"
+
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+
+# setup temporary images
+tmpA1="$dir/shadhigh_1_$$.mpc"
+tmpB1="$dir/shadhigh_1_$$.cache"
+tmpS1="$dir/shadhigh_S_$$.mpc"
+tmpS2="$dir/shadhigh_S_$$.cache"
+tmpH1="$dir/shadhigh_H_$$.mpc"
+tmpH2="$dir/shadhigh_H_$$.cache"
+tmpG1="$dir/shadhigh_G_$$.mpc"
+tmpG2="$dir/shadhigh_G_$$.cache"
+trap "rm -f $tmpA1 $tmpB1 $tmpS1 $tmpS2 $tmpH1 $tmpH2 $tmpG1 $tmpG2; exit 0" 0
+trap "rm -f $tmpA1 $tmpB1 $tmpA2 $tmpB2 $tmpG1 $tmpG2 $tmpG1 $tmpG2; exit 1" 1 2 3 15
+
+# read the input image into the temporary cached image and test if valid
+convert -quiet -regard-warnings "$infile" +repage "$tmpA1" ||
+	echo "--- 1 FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO size  ---"
+
+
+# set up clipping
+if [ "$bclip" = "0" -a "$wclip" = "0" ]; then
+	clipping=""
+else
+	clipping="-contrast-stretch $bclip,$wclip%"
+fi
+
+# get luminance channel for grayscale processing
+convert $tmpA1 -colorspace LAB -channel R -separate +channel $clipping $tmpG1
+
+
+# process shadow
+if [ "$samt" != 0 ]; then
+	srad=`convert xc: -format "%[fx:$srad/3]" info:`
+	samt=`convert xc: -format "%[fx:$samt/20]" info:`
+	proc="+sigmoidal-contrast $samt,100%"	
+	convert $tmpA1 -colorspace LAB -channel R $proc +channel -colorspace sRGB \
+		\( $tmpG1 -blur 0x${srad} -black-threshold $swid% -level ${swid}x100% -negate \) \
+		-alpha off -compose copy_opacity -composite $tmpS1
+else
+	convert $tmpA1 $tmpS1
+fi
+
+
+# process highlight
+if [ "$hamt" != 0 ]; then
+	hrad=`convert xc: -format "%[fx:$hrad/3]" info:`
+	hamt=`convert xc: -format "%[fx:$hamt/20]" info:`
+	proc="+sigmoidal-contrast $hamt,0%"
+	hwid2=$((100-hwid))
+	convert $tmpA1 -colorspace LAB -channel R $proc +channel -colorspace sRGB \
+		\( $tmpG1 -blur 0x${hrad} -white-threshold $hwid2% -level 0x${hwid2}% \) \
+		-alpha off -compose copy_opacity -composite $tmpH1
+else
+	convert $tmpA1 $tmpH1
+fi
+
+# set up midtone processing
+if [ "$mamt" = "0" ]; then
+	mproc=""
+else
+	mtest=`convert xc: -format "%[fx:sign($mamt)]" info:`
+	if [ $mtest -eq -1 ]; then
+		mamt=`convert xc: -format "%[fx:abs($mamt)/20]" info:`
+		mproc="-colorspace LAB -channel R +sigmoidal-contrast ${mamt}x50% +channel -colorspace sRGB"
+	else
+		mamt=`convert xc: -format "%[fx:abs($mamt)/10]" info:`
+		mproc="-colorspace LAB -channel R -sigmoidal-contrast ${mamt}x50% +channel -colorspace sRGB"
+	fi
+fi
+
+# set up color correct
+if [ "$camt" = "0" ]; then
+	cproc=""
+else
+	ctest=`convert xc: -format "%[fx:sign($camt)]" info:`
+	if [ $ctest -eq -1 ]; then
+		camt=`convert xc: -format "%[fx:abs($camt)/20]" info:`
+		cproc="-colorspace LAB -channel BG +sigmoidal-contrast $camt,50% +channel -colorspace sRGB"
+	else
+		camt=`convert xc: -format "%[fx:abs($camt)/20]" info:`
+		cproc="-colorspace LAB -channel BG -sigmoidal-contrast $camt,50% +channel -colorspace sRGB"
+	fi
+fi
+
+
+# blend highlight and shadow results and do midtone and color correction processing
+convert $tmpH1 $tmpS1 -define compose:args=$blend -compose blend -composite \
+	$mproc $cproc -alpha off $outfile
+
+
+exit 0

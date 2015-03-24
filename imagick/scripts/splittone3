@@ -1,0 +1,414 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 12/19/2013 .......... revised 12/19/2013
+# 
+# USAGE: splittone3 [-sc shadowcolor] [-hc highlightcolor] [-m mix] 
+# [-f format] [-t type] [-c compose] [-p] [-b bri] [-c con] infile outfile
+# USAGE: splittone3 [-help]
+# 
+# OPTIONS:
+# 
+# -sc     shadowcolor        shadow color; any opaque IM color allowed; 
+#                        	 default=black
+# -hc     highlightcolor     highlight color; any opaque IM color allowed; 
+#                            default=white
+# -m      mix                mix between shadow and highlight coloring; 
+#                            0<=interger<=100; 0 is all shadow coloring; 
+#                            100 is all highlight coloring; default=50
+# -f      format             format of image to process; image or grayscale; 
+#                            default=image
+# -t      type               type of color processing; color or gradient; 
+#                            default=color
+# -c      compose            compose method to use; choices are: colorize, 
+#                            overlay, softlight and hardlight; default=colorize
+# -p                         preserve luminosity
+# -b      bri                brightness; -100<=integer<=100; default=0
+# -s      sat                saturation; -100<=integer<=100; default=0
+#
+###
+# 
+# NAME: SPLITTONE3 
+# 
+# PURPOSE: To apply a color splittone effect to an image.
+# 
+# DESCRIPTION: SPLITTONE3 applies a color splittone effect to an image by 
+# adjusting shadow and highlight color separately. 
+# 
+# 
+# ARGUMENTS: 
+# 
+# -sc shadowcolor ... SHADOWCOLOR is the shadow color. Any opaque IM color is 
+# allowed. The default=black
+# 
+# -hc highlightcolor ... HIGHLIGHTCOLOR is the highlight color. Any opaque IM 
+# color is allowed. The default=black
+# 
+# -m mix ... MIX between shadow and highlight coloring. Values are integers 
+# between 0 and 100. Zero is all shadow coloring. One hundred is all 
+# highlight coloring. The default=50 (equal blend).
+# 
+# -f format ... FORMAT the image to process. Choices are: image (leave image 
+# unchanged) or grayscale (convert image to grayscale before processing). The
+# default=image.
+#  
+# -t type ... TYPE of color processing. The choices are: color (solid color 
+# composition of grayscale version with image) or gradient (+level-colors 
+# composition of grayscale version with image). The default=color.
+#
+# -c compose ... COMPOSE method to use to combine the image and the colored 
+# grayscale image. The choices are: colorize, overlay, softlight and hardlight. 
+# The default=colorize.
+# 
+# -m mode ... MODE for overlaying the shadow processed image with highlight 
+# processed image. The choices are HS (highlight first, then shadow overlaid) 
+# or SH (shadow first, then high;light overlaid). The default=HS. 
+# 
+# -p ... Preserve luminosity.
+# 
+# -b bri ... BRI is the percent change in brightness. Values are integers 
+# between -100 and 100. The default=0 (no change)
+# 
+# -s sat ... SAT is the percent change in saturation. Values are integers 
+# between -100 and 100. The default=0 (no change)
+# 
+# LIMITATION: Works best for compose=colorize for IM 6.8.5.5 or higher due to 
+# the introduction and use of colorspace HCLp. Otherwise, a quite different 
+# result will be obtained using colorspace HSL.
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+# 
+
+# set default values
+scolor="black"				# shadow color; default=black
+hcolor="white"				# highlight color; default=white
+format="image"				# process image or grayscale
+type="color"				# type of processing color or gradient; default=color
+compose="colorize"			# compose method; colorize, overlay, softlight, hardlight; default=colorize
+mix="50"					# shadow - hightlight mixing ratio; 0<=integer<=100; default=50
+preserve="no"				# preserve luminosity; yes or no; only effective for format=image
+bri=0						# grayscale brightness; -100<=integer<=100; default=0
+sat=0						# output saturation; -100<=integer<=100; default=0
+blur=10						# fixed
+div=5						# fixed; scaling factor for sigmoidal brightness
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 19 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		     -help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-sc)    # get  shadowcolor
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SHADOWCOLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   scolor="$1"
+					   ;;
+				-hc)    # get  highlightcolor
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID HIGHLIGHT SPECIFICATION ---"
+					   checkMinus "$1"
+					   hcolor="$1"
+					   ;;
+				-m)    # get mix
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID MIX SPECIFICATION ---"
+					   checkMinus "$1"
+					   mix=`expr "$1" : '\([0-9]*\)'`
+					   [ "$mix" = "" ] && errMsg "--- MIX=$mix MUST BE A NON-NEGATIVE INTEGER ---"
+					   testA=`echo "$mix < 0" | bc`
+					   testB=`echo "$mix > 100" | bc`
+					   [ $testA -eq 1 -o $testB -eq 1 ] && errMsg "--- MIX=$mix MUST BE AN INTEGER BETWEEN 0 AND 100 ---"
+					   ;;
+			   	-f)    # format
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID FORMAT SPECIFICATION ---"
+					   checkMinus "$1"
+					   format=`echo "$1" | tr "[:upper:]" "[:lower:]"`
+					   case "$format" in
+					   		image|i) format="image";;
+					   		grayscale|gray|g) format="grayscale";;
+					   		*) errMsg "--- FORMAT=$format IS NOT A VALID CHOICE ---" ;;
+					   esac
+					   ;;
+			   	-t)    # type
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID TYPE SPECIFICATION ---"
+					   checkMinus "$1"
+					   type=`echo "$1" | tr "[:upper:]" "[:lower:]"`
+					   case "$type" in
+					   		color|c) type="color";;
+					   		gradient|g) type="gradient";;
+					   		*) errMsg "--- TYPE=$type IS NOT A VALID CHOICE ---" ;;
+					   esac
+					   ;;
+			   	-c)    # compose
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID COMPOSE SPECIFICATION ---"
+					   checkMinus "$1"
+					   type=`echo "$1" | tr "[:upper:]" "[:lower:]"`
+					   case "$compose" in
+					   		colorize|c) compose="colorize";;
+					   		overlay|o) compose="overlay";;
+					   		softlight|s) compose="softlight";;
+					   		hardlight|h) compose="hardlight";;
+					   		*) errMsg "--- COMPOSE=$compose IS NOT A VALID CHOICE ---" ;;
+					   esac
+					   ;;
+			   	-p)    # preserve
+					   preserve="yes"
+					   ;;
+				-b)    # get bri
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   #errorMsg="--- INVALID BRI SPECIFICATION ---"
+					   #checkMinus "$1"
+					   bri=`expr "$1" : '\([-0-9]*\)'`
+					   [ "$bri" = "" ] && errMsg "--- BRI=$bri MUST BE A NON-NEGATIVE INTEGER ---"
+					   testA=`echo "$bri < -100" | bc`
+					   testB=`echo "$bri > 100" | bc`
+					   [ $testA -eq 1 -o $testB -eq 1 ] && errMsg "--- BRI=$bri MUST BE AN INTEGER BETWEEN -100 AND 100 ---"
+					   ;;
+				-s)    # get sat
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   #errorMsg="--- INVALID SAT SPECIFICATION ---"
+					   #checkMinus "$1"
+					   sat=`expr "$1" : '\([-0-9]*\)'`
+					   [ "$sat" = "" ] && errMsg "--- SAT=$sat MUST BE A NON-NEGATIVE INTEGER ---"
+					   testA=`echo "$sat < -100" | bc`
+					   testB=`echo "$sat > 100" | bc`
+					   [ $testA -eq 1 -o $testB -eq 1 ] && errMsg "--- SAT=$sat MUST BE AN INTEGER BETWEEN -100 AND 100 ---"
+					   ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile
+	infile=$1
+	outfile=$2
+fi
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "NO INPUT FILE SPECIFIED"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "NO OUTPUT FILE SPECIFIED"
+
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+
+# setup temporary images
+tmpA1="$dir/splittone_1_$$.mpc"
+tmpB1="$dir/splittone_1_$$.cache"
+tmpG1="$dir/splittone_G_$$.mpc"
+tmpG2="$dir/splittone_G_$$.cache"
+tmpS1="$dir/splittone_S_$$.mpc"
+tmpS2="$dir/splittone_S_$$.cache"
+tmpH1="$dir/splittone_H_$$.mpc"
+tmpH2="$dir/splittone_H_$$.cache"
+trap "rm -f $tmpA1 $tmpB1 $tmpS1 $tmpS2 $tmpH1 $tmpH2 $tmpG1 $tmpG2; exit 0" 0
+trap "rm -f $tmpA1 $tmpB1 $tmpS1 $tmpS2 $tmpH1 $tmpH2 $tmpG1 $tmpG2; exit 1" 1 2 3 15
+
+# read the input image into the temporary cached image and test if valid
+convert -quiet -regard-warnings "$infile" +repage "$tmpA1" ||
+	echo "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO size  ---"
+
+# get im_version
+im_version=`convert -list configure | \
+	sed '/^LIB_VERSION_NUMBER /!d; s//,/;  s/,/,0/g;  s/,0*\([0-9][0-9]\)/\1/g' | head -n 1`
+
+# colorspace RGB and sRGB swapped between 6.7.5.5 and 6.7.6.7 
+# though probably not resolved until the latter
+# then -colorspace gray changed to linear between 6.7.6.7 and 6.7.8.2 
+# then -separate converted to linear gray channels between 6.7.6.7 and 6.7.8.2,
+# though probably not resolved until the latter
+# so -colorspace HSL/HSB -separate and -colorspace gray became linear
+# but we need to use -set colorspace RGB before using them at appropriate times
+# so that results stay as in original script
+if [ "$im_version" -lt "06070606" -o "$im_version" -gt "06070707" ]; then
+	cspace="RGB"
+else
+	cspace="sRGB"
+fi
+if [ "$im_version" -lt "06070607" -o "$im_version" -gt "06070707" ]; then
+	setcspace="-set colorspace RGB"
+else
+	setcspace=""
+fi
+# no need for setcspace for grayscale or channels after 6.8.5.4
+if [ "$im_version" -gt "06080504" ]; then
+	setcspace=""
+	cspace="sRGB"
+fi
+
+# set up sat and bri
+sat=$((sat+100))
+test=`convert xc: -format "%[fx:sign($bri)]" info:`
+bri=`convert xc: -format "%[fx:abs($bri)/$div]" info:`
+
+# create grayscale image
+if [ $test -eq -1 ]; then
+	convert $tmpA1 $setcspace -colorspace gray -auto-level +sigmoidal-contrast $bri,0% $tmpG1
+else
+	convert $tmpA1 $setcspace -colorspace gray -auto-level -sigmoidal-contrast $bri,0% $tmpG1
+fi
+
+# create shadow and hightlight images
+if [ "$type" = "gradient" ]; then
+#	sproc="-negate +level-colors black,$scolor"
+	sproc="+level-colors $scolor,white"
+	hproc="+level-colors black,$hcolor"
+elif [ "$type" = "color" ]; then
+	sproc="-fill $scolor -colorize 100%"
+	hproc="-fill $hcolor -colorize 100%"
+fi
+
+# set up format
+if [ "$format" = "image" ]; then
+	img="$tmpA1"
+elif [ "$format" = "grayscale" ]; then
+	img="$tmpG1"
+fi
+
+# set up colorize/luminize colorspace
+if [ "$im_version" -ge "06080505" ]; then
+	colormode="HCLp"
+else
+	colormode="HSL"
+fi
+	
+# colorize grayscale image for shadows
+if [ "$compose" = "colorize" ]; then
+	convert $tmpG1 \
+		\( -clone 0 $sproc $setcspace -colorspace $colormode -separate +channel \) \
+		\( -clone 0 $setcspace -colorspace $colormode -channel b -separate +channel \) \
+		-delete 0,3 -set colorspace $colormode -combine -colorspace $cspace $tmpS1
+else
+	convert $tmpG1 \
+		\( -clone 0 $sproc \) \
+		-compose $compose -composite \
+		$tmpS1
+fi
+
+
+# colorize grayscale image for highlights
+if [ "$compose" = "colorize" ]; then
+	convert $tmpG1 \
+		\( -clone 0 $hproc $setcspace -colorspace $colormode -separate +channel \) \
+		\( -clone 0 $setcspace -colorspace $colormode -channel b -separate +channel \) \
+		-delete 0,3 -set colorspace $colormode -combine -colorspace $cspace $tmpH1
+else
+	convert $tmpG1 \
+		\( -clone 0 $hproc \) \
+		-compose $compose -composite \
+		$tmpH1
+fi
+	
+	
+
+# merge shadow with input image
+convert $img \
+	\( $tmpS1 \( $tmpG1 -blur 0x$blur -negate -auto-level \) \
+		-alpha off -compose copy_opacity -composite \) \
+	-compose over -flatten $tmpS1
+
+
+# merge highlight with input image
+convert $img \
+	\( $tmpH1 \( $tmpG1 -blur 0x$blur -auto-level \) \
+		-alpha off -compose copy_opacity -composite \) \
+	-compose over -flatten $tmpH1
+
+
+
+# blend together
+convert \( $tmpS1 \) \( $tmpH1 \) \
+	-define compose:args=$mix -compose blend -composite -modulate 100,$sat,100 $outfile
+
+if [ "$preserve" = "yes" ]; then
+	convert \( \( $tmpS1 \) \( $tmpH1 \) \
+		-define compose:args=$mix -compose blend -composite -modulate 100,$sat,100 \
+			$setcspace -colorspace $colormode -separate +channel \) \
+		\( $img $setcspace -colorspace $colormode -channel b -separate +channel \) \
+		-delete 2 -set colorspace $colormode -combine -colorspace $cspace $outfile
+else
+	convert \( $tmpS1 \) \( $tmpH1 \) \
+		-define compose:args=$mix -compose blend -composite -modulate 100,$sat,100 $outfile
+fi
+
+exit 0	
+	

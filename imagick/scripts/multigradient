@@ -1,0 +1,625 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 5/14/2013 .......... revised 5/14/2013
+# 
+# USAGE: multigradient [-w width] [-h height] [-s stops] [-t type] 
+# [-d direction] [-c center] [-r radii] outfile
+#
+# USAGE: multigradient [-help]
+# 
+# OPTIONS:
+# 
+# -w     width         width of desired output image; default=256
+# -h     height        height of desired output image; default=256
+# -s     stops         stops; space separate list of pairs of color and 
+#                      percent location along the gradient enclosed in double 
+#                      quotes; default="white black"
+# -t     type          type of gradient; choices are linear, circle or ellipse;
+#                      default=linear
+# -d     direction     direction of gradient; angle or sides or corners; 
+#                      default=to-bottom for linear and closest-side for circle 
+#                      or ellipse; angles are measured in degrees clockwise 
+#                      from the zeroangle direction; -360<=angle<=360
+# -c     center        x and y center coordinates for ellipse or circle; 
+#                      pair of comma separated floats>=0; 
+#                      default=(width-2)/2,(height-1)/2
+# -r     radii         x and y radii for ellipse or circle; 
+#                      pair of comma separated floats>=0; 
+#                      default is determined by distance from center to 
+#                      closest-side
+# -z     zeroangle     zero angle direction for type=linear; choices are: 
+#                      to-top or to-right; default=to-top
+# 
+###
+# 
+# NAME: MULTIGRADIENT 
+# 
+# PURPOSE: To create either a linear or radial gradient image with two or more 
+# stops to specify colors and locations along the gradient direction
+# 
+# DESCRIPTION: RADIALGRADIENT creates either a linear or radial gradient image 
+# with two or more stops to specify colors and locations along the gradient 
+# direction. Linear gradients may be oriented at any rotation angle or towards 
+# any side or corner. A radial gradient may be either an ellipse or constrained 
+# to a circle. Directions include: closest-side, furthest-side, closest-corner, 
+# or furthest corner. Colors may contain partial transparency and allow any 
+# valid IM color specification, including color names, rgb values or hex values. 
+# This script attempts to simulate CSS style gradients.
+# 
+# 
+# ARGUMENTS: 
+# 
+# -w width ... WIDTh of desired output image. The default=256.
+# 
+# -h height ... HEIGHT of desired output image. The default=256.
+# 
+# -s stops ... STOPS are a space separate list of pairs of colors and percent 
+# locations along the gradient enclosed in double quotes. The first and last 
+# percent location may be left off and are then assumed to be 0 and 100 
+# (percent). The default="white black" or "white 0 black 100".
+# 
+# -t type ... TYPE of gradient. The choices are: linear, circle or ellipse. 
+# The default=linear.
+# 
+# -d  direction ... DIRECTION of gradient. For type=linear, direction may
+# be either an angle in degrees measured clockwise from the zeroangle in the
+# range of -360 to 360 or alternately, direction may be any one of the
+# following: to-top, to-right, to-bottom, to-left, to-topright,
+# to-bottomright, to-bottomleft or to-topleft for linear. For type=ellipse or 
+# circle, direction may be one of the following: closest-side, furthest-side, 
+# closest-corner, furthest-corner. For type=linear, the default is to-bottom  
+# for zeroangle=to-top and the default is to-right for zeroangle=to-right. For
+# ellipse or circle the default=closest-side.
+# 
+# -c center ... x and y CENTER coordinates for ellipse or circle expressed as 
+# a comma separate pair of non-negative floats. The 
+# default=(width-2)/2,(height-1)/2.
+# 
+# -r radii ... x and y RADII for ellipse or circle expressed as a comma 
+# separate pair of non-negative floats. The default is determined by distance 
+# from the gradient center to the closest-side.
+# 
+# -z zeroangle ... ZEROANGLE is direction where angle=0 for type=linear. The 
+# choices are: to-top or to-right. The default=to-top
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+# 
+
+# set default values
+width=256
+height=256
+stops="white black"			# default: equivalent to gradient: or gradient:"white-black"
+type="linear"				# linear, ellipse, circle
+direction=""				# angle in degrees clockwise from "zeroangle"; or to-top, to-right, to-bottom, to-left, to-topright, to-bottomright, to-bottomleft, to-topleft (for linear); or closest-corner, furthest-corner, closest-side, furthest-side (for ellipse or circle)
+center=""					# ellipse or circle only
+radii=""					# ellipse or circle only
+zeroangle="to-top"			# linear coordinate system zero angle; to-right or to-top
+
+# fixed 
+length=65000
+length=1000
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 15 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		     -help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-w)    # get  width
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID WIDTH SPECIFICATION ---"
+					   checkMinus "$1"
+					   width=`expr "$1" : '\([0-9]*\)'`
+					   [ "$width" = "" ] && errMsg "--- WIDTH=$width MUST BE A NON-NEGATIVE INTEGER ---"
+		   			   testA=`echo "$width <= 0" | bc`
+					   [ $testA -eq 1 ] && errMsg "--- WIDTH=$width MUST BE A POSITIVE INTEGER ---"
+					   ;;
+				-h)    # get  height
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID HEIGHT SPECIFICATION ---"
+					   checkMinus "$1"
+					   height=`expr "$1" : '\([0-9]*\)'`
+					   [ "$height" = "" ] && errMsg "--- HEIGHT=$height MUST BE A NON-NEGATIVE INTEGER ---"
+		   			   testA=`echo "$height <= 0" | bc`
+					   [ $testA -eq 1 ] && errMsg "--- HEIGHT=$height MUST BE A POSITIVE INTEGER ---"
+					   ;;
+				-s)    # get  stops
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID STOPS SPECIFICATION ---"
+					   checkMinus "$1"
+					   stops="$1"
+					   ;;
+				-t)    # type
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID TYPE SPECIFICATION ---"
+					   checkMinus "$1"
+					   type=`echo "$1" | tr "[:upper:]" "[:lower:]"`
+					   case "$type" in 
+							linear|l) type="linear" ;;
+							circle|c) type="circle" ;;
+							ellipse|e) type="ellipse" ;;
+							*) errMsg "--- TYPE=$type IS AN INVALID VALUE ---" 
+					   esac
+				   	   ;;
+				-d)    # get  direction
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   #errorMsg="--- INVALID DIRECTION SPECIFICATION ---"
+					   #checkMinus "$1"
+					   direction=`echo "$1" | tr "[:upper:]" "[:lower:]"`
+					   ;;
+				-c)    # get  center
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID CENTER SPECIFICATION ---"
+					   checkMinus "$1"
+					   center=`expr "$1" : '\([.0-9]*,[.0-9]*\)'`
+					   [ "$center" = "" ] && errMsg "--- CENTER=$center MUST BE A COMMA SEPARATED PAIR OF NON-NEGATIVE FLOATS ---"
+					   ;;
+				-r)    # get  radii
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID RADII SPECIFICATION ---"
+					   checkMinus "$1"
+					   radii=`expr "$1" : '\([.0-9]*,[.0-9]*\)'`
+					   [ "$radii" = "" ] && errMsg "--- RADII=$radii MUST BE A COMMA SEPARATED PAIR OF NON-NEGATIVE FLOATS ---"
+					   ;;
+				-z)    # zeroangle
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID ZEROANGLE SPECIFICATION ---"
+					   checkMinus "$1"
+					   zeroangle=`echo "$1" | tr "[:upper:]" "[:lower:]"`
+					   case "$zeroangle" in 
+							to-top) ;;
+							to-right) ;;
+							*) errMsg "--- ZEROANGLE=$type IS AN INVALID VALUE ---" 
+					   esac
+				   	   ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get outfile
+	outfile=$1
+fi
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "--- NO OUTPUT FILE SPECIFIED ---"
+
+
+# setup temporary images
+tmpA1="$dir/multigradient_1_$$.mpc"
+tmpB1="$dir/multigradient_1_$$.cache"
+tmpA2="$dir/multigradient_2_$$.mpc"
+tmpB2="$dir/multigradient_2_$$.cache"
+trap "rm -f $tmpA1 $tmpB1 $tmpA2 $tmpB2; exit 0" 0
+trap "rm -f $tmpA1 $tmpB1 $tmpA2 $tmpB2; exit 1" 1 2 3 15
+
+
+function linearGradient
+	{
+	# creates appropiately rotated grayscale gradient
+	angle=$1
+	cos=`convert xc: -format "%[fx:cos($angle*pi/180)]" info:`
+	sin=`convert xc: -format "%[fx:sin($angle*pi/180)]" info:`
+	cx=`convert xc: -format "%[fx:($width-1)/2]" info:`
+	cy=`convert xc: -format "%[fx:($height-1)/2]" info:`
+	# dist corresponds to 2*distance along a line from the center at the specified angle --
+	# to the intersection with a perpendicular line from the corner
+	# abs needed so that it works for all quadrants not just first quadrant
+	dist=`convert xc: -format "%[fx:abs($width*$cos)+abs($height*$sin)]" info:`
+#	echo "dist=$dist; phase=$phase; angle=$angle"
+
+: <<COMMENT1
+	# slow pure fx approach
+	convert -size ${width}x${height} xc: -fx "$cos*(i-$cx)/$dist + $sin*(j-$cy)/$dist + 0.5" $tmpA1
+COMMENT1
+
+	# faster hybrid approach (same speed if use gradient:)
+	a=`convert xc: -format "%[fx:$cos*($width-1)/$dist]" info:`
+	b=`convert xc: -format "%[fx:$sin*($height-1)/$dist]" info:`
+	c=`convert xc: -format "%[fx:0.5-($cos*$cx+$sin*$cy)/$dist]" info:`
+	if [ "$angle" = "180" -o "$angle" = "360" ]; then
+		ang=0
+	else
+		ang=`convert xc: -format "%[fx:mod($angle,90)]" info:`
+	fi
+	convert \
+		\( -size ${width}x1 xc: -fx "i/(w-1)" -scale ${width}x${height}! \) \
+		\( -size 1x${height} xc: -fx "j/(h-1)" -scale ${width}x${height}! \) \
+		+swap -define compose:args="0,$a,$b,$c" -compose mathematics -composite $tmpA1
+
+	}
+
+function radialGradient
+	{
+	cx=$1
+	cy=$2
+	rx=$3
+	ry=$4
+#	echo "cx=$cx; cy=$cy; rx=$rx; ry=$ry"
+	
+: <<COMMENT2
+	# slow pure fx approach
+	convert -size ${width}x1 xc: \
+		-fx "xx=(i-$cx)/$rx; yy=(j-$cy)/$ry; hypot(xx,yy)" $tmpA1
+COMMENT2
+
+	# faster hybrid approach
+	# choose not to use 1D gradient: and -solarize -level 0x50% -evaluate pow 2
+	# comparison with -fx shows slight differences and I trust -fx results more
+	convert \
+		\( -size ${width}x1 xc: -fx "xx=(i-$cx)/$rx; xx*xx" -scale ${width}x${height}! \) \
+		\( -size 1x${height} xc: -fx "yy=(j-$cy)/$ry; yy*yy" -scale ${width}x${height}! \) \
+		-compose plus -composite -evaluate pow 0.5 $tmpA1
+	}
+	
+function distSides
+	{
+	rleft=$cx
+	rtop=$cy
+	rright=`convert xc: -format "%[fx:$width-1-$cx]" info:`
+	rbottom=`convert xc: -format "%[fx:$height-1-$cy]" info:`
+	}
+
+function distCorners
+	{
+	rtopleft=`convert xc: -format "%[fx:hypot($cx,$cy)]" info:`
+	rtopright=`convert xc: -format "%[fx:hypot($width-1-$cx,$cy)]" info:`
+	rbottomright=`convert xc: -format "%[fx:hypot($width-1-$cx,$height-1-$cy)]" info:`
+	rbottomleft=`convert xc: -format "%[fx:hypot($cx,$height-1-$cy)]" info:`
+	}
+
+function cornerCoords
+	{
+	rad=$1
+	if [ $(convert xc: -format "%[fx:$rad==$rtopleft?1:0]" info:) -eq 1 ]; then
+		xx=0
+		yy=0
+	elif [ $(convert xc: -format "%[fx:$rad==$rtopright?1:0]" info:) -eq 1 ]; then
+		xx=$((width-1))
+		yy=0
+	elif [ $(convert xc: -format "%[fx:$rad==$rbottomright?1:0]" info:) -eq 1 ]; then
+		xx=$((width-1))
+		yy=$((height-1))
+	elif [ $(convert xc: -format "%[fx:$rad==$rbottomleft?1:0]" info:) -eq 1 ]; then
+		xx=0
+		yy=$((height-1))
+	fi
+	}
+
+
+# set up linear coordinate system
+if [ "$type" = "linear" -a "$zeroangle" = "to-top" ]; then
+	phase=-90
+	[ "$direction" = "" ] && direction="to-bottom"
+elif [ "$type" = "linear" -a "$zeroangle" = "to-right" ]; then
+	phase=0
+	[ "$direction" = "" ] && direction="to-right"
+elif [ "$type" = "circle" -o "$type" = "ellipse" ]; then
+	[ "$direction" = "" ] && direction="closest-side"
+fi
+
+# trap on direction
+angletest="false"
+if [ "$type" = "linear" ]; then
+	if [ "$(echo "$direction" | grep  -E '^[-+]?[0-9]+\.?[0-9]*$')" != "" ]; then
+		# direction is angle
+		dtest=`convert xc: -format "%[fx:($direction<-360 || $direction>360)?0:1 ]" info:`
+		[ $dtest -eq 0 ] && errMsg "---DIRECTION ANGLE MUST BE BETWEEN 0 AND 360 ---"
+		angletest="true"
+#		echo "dir=$direction; dtest=$dtest; angletest=$angletest"
+
+	else
+		# direction is not an angle	
+		case "$direction" in 
+		to-top) ;;
+		to-right) ;;
+		to-bottom) ;;
+		to-left) ;;
+		to-topright) ;;
+		to-bottomright) ;;
+		to-bottomleft) ;;
+		to-topleft) ;;
+		*) errMsg "--- DIRECTION=$direction IS AN INVALID VALUE FOR TYPE=LINEAR ---" 
+		esac
+	fi
+else
+	case "$direction" in 
+		closest-side) ;;
+		furthest-side) ;;
+		closest-corner) ;;
+		furthest-corner) ;;
+		*) errMsg "--- DIRECTION=$direction IS AN INVALID VALUE FOR TYPE=ELLIPSE OR TYPE=CIRCLE ---" 
+esac
+fi
+
+if [ "$type" = "linear" ]; then
+	# create linear grayscale gradient from black to white for different directions
+
+	if [ "$angletest" = "true" ]; then
+		angle=`convert xc: -format "%[fx:$direction+$phase]" info:`
+		linearGradient $angle
+	elif [ "$direction" = "to-right" ]; then
+		convert -size "${height}x${width}" gradient: -rotate 90 $tmpA1
+	elif [ "$direction" = "to-left" ]; then
+		convert -size "${height}x${width}" gradient: -rotate -90 $tmpA1
+	elif [ "$direction" = "to-bottom" ]; then
+		convert -size "${width}x${height}" gradient: -rotate 180 $tmpA1
+	elif [ "$direction" = "to-top" ]; then
+		convert -size "${width}x${height}" gradient: $tmpA1
+	elif [ "$direction" = "to-bottomright" ]; then
+		angle=`convert xc: -format "%[fx:(180/pi)*atan2($height,$width)]" info:`
+		linearGradient $angle
+	elif [ "$direction" = "to-bottomleft" ]; then
+		angle=`convert xc: -format "%[fx:90+(180/pi)*atan2($height,$width)]" info:`
+		linearGradient $angle
+	elif [ "$direction" = "to-topleft" ]; then
+		angle=`convert xc: -format "%[fx:180+(180/pi)*atan2($height,$width)]" info:`
+		linearGradient $angle
+	elif [ "$direction" = "to-topright" ]; then
+		angle=`convert xc: -format "%[fx:270+(180/pi)*atan2($height,$width)]" info:`
+		linearGradient $angle
+	fi
+
+elif [ "$type" = "circle" ]; then
+	# create radial grayscale gradient from black to white different directions
+	
+	# get center
+	if [ "$center" = "" ]; then
+		cx=`convert xc: -format "%[fx:($width-1)/2]" info:`
+		cy=`convert xc: -format "%[fx:($height-1)/2]" info:`
+	else
+		cx=`echo "$center" | cut -d, -f1`
+		cy=`echo "$center" | cut -d, -f2`
+	fi
+	
+	if [ "$radii" != "" ]; then
+		rx=`echo "$radii" | cut -d, -f1`
+		ry=$rx
+		radialGradient "$cx" "$cy" "$rx" "$ry"
+	elif [ "$direction" = "closest-side" ]; then
+		distSides
+		rx=`convert xc: -format "%[fx:min($rleft,(min($rtop,(min($rright,$rbottom)))))]" info:`
+		ry=$rx
+		radialGradient "$cx" "$cy" "$rx" "$ry"
+	elif [ "$direction" = "furthest-side" ]; then
+		distSides
+		rx=`convert xc: -format "%[fx:max($rleft,(max($rtop,(max($rright,$rbottom)))))]" info:`
+		ry=$rx
+		radialGradient "$cx" "$cy" "$rx" "$ry"
+	elif [ "$direction" = "closest-corner" ]; then
+		distCorners
+		rx=`convert xc: -format "%[fx:min($rtopleft,(min($rtopright,(min($rbottomleft,$rbottomright)))))]" info:`
+		ry=$rx
+		radialGradient "$cx" "$cy" "$rx" "$ry"
+	elif [ "$direction" = "furthest-corner" ]; then
+		distCorners
+		rx=`convert xc: -format "%[fx:max($rtopleft,(max($rtopright,(max($rbottomleft,$rbottomright)))))]" info:`
+		ry=$rx
+		radialGradient "$cx" "$cy" "$rx" "$ry"
+	fi
+	
+elif [ "$type" = "ellipse" ]; then
+	# create radial grayscale gradient from black to white different directions
+	
+	# get center
+	if [ "$center" = "" ]; then
+		cx=`convert xc: -format "%[fx:($width-1)/2]" info:`
+		cy=`convert xc: -format "%[fx:($height-1)/2]" info:`
+	else
+		cx=`echo "$center" | cut -d, -f1`
+		cy=`echo "$center" | cut -d, -f2`
+	fi
+	
+	if [ "$radii" != "" ]; then
+		rx=`echo "$radii" | cut -d, -f1`
+		ry=`echo "$radii" | cut -d, -f2`
+		radialGradient "$cx" "$cy" "$rx" "$ry"
+	elif [ "$direction" = "closest-side" ]; then
+		distSides
+		rx=`convert xc: -format "%[fx:min($rleft,$rright)]" info:`
+		ry=`convert xc: -format "%[fx:min($rtop,$rbottom)]" info:`
+		radialGradient "$cx" "$cy" "$rx" "$ry"
+	elif [ "$direction" = "furthest-side" ]; then
+		distSides
+		rx=`convert xc: -format "%[fx:max($rleft,$rright)]" info:`
+		ry=`convert xc: -format "%[fx:max($rtop,$rbottom)]" info:`
+		radialGradient "$cx" "$cy" "$rx" "$ry"
+	elif [ "$direction" = "closest-corner" ]; then
+		distCorners
+		rmin=`convert xc: -format "%[fx:min($rtopleft,(min($rtopright,(min($rbottomleft,$rbottomright)))))]" info:`
+		cornerCoords "$rmin"
+		ry=`convert xc: -format "%[fx:sqrt(($height/$width)^2*($xx-$cx)^2 + ($yy-$cy)^2)]" info:`
+		rx=`convert xc: -format "%[fx:($width/$height)*$ry]" info:`
+		radialGradient "$cx" "$cy" "$rx" "$ry"
+	elif [ "$direction" = "furthest-corner" ]; then
+		distCorners
+		rmax=`convert xc: -format "%[fx:max($rtopleft,(max($rtopright,(max($rbottomleft,$rbottomright)))))]" info:`
+		cornerCoords "$rmax"
+		ry=`convert xc: -format "%[fx:sqrt(($height/$width)^2*($xx-$cx)^2 + ($yy-$cy)^2)]" info:`
+		rx=`convert xc: -format "%[fx:($width/$height)*$ry]" info:`
+		radialGradient "$cx" "$cy" "$rx" "$ry"
+	fi
+fi
+
+
+# process stops to separate into colorArr and percentArr
+stops=`echo "$stops" | sed 's/, /,/g; s/[ ][ ]*/ /g'`
+#echo "stops=$stops"
+
+stopsArr=($stops)
+num=${#stopsArr[*]}
+numm1=$((num-1))
+#echo "$num"
+
+# test for even number of entries
+test=`convert xc: -format "%[fx:mod($num,2)]" info:`
+[ $test != 0 ] && errMsg "--- NUMBER OF STOP ENTRIES MUST BE EVEN ---" && exit 1
+
+# test if first stop is numeric and quit
+first=${stopsArr[0]}
+[ "$(echo "$first" | grep -E '^[0-9][0-9]*\.?[0-9]*$')" != "" ] && errMsg "--- FIRST ENTRY IN STOPS LIST IS NUMERIC ---" && exit 1
+
+# test if last stop is numeric (percent) or non-numeric (color)
+last=${stopsArr[$numm1]}
+if [ "$(echo "$last" | grep -E '^[0-9][0-9]*\.?[0-9]*$')" = "" ]; then
+	# not numeric - process stops for firstcolor secondcolor second percent ... lastcolor format
+	if [ $num -eq 2 ]; then
+		colorArr=($first $last)
+		percentArr=(0 100)
+		num=2
+		numm1=1
+#		echo "$numm1"
+	else	
+		#remove first and last entries from stops and then get color and percent arrays
+		pos=1
+		len=$((num-2))
+		stopsArr2=(${stopsArr[@]:$pos:$len})
+		num=${#stopsArr2[*]}
+#		echo "$num"
+#		echo "stops=${stopsArr2[*]}"
+
+		# get remaining entries separated into color and percent arrays
+		colorArr=($(for ((i=0; i<num; i=i+2)) do echo ${stopsArr2[$i]}; done))
+		percentArr=($(for ((i=1; i<num; i=i+2)) do echo ${stopsArr2[$i]}; done))
+#		echo "color=${colorArr[*]}"
+#		echo "percent=${percentArr[*]}"
+
+		# re-add first and last colors and percents
+		colorArr=($first ${colorArr[*]} $last)
+		percentArr=(0 ${percentArr[*]} 100)
+#		echo "${colorArr[*]}"
+#		echo "${percentArr[*]}"
+		numc="${#colorArr[*]}"
+		nump="${#percentArr[*]}"
+		[ $numc -ne $nump ] && errMsg "--- INCONSISTENT NUMBER OF COLORS AND PERCENTS ---"
+		num=$numc
+		numm1=$((num-1))
+#		echo "$numm1"
+	fi
+	
+else
+	# not numeric - process stops for firstcolor 0 secondcolor second percent ... lastcolor 100 format
+	colorArr=($(for ((i=0; i<num; i=i+2)) do echo ${stopsArr[$i]}; done))
+	percentArr=($(for ((i=1; i<num; i=i+2)) do echo ${stopsArr[$i]}; done))
+#	echo "color=${colorArr[*]}"
+#	echo "percent=${percentArr[*]}"
+	numc="${#colorArr[*]}"
+	nump="${#percentArr[*]}"
+	[ $numc -ne $nump ] && errMsg "--- INCONSISTENT NUMBER OF COLORS AND PERCENTS ---"
+	num=$numc
+	numm1=$((num-1))
+#	echo "$numm1"
+	last=${colorArr[$numm1]}
+	# ensure first and last percent are 0 and 100
+	firstpct=${percentArr[1]}
+	lastpct=${percentArr[$num]}
+	[ "$firstpct" != "0" ] && errMsg "--- FIRST PERCENT MUST BE 0 ---"
+	[ "$lastpct" != "100" ] && errMsg "--- LAST PERCENT MUST BE 100 ---"
+fi
+
+# get last color for initial fill of 1D image
+fillcolor=$last
+#echo "fillcolor=$fillcolor"
+
+# create base lut image
+convert -size ${length}x1 xc:"$fillcolor" $tmpA2
+
+
+# colorize the lut with stop colors
+for ((i=0; i<$numm1; i++)) do
+j=$((i+1))
+dim=`convert xc: -format "%[fx:ceil($length*(${percentArr[$j]}-${percentArr[$i]})/100)]" info:`
+offset=`convert xc: -format "%[fx:max(0,round($length*${percentArr[$i]}/100)-1)]" info:`
+color1="${colorArr[$i]}"
+color2="${colorArr[$j]}"
+#echo "dim=$dim; offset=$offset; color1=$color1; color2=$color2;"
+convert $tmpA2 \( -size 1x${dim} gradient:"$color2-$color1" -rotate 90 \) \
+	-geometry +${offset}+0 -compose over -composite $tmpA2
+done
+
+
+# apply lut to grayscale gradient
+# requires IM 6.3.5-7 for -clut
+# test if alpha channel and not fully opaque
+# requires IM 6.4.3-7 for -alpha
+alphamean=`convert $tmpA2 -alpha on -alpha extract -format "%[fx:mean]" info:`
+if [ "$alphamean" != 1 ]; then
+	convert \( $tmpA1 -alpha copy -channel A -negate +channel \) $tmpA2 -clut $outfile
+else
+	convert $tmpA1 $tmpA2 -clut $outfile
+fi
+
+exit 0

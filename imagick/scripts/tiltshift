@@ -1,0 +1,309 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 1/22/2012 .......... 6/14/2013
+#
+# USAGE: tiltshift [-m mode] [-s size] [-b blur] [-B brightness] [-C contast]
+# [-S saturation] infile outfile
+#
+# USAGE: tiltshift [-help|-h]
+#
+# OPTIONS:
+#
+# -m     mode           mode of tiltshift; choices are: vertical (v), 
+#                       horizontal (h), elliptical (e) and circular (c); 
+#                       default=vertical
+# -s     size           size of central unblurred area; -100<=integer<=100;
+#                       default=0 (no change from default amount)
+# -b     blur           blur amount for outer area; float>=0; default=5
+# -B     brightness     brightness change of image; -100<=integer<=100; 
+#                       default=0 (no change)
+# -C     contrast       contrast change of image; -100<=integer<=100; 
+#                       default=0 (no change)
+# -S     saturation     saturation change of image; -100<=integer<=100; 
+#                       default=0 (no change)
+#  
+###
+#
+# NAME: TILTSHIFT 
+# 
+# PURPOSE: Applies a tiltshift effect to an image.
+# 
+# DESCRIPTION: TILTSHIFT applies a tiltshift effect to an image. There are 
+# optional modes including: vertical, horizontal, elliptical and circular
+# 
+# 
+# OPTIONS: 
+# 
+# -m mode ... MODE of the tiltshift effect. The choices are: vertical (v), 
+# horizontal (h), elliptical (e) and circular (c). The default=vertical.
+# 
+# -s size ... SIZE of the central unblurred area relative to a default amount. 
+# Values are -100<=integer<=100. The default=0.
+# 
+# -b blur ... BLUR amount for the outer area. Values are floats>=0. The 
+# default=5.
+# 
+# -B brightness ... BRIGHTNESS change of the image. Values are 
+# -100<=integers<=100. The default=0 (no change).
+# 
+# -C contrast ... CONTRAST change of the image. Values are -100<=integers<=100. 
+# The default=0 (no change).
+# 
+# -S saturation ... SATURATION change of the image. Values are 
+# -100<=integers<=100. The default=0 (no change).
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set up defaults
+mode="vertical"     # vertical, horizontal, ellipse, circle
+size=0				# size of unblurred area
+blur=5				# blur amount
+bright=0			# brightness change
+contr=0				# contrast change
+sat=0				# saturation change
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 19 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		     -help|-h)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-m)    # mode
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID MODE SPECIFICATION ---"
+					   checkMinus "$1"
+					   mode="$1"
+					   mode=`echo "$mode" | tr "[:upper:]" "[:lower:]"`
+					   case "$mode" in 
+							vertical|v) mode="vertical";;
+							horizontal|h) mode="horizontal";;
+							elliptical|ellipse|e) mode="ellipse";;
+							circular|circle|c) mode="circle";;
+							*) errMsg "--- MODE=$mode IS AN INVALID VALUE ---" 
+						esac
+					   ;;
+				-s)    # get size
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SIZE SPECIFICATION ---"
+					   #checkMinus "$1"
+					   size=`expr "$1" : '\([-0-9]*\)'`
+					   [ "$size" = "" ] && errMsg "--- SIZE=$size MUST BE AN INTEGER ---"
+					   test1=`echo "$size < -100" | bc`
+					   test2=`echo "$size > 100" | bc`
+					   [ $test1 -eq 1 -o $test2 -eq 1 ] && errMsg "--- SIZE=$size MUST BE AN INTEGER BETWEEN -100 AND 100 ---"
+					   ;;
+				-b)    # get blur
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID BLUR SPECIFICATION ---"
+					   checkMinus "$1"
+					   blur=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$blur" = "" ] && errMsg "--- BLUR=$blur MUST BE A NON-NEGATIVE FLOAT ---"
+					   ;;
+
+				-B)    # get bright
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID BRIGHTNESS SPECIFICATION ---"
+					   #checkMinus "$1"
+					   bright=`expr "$1" : '\([-0-9]*\)'`
+					   [ "$bright" = "" ] && errMsg "--- BRIGHTNESS=$bright MUST BE AN INTEGER ---"
+					   test1=`echo "$bright < -100" | bc`
+					   test2=`echo "$bright > 100" | bc`
+					   [ $test1 -eq 1 -o $test2 -eq 1 ] && errMsg "--- BRIGHTNESS=$bright MUST BE AN INTEGER BETWEEN -100 AND 100 ---"
+					   ;;
+				-C)    # get contr
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID CONTRAST SPECIFICATION ---"
+					   #checkMinus "$1"
+					   contr=`expr "$1" : '\([-0-9]*\)'`
+					   [ "$contr" = "" ] && errMsg "--- CONTRAST=$contr MUST BE AN INTEGER ---"
+					   test1=`echo "$contr < -100" | bc`
+					   test2=`echo "$contr > 100" | bc`
+					   [ $test1 -eq 1 -o $test2 -eq 1 ] && errMsg "--- CONTRAST=$contr MUST BE AN INTEGER BETWEEN -100 AND 100 ---"
+					   ;;
+				-S)    # get sat
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SATURATION SPECIFICATION ---"
+					   #checkMinus "$1"
+					   sat=`expr "$1" : '\([-0-9]*\)'`
+					   [ "$sat" = "" ] && errMsg "--- SATURATION=$sat MUST BE AN INTEGER ---"
+					   test1=`echo "$sat < -100" | bc`
+					   test2=`echo "$sat > 100" | bc`
+					   [ $test1 -eq 1 -o $test2 -eq 1 ] && errMsg "--- SATURATION=$sat MUST BE AN INTEGER BETWEEN -100 AND 100 ---"
+					   ;;
+			 	-)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile
+	infile=$1
+	outfile=$2
+fi
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "NO INPUT FILE SPECIFIED"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "NO OUTPUT FILE SPECIFIED"
+
+
+# setup temp files
+tmpA1="$dir/tiltshift_1_$$.mpc"
+tmpB1="$dir/tiltshift_1_$$.cache"
+tmpA2="$dir/tiltshift_2_$$.mpc"
+tmpB2="$dir/tiltshift_2_$$.cache"
+trap "rm -f $tmpA1 $tmpB1 $tmpA2 $tmpB2; exit 0" 0
+trap "rm -f $tmpA1 $tmpB1 $tmpA2 $tmpB2; exit 1" 1 2 3 15
+
+# get im_version
+im_version=`convert -list configure | \
+	sed '/^LIB_VERSION_NUMBER /!d; s//,/;  s/,/,0/g;  s/,0*\([0-9][0-9]\)/\1/g' | head -n 1`
+
+# colorspace RGB and sRGB swapped between 6.7.5.5 and 6.7.6.7 
+# though probably not resolved until the latter
+# then -colorspace gray changed to linear between 6.7.6.7 and 6.7.8.2 
+# then -separate converted to linear gray channels between 6.7.6.7 and 6.7.8.2,
+# though probably not resolved until the latter
+# so -colorspace HSL/HSB -separate and -colorspace gray became linear
+# but we need to use -set colorspace RGB before using them at appropriate times
+# so that results stay as in original script
+# The following was determined from various version tests using vignette2
+# with IM 6.7.4.10, 6.7.6.10, 6.7.9.1
+if [ "$im_version" -lt "06070607" -o "$im_version" -gt "06070707" ]; then
+	setcspace="-set colorspace RGB"
+else
+	setcspace=""
+fi
+# no need for setcspace for grayscale or channels after 6.8.5.4
+if [ "$im_version" -gt "06080504" ]; then
+	setcspace=""
+fi
+
+
+# test input image
+convert -quiet -regard-warnings "$infile" +repage "$tmpA1" ||
+	errMsg "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+
+
+# get image dimensions
+ww=`identify -ping -format "%w" $tmpA1`
+hh=`identify -ping -format "%h" $tmpA1`
+dim=`convert xc: -format "%[fx:min($ww,$hh)]" info:`
+
+
+if [ "$mode" = "vertical" ]; then
+	convert -size ${ww}x${hh} gradient: -solarize 50% -level 0x50% -negate $tmpA2
+elif [ "$mode" = "horizontal" ]; then
+	convert -size ${hh}x${ww} gradient: -rotate 90 -solarize 50% -level 0x50% -negate $tmpA2
+elif [ "$mode" = "ellipse" ]; then
+	convert -size ${dim}x${dim} radial-gradient: -negate -resize ${ww}x${hh}\! $tmpA2
+elif [ "$mode" = "circle" ]; then
+	convert -size ${dim}x${dim} radial-gradient: -negate -gravity center -background white -extent ${ww}x${hh}\! $tmpA2
+fi
+
+# convert brightness and saturate from percent to modulate format
+bright=`convert xc: -format "%[fx:$bright+100]" info:`
+sat=`convert xc: -format "%[fx:$sat+100]" info:`
+
+
+# set up contrast to scale to -100 to 100
+test=`convert xc: -format "%[fx:abs($contr)<0.0001?0:($contr>0?1:-1)]" info:`
+contr=`convert xc: -format "%[fx:(2/10)*abs($contr)]" info:`
+
+# set up sign for sigmoidal contrast
+if [ $test -eq 1 -o $test -eq 0 ]; then
+	sign="-"
+elif [ $test -eq -1 ]; then
+	sign="+"
+fi
+
+#convert size to gammaval
+#use linear equation ax+b to solve for a and b when: (100-->0.01 and 0-->1) and also (-100-->10 and 0-->1)
+test=`convert xc: -format "%[fx:$size<1?0:1]" info:`
+if [ $test -eq 1 ]; then
+	size=`convert xc: -format "%[fx:-0.0099*$size+1]" info:`
+elif [ $test -eq 0 ]; then
+	size=`convert xc: -format "%[fx:-0.09*$size+1]" info:`
+fi
+
+# create output
+convert \( $tmpA1 -modulate $bright,$sat,100 ${sign}sigmoidal-contrast ${contr},50% \) \
+\( -clone 0 -blur 0x$blur \) \
+\( $tmpA2 -gamma $size \) \
+$setcspace -compose over -composite $outfile
+
+
+exit 0
+

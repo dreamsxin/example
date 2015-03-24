@@ -1,0 +1,344 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 6/1/2014 .......... revised 2/20/2015
+#
+# ------------------------------------------------------------------------------
+# 
+# Licensing:
+# 
+# Copyright © Fred Weinhaus
+# 
+# My scripts are available free of charge for non-commercial use, ONLY.
+# 
+# For use of my scripts in commercial (for-profit) environments or 
+# non-free applications, please contact me (Fred Weinhaus) for 
+# licensing arrangements. My email address is fmw at alink dot net.
+# 
+# If you: 1) redistribute, 2) incorporate any of these scripts into other 
+# free applications or 3) reprogram them in another scripting language, 
+# then you must contact me for permission, especially if the result might 
+# be used in a commercial or for-profit environment.
+# 
+# My scripts are also subject, in a subordinate manner, to the ImageMagick 
+# license, which can be found at: http://www.imagemagick.org/script/license.php
+# 
+# ------------------------------------------------------------------------------
+# 
+# USAGE: kuwahara [-d dimension] [-m method] [-s smoothing] infile outfile
+# USAGE: kuwahara [-h or -help]
+#
+# OPTIONS:
+#
+# -d     dimension     square window dimension; integer>=2; default=3
+# -m     method        method of processing; 1=mean, 2=gaussian mean, 3=median
+#                      default=2
+# -s     smoothing     smoothing factor for method 2; float>=1; nominal 
+#                      between 1 and 2; default=1
+#
+###
+#
+# NAME: KUWAHARA 
+# 
+# PURPOSE: To apply a Kuwahara type edge preserving noise reduction filter to an image.
+# 
+# DESCRIPTION: KUWAHARA applies a Kuwahara type edge preserving noise
+# reduction filter to an image. The basic Kuwahara filter does the following.
+# For each pixel in the image, the four diagonal neighboring square sized
+# windows (northwest, northeast, southeast and soutwest) that overlap with the
+# pixel at their corners are processed to get their mean and standard
+# deviation. The output image has the corresponding pixel filled with the mean
+# of the four window that has the smallest standard deviation, i.e. the
+# smoothest window. I have modified this approach in several ways. First, I
+# use the eight neighboring windows that overlap the pixel coordinate
+# (northwest, north, northeast, east, southeast, south, southwest and west).
+# Second, I allow three different methods to compute the mean and standard
+# deviation. Method 1 uses a square uniformly weighted mean and corresponding
+# standard deviation. This is the traditional approach. Method 2 uses a
+# circular Gaussian weighted mean within the square window and corresponding
+# standard deviation. Method 3 uses the circular Gaussian weighted approach to
+# compute the standard deviation, but uses a square window median value.
+# 
+# OPTIONS: 
+#
+# -d dimension ... DIMENSION is the square window dimension. Values are 
+# integer>=2. Nominal values are in the range of 2 to 4. The default=3. 
+# Values larger than 4 may cause jagged, flat regions.
+# 
+# -m method ... METHOD is the method of processing. The choices are: 1=mean, 
+# 2=gaussian mean, 3=median. The default=2.
+# 
+# -s smoothing ... SMOOTHING is the smoothing factor for method 2 only. Values 
+# are float>=1. Nominal values are between 1 and 2. The default=1. The larger 
+# the value the more smoothing.
+#
+# References:
+# http://en.wikipedia.org/wiki/Kuwahara_filter
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set default values
+dimension=3		# square window dimension
+method=2		# 1=mean, 2=gaussian mean, 3=median
+smoothing=1		# smoothing factor for method 2; float>1; nominal between 1 and 2
+
+
+# set directory for temporary files
+tmpdir="/tmp"
+
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -e '1,/^####/d;  /^###/g;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -e '1,/^####/d;  /^######/g;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 8 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		  -h|-help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-d)    # get dimension
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID DIMENSION SPECIFICATION ---"
+					   checkMinus "$1"
+					   dimension=`expr "$1" : '\([0-9]*\)'`
+					   [ "$dimension" = "" ] && errMsg "--- DIMENSION=$dimension MUST BE AN INTEGER ---"
+		   			   testA=`echo "$dimension < 1" | bc`
+					   [ $testA -eq 1 ] && errMsg "--- DIMENSION=$dimension MUST BE AN INTEGER GREATER THAN 1 ---"
+					   ;;
+				-m)    # get method
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID METHOD SPECIFICATION ---"
+					   checkMinus "$1"
+					   method=`expr "$1" : '\([0-9]*\)'`
+					   [ "$method" = "" ] && errMsg "--- METHOD=$method MUST BE AN INTEGER ---"
+					   testA=`echo "$method > 3" | bc`
+					   testB=`echo "$method < 1" | bc`
+					   [ $testA -eq 1 -o $testB -eq 1 ] && errMsg "--- METHOD=$method MUST BE AN INTEGER BETWEEN 1 AND 3 ---"
+					   ;;
+				-s)    # get smoothing
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SMOOTHING SPECIFICATION ---"
+					   checkMinus "$1"
+					   smoothing=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$smoothing" = "" ] && errMsg "--- SMOOTHING=$smoothing MUST BE A FLOAT ---"
+		   			   testA=`echo "$smoothing < 1" | bc`
+					   [ $testA -eq 1 ] && errMsg "--- SMOOTHING=$smoothing MUST BE A FLOAT GREATER OR EQUAL TO 1 ---"
+					   ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile, outfile
+	infile="$1"
+	outfile="$2"
+fi
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "--- NO INPUT FILE SPECIFIED ---"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "--- NO OUTPUT FILE SPECIFIED ---"
+
+
+dir="$tmpdir/KUWAHARA.$$"
+
+mkdir "$dir" || errMsg "--- FAILED TO CREATE TEMPORARY FILE DIRECTORY ---"
+trap "rm -rf $dir;" 0
+trap "rm -rf $dir; exit 1" 1 2 3 15
+trap "rm -rf $dir; exit 1" ERR
+
+
+# read input image
+convert -quiet "$infile" $dir/tmpI.miff ||
+echo  "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE  ---"
+
+# get image dimensions
+ww=`identify -ping -format "%w" $dir/tmpI.miff`
+hh=`identify -ping -format "%h" $dir/tmpI.miff`
+
+# set up sigma
+if [ $method -eq 2 ]; then
+	sigma=`convert xc: -format "%[fx:$smoothing*($dimension-1)/2]" info:`
+elif [ $method -eq 3 ]; then
+	sigma=`convert xc: -format "%[fx:($dimension-1)/2]" info:`
+fi
+
+# set up method
+if [ $method -eq 1 ]; then
+	proc1="-statistic mean ${dimension}x${dimension}"
+	proc2=$proc1
+elif [ $method -eq 2 ]; then
+	proc1="-blur 0x$sigma"
+	proc2=$proc1
+elif [ $method -eq 3 ]; then
+	proc1="-statistic median ${dimension}x${dimension}"
+	proc2="-blur 0x$sigma"
+fi
+
+
+# process to get mean/std or median/std; both are labeled M/S
+convert $dir/tmpI.miff \
+	\( -clone 0 $proc1 +write $dir/tmpM.miff \) \
+	\( -clone 0 -colorspace gray $proc2 \) \
+	\( -clone 0 -clone 0 -colorspace gray -compose multiply -composite $proc2 \) \
+	\( -clone 2 -clone 2 -compose multiply -composite \) \
+	-delete 0,1,2 +swap -compose minus -composite -evaluate pow 0.5 $dir/tmpS.miff
+
+# shift to eight neighbor offsets
+shift=$(((dimension-1)/2))
+#echo "shift=$shift"
+
+# mean
+# northwest
+convert $dir/tmpM.miff -distort SRT "0,0 1 0 ${shift},${shift}" +repage $dir/tmpM1.miff
+# northeast
+convert $dir/tmpM.miff -distort SRT "0,0 1 0 -${shift},${shift}" +repage $dir/tmpM2.miff
+# southeast
+convert $dir/tmpM.miff -distort SRT "0,0 1 0 -${shift},-${shift}" +repage $dir/tmpM3.miff
+# southwest
+convert $dir/tmpM.miff -distort SRT "0,0 1 0 ${shift},-${shift}" +repage $dir/tmpM4.miff
+# north
+convert $dir/tmpM.miff -distort SRT "0,0 1 0 0,${shift}" +repage $dir/tmpM5.miff
+# east
+convert $dir/tmpM.miff -distort SRT "0,0 1 0 -${shift},0" +repage $dir/tmpM6.miff
+# south
+convert $dir/tmpM.miff -distort SRT "0,0 1 0 0,-${shift}" +repage $dir/tmpM7.miff
+# west
+convert $dir/tmpM.miff -distort SRT "0,0 1 0 ${shift},0" +repage $dir/tmpM8.miff
+
+
+# std
+# northwest
+convert $dir/tmpS.miff -distort SRT "0,0 1 0 ${shift},${shift}" +repage $dir/tmpS1.miff
+# northeast
+convert $dir/tmpS.miff -distort SRT "0,0 1 0 -${shift},${shift}" +repage $dir/tmpS2.miff
+# southeast
+convert $dir/tmpS.miff -distort SRT "0,0 1 0 -${shift},-${shift}" +repage $dir/tmpS3.miff
+# southwest
+convert $dir/tmpS.miff -distort SRT "0,0 1 0 ${shift},-${shift}" +repage $dir/tmpS4.miff
+# north
+convert $dir/tmpS.miff -distort SRT "0,0 1 0 0,${shift}" +repage $dir/tmpS5.miff
+# east
+convert $dir/tmpS.miff -distort SRT "0,0 1 0 -${shift},0" +repage $dir/tmpS6.miff
+# south
+convert $dir/tmpS.miff -distort SRT "0,0 1 0 0,-${shift}" +repage $dir/tmpS7.miff
+# west
+convert $dir/tmpS.miff -distort SRT "0,0 1 0 ${shift},0" +repage $dir/tmpS8.miff
+
+
+# find smallest std 
+convert \
+	$dir/tmpS1.miff $dir/tmpS2.miff $dir/tmpS3.miff $dir/tmpS4.miff \
+	$dir/tmpS5.miff $dir/tmpS6.miff $dir/tmpS7.miff $dir/tmpS8.miff \
+	-evaluate-sequence min $dir/tmpSMIN.miff
+	
+# compare std to min std and select appropriate mean
+test=`convert xc: -format "%[fx:$dimension%2]" info:`
+if [ "$test" = "0" -a "$method" != "2" ]; then 
+	convert -respect-parenthesis $dir/tmpSMIN.miff \
+		\( $dir/tmpS1.miff -clone 0 -compose difference -composite -threshold 0 -negate \
+			$dir/tmpM1.miff +swap -alpha off -compose copy_opacity -composite \) \
+		\( $dir/tmpS2.miff -clone 0 -compose difference -composite -threshold 0 -negate \
+			$dir/tmpM2.miff +swap -alpha off -compose copy_opacity -composite \) \
+		\( $dir/tmpS3.miff -clone 0 -compose difference -composite -threshold 0 -negate \
+			$dir/tmpM3.miff +swap -alpha off -compose copy_opacity -composite \) \
+		\( $dir/tmpS4.miff -clone 0 -compose difference -composite -threshold 0 -negate \
+			$dir/tmpM4.miff +swap -alpha off -compose copy_opacity -composite \) \
+		\( $dir/tmpS5.miff -clone 0 -compose difference -composite -threshold 0 -negate \
+			$dir/tmpM5.miff +swap -alpha off -compose copy_opacity -composite \) \
+		\( $dir/tmpS6.miff -clone 0 -compose difference -composite -threshold 0 -negate \
+			$dir/tmpM6.miff +swap -alpha off -compose copy_opacity -composite \) \
+		\( $dir/tmpS7.miff -clone 0 -compose difference -composite -threshold 0 -negate \
+			$dir/tmpM7.miff +swap -alpha off -compose copy_opacity -composite \) \
+		\( $dir/tmpS8.miff -clone 0 -compose difference -composite -threshold 0 -negate \
+			$dir/tmpM8.miff +swap -alpha off -compose copy_opacity -composite \) \
+		-delete 0 -background black -compose over -flatten \
+		-distort SRT "0,0 1 0 -0.5,-0.5" \
+		"$outfile"
+else
+	convert -respect-parenthesis $dir/tmpSMIN.miff \
+		\( $dir/tmpS1.miff -clone 0 -compose difference -composite -threshold 0 -negate \
+			$dir/tmpM1.miff +swap -alpha off -compose copy_opacity -composite \) \
+		\( $dir/tmpS2.miff -clone 0 -compose difference -composite -threshold 0 -negate \
+			$dir/tmpM2.miff +swap -alpha off -compose copy_opacity -composite \) \
+		\( $dir/tmpS3.miff -clone 0 -compose difference -composite -threshold 0 -negate \
+			$dir/tmpM3.miff +swap -alpha off -compose copy_opacity -composite \) \
+		\( $dir/tmpS4.miff -clone 0 -compose difference -composite -threshold 0 -negate \
+			$dir/tmpM4.miff +swap -alpha off -compose copy_opacity -composite \) \
+		\( $dir/tmpS5.miff -clone 0 -compose difference -composite -threshold 0 -negate \
+			$dir/tmpM5.miff +swap -alpha off -compose copy_opacity -composite \) \
+		\( $dir/tmpS6.miff -clone 0 -compose difference -composite -threshold 0 -negate \
+			$dir/tmpM6.miff +swap -alpha off -compose copy_opacity -composite \) \
+		\( $dir/tmpS7.miff -clone 0 -compose difference -composite -threshold 0 -negate \
+			$dir/tmpM7.miff +swap -alpha off -compose copy_opacity -composite \) \
+		\( $dir/tmpS8.miff -clone 0 -compose difference -composite -threshold 0 -negate \
+			$dir/tmpM8.miff +swap -alpha off -compose copy_opacity -composite \) \
+		-delete 0 -background black -compose over -flatten \
+		"$outfile"
+fi
+
+
+exit 0

@@ -1,0 +1,355 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 8/4/2011 .......... 1/25/2013
+#
+# USAGE: spots [-s size] [-t type] [-p pad] [-b bgcolor] [-e edge] [-E ecolor] [-B brightness] [-C Contrast] infile [spotfile] outfile 
+# USAGE: spots [-help]
+#
+# OPTIONS:
+#
+# -s      size              spot size expressed as WxH in pixels; default=5x5
+# -t      type              type of spot shape; choices are: circle (or c), 
+#                           square (or s), or diamond (or d); default=circle
+# -p      pad               padding or border around spot cell in pixels on 
+#                           each side; integer>=0; default=1
+# -b      bgcolor           background color to apply to image where spot
+#                           does not cover; any valid IM color; default=black
+# -e      edge              edge thickness accent around spot shape; 
+#                           integer>=0; default=0
+# -E      ecolor            color of accent edge around spot shape; 
+#                           any valid IM color; default=gray
+# -B      brightness        percent change in brightness of spots; 
+#                           integer; default=0
+# -C      contrast          percent change in contrast of spots; 
+#                           integer; default=0
+# 
+# 
+###
+# 
+# NAME: SPOTS 
+# 
+# PURPOSE: Converts the image into a series of uniform-colored spots.
+# 
+# DESCRIPTION: SPOTS converts the image into a series of uniform-colored 
+# spots. The shape of spots allowed are: circle (ellipse), square (rectangle) 
+# or diamond. The spot size may be adjusted. A colored edge may also be 
+# placed around each spot. An optional spotfile may be provided to define 
+# some other shape than those built-in.
+# 
+# 
+# OPTIONS: 
+# 
+# -s size ... SIZE is the WxH dimensions of the spot cell. Values are a 
+# pair of positive integers separated by an x. The default=5x5. If only 
+# one value is provided, it will be used for both. This parameter is 
+# ignored if a spotfile is provided.
+#
+# -t type ... TYPE is the type of spot shape. The choices are: circle (or c),
+# square (or s), diamond (or d). These may be asymmetric as ellipses or 
+# rectangles as controlled by the size parameters. This parameter is 
+# ignored if a spotfile is provided.
+# 
+# -p pad ... PAD is the border around the spot cell. Values are integers>=0. 
+# The default=0.
+# 
+# -b bgcolor ... BGCOLOR is the color to apply to the image between the spots. 
+# Any valid IM color is allowed. The default=black.
+# 
+# -e edge ... EDGE is the thickness of the optional edge hightlight around 
+# the spot shape. Values are integers>=0. The default=0.
+# 
+# -E ecolor ... ECOLOR is the color of the edge highlight. Any valid IM color 
+# is allowed. The default=gray.
+# 
+# -B brightness ... BRIGHTNESS is the percent change in brightness of the 
+# spot colors. Values are integers. The default=0
+# 
+# -C contrast ... CONTRAST is the percent change in contrast of the 
+# spot colors. Values are integers. The default=0
+# 
+# The spotfile must be a binary mask with white for the shape and black 
+# for the background and no alpha channel.
+# 
+# REQUIREMENTS: IM 6.3.6-1 or higher due to the use of
+# -define distort:viewport=WxH+X+Y with -distort SRT.
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set default values
+size="5x5"			# spot WxH
+type="circle"		# circle, square, diamond
+pad=1				# border padding
+edge=0				# edge width
+ecolor="gray"		# edge color
+bgcolor="black"		# background color
+bri=0				# brightness
+con=0				# contrast
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 19 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		     -help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-s)    # get size
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SIZE SPECIFICATION ---"
+					   checkMinus "$1"
+					   size=`expr "$1" : '\([0-9]*[x]*[0-9]*\)'`
+					   [ "$size" = "" ] && errMsg "--- SIZE=$size MUST BE A PAIR OF POSITIVE INTEGERS (with no sign) SEPARATED BY AN x ---"
+					   ;;
+		 		-t)    # type
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID TYPE SPECIFICATION ---"
+					   checkMinus "$1"
+					   # test mode values
+					   type="$1"
+					   type=`echo "$type" | tr "[:upper:]" "[:lower:]"`
+					   case "$type" in 
+					   		circle|c) type="circle" ;;
+					   		square|s) type="square" ;;
+					   		diamond|d) type="diamond" ;;
+					   		*) errMsg "--- TYPE=$type IS AN INVALID VALUE ---" 
+					   	esac
+					   ;;
+				-p)    # get pad
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID PAD SPECIFICATION ---"
+					   checkMinus "$1"
+					   pad=`expr "$1" : '\([0-9]*\)'`
+					   [ "$pad" = "" ] && errMsg "--- PAD=$pad MUST BE A NON-NEGATIVE INTEGER (with no sign) ---"
+					   ;;
+				-b)    # get bgcolor
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID BGCOLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   bgcolor="$1"
+					   ;;
+				-e)    # get edge
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID EDGE SPECIFICATION ---"
+					   checkMinus "$1"
+					   edge=`expr "$1" : '\([0-9]*\)'`
+					   [ "$edge" = "" ] && errMsg "--- EDGE=$edge MUST BE A NON-NEGATIVE INTEGER (with no sign) ---"
+					   ;;
+				-E)    # get ecolor
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID ECOLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   ecolor="$1"
+					   ;;
+				-B)    # get brightness
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID BRIGHTNESS SPECIFICATION ---"
+					   #checkMinus "$1"
+					   bri=`expr "$1" : '\([-0-9]*\)'`
+					   [ "$bri" = "" ] && errMsg "--- BRIGHTNESS=$bri MUST BE AN INTEGER (with no sign) ---"
+					   ;;
+				-C)    # get contrast
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID CONTRAST SPECIFICATION ---"
+					   #checkMinus "$1"
+					   con=`expr "$1" : '\([-0-9]*\)'`
+					   [ "$con" = "" ] && errMsg "--- CONTRAST=$con MUST BE AN INTEGER (with no sign) ---"
+					   ;;
+			 	-)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile and spotfile
+	if [ $# -eq 3 ]; then
+		infile=$1
+		spotfile=$2
+		outfile=$3
+	elif [ $# -eq 2 ]; then
+		infile=$1
+		outfile=$2
+	else
+		errMsg "--- INCONSISTENT NUMBER OF IMAGES PROVIDED ---"
+	fi
+fi
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "NO INPUT FILE SPECIFIED"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "NO OUTPUT FILE SPECIFIED"
+
+# create temp files
+tmpA1="$dir/spots_1_$$.mpc"
+tmpB1="$dir/spots_1_$$.cache"
+tmpA2="$dir/spots_2_$$.mpc"
+tmpB2="$dir/spots_2_$$.cache"
+trap "rm -f $tmpA1 $tmpB1 $tmpA2 $tmpB2; exit 0" 0
+trap "rm -f $tmpA1 $tmpB1 $tmpA2 $tmpB2; exit 1" 1 2 3 15
+
+# setup brightness contrast
+if [ "$bri" = "0" -a "$con" = "0" ]; then
+	bricon=""
+else
+	bricon="-brightness-contrast $bri,$con"
+fi
+
+# test input image
+convert -quiet -regard-warnings "$infile" $bricon +repage "$tmpA1" ||
+	errMsg "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+
+# test spot file if exists
+if [ "$spotfile" != "" ]; then
+	convert -quiet -regard-warnings "$spotfile" -alpha off +repage "$tmpA2" ||
+		errMsg "--- FILE $spotfile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+fi
+
+# get image width, height and aspect
+ww=`convert $tmpA1 -ping -format "%w" info:`
+hh=`convert $tmpA1 -ping -format "%h" info:`
+
+# get size of spot and center of spot and last pixel of spot and pad size
+if [ "$spotfile" = "" ]; then
+	sw=`echo $size | cut -dx -f1`
+	sh=`echo $size | cut -dx -f2`
+	scx=`convert xc: -format "%[fx:($sw-1)/2]" info:`
+	scy=`convert xc: -format "%[fx:($sh-1)/2]" info:`
+	lx=$((sw-1))
+	ly=$((sh-1))
+	
+	# get pad size
+	pw=$((sw+2*pad))
+	ph=$((sh+2*pad))
+
+else
+	pw=`convert $tmpA2 -ping -format "%w" info:`
+	ph=`convert $tmpA2 -ping -format "%h" info:`
+fi
+
+
+if [ "$spotfile" = "" ]; then
+	if [ "$pad" = "0" ]; then
+		padding=""
+	else 
+		padding="-bordercolor black -border $pad"
+	fi
+	
+	# create spot template
+	if [ "$type" = "circle" ]; then
+		convert -size ${sw}x${sh} xc:black \
+			+antialias -fill white -draw "ellipse $scx,$scy $scx,$scy 0,360" -alpha off \
+			$padding \
+			$tmpA2
+	
+	elif [ "$type" = "square" ]; then
+		convert -size ${sw}x${sh} xc:black \
+			+antialias -fill white -draw "rectangle 0,0 $lx,$ly" -alpha off \
+			$padding \
+			$tmpA2
+	
+	elif [ "$type" = "diamond" ]; then
+		convert -size ${sw}x${sh} xc:black \
+			+antialias -fill white -draw "polygon $scx,0 $lx,$scy $scx,$ly 0,$scy" -alpha off \
+			$padding \
+			$tmpA2
+	fi
+fi
+
+# compute xmin and ymin and virtual canvas size
+xmin=`convert xc: -format "%[fx:ceil($ww/$pw)]" info:`
+ymin=`convert xc: -format "%[fx:ceil($hh/$ph)]" info:`
+www=`convert xc: -format "%[fx:$xmin*$pw]" info:`
+hhh=`convert xc: -format "%[fx:$ymin*$ph]" info:`
+
+
+# process image
+if [ "$edge" = "0" ]; then
+	convert \( $tmpA1 -define distort:viewport=${www}x${hhh}+0 -virtual-pixel mirror -distort SRT 0 \
+		-scale ${xmin}x${ymin}! -scale ${www}x${hhh}! -crop ${ww}x${hh}+0+0 +repage \) \
+		\( $tmpA2 -write mpr:tile +delete -size ${ww}x${hh}! tile:mpr:tile \) \
+		-alpha off -compose copy_opacity -composite -compose over \
+		-background $bgcolor -flatten  \
+		$outfile
+else
+	convert \( $tmpA1 -define distort:viewport=${www}x${hhh}+0 -virtual-pixel mirror -distort SRT 0 \
+		-scale ${xmin}x${ymin}! -scale ${www}x${hhh}! -crop ${ww}x${hh}+0+0 +repage \) \
+		\( $tmpA2 -write mpr:tile +delete -size ${ww}x${hh}! tile:mpr:tile \) \
+		\( -clone 1 -threshold 0 -edge $edge -fill $ecolor -opaque white -transparent black \) \
+		\( -clone 0 -clone 1 -alpha off -compose copy_opacity -composite -compose over \
+		-background $bgcolor -flatten \) \
+		-delete 0,1 +swap -compose over -composite \
+		$outfile
+fi
+
+exit 0

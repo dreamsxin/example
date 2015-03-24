@@ -1,0 +1,309 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 9/29/2012 .......... revised 2/20/2015
+#
+# ------------------------------------------------------------------------------
+# 
+# Licensing:
+# 
+# Copyright © Fred Weinhaus
+# 
+# My scripts are available free of charge for non-commercial use, ONLY.
+# 
+# For use of my scripts in commercial (for-profit) environments or 
+# non-free applications, please contact me (Fred Weinhaus) for 
+# licensing arrangements. My email address is fmw at alink dot net.
+# 
+# If you: 1) redistribute, 2) incorporate any of these scripts into other 
+# free applications or 3) reprogram them in another scripting language, 
+# then you must contact me for permission, especially if the result might 
+# be used in a commercial or for-profit environment.
+# 
+# My scripts are also subject, in a subordinate manner, to the ImageMagick 
+# license, which can be found at: http://www.imagemagick.org/script/license.php
+# 
+# ------------------------------------------------------------------------------
+# 
+# USAGE: lichtenstein [-p poster] [-b blur1] [-s sigmoidal] [-d dither] 
+# [-B blur2] [-e edge] [-g gain] [-E erode] [-c colors] [-S sat] infile outfile
+# 
+# USAGE: lichtenstein [-h or -help]
+# 
+# OPTIONS:
+# 
+# -p     poster        posterize levels; integer>=0; default=7
+# -b     blur1         main blurring amount; float>=0; default=3
+# -s     sigmoidal     amount of sigmoidal contrast; float>=0; default=2
+# -d     dither        ordered dither kind; any valid IM ordered dither; 
+#                      default=o8x8; suggested alternate is h6x6a
+# -B     blur2         minor blurring amount; float>=0; default=1
+# -e     edge          amount of edge enhancement; integer>=0; default=2
+# -g     gain          edge gain; float>=0; default=5
+# -E     erode         erosion of edges to thicken; integer>=0; default=1
+# -S     sat           saturation amount; integer>=0; default=175; 
+#                      (100 is no change)
+# 
+###
+# 
+# NAME: LICHTENSTEIN 
+# 
+# PURPOSE: To apply a Roy Lichtenstein newspaper cartoon effect to an image.
+# 
+# DESCRIPTION: LICHTENSTEIN applies a Roy Lichtenstein newspaper cartoon effect 
+# to an image.
+# 
+# 
+# ARGUMENTS: 
+# 
+# -p poster ... POSTER is the number of posterize levels. Values are 
+# integers>=0. The default=7.
+# 
+# -b blur1 ... BLUR1 is the main blurring amount. Values are floats>=0. The 
+# default=3.
+# 
+# -s sigmoidal ... SIGMOIDAL is the amount of (inverse) sigmoidal contrast. 
+# Values are floats>=0. The default=2.
+# 
+# -d dither ... DITHER is the kind of ordered dither to use.  Any valid IM 
+# ordered dither is allowed. The default=o8x8. A suggested alternate is h6x6a.
+# If dither=none, the dithering will be disabled.
+# 
+# -B blur2 ... BLUR2 is the minor (softening) blurring amount. Values are 
+# floats>=0. The default=1.
+# 
+# -e edge ... EDGE is the amount of edge enhancement. Values are integers>=0. 
+# The default=2.
+# 
+# -g gain ... GAIN is the amount of edge gain (intensity). Values are 
+# floats>=0. The default=5.
+# 
+# -E erode ... ERODE is the amount of erosion of the edges to thicken them. 
+# Values are integers>=0; default=1.
+# 
+# -S sat ... SAT is the color saturation amount. Values are integers>=0. 
+# The default=175. (100 is no change)
+# 
+# REFERENCES:
+# http://www.flickr.com/photos/funadium/2354849007/
+# http://en.wikipedia.org/w/index.php?title=Roy_Lichtenstein&oldid=195832606
+# 
+# REQUIREMENTS: IM 6.7.9.0 or higher due to the use of colorspace HCL 
+# in -modulate.
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+# 
+
+# set default values
+poster=7			# posterize levels
+blur1=3				# main blur
+sigmoidal=2			# sigmoidal contrast
+dither="o8x8"		# ordered dither type; suggest h6x6a or o8x8
+blur2=1				# minor blur
+edge=2				# edge thickness
+gain=5				# edge gain
+erode=1				# edge erode
+sat=175				# saturation
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -e '1,/^####/d;  /^###/g;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -e '1,/^####/d;  /^######/g;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 22 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		  -h|-help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-p)    # get poster
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID POSTER SPECIFICATION ---"
+					   checkMinus "$1"
+					   poster=`expr "$1" : '\([0-9]*\)'`
+					   [ "$poster" = "" ] && errMsg "--- POSTER=$poster MUST BE A NON-NEGATIVE INTEGER VALUE (with no sign) ---"
+					   ;;
+				-b)    # get blur1
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID BLUR1 SPECIFICATION ---"
+					   checkMinus "$1"
+					   blur1=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$blur1" = "" ] && errMsg "--- BLUR1=$blur1 MUST BE A NON-NEGATIVE FLOAT VALUE (with no sign) ---"
+					   ;;
+				-s)    # get sigmoidal
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SIGMOIDAL SPECIFICATION ---"
+					   checkMinus "$1"
+					   sigmoidal=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$sigmoidal" = "" ] && errMsg "--- SIGMOIDAL=$sigmoidal MUST BE A NON-NEGATIVE FLOAT VALUE (with no sign) ---"
+					   ;;
+				-B)    # get blur2
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID BLUR2 SPECIFICATION ---"
+					   checkMinus "$1"
+					   blur2=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$blur2" = "" ] && errMsg "--- BLUR2=$blur2 MUST BE A NON-NEGATIVE FLOAT VALUE (with no sign) ---"
+					   ;;
+				-d)    # get dither
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID DITHER SPECIFICATION ---"
+					   checkMinus "$1"
+					   dither="$1"
+					   ;;
+				-e)    # get edge
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID EDGE SPECIFICATION ---"
+					   checkMinus "$1"
+					   edge=`expr "$1" : '\([0-9]*\)'`
+					   [ "$edge" = "" ] && errMsg "--- EDGE=$edge MUST BE A NON-NEGATIVE INTEGER VALUE (with no sign) ---"
+					   ;;
+				-g)    # get gain
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID GAIN SPECIFICATION ---"
+					   checkMinus "$1"
+					   gain=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$gain" = "" ] && errMsg "--- GAIN=$gain MUST BE A NON-NEGATIVE FLOAT VALUE (with no sign) ---"
+					   ;;
+				-E)    # get erode
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID ERODE SPECIFICATION ---"
+					   checkMinus "$1"
+					   erode=`expr "$1" : '\([0-9]*\)'`
+					   [ "$erode" = "" ] && errMsg "--- ERODE=$erode MUST BE A NON-NEGATIVE INTEGER VALUE (with no sign) ---"
+					   ;;
+				-S)    # get sat
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SAT SPECIFICATION ---"
+					   checkMinus "$1"
+					   sat=`expr "$1" : '\([0-9]*\)'`
+					   [ "$sat" = "" ] && errMsg "--- SAT=$sat MUST BE A NON-NEGATIVE INTEGER VALUE (with no sign) --- ---"
+					   ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile
+	infile="$1"
+	outfile="$2"
+fi
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "NO INPUT FILE SPECIFIED"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "NO OUTPUT FILE SPECIFIED"
+
+
+# setup temp files
+tmpA1="$dir/lichtenstein_A_$$.mpc"
+tmpA2="$dir/lichtenstein_A_$$.cache"
+trap "rm -f $tmpA1 $tmpA2;" 0
+trap "rm -f $tmpA1 $tmpA2; exit 1" 1 2 3 15
+trap "rm -f $tmpA1 $tmpA2; exit 1" ERR
+
+
+# test input image
+convert -quiet "$infile" +repage  "$tmpA1" ||
+	errMsg "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE  ---"
+
+# set up dither
+if [ "$dither" = "none" ]; then
+	dithering=""
+else
+	dithering="-ordered-dither $dither"
+fi
+
+
+# process image
+# clone original image and posterize and main blur
+# apply sigmoidal-contrast
+# modulate
+# dither
+# clone original image and convert to edges
+# desaturate
+# erode and minor blur
+# clone edge image and negate
+# put negated edge image into alpha channel of edge image
+# delete temps and compose edge image over dithered image
+convert $tmpA1 \
+\( -clone 0 -posterize $poster -blur 0x$blur1 \
+	+sigmoidal-contrast ${sigmoidal}x50% \
+	-define modulate:colorspace=HCL -modulate 100,$sat,100 \
+	$dithering \) \
+\( -clone 0 -blur 0x$blur2 -morphology edge diamond:$edge -evaluate multiply $gain \
+	-negate -define modulate:colorspace=HCL -modulate 100,0,100 \
+	-morphology erode diamond:$erode -blur 0x$blur2 \) \
+\( +clone -negate \) \
+\( -clone 2 -clone 3 -alpha off -compose over -compose copy_opacity -composite \) \
+-delete 0,2,3 -compose over -composite "$outfile"
+
+exit 0

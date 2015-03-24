@@ -1,0 +1,457 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 3/18/2013 .......... revised 6/13/2013
+#
+# USAGE: picturefold [-n numfolds] [-a angle] [-h height] [-l location] 
+# [-y yoffset] [-s shading] [-t thickness] [-b bdcolor] [-B bgcolor] 
+# [-o opacity] [-d distance] [-r ramp] infile outfile
+#
+# USAGE: picturefold [-help]
+#
+# OPTIONS:
+#
+# -n     numfolds       number of folds; integer>=2; default=5
+# -a     angle          angle of fold; 0<=integer<=40; default=10
+# -h     height         crop height as percent; 5<=integer<=95; default=95
+# -l     location       vertical crop location; north, south or center; 
+#                       default=center
+# -y     yoffset        percent vertical offset from the crop location; 
+#                       -100<=integer<=100; default=0
+# -s     shading        shading brightness value; 0<=integer<=100; default=70 
+# -t     thickness      border thickness; integer>=0; default=0 (off)
+# -b     bdcolor        border color; any valid IM color is allowed; 
+#                       default=red
+# -B     bgcolor        background color; any valid IM color is allowed; 
+#                       default=white
+# -o     opacity        shadow opacity; 0<=integer<=100; default=0 (off)
+# -d     distance       shadow distance; integer>=0; default=5
+# -r     ramp           shadow ramping (tapering); integer>=0; default=5
+#
+###
+#
+# NAME: PICTUREFOLD 
+# 
+# PURPOSE: To apply a map-like folded appearance to an image.
+# 
+# DESCRIPTION: PICTUREFOLD applies a map-like folded appearance to an image.
+# A border or shadow optionally may be placed around the image.
+# 
+# OPTIONS: 
+#
+# -n numfolds ... NUMFOLDS is the number of folds. Values are integers>=2. 
+# The default=5.
+# 
+# -a angle ... ANGLE of fold. Values are 0<=integer<=40. The default=10.
+# 
+# -h height ... HEIGHT is the crop height as percent of the image height for 
+# desired region. Values are 5<=integers<=95. The default=95.
+# 
+# -l location ... LOCATION is the desired vertical crop location. Values are: 
+# north, south or center. The default=center.
+# 
+# -y yoffset ... YOFFSET is the percent vertical offset from the crop location.  
+# Values are -100<=integer<=100. The default=0.
+# 
+# -s shading ... SHADING brightness value. Values are 0<=integer<=100. A value 
+# of 0 is black and 100 is full image brightness. The default=70.
+#  
+# -t thickness ... THICKNESS is the border thickness. Values are integers>=0. 
+# However, for thickness=1, thickness will be set to 2 for functionality  
+# reasons. The default=0 (no border).
+# 
+# -b bdcolor ... BDCOLOR is the border color. Any valid IM color is allowed.  
+# The default=red.
+# 
+# -B bgcolor ... BGCOLOR is the background color. Any valid IM color is 
+# allowed. The default=white.
+# 
+# -o opacity ... OPACITY is the shadow opacity. Values are 0<=integer<=100. 
+# The default=0 (no shadow).
+# 
+# -d distance ... DISTANCE is the shadow distance (length). Values are 
+# integers>=0. The default=5.
+# 
+# -r ramp ... RAMP is the shadow ramping (tapering). Values are integer>=0. 
+# The default=5.
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set default values
+numfolds=5			# number of folds; integer>=2
+angle=10			# angle of fold; 0<=integer<=40
+height=95			# percent height of region to use; 5<=height<=95
+location=center		# location for region; north, south and center
+yoffset=0			# percent vertical offset from location
+shading=70			# shading brightness
+thick=0				# thickness of border; 0 is off
+bdcolor=red			# border color
+bgcolor=white		# background color
+opacity=0			# shadow opacity; 0 is off; nominal is 80
+distance=5			# shadow distance
+ramp=5				# shadow ramp
+
+# internal defaults
+fuzzval=50			# floodfill fuzz value
+blurval=2			# blurval
+
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 26 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		  -h|-help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-n)    # get numfolds
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID NUMFOLDS SPECIFICATION ---"
+					   checkMinus "$1"
+					   numfolds=`expr "$1" : '\([0-9]*\)'`
+					   [ "$numfolds" = "" ] && errMsg "--- NUMFOLDS=$numfolds MUST BE A NON-NEGATIVE INTEGER ---"
+		   			   testA=`echo "$numfolds < 2" | bc`
+					   [ $testA -eq 1 ] && errMsg "--- NUMFOLDS=$numfolds MUST BE AN INTEGER GREATER THAN 1 ---"
+					   ;;
+				-a)    # get angle
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID ANGLE SPECIFICATION ---"
+					   checkMinus "$1"
+					   angle=`expr "$1" : '\([0-9]*\)'`
+					   [ "$angle" = "" ] && errMsg "--- ANGLE=$angle MUST BE A NON-NEGATIVE INTEGER ---"
+		   			   testA=`echo "$angle > 40" | bc`
+					   [ $testA -eq 1 ] && errMsg "--- ANGLE=$angle MUST BE AN INTEGER LESS THAN OR EQUAL TO 40 ---"
+					   ;;
+				-h)    # get height
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID HEIGHT SPECIFICATION ---"
+					   checkMinus "$1"
+					   height=`expr "$1" : '\([0-9]*\)'`
+					   [ "$height" = "" ] && errMsg "--- HEIGHT=$height MUST BE A NON-NEGATIVE INTEGER ---"
+		   			   testA=`echo "$height < 5" | bc`
+		   			   testB=`echo "$height > 95" | bc`
+					   [ $testA -eq 1 -o $testB -eq 1 ] && errMsg "--- HEIGHT=$height MUST BE AN INTEGER BETWEEN 5 AND 95 ---"
+					   ;;
+				-l)    # location
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID LOCATION SPECIFICATION ---"
+					   checkMinus "$1"
+					   mode=`echo "$1" | tr "[:upper:]" "[:lower:]"`
+					   case "$location" in 
+							north|n) location="north" ;;
+							center|c) location="center" ;;
+							south|s) location="south" ;;
+							*) errMsg "--- LOCATION=$location IS AN INVALID VALUE ---" 
+					   esac
+				   	   ;;
+				-y)    # get yoffset
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID YOFFSET SPECIFICATION ---"
+					   #checkMinus "$1"
+					   yoffset=`expr "$1" : '\([-0-9]*\)'`
+					   [ "$height" = "" ] && errMsg "--- YOFFSET=$yoffset MUST BE AN INTEGER ---"
+		   			   testA=`echo "$yoffset < -100" | bc`
+		   			   testB=`echo "$yoffset > 100" | bc`
+					   [ $testA -eq 1 -o $testB -eq 1 ] && errMsg "--- YOFFSET=$yoffset MUST BE AN INTEGER BETWEEN -100 AND 100 ---"
+					   ;;
+				-s)    # get shading
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SHADING SPECIFICATION ---"
+					   checkMinus "$1"
+					   shading=`expr "$1" : '\([0-9]*\)'`
+					   [ "$shading" = "" ] && errMsg "--- SHADING=$shading MUST BE A NON-NEGATIVE INTEGER ---"
+		   			   testA=`echo "$shading > 100" | bc`
+					   [ $testA -eq 1 ] && errMsg "--- SHADING=$shading MUST BE AN INTEGER LESS THAN OR EQUAL TO 100 ---"
+					   ;;
+				-t)    # get thick
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID THICKNESS SPECIFICATION ---"
+					   checkMinus "$1"
+					   thick=`expr "$1" : '\([0-9]*\)'`
+					   [ "$thick" = "" ] && errMsg "--- THICKNESS=$thick MUST BE A NON-NEGATIVE INTEGER ---"
+					   ;;
+				-b)    # get bdcolor
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID BDCOLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   bdcolor="$1"
+					   ;;
+				-B)    # get bgcolor
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID bgcolor SPECIFICATION ---"
+					   checkMinus "$1"
+					   bgcolor="$1"
+					   ;;
+				-o)    # get opacity
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID OPACITY SPECIFICATION ---"
+					   checkMinus "$1"
+					   opacity=`expr "$1" : '\([0-9]*\)'`
+					   [ "$opacity" = "" ] && errMsg "--- OPACITY=$opacity MUST BE A NON-NEGATIVE INTEGER ---"
+		   			   testA=`echo "$opacity < 0" | bc`
+		   			   testB=`echo "$opacity > 100" | bc`
+					   [ $testA -eq 1 -o $testB -eq 1 ] && errMsg "--- OPACITY=$opacity MUST BE AN INTEGER BETWEEN 0 AND 100 ---"
+					   ;;
+				-d)    # get distance
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID DISTANCE SPECIFICATION ---"
+					   checkMinus "$1"
+					   distance=`expr "$1" : '\([0-9]*\)'`
+					   [ "$distance" = "" ] && errMsg "--- DISTANCE=$distance MUST BE A NON-NEGATIVE INTEGER ---"
+					   ;;
+				-r)    # get ramp
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID RAMP SPECIFICATION ---"
+					   checkMinus "$1"
+					   ramp=`expr "$1" : '\([0-9]*\)'`
+					   [ "$ramp" = "" ] && errMsg "--- RAMP=$ramp MUST BE A NON-NEGATIVE INTEGER ---"
+					   ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile
+	infile=$1
+	outfile=$2
+fi
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "--- NO INPUT FILE SPECIFIED ---"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "--- NO OUTPUT FILE SPECIFIED ---"
+
+
+# setup temporary images
+tmpA1="$dir/picturefold_1_$$.mpc"
+tmpB1="$dir/picturefold_1_$$.cache"
+tmpA2="$dir/picturefold_2_$$.mpc"
+tmpB2="$dir/picturefold_2_$$.cache"
+trap "rm -f $tmpA1 $tmpB1 $tmpA2 $tmpB2; exit 0" 0
+trap "rm -f $tmpA1 $tmpB1 $tmpA2 $tmpB2; exit 1" 1 2 3 15
+
+# read the input image into the temporary cached image and test if valid
+convert -quiet -regard-warnings "$infile" +repage "$tmpA1" ||
+	echo "--- 1 FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO size  ---"
+
+# get infile dimensions
+ww=`identify -ping -format "%w" $tmpA1`
+hh=`identify -ping -format "%h" $tmpA1`
+
+# get specified height
+hh2=`convert xc: -format "%[fx:round($height*$hh/100)]" info:`
+
+# adjust thickness for blur and to pad out the image sufficient for the border and blur
+#thick1=$((thick-2))  --- problems if thick<3
+if [ $thick -eq 1 ]; then
+	thick=2
+	thick1=3
+elif [ $thick -lt 4 ]; then
+	thick1=3
+else
+	thick1=$((thick-2))
+fi
+thick2=$((thick1*2))
+#echo "thick=$thick; thick1=$thick1; thick2=$thick2;"
+
+# get width from numfolds
+ww3=`convert xc: -format "%[fx:floor($ww/$numfolds)]" info:`
+ww2=`convert xc: -format "%[fx:$numfolds*$ww3]" info:`
+
+# limit hh2
+hh2=`convert xc: -format "%[fx:($hh2>$hh-2*$thick2-$ww3*atan($angle*pi/180)?$hh-2*$thick2-$ww3*atan($angle*pi/180):$hh2)]" info:`
+#echo "hh=$hh; hh2=$hh2"
+
+# setup geometry and adjust yoffset for negative values
+yoffset=`convert xc: -format "%[fx:round($yoffset*$hh/100)]" info:`
+offsets=`printf "+0+%d"  $yoffset`
+
+# setup shading
+shading="gray$shading"
+#echo "$shading"
+
+# center crop image to appropriate width
+#convert $tmpA1 -gravity center -crop ${ww2}x${hh}+0+$yoffset +repage $tmpA1
+
+# set up alternating repeats for the following processing
+proc=""
+if [ $numfolds -gt 2 ]; then
+	num=$((numfolds-2))
+	for ((i=0; i<num; i++)) do
+		j=`convert xc: -format "%[fx:mod($i,2)]" info:`
+		proc="$proc -clone $j"
+	done
+fi
+#echo "$proc"
+
+# create alternating bright and dark modulations of the cropped image
+#
+# create white horizontal line and gray70 horizontal line of fold width
+# add alternate copies and append them all, scale to full height and center extend with black to input size
+# multiply mask by image
+convert \( -size ${ww3}x1 xc:white \) \( -size ${ww3}x1 xc:$shading \) \
+	$proc +append -scale ${ww2}x${hh}! -gravity center -background black -extent ${ww}x${hh} \
+	$tmpA1 -compose multiply -composite $tmpA1
+
+
+if [ "$opacity" != "0" -o "$thickness" != "0" ]; then
+	maskwrite="+write $tmpA2"
+else
+	maskwrite=""
+fi
+
+
+# create and apply alternating sheared masks to intensity modulated image
+#
+# create sheared white mask of size of fold on transparent background
+# clone and horizontal flop it, add alternate copies, and append them all
+# make a transparent image of the size of the 
+# composite the mask at the proper location in the transparent image
+# put the b/w mask as the alpha channel for the image and trim
+convert \( -size ${ww3}x${hh2} xc:white -background black -shear 0x-$angle \) \
+	\( +clone -flop \) $proc +append $maskwrite  \
+	\( -size ${ww2}x${hh} xc:black \) \
+	+swap -gravity $location -geometry $offsets -compose over -composite \
+	$tmpA1 +swap -alpha off -compose copy_opacity -composite -trim +repage $tmpA1
+
+
+
+# add border
+if [ "$thick" != "0" ]; then
+fuzzval2=`convert xc: -format "%[fx:$fuzzval/2]" info:`
+# add border to image
+# add border to mask, threshold to remove antialiasing, convert to outer edge, blur and level
+# compose image with mask using mask
+# remove tmps, do fuzzy trim
+convert $tmpA1 -background black -alpha background -alpha off -bordercolor black -border $thick2 \
+	\( $tmpA2 -bordercolor black -border $thick2 -threshold 0 \
+		-morphology edgeout octagon:$thick -blur 0x$blurval -level 0x50% \) \
+	\( -clone 1 -fuzz $fuzzval2% -fill "$bdcolor" -opaque white \) \
+	\( -clone 0 -clone 2 -clone 1 -compose over -composite \) \
+	-delete 0,1,2 -fuzz $fuzzval% -trim +repage $tmpA1
+fi
+
+
+# add shadow
+
+if [ "$opacity" != "0" ]; then
+	if [ "$thick" != "0" ]; then
+		# clone input, add black border
+		# floodfill outer black with none, convert opaque to white and transparent to black for new mask
+		# blur, level and shave so mask is back to size of input
+		# put mask in alpha channel of input
+		# create shadow
+		# composite shadow over input
+		convert $tmpA1 \( -clone 0 -bordercolor black -border $thick1 \
+			-fuzz $fuzzval% -fill none -draw "matte 0,0 floodfill" \
+			-fill white +opaque none -fill black -opaque none -alpha off \
+			-blur 0x$blurval -level 50x100% -shave $thick1 \) \
+			-alpha off -compose copy_opacity -composite -trim +repage  \
+			\( +clone -background black -shadow ${opacity}x${ramp}+${distance}+${distance} \) \
+			+swap -background none -compose over -layers merge +repage \
+			$tmpA1
+	else
+		# blur mask image, and level
+		# put mask in alpha channel of input
+		# create shadow
+		# composite shadow over input
+		convert $tmpA1 \( $tmpA2 -blur 0x$blurval -level 50x100% \) \
+			-alpha off -compose copy_opacity -composite -trim +repage  \
+			\( +clone -background black -shadow ${opacity}x${ramp}+${distance}+${distance} \) \
+			+swap -background none -compose over -layers merge +repage \
+			$tmpA1
+	fi
+fi
+
+
+
+# add background color
+if [ "$thick" = "0" -o "$opacity" != "0" ]; then
+	convert $tmpA1 -background $bgcolor -flatten $outfile
+else
+	convert $tmpA1 -bordercolor black -border 2 \
+		-fuzz $fuzzval% -fill none -draw "matte 0,0 floodfill" \
+		-background $bgcolor -flatten $outfile
+fi
+
+exit 0
+
+
+

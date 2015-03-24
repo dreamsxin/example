@@ -1,0 +1,574 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 7/28/2011 .......... 6/13/2013
+#
+# USAGE: pagepeel [-a amount] [-p pcolor] [-b bgcolor] [-s shortening] [-c curvature] [-m mode] [-S shadow] [-D darklevel] [-B brighten] [-C contrast] [-I] infile [bgfile] outfile 
+# USAGE: pagepeel [-help]
+#
+# OPTIONS:
+#
+# -a      amount            amount of pagepeel expressed as percent of  
+#                           image diagonal; integer>0; default=30
+# -p      pcolor            color to apply to peel; any valid IM color; 
+#                           default=white
+# -b      bgcolor           background color to apply to image where 
+#                           peeled away; any valid IM color; 
+#                           default=none (transparent)
+# -s      shortening        percent of peeled over amount relative to 
+#                           peeled away amount; 0<=integer<=100; 
+#                           default=90
+# -c      curvature         proportional to the depth/half-width of 
+#                           curvaturee; 0<=integer<=100; default=30
+# -m      mode              mode of curvature; choices are: 
+#                           parabola (or p) or arc (or a);
+#                           default=parabola
+# -S      shadow            size of shadow; integer>=0; default=0
+# -D      darklevel         dark level of shading; 0<=integer<=100;
+#                           smaller numbers are darker; default=25
+# -B      brighten			brightenning percent of light area of 
+#                           shading;  0<=integer<=100; default=10
+# -C      contrast          non-linear contrast reduction of shading; 
+#                           0<=integer<=100; smaller values reduce 
+#                           contrast more; default=50
+# -I                        save intermediate mask images;
+#                           default=no
+#
+###
+#
+# NAME: PAGEPEEL 
+# 
+# PURPOSE: Applies a pagepeel effect to the lower right corner of an image.
+# 
+# DESCRIPTION: PAGEPEEL applies a pagepeel effect to the lower right corner 
+# of an image along the bottom right to top left diagonal. The peeled region 
+# is outlined by either parabolas or circular arcs. The peeled region can 
+# be shaded and/or colored. A shadow can also be added. The removed area 
+# can be colored, transparent or filled with an optional same size background 
+# image if provided. Note that this is a 2D simulation and not a true 3D effect.
+# 
+# 
+# OPTIONS: 
+# 
+# -a amount ... AMOUNT of pagepeel expressed as percent of image diagonal. 
+# Values are in range integer>=1. Recommend at least 5. The default=30
+#
+# -p pcolor ... PCOLOR is the color to apply to peeled region. Any valid IM 
+# color is allowed. The default=white.
+# 
+# -b bgcolor ... BGCOLOR is the color to apply to peeled away part of the  
+# image. Any valid IM color is allowed. The default=none for transparent. 
+# If a background file is provided, bgcolor must be none.
+# 
+# -s shortening ... SHORTENING is the percent of peeled over amount relative 
+# to peeled away amount. Values are integers in the range 0 to 100. 
+# The default=90
+# 
+# -c curvature ... CURVATURE is proportional to the depth/half-width of   
+# the curve. Values are integers in the range 0 to 100. The default=30.
+# 
+# -m mode ... MODE of curvature. The choices are: parabola (or p) or 
+# arc (or a). The arc is slightly faster. The default=parabola
+# 
+# -S shadow ... SHADOW size. Values are integers>=0. The default=0
+# 
+# -D darklevel ... DARKLEVEL of shading. Values are integers between 
+# 0 and 100. Smaller numbers are darker. The default=25
+# 
+# -B brighten ... BRIGHTEN percent of light area of shading. Values are 
+# integers between 0 and 100. The default=10
+# 
+# -C contrast ... (non-linear) CONTRAST reduction of shading. Values are 
+# integers between 0 and 100. Smaller values reduce contrast more. The 
+# default=50
+# 
+# -I ... SAVE intermediate mask IMAGES. The images will be named:
+# pagepeel_corner_mask.png, pagepeel_gradient_mask.png
+# and if shadow != 0, then also pagepeel_shadow_mask.png
+# This allows the same masks to be used for multiple images.
+# See example at http://www.imagemagick.org/Usage/thumbnails/#pagecurl
+#  
+# REQUIREMENTS: IM 6.4.3-0 or higher due to the use of -sparse-color 
+# barycentric to generate the gradient shading.
+# 
+# Thanks to Anthony Thyssen for suggesting and working out the shadow 
+# and intermediate image save processing.
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set default values
+amount=20		# percent of pull back from bottom right corner to where folds
+shorten=90		# percent of pull over amount relative to pulled back amount
+curvature=30	# 100 times ratio of depth/width of parabola
+mode="parabola" # parabola or arc
+bgcolor="none"	# background color -- color behind where pulled away
+pcolor="white"	# peeled color -- color of pulled away region
+dark=25			# dark level of shading in range 0 to 100 (0 black, 100 white)
+bright=10		# brightenning percent of light area of shading
+contrast=50		# contrast of shading
+shadow=0		# shadow blurring
+isave="no"      # save intermediate images; yes or no
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 24 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		     -help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-a)    # get amount
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID AMOUNT SPECIFICATION ---"
+					   checkMinus "$1"
+					   amount=`expr "$1" : '\([0-9]*\)'`
+					   [ "$amount" = "" ] && errMsg "--- AMOUNT=$amount MUST BE A NON-NEGATIVE INTEGER (with no sign) ---"
+					   test1=`echo "$amount < 1" | bc`
+					   [ $test1 -eq 1 ] && errMsg "--- AMOUNT=$amount MUST BE AN GREATER THAN 1 ---"
+					   ;;
+				-p)    # get pcolor
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID PCOLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   pcolor="$1"
+					   ;;
+				-b)    # get bgcolor
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID BGCOLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   bgcolor="$1"
+					   ;;
+				-s)    # get shortening
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SHORTENING SPECIFICATION ---"
+					   checkMinus "$1"
+					   shorten=`expr "$1" : '\([0-9]*\)'`
+					   [ "$shorten" = "" ] && errMsg "--- SHORTENING=$shorten MUST BE A NON-NEGATIVE INTEGER (with no sign) ---"
+					   test1=`echo "$shorten < 0" | bc`
+					   test2=`echo "$shorten > 100" | bc`
+					   [ $test1 -eq 1 -o $test2 -eq 1 ] && errMsg "--- SHORTENING=$shorten MUST BE AN INTEGER BETWEEN 0 AND 100 ---"
+					   ;;
+				-c)    # get curvature
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID CURVATURE SPECIFICATION ---"
+					   checkMinus "$1"
+					   curvature=`expr "$1" : '\([0-9]*\)'`
+					   [ "$curvature" = "" ] && errMsg "--- CURVATURE=$curvature MUST BE A NON-NEGATIVE INTEGER (with no sign) ---"
+					   test1=`echo "$curvature < 0" | bc`
+					   test2=`echo "$curvature > 100" | bc`
+					   [ $test1 -eq 1 -o $test2 -eq 1 ] && errMsg "--- CURVATURE=$curvature MUST BE AN INTEGER BETWEEN 0 AND 100 ---"
+					   ;;
+		 		-m)    # mode
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID MODE SPECIFICATION ---"
+					   checkMinus "$1"
+					   # test mode values
+					   mode="$1"
+					   mode=`echo "$mode" | tr "[:upper:]" "[:lower:]"`
+					   case "$mode" in 
+					   		parabola|p) mode="parabola" ;;
+					   		arc|a) mode="arc" ;;
+					   		*) errMsg "--- MODE=$mode IS AN INVALID VALUE ---" 
+					   	esac
+					   ;;
+				-S)    # get shadow
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SHADOW SPECIFICATION ---"
+					   checkMinus "$1"
+					   shadow=`expr "$1" : '\([0-9]*\)'`
+					   [ "$shadow" = "" ] && errMsg "--- SHADOW=$shadow MUST BE A NON-NEGATIVE INTEGER (with no sign) ---"
+					   ;;
+				-D)    # get dark
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID DARKLEVEL SPECIFICATION ---"
+					   checkMinus "$1"
+					   dark=`expr "$1" : '\([0-9]*\)'`
+					   [ "$dark" = "" ] && errMsg "--- DARKLEVEL=$dark MUST BE A NON-NEGATIVE INTEGER (with no sign) ---"
+					   test1=`echo "$dark < 0" | bc`
+					   test2=`echo "$dark > 100" | bc`
+					   [ $test1 -eq 1 -o $test2 -eq 1 ] && errMsg "--- DARKLEVEL=$dark MUST BE AN INTEGER BETWEEN 0 AND 100 ---"
+					   ;;
+				-B)    # get bright
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID BRIGHTEN SPECIFICATION ---"
+					   checkMinus "$1"
+					   bright=`expr "$1" : '\([0-9]*\)'`
+					   [ "$bright" = "" ] && errMsg "--- BRIGHTEN=$bright MUST BE A NON-NEGATIVE INTEGER (with no sign) ---"
+					   test1=`echo "$bright < 0" | bc`
+					   test2=`echo "$bright > 100" | bc`
+					   [ $test1 -eq 1 -o $test2 -eq 1 ] && errMsg "--- BRIGHTEN=$bright MUST BE AN INTEGER BETWEEN 0 AND 100 ---"
+					   ;;
+				-C)    # get contrast
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID CONTRAST SPECIFICATION ---"
+					   checkMinus "$1"
+					   contrast=`expr "$1" : '\([0-9]*\)'`
+					   [ "$contrast" = "" ] && errMsg "--- CONTRAST=$contrast MUST BE A NON-NEGATIVE INTEGER (with no sign) ---"
+					   test1=`echo "$contrast < 0" | bc`
+					   test2=`echo "$contrast > 100" | bc`
+					   [ $test1 -eq 1 -o $test2 -eq 1 ] && errMsg "--- CONTRAST=$contrast MUST BE AN INTEGER BETWEEN 0 AND 100 ---"
+					   ;;
+				-I)    # get imagesave
+					   isave="yes"
+					   ;;
+			 	-)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile and bgfile
+	if [ $# -eq 3 ]; then
+		infile=$1
+		bgfile=$2
+		outfile=$3
+	elif [ $# -eq 2 ]; then
+		infile=$1
+		outfile=$2
+	else
+		errMsg "--- INCONSISTENT NUMBER OF IMAGES PROVIDED ---"
+	fi
+fi
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "NO INPUT FILE SPECIFIED"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "NO OUTPUT FILE SPECIFIED"
+
+# set up temporary images
+tmpA1="$dir/pagepeel_1_$$.mpc"
+tmpB1="$dir/pagepeel_1_$$.cache"
+tmpA2="$dir/pagepeel_2_$$.mpc"
+tmpB2="$dir/pagepeel_2_$$.cache"
+trap "rm -f $tmpA1 $tmpB1 $tmpA2 $tmpB2; exit 0" 0
+trap "rm -f $tmpA1 $tmpB1 $tmpA2 $tmpB2; exit 1" 1 2 3 15
+
+# get im_version
+im_version=`convert -list configure | \
+	sed '/^LIB_VERSION_NUMBER /!d; s//,/;  s/,/,0/g;  s/,0*\([0-9][0-9]\)/\1/g' | head -n 1`
+
+# colorspace RGB and sRGB swapped between 6.7.5.5 and 6.7.6.7 
+# though probably not resolved until the latter
+# then -colorspace gray changed to linear between 6.7.6.7 and 6.7.8.2 
+# then -separate converted to linear gray channels between 6.7.6.7 and 6.7.8.2,
+# though probably not resolved until the latter
+# so -colorspace HSL/HSB -separate and -colorspace gray became linear
+# but we need to use -set colorspace RGB before using them at appropriate times
+# so that results stay as in original script
+# The following was determined from various version tests using pagepeel.
+# with IM 6.7.4.10, 6.7.6.10, 6.7.9.0
+# Note: cannot get exact color match for IM 6.7.6.10 (ie 6.7.6.7 thru 6.7.7.7)
+if [ "$im_version" -lt "06070607" -o "$im_version" -gt "06070707" ]; then
+	setcspace="-set colorspace RGB"
+else
+	setcspace=""
+fi
+# no need for setcspace for grayscale or channels after 6.8.5.4
+if [ "$im_version" -gt "06080504" ]; then
+	setcspace=""
+fi
+
+
+# test input image
+convert -quiet -regard-warnings "$infile" +repage $setcspace "$tmpA1" ||
+	errMsg "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+	
+if [ "$bgfile" != "" ]; then
+	convert -quiet -regard-warnings "$bgfile" +repage $setcspace "$tmpA2" ||
+		errMsg "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+fi
+
+
+ww=`convert $tmpA1 -ping -format "%w" info:`
+hh=`convert $tmpA1 -ping -format "%h" info:`
+wm1=`convert xc: -format "%[fx:$ww-1]" info:`
+hm1=`convert xc: -format "%[fx:$hh-1]" info:`
+#echo "ww=$ww; hh=$hh; wm1=$wm1; hm1=$hm1;"
+
+# get x and y value corresponding to parametric equation of diagonal line
+# from bottom-right to top-left, using amount/100 as parameter
+# to set the place for the fold
+xf=`convert xc: -format "%[fx:(1-$amount/100)*$wm1]" info:`
+yf=`convert xc: -format "%[fx:(1-$amount/100)*$hm1]" info:`
+
+# get x and y values for perpendicular intersection with right and bottom edges
+# diagonal slope=hm1/wm1; orthogonal slope=-wm1/hm1
+# right intersection given by slope=-wm1/hm1=(yr-yf)/(xr-xf)
+# or xr=wm1 and yr=-(wm1/hm1)*(wm1-xf)+yf
+# bottom intersection given by slope=-wm1/hm1=(yb-yf)/(xb-xf)
+# or yb=hm1 and xb=-(hm1/wm1)*(hm1-yf)+xf
+xr=$wm1
+yr=`convert xc: -format "%[fx:-($wm1/$hm1)*($xr-$xf)+$yf]" info:`
+yb=$hm1
+xb=`convert xc: -format "%[fx:-($hm1/$wm1)*($yb-$yf)+$xf]" info:`
+
+# if yr<0 or xb<0, then get intersections with top and left edges
+# top intersection given by slope=-wm1/hm1=(yt-yf)/(xt-xf)
+# or yt=0 and xt=(hm1/wm1)*yf+xf
+# left intersection given by slope=-wm1/hm1=(yl-yf)/(xl-xf)
+# or xl=0 and yl=(wm1/hm1)*xf+yf
+test1=`convert xc: -format "%[fx:$yr<0?1:0]" info:`
+if [ $test1 -eq 1 ]; then
+	yt=0
+	xt=`convert xc: -format "%[fx:($hm1/$wm1)*$yf+$xf]" info:`
+fi
+test2=`convert xc: -format "%[fx:$xb<0?1:0]" info:`
+if [ $test2 -eq 1 ]; then
+	xl=0
+	yl=`convert xc: -format "%[fx:($wm1/$hm1)*$xf+$yf]" info:`
+fi
+
+# get the corner x and y value along diagonal
+xc=`convert xc: -format "%[fx:round((1-2*($amount*($shorten/100))/100)*$wm1)]" info:`
+yc=`convert xc: -format "%[fx:round((1-2*($amount*($shorten/100))/100)*$hm1)]" info:`
+
+#echo "xf=$xf; yf=$yf; xr=$xr; yr=$yr; xb=$xb; yb=$yb; xc=$xc; yc=$yc"
+
+
+if [ "$mode" = "parabola" ]; then
+	# Reference for parabola equations: http://en.wikipedia.org/wiki/Parabola
+	
+	# compute vertical axis of symmetry parabola between xc,yc and xr,yr
+	# y=ax^2 + bx + c  
+	# first solve for a from alternate form of parabola
+	# (x-h)^2 = 4p(y-k)
+	# curvature=100*(yc-k)/(xc-h)
+	# from 4p=(x-h)^2/(y-k) we get
+	# p=100*(xc-xr)/(4curvature)
+	# but a=1/(4p)
+	# so a=.01*curvature/(xc-xr)
+	a1=`convert xc: -format "%[fx:0.01*$curvature/($xc-$xr)]" info:`
+	# compute b and c 
+	# (yc - a*xc^2) = b*xc + c
+	# (yr - a*xr^2) = b*xr + c
+	# c = (yc - a*xc^2) - b*xc 
+	# b = ((yr-yc) + a*(xc^2 - xr^2))/(xr - xc)
+	b1=`convert xc: -format "%[fx:(($yr-$yc) + $a1*($xc*$xc - $xr*$xr))/($xr - $xc)]" info:`
+	c1=`convert xc: -format "%[fx:($yc - $a1*$xc*$xc) - $b1*$xc]" info:`
+	#echo "a1=$a1; b1=$b1; c1=$c1;"
+	
+	# compute horizontal axis of symmetry parabola between xc,yc and xb,yb
+	# x=ay^2 + by + c  where a=curvature/1000
+	# first solve for a from alternate form of parabola
+	# (y-h)^2 = 4p(x-k)
+	# curvature=100*(xc-k)/(yc-h)
+	# from 4p=(y-h)^2/(x-k) we get
+	# p=100*(yc-yb)/(4curvature)
+	# but a=1/(4p)
+	# so a=0.01*curvature/(yc-yb)
+	a2=`convert xc: -format "%[fx:0.01*$curvature/($yc-$yb)]" info:`
+	# compute b and c 
+	# (xc - a*yc^2) = b*yc + c
+	# (xb - a*yb^2) = b*yb + c
+	# c = (xc - a*yc^2) - b*yc 
+	# b = ((xb-xc) + a*(yc^2 - yb^2))/(yb - yc)
+	b2=`convert xc: -format "%[fx:(($xb-$xc) + $a2*($yc*$yc - $yb*$yb))/($yb - $yc)]" info:`
+	c2=`convert xc: -format "%[fx:($xc - $a2*$yc*$yc) - $b2*$yc ]" info:`
+	#echo "a2=$a2; b2=$b2; c2=$c2;"
+	
+	# compute polyline points for vertical axis of symmetry parabola
+	pointsa=`awk -v a1="$a1" -v b1="$b1" -v c1="$c1" -v xr="$xr" -v xc="$xc" \
+	'BEGIN { for (x=xr; x>=xc; x--) { y = a1*x*x+b1*x+c1; print x, y }; }'`
+	
+	# add last point to be sure skip does not miss it
+	pointsa="$pointsa $xc,$yc"
+	#echo "pointsa=$pointsa"
+	
+	# compute polyline points for horizontal axis of symmetry parabola
+	pointsb=`awk -v a2="$a2" -v b2="$b2" -v c2="$c2" -v yb="$yb" -v yc="$yc" \
+	'BEGIN { for (y=yc; y<=yb; y++) { x = a2*y*y+b2*y+c2; print x, y }; }'`
+	
+	pointsb="$pointsb $xb,$yb"
+	#echo "pointsb=$pointsb"
+	
+	points1="$pointsa $pointsb"
+	
+	# add points xb,yb xr,yr
+	points1="$points1 $xb,$yb $xr,$yr"
+	#echo "point1=$points1"
+	
+	proc="polyline $points1"
+	
+elif [ "$mode" = "arc" ]; then
+	# use circular arc
+	
+	# form half arc and draw line between arc points
+	# phi=angle between radius at xc and arc line = atan(w/h) = atan(1/(0.1*curvature))
+	# theta=pi-2*phi
+	# R=half-width/sin(theta)
+
+	# compute radius of arc between xc and xr and curvature
+	phi1=`convert xc: -format "%[fx:atan(1/(0.01*$curvature))]" info:`
+	theta1=`convert xc: -format "%[fx:pi-2*$phi1]" info:`
+	rad1=`convert xc: -format "%[fx:($xr-$xc)/sin($theta1)]" info:`
+	#echo "phi1=$phi1; theta1=$theta1; rad1=$rad1"
+	
+	# compute radius of arc between yc and yb and curvature
+	phi2=`convert xc: -format "%[fx:atan(1/(0.01*$curvature))]" info:`
+	theta2=`convert xc: -format "%[fx:pi-2*$phi2]" info:`
+	rad2=`convert xc: -format "%[fx:($yb-$yc)/sin($theta2)]" info:`
+	#echo "phi2=$phi2; theta2=$theta2; rad2=$rad2"
+	
+	proc="path 'M $xb,$yb  A $rad2,$rad2 0 0,0 $xc,$yc  A $rad1,$rad1 0 0,0 $xr,$yr Z"
+fi
+
+
+# set up dark, brightening and contrast
+dark=`convert xc: -format "%[fx:$dark/100]" info:`
+bright=$((100-bright))
+contrast=`convert xc: -format "%[fx:$contrast/100]" info:`
+
+# convert pcolor to hsb and reduce the b to 25%
+hue=`convert xc:$pcolor $setcspace -colorspace hsb -format "%[fx:100*u.r]" info:`
+sat=`convert xc:$pcolor $setcspace -colorspace hsb -format "%[fx:100*u.g]" info:`
+bri=`convert xc:$pcolor $setcspace -colorspace hsb -format "%[fx:100*u.b]" info:`
+bri2=`convert xc: -format "%[fx:$dark*$bri]" info:`
+pcolor2=`convert xc:"hsb($hue%,$sat%,$bri2%)" -format "%[pixel:u.p{0,0}]" info: | sed 's/%/%%/g'`
+#echo "hue=$hue; sat=$sat; bri=$bri; bri2=$bri2; pcolor2=$pcolor2"
+
+# set up polygon in lower right corner for under peeled away part
+if [ $test1 -eq 0 -a $test2 -eq 0 ]; then
+	points2="$xb,$yb $xr,$yr $wm1,$hm1"
+elif [ $test1 -eq 1 -a $test2 -eq 0 ]; then
+	points2="$xb,$yb $xt,$yt $wm1,0 $wm1,$hm1"
+elif [ $test1 -eq 0 -a $test2 -eq 1 ]; then
+	points2="$xl,$yl $xr,$yr $wm1,$hm1 0,$hm1"
+elif [ $test1 -eq 1 -a $test2 -eq 1 ]; then
+	points2="$xl,$yl $xt,$yt, $wm1,0 $wm1,$hm1 0,$hm1"
+fi
+#echo "points2=$points2"
+
+# set up for background image or background color
+if [ "$bgcolor" = "none" -a "$bgfile" != "" ]; then
+	back="$tmpA2 +swap"
+else
+	back="-background $bgcolor"
+fi
+
+
+#set up to write intermediate images
+if [ "$isave" = "yes" ]; then
+	writeA2="+write pagepeel_corner_mask.png"
+	writeA3="+write pagepeel_shadow_mask.png"
+	writeA4="+write pagepeel_gradient_mask.png"
+else
+	writeA2=""
+	writeA3=""
+	writeA4=""
+fi
+
+if [ "$shadow" != "0" ]; then
+	# input image
+	# create black and white mask for removed area
+	# composite the mask with image and either background color or background image
+	# create black and transparent mask for peel
+	# blur mask for peel
+	# composite blurred mask with previous composite of image and background
+	# create colored gradient using -sparse-color two-point method
+	# put non-blurred peel mask into alpha channel for gradient
+	# composite the transparent gradient over the previous composite of image and background
+	convert $tmpA1 \
+		\( -size ${ww}x${hh} xc:white -fill black -stroke black -draw "polygon $points2" -transparent black $writeA2 \) \
+		\( -clone 0 -clone 1 -alpha off -compose copy_opacity -composite -compose over $back -flatten \) \
+		\( -size ${ww}x${hh} xc:none -fill black -stroke black -draw "$proc" \) \
+		\( -clone 3 -channel All -blur 0x$shadow $writeA3 \) \
+		\( -clone 2 -clone 4 -compose over -composite \) \
+		\( -size ${ww}x${hh} xc:black -sparse-color barycentric "$xc,$yc $pcolor $xf,$yf $pcolor2" \
+			-evaluate pow $contrast -level 0x$bright% \) \
+		\( -clone 6 -clone 3 -compose copy_opacity -composite $writeA4 \) \
+		 -delete 0,1,2,3,4,6 -compose over -composite \
+		$outfile
+else
+	# input image
+	# create black and white mask for removed area
+	# composite the mask with image and either background color or background image
+	# create black and transparent mask for peel
+	# create colored gradient using -sparse-color two-point method
+	# put non-blurred peel mask into alpha channel for gradient
+	# composite the transparent gradient over the previous composite of image and background
+	convert $tmpA1 \
+		\( -size ${ww}x${hh} xc:white -fill black -stroke black -draw "polygon $points2" -transparent black $writeA2 \) \
+		\( -clone 0 -clone 1 -alpha off -compose copy_opacity -composite -compose over $back -flatten \) \
+		\( -size ${ww}x${hh} xc:none -fill black -stroke black -draw "$proc" \) \
+		\( -size ${ww}x${hh} xc:black -sparse-color barycentric "$xc,$yc $pcolor $xf,$yf $pcolor2" \
+			-evaluate pow $contrast -level 0x$bright% \) \
+		\( -clone 4 -clone 3 -compose copy_opacity -composite $writeA4 \) \
+		 -delete 0,1,3,4 -compose over -composite \
+		$outfile
+fi
+
+
+exit 0

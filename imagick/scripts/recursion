@@ -1,0 +1,241 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 5/30/2008 .......... revised 1/5/2009
+#
+# USAGE: recursion [-d dist] [-z zoom ] [-a angle] [- r rot] [-i iter] infile outfile
+# USAGE: recursion [-h or -help]
+#
+# OPTIONS:
+#
+# -d       dist       distance to shift on each iteration;
+#                     float>=0; default=10
+# -z       zoom       zoom factor for each iteration;
+#                     0<float<=1; default=.8
+# -a       angle      angular direction to shift on each iteration;
+#                     -180<=float<180 degree; default=0
+# -r       rot        amount of rotation of image on each iteration;
+#                     -180<=float<180 degrees; default=0
+# -i       iter       number of iterations; integer>0; default=8
+#
+###
+#
+# NAME: RECURSION 
+# 
+# PURPOSE: To create a recursive affine composite effect in an image.
+# 
+# DESCRIPTION: RECURSION create a recursive affine composite effect in an image.
+# The image is scaled, rotated and shifted by the specified amount on each 
+# iteration and then composited over the previous result.
+# 
+# OPTIONS: 
+#
+# -d dist ... DIST is distance to shift the image on each iterations. 
+# Values are floats >= 0. Typical values are between 10 and 20. The default=10.
+# 
+# -z zoom ... ZOOM is scale factor to apply to the image on each iteration. 
+# Values are 0<float<=1. Typical values are slightly less than 1. The default=.8
+# 
+# -a angle ... ANGLE is the direction angle to shift the image on each iteration. 
+# It is specified as a counterclockwise rotation -180<=float<=180 degrees. Typical 
+# values are between 0 and 90. The default is 0 (along the positive x direction).
+# 
+# -r rot ... ROT is the amount to rotate the image on each iteration. 
+# It is specified as a clockwise rotation -180<=float<=180 degrees. Typical values 
+# are betwen 0 and 30. The default is 0.
+#
+# -i iter ... ITER is the number of iterations in the recursion. Typical values are 
+# between 5 and 20. Values are integers>0.
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set default values
+angle=0
+dist=10
+rot=0
+zoom=0.8
+iter=8
+outfile=""
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 12 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		  -h|-help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-a)    # get angle
+					   shift  # to get the next parameter - angle
+					   # test if parameter starts with minus sign 
+					   #errorMsg="--- INVALID ANGLE SPECIFICATION ---"
+					   #checkMinus "$1"
+					   angle=`expr "$1" : '\([-.0-9]*\)'`
+					   [ "$angle" = "" ] && errMsg "ANGLE=$angle MUST BE A FLOAT"
+		   			   angletestA=`echo "$angle < -180" | bc`
+		   			   angletestB=`echo "$angle > 180" | bc`
+					   [ $angletestA -eq 1 -o $angletestB -eq 1 ] && errMsg "--- ANGLE=$angle MUST BE BETWEEN -180 AND 180 ---"
+					   ;;
+				-r)    # get rot
+					   shift  # to get the next parameter - rot
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID ROTATION SPECIFICATION ---"
+					   checkMinus "$1"
+					   rot=`expr "$1" : '\([-.0-9]*\)'`
+					   [ "$rot" = "" ] && errMsg "ROTATION=$rot MUST BE A FLOAT"
+		   			   rottestA=`echo "$rot < -180" | bc`
+		   			   rottestB=`echo "$rot > 180" | bc`
+					   [ $rottestA -eq 1 -o $rottestB -eq 1 ] && errMsg "--- ROTATION=$rot MUST BE BETWEEN -180 AND 180 ---"
+					   ;;
+				-d)    # get dist
+					   shift  # to get the next parameter - dist
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID DIST SPECIFICATION ---"
+					   checkMinus "$1"
+					   dist=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$dist" = "" ] && errMsg "DIST=$dist MUST BE A NON-NEGATIVE FLOAT"
+					   ;;
+				-z)    # get zoom
+					   shift  # to get the next parameter - zoom
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID ZOOM SPECIFICATION ---"
+					   checkMinus "$1"
+					   zoom=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$zoom" = "" ] && errMsg "ZOOM=$zoom MUST BE A FLOAT"
+		   			   zoomtestA=`echo "$zoom <= 0" | bc`
+		   			   zoomtestB=`echo "$zoom > 1" | bc`
+					   [ $zoomtestA -eq 1 -o $zoomtestB -eq 1 ] && errMsg "--- ZOOM=$zoom MUST BE A FLOAT GREATER THAN 0 AND LESS THAN OR EQUAL 1 ---"
+					   ;;
+				-i)    # get iter
+					   shift  # to get the next parameter - iter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID ITER SPECIFICATION ---"
+					   checkMinus "$1"
+					   iter=`expr "$1" : '\([0-9]*\)'`
+					   [ "$iter" = "" ] && errMsg "ITER=$iter MUST BE A NON-NEGATIVE FLOAT"
+		   			   itertest=`echo "$iter < 1" | bc`
+					   [ $itertest -eq 1 ] && errMsg "--- ITER=$iter MUST BE A POSITIVE FLOAT ---"
+					   ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile
+	infile=$1
+	outfile=$2
+fi
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "NO INPUT FILE SPECIFIED"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "NO OUTPUT FILE SPECIFIED"
+
+# set temporary files
+tmpA="$dir/recursion_1_$$.mpc"
+tmpB="$dir/recursion_1_$$.cache"
+tmpC="$dir/recursion_2_$$.mpc"
+tmpD="$dir/recursion_2_$$.cache"
+trap "rm -f $tmpA $tmpB $tmpC $tmpD; exit 0" 0
+trap "rm -f $tmpA $tmpB $tmpC $tmpD; exit 1" 1 2 3 15
+
+if convert -quiet -regard-warnings "$infile" +repage "$tmpA"
+	then
+	: ' Do Nothing '
+else
+	errMsg "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+fi
+
+
+xc=`convert $infile -format "%[fx:w/2]" info:`
+yc=`convert $infile -format "%[fx:h/2]" info:`
+xo=`convert xc: -format "%[fx:$xc+$dist*cos($angle*pi/180)]" info:`
+yo=`convert xc: -format "%[fx:$yc-$dist*sin($angle*pi/180)]" info:`
+
+echo "xc=$xc"
+echo "yc=$yc"
+echo "xo=$xo"
+echo "yo=$yo"
+
+
+echo ""
+echo "Number Of Interations = $iter"
+echo ""
+
+#process image
+convert $tmpA $tmpC
+i=1
+while [ $i -le $iter ]
+	do
+	echo "iteration=$i"
+	convert $tmpC -channel RGBA -matte -virtual-pixel transparent \
+		-distort SRT "$xc,$yc $zoom $rot $xo,$yo" $tmpC
+	convert $tmpA $tmpC -composite $tmpA
+	i=`expr $i + 1`
+done
+convert $tmpA $outfile
+exit 0

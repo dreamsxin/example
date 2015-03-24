@@ -1,0 +1,236 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 1/20/2009 .......... revised 2/11/2009
+#
+# USAGE: striations [-t type] [-r radius] [-c center] [-k column] infile outfile
+# USAGE: striations [-h or -help]
+#
+# OPTIONS:
+#
+# -t      type               type of striations; choices are radial (or r)
+#                            or circular (c); default=radial
+# -r      radius             radius from center point where striations begin; 
+#                            integer>=0; default is half the minimum image dimension
+# -c      center             center point for striation effect; center=cx,cy; 
+#                            integer>=0; default is center of image
+# -k      column             column to use for circular striations; integers;
+#                            0<=column<width
+#
+###
+#
+# NAME: STRIATIONS 
+# 
+# PURPOSE: To apply radial or circular striations to image.
+# 
+# DESCRIPTION: STRIATIONS applies radial or circular striations to image 
+# starting at a user specified center point and radius.
+# 
+# OPTIONS: 
+#
+# -t type ... TYPE of striations. Choices are radial (or r) or circular (or c).
+# The default is radial.
+# 
+# -r radius ... RADIUS is the radial distance from the center point at 
+# which the striations begin. Values are integers>=0. The default is 
+# half the minimum dimension of the image.
+# 
+# -c center ... CENTER=cx,cy are the comma separated coordinates in the image 
+# from where the radial striations eminate. Values are integers>=0. The default 
+# is the center of the image.
+# 
+# -k column ... COLUMN of the polar image to use for generating the circular 
+# striations. Values are integers, such that 0<=column<width of the image.
+# The default=0.
+# 
+# NOTE: Requires IM 6.4.2-8 or higher due to the use of -distort polar/depolar.
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set default values
+type="radial"	#radial or circular
+rad=""			#defaults to half the min width or height
+center=""		#defaults to the center of the image
+column=0
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 10 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		  -h|-help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-t)	   # get type
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID TYPE SPECIFICATION ---"
+					   checkMinus "$1"
+					   type=`echo "$1" | tr '[A-Z]' '[a-z]'`
+					   case "$type" in 
+					   		radial|r) type="radial";;
+					   		circular|c) type="circular";;
+					   		*) errMsg "--- TYPE=$type IS AN INVALID VALUE ---" 
+					   	esac
+					   ;;					   
+				-r)    # get rad
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID RADIUS SPECIFICATION ---"
+					   checkMinus "$1"
+					   rad=`expr "$1" : '\([0-9]*\)'`
+					   [ "$rad" = "" ] && errMsg "RADIUS=$rad MUST BE A NON-NEGATIVE INTEGER"
+					   ;;
+				-c)    # get center
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID CENTER SPECIFICATION ---"
+					   checkMinus "$1"
+					   test=`echo "$1" | tr "," " " | wc -w`
+					   [ $test -eq 1 -o $test -gt 2 ] && errMsg "--- INCORRECT NUMBER OF COORDINATES SUPPLIED ---"
+					   center=`expr "$1" : '\([0-9]*,[0-9]*\)'`
+					   [ "$center" = "" ] && errMsg "--- CENTER=$coords MUST BE A PAIR OF NON-NEGATIVE INTEGERS SEPARATED BY A COMMA ---"
+					   center="$1,"
+		   			   cx=`echo "$center" | cut -d, -f1`
+		   			   cy=`echo "$center" | cut -d, -f2`
+					   ;;
+				-k)    # get column
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID COLUMN SPECIFICATION ---"
+					   checkMinus "$1"
+					   column=`expr "$1" : '\([0-9]*\)'`
+					   [ "$column" = "" ] && errMsg "COLUMN=$column MUST BE A NON-NEGATIVE INTEGER"
+					   ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile
+	infile=$1
+	outfile=$2
+fi
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "NO INPUT FILE SPECIFIED"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "NO OUTPUT FILE SPECIFIED"
+
+# setup temporary images
+tmpA1="$dir/striations_1_$$.mpc"
+tmpA2="$dir/striations_1_$$.cache"
+trap "rm -f $tmpA1 $tmpA2; exit 0" 0
+trap "rm -f $tmpA1 $tmpA2; exit 1" 1 2 3 15
+
+
+# read input and make sure OK
+if convert -quiet -regard-warnings "$infile" +repage "$tmpA1"
+	then
+	: ' do nothing '
+else
+	errMsg "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+fi
+
+# get center if not provided
+if [ "$center" = "" ]; then
+	cx=`convert $tmpA1 -format "%[fx:(w-1)/2]" info:`
+	cy=`convert $tmpA1 -format "%[fx:(h-1)/2]" info:`
+fi
+
+# get radius if not profided
+if [ "$rad" = "" ]; then
+rad=`convert $tmpA1 -format "%[fx:floor(min(w,h)/2))]" info:`
+fi
+
+# correct radius to account for polar transformation scaling
+rad1=`convert $tmpA1 -format "%[fx:floor(2*$rad*h/sqrt(w*w+h*h))]" info:`
+
+# get image width and height and distance outside radius
+ww=`convert $tmpA1 -format %w info:`
+hh=`convert $tmpA1 -format %h info:`
+hmr=`convert xc: -format "%[fx:max(1,$hh-$rad1)]" info:`
+
+# test column
+[ $column -ge $ww ] && errMsg "--- COLUMN=$column MUST BE AN INTEGER BETWEEN 0 AND IMAGE WIDTH ---"
+
+# convert image to polar coords
+convert $tmpA1 -distort depolar -1,0,$cx,$cy $tmpA1
+
+if [ "$type" = "radial" ]; then
+# crop to radius and repeat last row and convert back to rectangular
+convert $tmpA1[${ww}x${rad1}+0+0] \
+	\( $tmpA1[${ww}x1+0+${rad1}] -scale ${ww}x${hmr}! \) \
+	-append -crop ${ww}x${hh}+0+0 +repage \
+	-distort polar -1,0,$cx,$cy $outfile
+elif [ "$type" = "circular" ]; then
+convert $tmpA1[${ww}x${rad1}+0+0] \
+	\( $tmpA1[1x${hmr}+${column}+${rad1}] -scale ${ww}x${hmr}! \) \
+	-append -crop ${ww}x${hh}+0+0 +repage \
+	-distort polar -1,0,$cx,$cy $outfile
+fi
+exit 0

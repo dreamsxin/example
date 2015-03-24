@@ -8,8 +8,41 @@ sudo apt-get install libmagickwand-dev
 ./rotate3D 45,45,0 birdofparadise.gif rotate3D.gif
 ./crosshatch -l 7 -s 10 -g 1 -a 2 birdofparadise.gif crosshatch.gif
 ./whitebalance -c "rgb(200,220,210)" birdofparadise.gif whitebalance.gif
+./chrome -i 100 birdofparadise.gif chrome.gif
+./picturefold -n 10 -t 1 -a 40 birdofparadise.gif picturefold.gif
+./pinbarrel "1.2,0,0,-0.2,0" birdofparadise.gif pinbarrel.gif
+./mottle -t b -a 5 -g 1 -c white -r b birdofparadise.gif mottle.gif
+./mottle -t d -a 3 -g 1 text4-2.png text4-2-1.png
+./zoomblur -a 1.1 birdofparadise.gif zoomblur.gif
+./tricolorize -l blue -m yellow -h red -c -20 birdofparadise.gif tricolorize.gif
+./tricolorize -l blue -m yellow -h red -c -50 birdofparadise.gif tricolorize2.gif
 ```
 
+```php
+//passthru('./pinbarrel "1.5,-0.5,0,0,0" birdofparadise.gif pinbarrel.gif');
+$image = new Phalcon\Image\Adapter\Imagick('birdofparadise.gif');
+$sf = ($image->getWidth() > $image->getHeight() ? $image->getHeight() : $image->getWidth())/2;
+$w = $image->getWidth() / 2;
+$h = $image->getHeight() / 2;
+$ax = 1.2;
+$bx = 0;
+$cx = 0;
+$dx = -0.2;
+Phalcon\Image\Adapter\Imagick::convert(array(
+	'convert',
+	'birdofparadise.gif',
+	'-virtual-pixel',
+	'black',
+	'-monitor',
+	'-fx',
+	"xd=(i-$w); yd=(j-$h); rd=hypot(xd,yd)/$sf; fdx=1.5 + -0.5*rd; xs=fdx*xd+$w; ys=ys=fdx*yd+$h; u.p{xs,ys}",
+	'pinbarrel.png'
+));
+
+passthru('./mottle -t b -a 5 -g 1 -c white -r b pinbarrel.gif mottle.gif');
+passthru('./mottle -t d -a 3 -g 1 mottle.gif mottle2.gif');
+passthru('./zoomblur -a 1.1 mottle2.gif zoomblur.gif');
+```
 
 PHP Imagick API - Translate CLI command to IMagick API
 

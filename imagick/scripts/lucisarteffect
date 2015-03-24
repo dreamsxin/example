@@ -1,0 +1,230 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 3/25/2013 .......... revised 2/23/2015
+#
+# ------------------------------------------------------------------------------
+# 
+# Licensing:
+# 
+# Copyright © Fred Weinhaus
+# 
+# My scripts are available free of charge for non-commercial use, ONLY.
+# 
+# For use of my scripts in commercial (for-profit) environments or 
+# non-free applications, please contact me (Fred Weinhaus) for 
+# licensing arrangements. My email address is fmw at alink dot net.
+# 
+# If you: 1) redistribute, 2) incorporate any of these scripts into other 
+# free applications or 3) reprogram them in another scripting language, 
+# then you must contact me for permission, especially if the result might 
+# be used in a commercial or for-profit environment.
+# 
+# My scripts are also subject, in a subordinate manner, to the ImageMagick 
+# license, which can be found at: http://www.imagemagick.org/script/license.php
+# 
+# ------------------------------------------------------------------------------
+# 
+# USAGE: lucisarteffect [-g gain] [-s saturation] infile outfile
+# USAGE: lucisarteffect [-h or -help]
+# 
+# OPTIONS:
+# 
+# -g      gain              effect gain; float>=0; default=0.3
+# -s      saturation        saturation of cartoon; integer>=0; default=60
+# 
+###
+# 
+# NAME: LUCISARTEFFECT 
+# 
+# PURPOSE: To apply a LucisArt-like effect to an image.
+# 
+# DESCRIPTION: LUCISARTEFFECT applies a LucisArt-like effect to an image.. 
+# 
+# 
+# ARGUMENTS: 
+# 
+# -g gain ... gain of the effect. Values are floats>=0. The default=0.3.
+# 
+# -s saturation ... SATURATION for the effect. Values are integer>=0. The
+# default=60.
+# 
+# Reference: http://www.lucisart.com/
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+# 
+
+# set default values
+gain=0.3
+saturation=60
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -e '1,/^####/d;  /^###/g;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -e '1,/^####/d;  /^######/g;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 6 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		  -h|-help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-g)    # get  gain
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID GAIN SPECIFICATION ---"
+					   checkMinus "$1"
+					   gain=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$gain" = "" ] && errMsg "--- GAIN=$gain MUST BE A NON-NEGATIVE FLOAT VALUE (with no sign) ---"
+					   ;;
+				-s)    # get saturation
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID SATURATION SPECIFICATION ---"
+					   checkMinus "$1"
+					   saturation=`expr "$1" : '\([0-9]*\)'`
+					   [ "$saturation" = "" ] && errMsg "--- SATURATION=$saturation MUST BE A NON-NEGATIVE INTEGER VALUE (with no sign) ---"
+					   ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile
+	infile="$1"
+	outfile="$2"
+fi
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "NO INPUT FILE SPECIFIED"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "NO OUTPUT FILE SPECIFIED"
+
+
+
+# setup temporary images
+tmpA1="$dir/lucisartseffect_1_$$.mpc"
+tmpB1="$dir/lucisartseffect_1_$$.cache"
+trap "rm -f $tmpA1 $tmpB1;" 0
+trap "rm -f $tmpA1 $tmpB1; exit 1" 1 2 3 15
+trap "rm -f $tmpA1 $tmpB1; exit 1" ERR
+
+# read the input image into the temporary cached image and test if valid
+convert -quiet "$infile" +repage "$tmpA1" ||
+	echo "--- 1 FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO size  ---"
+
+# get im version
+im_version=`convert -list configure | \
+	sed '/^LIB_VERSION_NUMBER /!d; s//,/;  s/,/,0/g;  s/,0*\([0-9][0-9]\)/\1/g' | head -n 1`
+
+# colorspace RGB and sRGB swapped between 6.7.5.5 and 6.7.6.7 
+# though probably not resolved until the latter
+# then -colorspace gray changed to linear between 6.7.6.7 and 6.7.8.2 
+# then -separate converted to linear gray channels between 6.7.6.7 and 6.7.8.2,
+# though probably not resolved until the latter
+# so -colorspace HSL/HSB -separate and -colorspace gray became linear
+# but we need to use -set colorspace RGB before using them at appropriate times
+# so that results stay as in original script
+# The following was determined from various version tests using lucisart.
+# with IM 6.7.4.10, 6.7.6.10, 6.8.3.3
+# note from 6.8.3.4, 6.8.3.5 to 6.8.3.9 and 6.8.4.0 something changed and cannot make them match 6.7.4.10 and 6.7.6.10 
+if [ "$im_version" -lt "06070607" -o "$im_version" -gt "06070707" ]; then
+	setcspace="-set colorspace RGB"
+else
+	setcspace=""
+fi
+# no need for setcspace for grayscale or channels after 6.8.5.4
+if [ "$im_version" -gt "06080504" ]; then
+	setcspace=""
+fi
+
+
+# set up blurring and unsharpening
+# note bug in -blur with large kernels from IM 6.8.3.4 to IM 6.8.3.10 (different and slower) -- fixed at 6.8.4.2 -- though does not affect small kernel
+# just keep using morphology blur as -blur after 6.8.4.2 calls morphology blur
+if [ "$im_version" -ge "06080304" ]; then
+	blurring="-morphology convolve blur:0x6;blur:0x6+90"
+else
+	blurring="-blur 0x6"
+fi
+
+
+# process image
+# clone the image and apply DoG filter
+# screen composite the DoG and image
+# clone original image again, totally desaturate and apply 6 pixel blur to grayscale
+# overlay composite the blurred and desaturated image with the previous composite
+# apply unsharpening with the mixing factor as gain
+# get output
+# desaturate the result some
+convert  $tmpA1 $setcspace \
+	\( -clone 0 -define convolve:scale=1 -morphology Convolve DoG:0,0,2 \) \
+	-compose screen -composite -clamp \
+	\( -clone 0 -modulate 100,0,100 -negate $blurring \) \
+	-compose overlay -composite \
+	-unsharp 0x9+${gain}+0 \
+	-define modulate:colorspace=HCL -modulate 100,$saturation,100 \
+	"$outfile"
+
+
+exit 0

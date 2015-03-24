@@ -1,0 +1,315 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 2/12/2009 .......... revised 3/23/2013
+#
+# USAGE: mottle [-t type ] [-a amount] [-g granularity] [-c color] [-r region] [-n newseed] [-s] infile outfile
+# USAGE: mottle [-h or -help]
+#
+# OPTIONS:
+#
+# -t      type               type of mottle effect; displace (or d), modulate (or m) 
+#                            blend (or b); default=displace
+# -a      amount             amount of displacement; integer>=0; default=5
+# -g      granularity        granularity or size of mottled areas; float>=0; default=5
+# -c      color              mixing color for blend effect; any valid IM color; default=black
+# -r      region             blend region where color is applied; foreground (or f) or 
+#                            background (or b); default=foreground
+# -n      newseed            forced seed value; integer>0; default will randomly change seed 
+# -s                         color shimmer for blend effect
+# 
+###
+#
+# NAME: MOTTLE 
+# 
+# PURPOSE: To apply various mottle effects to an image.
+# 
+# DESCRIPTION: MOTTLE various mottle effects to an image. The effect types 
+# are displacement, modulation and blend. The latter two are more suited for 
+# for application to binary images.
+# 
+# OPTIONS: 
+#
+# -t type ... TYPE of mottle effect. Choices are: displace or (d), modulate (or m) 
+# and blend (or b). The modulate and blend options are better suited for
+# binary images. The default is displace.
+# 
+# -a amount ... AMOUNT of displacement in pixels. Values are integers>=0.
+# The default=5. Modulate and blend are not sensitive to this parameter.
+#
+# -g granularity ... GRANULARITY is the size of the mottled areas. Values are 
+# floats>=0. The default=5.
+#
+# -c color ... COLOR is the mixing color for the type=blend effect. 
+# Any valid IM color is allowed. See http://imagemagick.org/script/color.php
+# The default=white. When region=background, this produces a "cloud-like" color 
+# effect on a color image. When region=foreground, this produces a mottled color 
+# tinting effect to a color image.
+# 
+# -r region ... REGION is the location where the type=blend effect coloration 
+# is applied. Values are either foreground (f) or background (b). 
+# The default=foreground
+# 
+# -n newseed ... NEWSEED is the forced seed value to use for randomization. This 
+# permits the pattern to be repeated. The default is to change the seed value 
+# randomly each time the script is run, thus causing somewhat different 
+# patterns each time the script is run.
+# 
+# -s ... Apply a color shimmer effect with type=modulate
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+#
+
+# set default values
+type="displace"			# displace, modulate or blend
+amount=5				# amount of displacement
+granularity=5			# granularity of features
+color="white"			# color for blend
+region="foreground"		# blend region; foreground or background
+shimmer="no"			# color shimmer effect for blend 
+newseed=""				# seed
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 15 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		  -h|-help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-t)	   # get type
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID TYPE SPECIFICATION ---"
+					   checkMinus "$1"
+					   type=`echo "$1" | tr '[A-Z]' '[a-z]'`
+					   case "$type" in 
+					   		displace|d) type="displace";;
+					   		modulate|m) type="modulate";;
+					   		blend|b) type="blend";;
+					   		*) errMsg "--- TYPE=$type IS AN INVALID VALUE ---" 
+					   	esac
+					   ;;					   
+				-a)    # get amount
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID AMOUNT SPECIFICATION ---"
+					   checkMinus "$1"
+					   amount=`expr "$1" : '\([0-9]*\)'`
+					   [ "$amount" = "" ] && errMsg "AMOUNT=$amount MUST BE AN INTEGER"
+#		   			   amounttest=`echo "$amount < 1" | bc`
+#					   [ $amounttest -eq 1 ] && errMsg "--- AMOUNT=$amount MUST BE A POSITIVE INTEGER ---"
+					   ;;
+				-g)    # get granularity
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID GRANULARITY SPECIFICATION ---"
+					   checkMinus "$1"
+					   granularity=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$granularity" = "" ] && errMsg "GRANULARITY=$granularity MUST BE A NON-NEGATIVE FLOAT"
+					   ;;
+				-c)    # get color
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID COLOR SPECIFICATION ---"
+					   checkMinus "$1"
+					   color="$1"
+					   ;;
+				-r)	   # get region
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID REGION SPECIFICATION ---"
+					   checkMinus "$1"
+					   region=`echo "$1" | tr '[A-Z]' '[a-z]'`
+					   case "$region" in 
+					   		foreground|f) region="foreground";;
+					   		background|b) region="background";;
+					   		*) errMsg "--- REGION=$region IS AN INVALID VALUE ---" 
+					   	esac
+					   ;;					   
+				-s)    # get shimmer
+					   shimmer="yes"
+					   ;;
+				-n)    # get  newseed
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID NEWSEED SPECIFICATION ---"
+					   checkMinus "$1"
+					   newseed=`expr "$1" : '\([0-9]*\)'`
+					   [ "$newseed" = "" ] && errMsg "--- NEWSEED=$newseed MUST BE A NON-NEGATIVE INTEGER VALUE (with no sign) ---"
+					   ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get infile and outfile
+	infile=$1
+	outfile=$2
+fi
+
+# test that infile provided
+[ "$infile" = "" ] && errMsg "NO INPUT FILE SPECIFIED"
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "NO OUTPUT FILE SPECIFIED"
+
+# setup temporary images
+tmpA="$dir/mottle_$$.mpc"
+tmpB="$dir/mottle_$$.cache"
+tmp0="$dir/mottle_0_$$.miff"
+tmp1="$dir/mottle_1_$$.miff"
+trap "rm -f $tmpA $tmpB $tmp0 $tmp1; exit 0" 0
+trap "rm -f $tmpA $tmpB $tmp0 $tmp1; exit 1" 1 2 3 15
+
+
+# get im version
+im_version=`convert -list configure | \
+	sed '/^LIB_VERSION_NUMBER /!d; s//,/;  s/,/,0/g;  s/,0*\([0-9][0-9]\)/\1/g' | head -n 1`
+
+# colorspace RGB and sRGB swapped between 6.7.5.5 and 6.7.6.7 
+# though probably not resolved until the latter
+# then -colorspace gray changed to linear between 6.7.6.7 and 6.7.8.2 
+# then -separate converted to linear gray channels between 6.7.6.7 and 6.7.8.2,
+# though probably not resolved until the latter
+# so -colorspace HSL/HSB -separate and -colorspace gray became linear
+# but we need to use -set colorspace RGB before using them at appropriate times
+# so that results stay as in original script
+# The following was determined from various version tests using mottle.
+# with IM 6.7.4.10, 6.7.6.10, 6.7.9.0
+if [ "$im_version" -lt "06070607" -o "$im_version" -gt "06070707" ]; then
+	setcspace="-set colorspace RGB"
+else
+	setcspace=""
+fi
+# no need for setcspace for grayscale or channels after 6.8.5.4
+if [ "$im_version" -gt "06080504" ]; then
+	setcspace=""
+fi
+
+
+# test image
+if convert -quiet -regard-warnings "$infile" +repage "$tmpA"
+	then
+	: ' Do Nothing '
+else
+		errMsg "--- FILE $infile DOES NOT EXIST OR IS NOT AN ORDINARY FILE, NOT READABLE OR HAS ZERO SIZE ---"
+fi
+
+ww=`convert $tmpA -format "%[fx:w]" info:`
+hh=`convert $tmpA -format "%[fx:h]" info:`
+
+if [ "$granularity" = "0" -o "$granularity" = "0.0" ]; then
+	blur=""
+else
+	blur="-blur 0x${granularity}"
+fi
+
+if [ "$type" = "modulate" -a "$shimmer" = "yes" ]; then
+	grayscale=""
+else
+	grayscale="-channel G -separate +channel"
+fi
+
+if [ "$region" = "foreground" ]; then
+	region="multiply"
+elif [ "$region" = "background" ]; then
+	region="plus"
+fi
+
+if [ "$newseed" = "" ]; then
+	seed=""
+else
+	seed="-seed $newseed"
+fi
+
+# create noise image with specified blur=granularity
+convert -size ${ww}x${hh} xc: $seed +noise Random \
+	-virtual-pixel tile  \
+	$blur \
+    $setcspace -contrast-stretch 0% \
+	$grayscale \
+    $tmp0
+
+
+if [ "$type" = "displace" ]; then
+	# process image with noise image as displacement map
+	if [ "$im_version" -lt "06050304" ]; then
+		composite $tmp0 $tmpA -displace ${amount}x${amount} $outfile
+	else
+		convert $tmpA $tmp0 -define compose:args=${amount}x${amount} -compose displace -composite $outfile
+	fi
+elif [ "$type" = "modulate" ]; then
+	# process image with background using noise image as mask
+	convert $tmpA $tmp0 $tmp0 \
+		$setcspace -compose multiply -composite $outfile
+elif [ "$type" = "blend" ]; then
+	# process image with blend color using noise image as mask
+	convert $tmpA \( -size ${ww}x${hh} xc:$color \) $tmp0 \
+		$setcspace -compose $region -composite $outfile
+fi
+
+
+exit 0

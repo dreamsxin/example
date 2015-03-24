@@ -1,0 +1,374 @@
+#!/bin/bash
+#
+# Developed by Fred Weinhaus 9/31/2009 .......... revised 6/13/2013
+# 
+# USAGE: perlin widthxheight [-s startlevel] [-e endlevel] [-b base] [-a attenuation] [-n noise] [-r reseed] [-f filter] [-m mode] outfile
+# USAGE: perlin [-h or -help]
+# 
+# OPTIONS:
+# 
+#         widthxHeight         width and height of desired output image
+# -s      startlevel           starting octave level; integer>0; default=1
+# -e      endlevel             ending octave level; integer>0; default is 
+#                              as high as practical
+# -b      base                 octave base; integer>1; default=2
+# -a      attenuation          attenuation factor; float>=0; default=0 
+#                              indicates attenuate linearly; other values 
+#                              indicates use an exponential attenuation with 
+#                              the value as the base; attenuation=2 is the 
+#                              other nominal value
+# -n      noise                noise type; any valid IM noise type; 
+#                              default=random
+# -r      reseed               seed value for random number generator; integer>=0; 
+#                              default indicates to use a random seed value
+#                              each iteration and each time the script is run
+# -f      filter               noise smoothing interpolation filter; 
+#                              any valid IM filter; default=lanczos
+# -m      mode                 output image color mode; gray or color; 
+#                              default=gray
+# 
+###
+# 
+# NAME: PERLIN 
+# 
+# PURPOSE: To create an image composed of Perlin type noise.
+# 
+# DESCRIPTION: PERLIN creates an image composed of Perlin type noise. Perlin 
+# noise is an addition of random noise images at successively higher octaves  
+# in frequency and more attenuated amplitudes.
+# 
+# 
+# ARGUMENTS: 
+# 
+# widthxheight ... WIDTHxHEIGHT is the desired sized of the output image.
+# 
+# -s startlevel ... STARTLEVEL is the starting octave level. It defines the 
+# lowest frequency of the random pattern (added to zero frequency midgray) 
+# where the frequency is the base raised to the octave level. Values are 
+# integers>0. The default=1.
+# 
+# -e endlevel ... ENDLEVEL is the ending octave level. It defines the 
+# highest frequency of the random pattern where the frequency is the base 
+# raised to the octave level. Values are integers>0. The default is to stop 
+# when the amplitude is smaller than the IM smallest number, quantumscale, 
+# for your IM Q level compilation. Practically, one might want to stop at 
+# octave level around 6 or 7 depending upon output size. If the endlevel 
+# is too high, then the resulting noise pattern may be too fine-grained.
+# 
+# -b base ... BASE is the base number for the octave frequencies. Frequencies 
+# are defined as base raised to the power of the octave level. Values are 
+# integers>1. The default=2 (frequencies increment as octaves that are powers 
+# of 2). Typical values are small numbers.
+# 
+# -a attenuation ... ATTENUATION is a value used to compute how the amplitude 
+# for each octave is attenuated (or amplified) as a function of increasing 
+# noise frequency. It is the inverse of what is typically called the 
+# "persistence" in some of the literature. Values are floats>0. For the default 
+# value of zero, the amplitude will be attenuated by successively larger 
+# integers incremented for each successive octave. When the attenuation value 
+# is larger than zero, the amplitude will be attenuated by the attenuation 
+# value raised to the same integer. Thus for values greater than 1, higher 
+# frequencies will be attenuation. But for values less than 1, higher 
+# frequencies will be amplified. Each frequency will carry the same weight, 
+# when the attenuation=1. A value of 2 is often used and produces a smoother 
+# result than the default of 0.
+# 
+# -n noise ... NOISE is the type of noise to use. Any valid IM noise is 
+# permitted. The default=random.
+# 
+# -f filter ... FILTER is the smoothing or interpolation filter used to 
+# generate the lower frequency patterns. Any valid IM filter is permitted. 
+# The default=lanczos.
+# 
+# -r reseed ... RESEED is the seed value to use in the random number 
+# generator. This permits the resulting image to be repeated. Values are 
+# integers>=0; The default is to change the seed value randomly each time 
+# the script is run and for each octave. When a seed value is provided, it 
+# will be used for all octaves.
+# 
+# REQUIREMENTS: IM 6.5.5.-1 or higher due to the use of -auto-level.
+# 
+# For references, see
+# http://en.wikipedia.org/wiki/Perlin_noise
+# http://freespace.virgin.net/hugo.elias/models/m_perlin.htm
+# 
+# CAVEAT: No guarantee that this script will work on all platforms, 
+# nor that trapping of inconsistent parameters is complete and 
+# foolproof. Use At Your Own Risk. 
+# 
+######
+# 
+
+# set default values
+base=2					#integer>1; typically 2 to 4; frequency=base^(octave level)
+startlevel=1			#starting octave level; integer>0
+endlevel=""				#ending octave level; default is as fine as possible
+atten=0					#persist=1/atten; amp=persist^(j-1); atten=0 -> amp=1/j; j=1,2...
+noise="random"			#random, gaussian, poisson
+reseed=""				#seed value
+filter=""				#triangle, cubic, gaussian, lanczos=default
+mode="gray"				#gray or color
+
+# set directory for temporary files
+dir="."    # suggestions are dir="." or dir="/tmp"
+
+# set up functions to report Usage and Usage with Description
+PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
+PROGDIR=`dirname $PROGNAME`            # extract directory of program
+PROGNAME=`basename $PROGNAME`          # base name of program
+usage1() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^###/q;  /^#/!q;  s/^#//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+usage2() 
+	{
+	echo >&2 ""
+	echo >&2 "$PROGNAME:" "$@"
+	sed >&2 -n '/^######/q;  /^#/!q;  s/^#*//;  s/^ //;  4,$p' "$PROGDIR/$PROGNAME"
+	}
+
+
+# function to report error messages
+errMsg()
+	{
+	echo ""
+	echo $1
+	echo ""
+	usage1
+	exit 1
+	}
+
+
+# function to test for minus at start of value of second part of option 1 or 2
+checkMinus()
+	{
+	test=`echo "$1" | grep -c '^-.*$'`   # returns 1 if match; 0 otherwise
+    [ $test -eq 1 ] && errMsg "$errorMsg"
+	}
+
+# test for correct number of arguments and get values
+if [ $# -eq 0 ]
+	then
+	# help information
+   echo ""
+   usage2
+   exit 0
+elif [ $# -gt 18 ]
+	then
+	errMsg "--- TOO MANY ARGUMENTS WERE PROVIDED ---"
+else
+	while [ $# -gt 0 ]
+		do
+			# get parameter values
+			case "$1" in
+		  -h|-help)    # help information
+					   echo ""
+					   usage2
+					   exit 0
+					   ;;
+				-s)    # get  startlevel
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID STARTLEVEL SPECIFICATION ---"
+					   checkMinus "$1"
+					   startlevel=`expr "$1" : '\([0-9]*\)'`
+					   [ "$startlevel" = "" ] && errMsg "--- STARTLEVEL=$startlevel MUST BE A NON-NEGATIVE INTEGER VALUE (with no sign) ---"
+					   test=`echo "$startlevel < 1" | bc`
+					   [ $test -eq 1 ] && errMsg "--- STARTLEVEL=$startlevel MUST BE A POSITIVE INTEGER ---"
+					   ;;
+				-e)    # get  endlevel
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID ENDLEVEL SPECIFICATION ---"
+					   checkMinus "$1"
+					   endlevel=`expr "$1" : '\([0-9]*\)'`
+					   [ "$endlevel" = "" ] && errMsg "--- ENDLEVEL=$endlevel MUST BE A NON-NEGATIVE INTEGER VALUE (with no sign) ---"
+					   test=`echo "$endlevel < 1" | bc`
+					   [ $test -eq 1 ] && errMsg "--- ENDLEVEL=$endlevel MUST BE A POSITIVE INTEGER ---"
+					   ;;
+				-b)    # get  base
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID BASE SPECIFICATION ---"
+					   checkMinus "$1"
+					   base=`expr "$1" : '\([0-9]*\)'`
+					   [ "$base" = "" ] && errMsg "--- BASE=$base MUST BE A NON-NEGATIVE INTEGER VALUE (with no sign) ---"
+					   test=`echo "$base < 2" | bc`
+					   [ $test -eq 1 ] && errMsg "--- BASE=$base MUST BE A POSITIVE INTEGER GREATER THAN OR EQUAL TO 2 ---"
+					   ;;
+				-a)    # get attenuation
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID ATTENUATION SPECIFICATION ---"
+					   checkMinus "$1"
+					   attenuation=`expr "$1" : '\([.0-9]*\)'`
+					   [ "$attenuation" = "" ] && errMsg "--- ATTENUATION=$attenuation MUST BE A NON-NEGATIVE FLOATING POINT VALUE (with no sign) ---"
+					   ;;
+				-n)    # get  noise
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID NOISE SPECIFICATION ---"
+					   checkMinus "$1"
+					   noise="$1"
+					   ;;
+				-f)    # get  filter
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID FILTER SPECIFICATION ---"
+					   checkMinus "$1"
+					   filter="$1"
+					   ;;
+				-r)    # get  reseed
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID RESEED SPECIFICATION ---"
+					   checkMinus "$1"
+					   reseed=`expr "$1" : '\([0-9]*\)'`
+					   [ "$reseed" = "" ] && errMsg "--- RESEED=$reseed MUST BE A NON-NEGATIVE INTEGER VALUE (with no sign) ---"
+					   ;;
+				-m)    # get mode
+					   shift  # to get the next parameter
+					   # test if parameter starts with minus sign 
+					   errorMsg="--- INVALID MODE SPECIFICATION ---"
+					   checkMinus "$1"
+					   mode=`echo "$1" | tr "[:upper:]" "[:lower:]"`
+					   case "$mode" in 
+					   		gray|g) mode="gray" ;;
+					   		color|c) mode="color" ;;
+					   		*) errMsg "--- MODE=$mode IS AN INVALID VALUE ---" 
+					   	esac
+					   ;;
+	 [0-9]*x[0-9]*)    # get  width x height
+					   size="$1"
+					   numdim=`echo "$size" | tr "x" " " | wc -w` 
+					   [ $numdim -ne 2 ] && errMsg "--- TWO DIMENSIONS MUST BE PROVIDED ---"
+					   width=`echo "$size" | cut -dx -f1`
+					   height=`echo "$size" | cut -dx -f2`
+					   ;;
+				 -)    # STDIN and end of arguments
+					   break
+					   ;;
+				-*)    # any other - argument
+					   errMsg "--- UNKNOWN OPTION ---"
+					   ;;
+		     	 *)    # end of arguments
+					   break
+					   ;;
+			esac
+			shift   # next option
+	done
+	#
+	# get outfile
+	outfile=$1
+fi
+
+# test that outfile provided
+[ "$outfile" = "" ] && errMsg "NO OUTPUT FILE SPECIFIED"
+
+# set temporary file
+tmpA1="$dir/perlin_A_$$.mpc"
+tmpA2="$dir/perlin_A_$$.cache"
+trap "rm -f $tmpA1 $tmpA2; exit 0" 0
+trap "rm -f $tmpA1 $tmpA2; exit 1" 1 2 3 15
+
+# get im_version
+im_version=`convert -list configure | \
+	sed '/^LIB_VERSION_NUMBER /!d; s//,/;  s/,/,0/g;  s/,0*\([0-9][0-9]\)/\1/g' | head -n 1`
+
+# colorspace RGB and sRGB swapped between 6.7.5.5 and 6.7.6.7 
+# though probably not resolved until the latter
+# then -colorspace gray changed to linear between 6.7.6.7 and 6.7.8.2 
+# then -separate converted to linear gray channels between 6.7.6.7 and 6.7.8.2,
+# though probably not resolved until the latter
+# so -colorspace HSL/HSB -separate and -colorspace gray became linear
+# but we need to use -set colorspace RGB before using them at appropriate times
+# so that results stay as in original script
+# The following was determined from various version tests using perlin.
+# with IM 6.7.4.10, 6.7.6.10, 6.7.9.0
+# Note reseed values do not reproduce original examples
+if [ "$im_version" -lt "06070607" -o "$im_version" -gt "06070707" ]; then
+	setcspace="-set colorspace RGB"
+else
+	setcspace=""
+fi
+# no need for setcspace for grayscale or channels after 6.8.5.4
+if [ "$im_version" -gt "06080504" ]; then
+	setcspace=""
+fi
+
+
+# setup for filtering
+if [ "$filter" != "" ]; then
+	filtering="-filter $filter"
+else
+	filtering=""
+fi
+
+# setup for random seed value
+if [ "$reseed" != "" ]; then
+	seeding="-seed $reseed"
+else
+	seeding=""
+fi
+
+# setup for output mode
+if [ "$mode" = "gray" ]; then
+	setgray="$setcspace -channel g -separate +channel"
+	setcolor=""
+elif [ "$mode" = "color" ]; then
+	setgray=""
+	setcolor="-channel rgb"
+fi
+
+# set end level as high as possible if ""
+[ "$endlevel" = "" ] && endlevel=`convert xc: -format "%[fx:quantumrange]" info:`
+
+#compute max of width and height
+maxwh=`convert xc: -format "%[fx:max($width,$height)]" info:`
+
+#compute start dim as base^(slevel)
+dim=`convert xc: -format "%[fx:$base^($startlevel)]" info:`
+
+# compute maxdim from logb(x) log10(x) and maxwh=max($width,$height)
+maxdim=`convert xc: -format "%[fx:$base^ceil(log($maxwh)/log($base))]" info:`
+
+# create zero frequency midgray base to which to add octave
+convert -size ${maxdim}x${maxdim} xc:"gray(50%)" $tmpA1
+
+# create running sum of increasing attenuation and frequency octave noise imagess
+# use -compose mathematics to add amp*(noise image - 0.5) to previous sum.
+# since we set a mid gray for zero freq, thus we want to add and subtract noise relative to DC
+# i controls the dimension or frequency of the initial octave random pattern image, which is then interpolated to fill to desired size
+# j controls the amplitude
+i=$startlevel
+j=1
+stop=0
+until [ $dim -gt $maxwh ]; do
+	if [ "$atten" = "0" ]; then
+		amp=`convert xc: -format "%[fx:1/$j]" info:`
+	else
+		amp=`convert xc: -format "%[fx:1/($atten^($j-1))]" info:`
+	fi
+	amp2=`convert xc: -format "%[fx:-0.5*$amp]" info:`		
+	echo "Processing Octave Level: $i and Amplitude=$amp"
+	convert $tmpA1 \
+		\( -size ${dim}x${dim} xc: $seeding +noise $noise $setgray \
+		$filtering -resize ${maxdim}x${maxdim}! \) \
+		+swap -compose mathematics \
+		-set option:compose:args "0,1,$amp,$amp2" -composite \
+		$tmpA1
+	stop=`convert xc: -format "%[fx:($amp<=quantumscale)?1:0]" info:`
+	[ $stop -eq 1 -o $i -ge $endlevel ] && break;
+	i=$(($i+1))
+	j=$(($j+1))
+	dim=`convert xc: -format "%[fx:($base^($i))]" info:`
+done
+
+convert $tmpA1 -gravity center -crop ${width}x${height}+0+0 +repage \
+	$setcolor -auto-level $outfile
+
+exit 0
+
+
