@@ -130,9 +130,9 @@ Phalcon\Image\Adapter\Imagick::convert(array(
 //passthru('./zoomblur -a 1.1 text5.png text6.png');
 $image = new Phalcon\Image\Adapter\Imagick('text5.png');
 $image->save('text5-1.png');
-$ww = $image->getWidth()/2;
-$hh = $image->getHeight()/2;
-$rad= hypot($ww/2,$hh/2);
+$ww = $image->getWidth();
+$hh = $image->getHeight();
+$rad= hypot($ww,$hh);
 $zoomfrac= 1.1-1;
 $iter= intval($zoomfrac*$rad);
 $i=1;
