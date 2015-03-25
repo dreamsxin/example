@@ -175,3 +175,197 @@ while ($i <= $iter) {
 }
 $image = new Phalcon\Image\Adapter\Imagick('text5-1.png');
 $image->save('text6.png');
+
+// passthru('./stainedglass birdofparadise.gif glass.gif')
+$kind = "random";
+$size = 16;
+$offset = 6;
+$ncolors = "";
+$bright = 100;
+$ecolor = "black";
+$thick = 1;
+$rseed = "";
+$average = "no";
+
+$tmpA = 'a.gif';
+
+$image = new Phalcon\Image\Adapter\Imagick('birdofparadise.gif');
+$image->save($tmpA);
+$colorspace = $image->getInternalImInstance()->getColorspace();
+
+$reduce = "";
+$cspace1 = "sRGB";
+$cspace2 = "sRGBA";
+
+$modulation = "";
+
+$ww = $image->getWidth();
+$hh = $image->getHeight();
+$ww1=$ww-1;
+$hh1=$hh-1;
+$ww2= $ww1 + round($size/2);
+$hh2= $hh1 + round($size/2);
+$qrange = $image->getInternalImInstance()->getQuantumRange();
+
+$offset = $offset+1;
+
+
+$tmpC = "tmpC.txt"; 
+$tmpG = "tmpG.txt"; 
+unlink($tmpC);
+unlink($tmpG);
+$fhC = fopen($tmpC, 'w+'); 
+$fhG = fopen($tmpG, 'w+'); 
+fwrite($fhC, "# ImageMagick pixel enumeration: $ww,$hh,255,rgb\n");
+$k=0;
+$y=0;
+$n = 0;
+while ( $y < $hh2 ) {
+	$x=0;
+	while ($x < $ww2 ) { 
+		if ($x>$ww1) {
+			$x=$ww1;
+		}
+
+		if ($y>$hh1) {
+			$y=$hh1;
+		}
+
+		$rx=mt_rand() / mt_getrandmax();
+
+		if ($rx<0.5) {
+			$signx=-1;
+		} else {
+			$signx=1;
+		}
+
+		$offx=intval($signx*(mt_rand() / mt_getrandmax())*$offset); 
+		$xx=$x+$offx;
+
+		if ($xx<0) {
+			$xx=0;
+		}
+
+		if ($xx>$ww1) {
+			$xx=$ww1;
+		}
+
+		$ry=mt_rand() / mt_getrandmax();
+
+		if ($ry<0.5) {
+			$signy=-1;
+		} else {
+			$signy=1;
+		}
+
+		$offy=intval($signy*(mt_rand() / mt_getrandmax())*$offset);	
+		$yy=$y+$offy;
+		if ($yy<0) {
+			$yy=0;
+		}
+
+		if ($yy>$hh1) {
+			$yy=$hh1;
+		}
+
+		fwrite($fhC, "${xx},${yy}: (255,255,255)\n");
+		fflush($fhC);
+
+		$g=100*$k/$qrange['quantumRangeLong'];
+		fwrite($fhG, "${xx} ${yy} gray(${g}%)\n");
+		fflush($fhG);
+
+		$x=$x+$size;
+		$k++;
+	}
+	$y=$y+$size;
+}
+
+fclose($fhC);
+fclose($fhG);
+
+$txtA = "a.txt";
+
+
+Phalcon\Image\Adapter\Imagick::convert(array(
+	'convert',
+	$tmpA,
+	'(',
+	'-background',
+	'black',
+	$tmpC,
+	')',
+	'-alpha',
+	'off',
+	'-compose',
+	'copy_opacity',
+	'-composite',
+	$txtA,
+));
+
+$fh = fopen($txtA, 'r');
+fgets($fh);
+
+$txtA2 = "a2.txt";
+unlink($txtA2);
+$fh2 = fopen($txtA2, 'w+');
+$i = 0;
+while (($buf = fgets($fh)) !== false) {
+	if (strpos($buf, " 0)") === false) {
+
+		$buf = substr($buf, 0, strpos($buf, ":")) .",". substr($buf, strrpos($buf, " ")+1);
+		fwrite($fh2, $buf);
+		var_dump($buf);
+	}
+}
+fclose($fh);
+fclose($fh2);
+
+$txtA2 = "a2.txt";
+$tmpA2 = "a2.gif";
+
+Phalcon\Image\Adapter\Imagick::convert(array(
+	'convert',
+	'-size',
+	"${ww}x${hh}",
+	"xc:",
+	"-sparse-color",
+	"voronoi",
+	"@${txtA2}",
+	$tmpA2,
+));
+
+$tmpA3 = 'a3.gif';
+Phalcon\Image\Adapter\Imagick::convert(array(
+	'convert',
+	'-size',
+	"${ww}x${hh}",
+	"xc:",
+	"-sparse-color",
+	"voronoi",
+	"@${tmpG}",
+	"-auto-level",
+	"-morphology",
+	"edge",
+	"diamond:${thick}",
+	"-threshold",
+	"0",
+	"-negate",
+	$tmpA3,
+));
+Phalcon\Image\Adapter\Imagick::convert(array(
+	'convert',
+	$tmpA2,
+	$tmpA3,
+	"-alpha",
+	"off",
+	"-compose",
+	"copy_opacity",
+	"-composite",
+	"-compose",
+	"over",
+	"-background",
+	$ecolor,
+	"-flatten",
+	"glass.gif"
+));
