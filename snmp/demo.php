@@ -9,6 +9,8 @@
 	# snmptranslate .1.3.6.1.2.1.1.1.0
 	# snmptranslate -On SNMPv2-MIB::system.sysUpTime.0
  */
+// $session = new SNMP(SNMP::VERSION_3, "192.168.1.108", "authPrivUser");
+// $session->setSecurity ( "authPriv",  "SHA" , "12345678", "DES", "87654321");
 $session = new SNMP(SNMP::VERSION_3, "localhost", "authOnlyUser");
 $session->setSecurity ( "authNoPriv",  "MD5" ,  "12345678");
 
@@ -60,5 +62,7 @@ $ret = $session->get( "UCD-SNMP-MIB::memTotalReal.0" );	// 总内存
 var_dump(__LINE__, $ret);
 $ret = $session->get( "UCD-SNMP-MIB::memAvailReal.0" );	// 未被使用的内存
 var_dump(__LINE__, $ret);
-$ret = $session->getnext( array(".1.3.6.1.2.1.25.2.3") );	// 磁盘使用情况 
+$ret = $session->walk( ".1.3.6.1.2.1.25.2.3" );	// 磁盘使用情况 
+var_dump(__LINE__, $ret);
+$ret = $session->walk( ".1.3.6.1.2.1.6.13.1.3" );	// 所有 TCP 连接
 var_dump(__LINE__, $ret);
