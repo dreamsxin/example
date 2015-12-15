@@ -1,3 +1,5 @@
 #遍历压缩
 
 for i in `ls *.mp4`; do zip -r ${i%\.*} $i; done
+
+for i in `ls *.doc`; do zip -P 123456 -r ${i%\.*} $i; done
