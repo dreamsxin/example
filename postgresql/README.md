@@ -47,7 +47,10 @@ tar xvf main.tar
 ```
 
 # 编写 recovery.conf
-时间点回复使用 select now() 获取的时间格式
+```shell
+cp /usr/share/postgresql/9.4/recovery.conf.sample /var/lib/postgresql/9.4/main/recovery.conf
+```
+在时间点恢复使用 select now() 获取的时间格式
 ```conf
 restore_command = 'cp /mnt/server/archivedir/%f %p'
 recovery_target_time = '2016-01-18 10:20:08.367751+08'
