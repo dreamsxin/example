@@ -1,8 +1,10 @@
 # 安装 Postgresql
 ```shell
+# Ubuntu 12
 sudo add-apt-repository ppa:pitti/postgresql
 sudo apt-get update
 sudo apt-get install postgresql
+# Ubuntu 14 到 Postgresql 官网
 ```
 
 # 备份与恢复
