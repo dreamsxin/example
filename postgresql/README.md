@@ -30,7 +30,7 @@ postgres=# select pg_start_backup('bakup_base');
 
 ## 備份整個data目錄 (tar方式)
 ```shell
-tar cvf /var/lib/postgresql/9.4/main.tar /var/lib/postgresql/9.4/main
+cd /var/lib/postgresql/9.4/
 tar cvf main.tar main
 ```
 
@@ -53,6 +53,7 @@ sudo service postgresql stop
 
 ## 使用基础备份目录替换当前目录
 ```shell
+cd /var/lib/postgresql/9.4/
 rm main -R
 tar xvf main.tar 
 ```
