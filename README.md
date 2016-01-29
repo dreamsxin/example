@@ -90,3 +90,13 @@ Email Address []:your_email@domain.com
 sudo a2enmod ssl
 sudo a2ensite default-ssl
 ```
+
+Ubuntu
+
+```shell
+apt-get install -y language-pack-en-base
+vi /etc/default/locale
+sudo locale-gen
+sudo dpkg-reconfigure locales
+apt-get install software-properties-common
+```
