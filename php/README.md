@@ -29,3 +29,12 @@ exec('7za x test.7z -r -y -o ./test');
 # or
 exec('LANG=en_US.UTF-8 7za x test.7z -r -y -o ./test');
 ```
+
+Valgrind 内存泄漏检查
+
+```shell
+export USE_ZEND_ALLOC=0; valgrind --tool=memcheck --num-callers=30 --log-file=memcache.log /usr/local/php/bin/php test.php
+# or
+setenv USE_ZEND_ALLOC 0
+valgrind --leak-check=full /usr/local/php/bin/php test.php
+ ```
