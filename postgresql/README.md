@@ -7,6 +7,17 @@ sudo apt-get install postgresql
 # Ubuntu 14 到 Postgresql 官网
 ```
 
+# 设置默认密码
+```shell
+psql -U postgres
+\passwd
+```
+
+# 远程连接修改pg_hba.conf
+```conf
+host    all             all             0.0.0.0/0               md5
+```
+
 # 备份与恢复
 
 ## 注意目录权限

@@ -99,4 +99,5 @@ vi /etc/default/locale
 sudo locale-gen
 sudo dpkg-reconfigure locales
 apt-get install software-properties-common
+add-apt-repository ppa:ondrej/php5
 ```
