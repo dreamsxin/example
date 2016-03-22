@@ -142,7 +142,7 @@ db.example.byExample({ name: "Jane Smith" }).toArray()
 ```shell
 db.example.document("example/193023403")
 ```
-通过查询语言 AQL 来查询
+AQL:
 ```shell
 db._query('FOR user IN example FILTER user.name == "Jane Smith" RETURN user').toArray()
 db._query('FOR user IN example FILTER user.age > 30 RETURN user').toArray()
@@ -205,8 +205,16 @@ graph._graph("social")._toVertex("relation/aliceAndBob")
 graph._graph("social")._paths()
 graph._graph("social")._paths({direction : 'inbound', minLength : 1, maxLength :  2}); # 从子节点到父节点
 ```
+AQL:
+```aql
+RETURN GRAPH_PATHS('social')
+```
 
 ## 查找两者关系路径
 ```shell
 graph._graph("social")._shortestPath("female/alice", "female/diana")
+```
+AQL:
+```aql
+RETURN GRAPH_SHORTEST_PATH("social", "female/alice", "female/diana")
 ```
