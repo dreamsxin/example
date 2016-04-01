@@ -53,7 +53,37 @@ tspawn --show-tables
 TemplateSystem=ERB
 ```
 
-## 根据数据库自动生成代码
+## 根据数据库表自动生成代码
 ```shell
 tspawn scaffold blog
+```
+
+## 修改了表结构重新生成
+```shell
+tspawn controller blog
+tspawn model blog
+tspawn sqlobject blog
+```
+
+## 编译
+```shell
+qmake -r "CONFIG+=debug"
+# or
+qmake -r "CONFIG+=release"
+make
+```
+
+## 运行，可选择模式`dev`、`test`、`product`
+```shell
+treefrog -e dev
+# 后台运行
+treefrog -d -e dev
+```
+浏览器中输入 `http://localhost:8800/Blog`
+
+## 停止、强制终止、重启
+```shell
+treefrog -k stop
+treefrog -k abort
+treefrog -k restart
 ```
