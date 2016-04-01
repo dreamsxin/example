@@ -2,7 +2,7 @@
 ```shell
 sudo apt-get install cmake libpcre3-dev zlib1g-dev libgcrypt11-dev libicu-dev python
 svn co https://svn.code.sf.net/p/cppcms/code/framework/trunk cppcms
-cd cppcms && mkdir build && cd build && cmake .. && make && make test && make install  
+cd cppcms && mkdir build && cd build && cmake .. && make && make test && sudo make install  
 ```
 
 # 创建 Hello World
@@ -53,7 +53,7 @@ int main(int argc,char ** argv)
 
 ## 编译
 ```shell
-c++ -Wl,-rpath=/usr/local/lib -lcppcms hello.cpp -lcppcms -o hello
+c++ -Wl,-rpath=/usr/local/lib hello.cpp -lcppcms -o hello
 ```
 
 ## 创建配置文件config.js
@@ -72,4 +72,78 @@ c++ -Wl,-rpath=/usr/local/lib -lcppcms hello.cpp -lcppcms -o hello
 ## 运行
 ```shell
  ./hello -c config.js
- ```
+```
+
+## 访问 http://localhost:8080/hello
+
+## 编译 CppDB `http://cppcms.com/sql/cppdb/`
+```shell
+svn co http://cppcms.svn.sourceforge.net/svnroot/cppcms/cppdb/trunk cppdb
+cd cppdb && mkdir build && cd build && cmake .. && make && sudo make install
+```
+
+## 更新代码
+```shell
+        try {
+                cppdb::session sql("sqlite3:db=db.db");
+                
+                sql << "DROP TABLE IF EXISTS test" << cppdb::exec;
+
+                sql<<   "CREATE TABLE test ( "
+                        "   id   INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
+                        "   n    INTEGER,"
+                        "   f    REAL, "
+                        "   t    TIMESTAMP,"
+                        "   name TEXT "
+                        ")  " << cppdb::exec;
+                
+                std::time_t now_time = std::time(0);
+                
+                std::tm now = *std::localtime(&now_time);
+
+                cppdb::statement stat;
+                
+                stat = sql << 
+                        "INSERT INTO test(n,f,t,name) "
+                        "VALUES(?,?,?,?)"
+                        << 10 << 3.1415926565 << now <<"Hello 'World'";
+
+                stat.exec();
+                std::cout<<"ID: "<<stat.last_insert_id() << std::endl;
+                std::cout<<"Affected rows "<<stat.affected()<<std::endl;
+                
+                stat.reset();
+
+                stat.bind(20);
+                stat.bind_null();
+                stat.bind(now);
+                stat.bind("Hello 'World'");
+                stat.exec();
+
+                cppdb::result res = sql << "SELECT id,n,f,t,name FROM test";
+
+                while(res.next()) {
+                        double f=-1;
+                        int id,k;
+                        std::tm atime;
+                        std::string name;
+                        res >> id >> k >> f >> atime >> name;
+                        std::cout <<id << ' '<<k <<' '<<f<<' '<<name<<' '<<asctime(&atime)<< std::endl;
+                }
+
+                res = sql << "SELECT n,f FROM test WHERE id=?" << 1 << cppdb::row;
+                if(!res.empty()) {
+                        int n = res.get<int>("n");
+                        double f=res.get<double>(1);
+                        std::cout << "The values are " << n <<" " << f << std::endl;
+                }
+        } catch(std::exception const &e) {
+                std::cerr << "ERROR: " << e.what() << std::endl;
+                return 1;
+        }
+```
+
+## 编译
+```shell
+c++ -Wl,-rpath=/usr/local/lib hello.cpp -lcppcms -lcppdb -o hello
+```
