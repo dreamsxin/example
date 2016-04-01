@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<%#include "blog.h" %>
+<% tfetch(QVariantMap, blog); %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+<p style="color: red"><%=$ error %></p>
+<p style="color: green"><%=$ notice %></p>
+
+<h1>New Blog</h1>
+
+<%== formTag(urla("create"), Tf::Post) %>
+  <p>
+    <label>Title<br /><input name="blog[title]" value="<%= blog["title"] %>" /></label>
+  </p>
+  <p>
+    <label>Body<br /><input name="blog[body]" value="<%= blog["body"] %>" /></label>
+  </p>
+  <p>
+    <input type="submit" value="Create" />
+  </p>
+</form>
+
+<%== linkTo("Back", urla("index")) %>
+
+</body>
+</html>

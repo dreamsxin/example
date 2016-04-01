@@ -1,0 +1,8 @@
+HEADERS += blog_editView.moc
+SOURCES += blog_editView.cpp
+HEADERS += blog_entryView.moc
+SOURCES += blog_entryView.cpp
+HEADERS += blog_indexView.moc
+SOURCES += blog_indexView.cpp
+HEADERS += blog_showView.moc
+SOURCES += blog_showView.cpp

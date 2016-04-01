@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<%#include "blog.h" %>
+<% tfetch(Blog, blog); %>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title><%= controller()->name() + ": " + controller()->activeAction() %></title>
+</head>
+<body>
+<p style="color: red"><%=$ error %></p>
+<p style="color: green"><%=$ notice %></p>
+
+<h1>Showing Blog</h1>
+<dt>ID</dt><dd><%= blog.id() %></dd><br />
+<dt>Title</dt><dd><%= blog.title() %></dd><br />
+<dt>Body</dt><dd><%= blog.body() %></dd><br />
+<dt>Created at</dt><dd><%= blog.createdAt() %></dd><br />
+<dt>Updated at</dt><dd><%= blog.updatedAt() %></dd><br />
+<dt>Lock Revision</dt><dd><%= blog.lockRevision() %></dd><br />
+
+<%== linkTo("Edit", urla("edit", blog.id())) %> |
+<%== linkTo("Back", urla("index")) %>
+
+</body>
+</html>

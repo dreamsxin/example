@@ -47,3 +47,13 @@ DatabaseName=db/blogdb
 ```shell
 tspawn --show-tables
 ```
+
+## 设置模版引擎 `config/development.ini`
+```ini
+TemplateSystem=ERB
+```
+
+## 根据数据库自动生成代码
+```shell
+tspawn scaffold blog
+```

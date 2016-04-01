@@ -11,3 +11,6 @@ LIBS += -L../lib -lhelper
 
 include(../appbase.pri)
 
+HEADERS += sqlobjects/blogobject.h
+HEADERS += blog.h
+SOURCES += blog.cpp
