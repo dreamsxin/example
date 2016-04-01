@@ -232,3 +232,10 @@ exit $?
 ```shell
 update-rc.d pgagent defaults
 ```
+
+# 安装 jsobx 扩展
+```shell
+git clone https://github.com/erthalion/jsonbx.git
+cd jsonbx
+make -j4 && sudo make install
+```
