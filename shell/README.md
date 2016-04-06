@@ -8,3 +8,13 @@ ISO 制作
 ```shell
 mkisofs -r -o iso1.iso iso1/
 ```
+
+# 查看连接数
+```shell
+netstat -n | awk '/^tcp/ {++S[$NF]} END {for(a in S) print a, S[a]}'
+```
+
+# 查看 apache 进程数
+```shell
+ps -ef | grep apache | wc -l
+```
