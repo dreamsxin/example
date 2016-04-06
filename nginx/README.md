@@ -15,6 +15,44 @@ sudo service php5-fpm restart
 sudo service php5-fpm status
 ```
 
+## 修改nginx配置
+```conf
+server {
+	listen   80;
+	server_name localhost.dev;
+
+	index index.php index.html index.htm;
+	set $root_path '/var/www/phalcon/public';
+	root $root_path;
+
+	try_files $uri $uri/ @rewrite;
+
+	location @rewrite {
+		rewrite ^/(.*)$ /index.php?_url=/$1;
+	}
+
+	location ~ \.php {
+		fastcgi_pass unix:/run/php-fpm/php-fpm.sock;
+		fastcgi_index /index.php;
+
+		include /etc/nginx/fastcgi_params;
+
+		fastcgi_split_path_info	   ^(.+\.php)(/.+)$;
+		fastcgi_param PATH_INFO	   $fastcgi_path_info;
+		fastcgi_param PATH_TRANSLATED $document_root$fastcgi_path_info;
+		fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+	}
+
+	location ~* ^/(css|img|js|flv|swf|download)/(.+)$ {
+		root $root_path;
+	}
+
+	location ~ /\.ht {
+		deny all;
+	}
+}
+```
+
 ## 配置php5监听端口 `/etc/php5/fpm/pool.d/www.conf`
 
 ```conf
@@ -23,37 +61,37 @@ listen = /var/run/php5-fpm.sock
 listen = 127.0.0.1:9000
 ```
 
-## 修改配置 `/etc/nginx/sites-available/default`
+## 修改nginx配置 `/etc/nginx/sites-available/default`
 ```conf
 server {
-    listen   80;
-    server_name localhost.dev;
+	listen   80;
+	server_name localhost.dev;
 
-    index index.php index.html index.htm;
-    set $root_path '/var/www/phalcon/public';
-    root $root_path;
-
-    location / {
-        try_files $uri $uri/ /index.php;
-    }
-
-    location ~ \.php$ {
-	fastcgi_buffer_size 128k;
-	fastcgi_buffers 32 32k;
-	try_files $uri =404;
-	fastcgi_split_path_info ^(.+\.php)(/.+)$;
-	fastcgi_pass 127.0.0.1:9000;
-	fastcgi_index index.php;
-	fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
-	include fastcgi_params;
-    }
-
-    location ~* ^/(css|img|js|flv|swf|download)/(.+)$ {
+	index index.php index.html index.htm;
+	set $root_path '/var/www/phalcon/public';
 	root $root_path;
-    }
 
-    location ~ /\.ht {
-	deny all;
-    }
+	location / {
+		try_files $uri $uri/ /index.php?$query_string;
+	}
+
+	location ~ \.php$ {
+		fastcgi_buffer_size 128k;
+		fastcgi_buffers 32 32k;
+		try_files $uri =404;
+		fastcgi_split_path_info ^(.+\.php)(/.+)$;
+		fastcgi_pass 127.0.0.1:9000;
+		fastcgi_index index.php;
+		fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
+		include fastcgi_params;
+	}
+
+	location ~* ^/(css|img|js|flv|swf|download)/(.+)$ {
+		root $root_path;
+	}
+
+	location ~ /\.ht {
+		deny all;
+	}
 }
 ```
