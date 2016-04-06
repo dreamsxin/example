@@ -41,3 +41,5 @@ mount /dev/xdb1 /www
 然后使用`cat /etc/fstab`命令查看，出现以下信息就表示写入成功。
 
 执行 `mount -a` 挂载新分区
+
+/dev/xdb1   /var/lib/postgresql ext4    barrier=0  0  0
