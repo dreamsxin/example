@@ -10,6 +10,7 @@ sudo apt-get install postgresql
 # 设置默认密码
 ```shell
 psql -U postgres
+sudo -u postgres psql 
 \passwd
 ```
 
