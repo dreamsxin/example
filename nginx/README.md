@@ -24,6 +24,8 @@ server {
 	index index.php index.html index.htm;
 	set $root_path '/var/www/phalcon/public';
 	root $root_path;
+	client_max_body_size 50M;
+	client_body_temp_path /tmp;
 
 	try_files $uri $uri/ @rewrite;
 
