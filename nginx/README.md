@@ -78,8 +78,12 @@ server {
 	}
 
 	location ~ \.php$ {
-		fastcgi_buffer_size 128k;
-		fastcgi_buffers 32 32k;
+	        fastcgi_buffer_size 128k;
+		fastcgi_buffers 4 256k;
+		fastcgi_busy_buffers_size 256k;
+		fastcgi_temp_file_write_size 256k;
+		fastcgi_send_timeout 900;
+		fastcgi_read_timeout 900
 		try_files $uri =404;
 		fastcgi_split_path_info ^(.+\.php)(/.+)$;
 		fastcgi_pass 127.0.0.1:9000;
@@ -96,4 +100,10 @@ server {
 		deny all;
 	}
 }
+```
+
+```conf
+pm = static
+pm.max_children = 30
+request_terminate_timeout = 900
 ```

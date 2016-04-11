@@ -240,3 +240,27 @@ git clone https://github.com/erthalion/jsonbx.git
 cd jsonbx
 make -j4 && sudo make install
 ```
+
+# 连接池 PgBouncer
+```shell
+sudo apt-get install pgbouncer
+```
+
+## 修改配置 `/etc/pgbouncer/pgbouncer.ini`
+```ini
+[databases]
+ads = host=127.0.0.1 port=5432 dbname=ads
+
+auth_type = md5
+auth_file = /etc/pgbouncer/userlist.txt
+```
+
+`/etc/pgbouncer/userlist.txt`
+```ini
+"postgres" "123456"
+```
+
+## 测试
+```shell
+psql -h 127.0.0.1 -p 6432 -U postgres ads
+```
