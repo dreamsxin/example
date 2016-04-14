@@ -1,0 +1,432 @@
+body {
+  background-image: none;
+}
+#fblike {
+  position: absolute;
+  top: 452px;
+}
+#app-torus {
+	height: 475px;
+}
+#container {
+	visibility: hidden;
+	position: absolute;
+	top: 0;
+	left: 170px;
+	right: 170px;
+	font-family: Arial;
+	background-color: red;
+}
+#link {
+	position: absolute;
+	top: 470px;
+	width: 100%;
+	text-align: center;
+	font-size: small;
+}
+#footer {
+    display: block;
+	padding-top: 500px;
+}
+
+
+CANVAS {
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+#paused {
+	width: 110px;
+	height: 30px;
+	position: absolute;
+	top: 346px;
+	left: 48px;
+	background-image: ur(img/torus/torus/paused.png);
+	display: none;
+}
+#but_resume {
+	top: -150px;
+	left: 7px;
+	width: 86px;
+	background-image: url(img/torus/but_resume.png);
+}
+#but_restart {
+	top: -110px;
+	left: 7px;
+	width: 86px;
+	background-image: url(img/torus/but_restart.png);
+}
+#but_quit {
+	top: -70px;
+	left: 7px;
+	width: 86px;
+	background-image: url(img/torus/but_quit.png);
+}
+#score {
+	position: absolute;
+	top: 33px;
+	left: 19px;
+	font-size: 14pt;
+	color: #666;
+	font-family: Arial;
+	font-weight: 700;
+}
+#time {
+	position: absolute;
+	top: 83px;
+	left: 19px;
+	font-size: 14pt;
+	color: #666;
+	font-family: Arial;
+	font-weight: 700;
+}
+#playing {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 200px;
+	height: 450px;
+	background-image: url(img/torus/base0.png);
+	background-repeat: no-repeat;
+	background-position: 8px 320px;
+}
+#panel {
+	display: none;
+	position: absolute;
+	top: 200px;
+	left: 250px;
+	width: 94px;
+	height: 233px;
+	background-image: url(img/torus/panel.png);
+}
+#promo {
+        position: absolute;
+        top: -100px;
+        left: 510px;
+}
+#title1 {
+	position: absolute;
+	top: -74px;
+	left: -17px;
+	width: 125px;
+	height: 126px;
+	background-image: url(img/torus/title_traditional.png);
+}
+#title2 {
+	position: absolute;
+	top: -76px;
+	left: -29px;
+	width: 150px;
+	height: 108px;
+	background-image: url(img/torus/title_time.png);
+}
+#title3 {
+	position: absolute;
+	top: -83px;
+	left: -8px;
+	width: 112px;
+	height: 97px;
+	background-image: url(img/torus/title_garbage.png);
+}
+#gameover {
+	display: none;
+	position: absolute;
+	top: 175px;
+	left: 200px;
+	width: 253px;
+	height: 221px;
+	background-image: url(img/torus/game_over.png);
+	font-size: 10pt;
+	color: #333;
+}
+#winner {
+	position: absolute;
+	top: 50px;
+	left: 19px;
+	padding-left: 11px;
+	width: 205px;
+	height: 200px;
+	background-image: url(img/torus/coins.png);
+	background-repeat: no-repeat;
+	background-position: 0 64px;
+}
+#winner FORM {
+	margin: 0;
+	padding: 0;
+}
+#but_main4 {
+	top: 167px;
+	left: 150px;
+	width: 86px;
+	background-image: url(img/torus/but_main.png);
+}
+#but_restart2 {
+	top: 127px;
+	left: 150px;
+	width: 86px;
+	background-image: url(img/torus/but_restart.png);
+}
+#sorryText {
+	position: absolute;
+	top: 45px;
+	left: 30px;
+	width: 205px;
+}
+#skull {
+	position: absolute;
+	top: 90px;
+	left: -35px;
+	width: 120px;
+	height: 150px;
+	background-image: url(img/torus/skull.png);
+}
+#but_pause {
+	top: 180px;
+	left: 15px;
+	width: 64px;
+	background-image: url(img/torus/but_pause.png);
+}
+#next {
+	position: absolute;
+	top: 127px;
+	left: 7px;
+	width: 80px;
+	height: 50px;
+	background-image: url(img/torus/blocks.png);
+}
+#menu {
+	position: absolute;
+	top: 234px;
+	left: 0px;
+	width: 450px;
+	height: 220px;
+	background-image: url(img/torus/menu.png);
+	background-repeat: no-repeat;
+	background-position: 92px 0px;
+}
+#menu_area {
+	position: absolute;
+	top: 39px;
+	left: 111px;
+	width: 321px;
+	height: 157px;
+	overflow: hidden;
+}
+.nonstick {
+	-apple-dashboard-region: dashboard-region(control rectangle 0 0 0 0);
+}
+.but {
+	-apple-dashboard-region: dashboard-region(control rectangle 0 0 0 0);
+	position: absolute;
+	cursor: pointer;
+	height: 36px;
+}
+.but:hover {
+	background-position: 0 -36px;
+}
+.but:active {
+	background-position: 0 -72px;
+}
+#screen0 {
+	position: absolute;
+	left: 321px;
+	top: 0;
+	width: 321px;
+	height: 157px;
+	background-image: url(img/torus/title_help.png);
+	background-repeat: no-repeat;
+	background-position: 30px 4px;
+}
+#copy {
+	position: absolute;
+	top: 125px;
+	left: 90px;
+	font-size: 10pt;
+	color: #444;
+}
+#helpBox {
+	display: none;
+	position: absolute;
+	top: 8px;
+	left: 90px;
+	width: 220px;
+	height: 100px;
+	overflow: auto;
+	font-size: 9pt;
+}
+#but_main0 {
+	top: 117px;
+	left: 229px;
+	width: 86px;
+	background-image: url(img/torus/but_main.png);
+}
+#screen1 {
+	position: absolute;
+	left:0;
+	top: 157px;
+	width: 321px;
+	height: 157px;
+	background-image: url(img/torus/modes.png);
+	background-position: 45px 7px;
+	background-repeat: no-repeat;
+}
+#go1, #go2, #go3 {
+	position: absolute;
+	width: 40px;
+	height: 36px;
+	background-image: url(img/torus/but_go.png);
+	cursor: pointer;
+}
+#go1 {
+	top: 110px;
+	left: 75px;
+}
+#go2 {
+	top: 110px;
+	left: 152px;
+}
+#go2:hover { background-position: 0 -108px;}
+#go2:active { background-position: 0 -144px;}
+#go3 {
+	top: 68px;
+	left: 229px;
+}
+#go3:hover { background-position: 0 -180px;}
+#go3:active { background-position: 0 -216px;}
+#but_main1 {
+	top: 117px;
+	left: 229px;
+	width: 86px;
+	background-image: url(img/torus/but_main.png);
+}
+#screen2 {
+	position: absolute;
+	left:321px;
+	top: 157px;
+	width: 321px;
+	height: 157px;
+}
+#quote {
+	position: absolute;
+	top: 7px;
+	left: 62px;
+	width: 250px;
+	font-family: Arial;
+	color: #FFF;
+	font-weight: 700;
+	font-size: 10pt;
+	font-style: italic;
+}
+#quote B {	color: #000;}
+#quote SPAN {
+	font-style: normal;
+	padding-left: 50px;
+}
+#but_play {
+	top: 115px;
+	left: 71px;
+	width: 62px;
+	background-image: url(img/torus/but_play.png);
+}
+#but_settings {
+	top: 115px;
+	left: 137px;
+	width: 75px;
+	background-image: url(img/torus/but_settings.png);
+}
+#but_help {
+	top: 76px;
+	left: 256px;
+	width: 60px;
+	background-image: url(img/torus/but_help.png);
+}
+#but_high {
+	position: absolute;
+	top: 115px;
+	left: 216px;
+	width: 98px;
+	background-image: url(img/torus/but_high.png);
+}
+#screen3 {
+	position: absolute;
+	left:642px;
+	top: 157px;
+	width: 321px;
+	height: 157px;
+	background-image: url(img/torus/title_high.png);
+	background-repeat: no-repeat;
+	background-position: 32px 5px;
+	font-size: 9pt;
+	font-family: Arial;
+}
+#bestType {
+	position: absolute;
+	top: 10px;
+	left: 200px;
+	width: 110px;
+}
+#best1, #best2, #best3 {
+	display: none;
+	position: absolute;
+	top: 40px;
+	left: 90px;
+}
+#best1 { display:block; }
+#but_main2 {
+	top: 115px;
+	left: 228px;
+	width: 86px;
+	background-image: url(img/torus/but_main.png);
+}
+#screen4 {
+	position: absolute;
+	left:321px;
+	top:314px;
+	height: 157px;
+	width: 321px;
+	background-image: url(img/torus/title_settings.png);
+	background-repeat: no-repeat;
+	background-position: 32px 5px;
+	font-family: Arial;
+	font-size: 10pt;
+}
+#screen4 SELECT {
+	width: 90px;
+}
+#div_base {
+	position: absolute;
+	top: 10px;
+	left: 150px;
+	width: 160px;
+	text-align: right;
+}
+#div_blocks {
+	position: absolute;
+	top: 35px;
+	left: 150px;
+	width: 160px;
+	text-align: right;
+}
+#div_ghost {
+	position: absolute;
+	top: 40px;
+	left: 217px;
+	width: 160px;
+}
+#but_main3 {
+	top: 115px;
+	left: 228px;
+	width: 86px;
+	background-image: url(img/torus/but_main.png);
+}
+
+
+#close {
+	position: absolute;
+	width: 20px;
+	height: 20px;
+	background-image: url(img/torus/close.png);
+	display: none;
+}
+#close:hover {background-position: 0 20px;}
+#close:active {background-position: 0 40px;}
