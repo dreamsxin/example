@@ -137,38 +137,6 @@ extern "C" {
 #include <phpcpp.h>
 #include <iostream>
 
-void helloWorld()
-{
-    // the C++ equivalent of the echo() function
-    Php::out << "hello world" << std::endl;
-
-    // generate output without a newline, and ensure that it is flushed
-    Php::out << "hello world" << std::flush;
-
-    // or call the flush() method
-    Php::out << "hello world";
-    Php::out.flush();
-
-    // just like all PHP functions, you can call the echo() function 
-    // from C++ code as well
-    Php::echo("hello world\n");
-
-    // generate a PHP notice
-    Php::notice << "this is a notice" << std::flush;
-
-    // generate a PHP warning
-    Php::warning << "this is a warning" << std::flush;
-
-    // inform the user that a call to a deprecated function was made
-    Php::deprecated << "this method is deprecated" << std::flush;
-
-    // generate a fatal error
-    Php::error << "fatal error" << std::flush;
-
-    // this code will no longer be called
-    Php::out << "regular output" << std::endl;
-}
-
 Php::Value sum(Php::Parameters &parameters)
 {
     int result = 0;
@@ -179,8 +147,7 @@ Php::Value sum(Php::Parameters &parameters)
 extern "C" {
     PHPCPP_EXPORT void *get_module() {
         static Php::Extension extension("hello", "1.0");
-        extension.add("helloworld", helloWorld);
-	extension.add("sum", sum);
+        extension.add("sum", sum);
         return extension;
     }
 }
