@@ -1,5 +1,7 @@
 # PHP-CPP 使用
 
+官方文档 http://www.phpcpp.com/documentation/
+
 ## 下载安装
 ```shell
 git clone https://github.com/CopernicaMarketingSoftware/PHP-CPP.git
@@ -17,7 +19,7 @@ vi Main.cpp
 ```Makefile
 NAME                =   hello
 
-INI_DIR             =   /etc/php5/conf.d
+INI_DIR             =   /etc/php5/cli/conf.d
 EXTENSION_DIR       =   $(shell php-config --extension-dir)
 EXTENSION           =   ${NAME}.so
 INI                 =   ${NAME}.ini
