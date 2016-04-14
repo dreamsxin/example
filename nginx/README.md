@@ -1,6 +1,8 @@
 # 安装 nginx php5-fpm
 
 ```shell
+sudo add-apt-repository ppa:nginx/stable
+sudo apt-get update
 sudo apt-get install nginx php5-fpm
 ```
 
@@ -63,7 +65,23 @@ listen = /var/run/php5-fpm.sock
 listen = 127.0.0.1:9000
 ```
 
-## 修改nginx配置 `/etc/nginx/sites-available/default`
+## 修改nginx配置
+`/etc/nginx/nginx.conf`
+```conf
+user www-data;
+worker_processes auto;
+pid /run/nginx.pid;
+worker_rlimit_nofile 100000;
+
+events {
+        worker_connections 2048;
+        # multi_accept on;
+        use epoll;
+}
+
+```
+
+`/etc/nginx/sites-available/default`
 ```conf
 server {
 	listen   80;
@@ -83,7 +101,7 @@ server {
 		fastcgi_busy_buffers_size 256k;
 		fastcgi_temp_file_write_size 256k;
 		fastcgi_send_timeout 900;
-		fastcgi_read_timeout 900
+		fastcgi_read_timeout 900;
 		try_files $uri =404;
 		fastcgi_split_path_info ^(.+\.php)(/.+)$;
 		fastcgi_pass 127.0.0.1:9000;
@@ -99,6 +117,8 @@ server {
 	location ~ /\.ht {
 		deny all;
 	}
+
+	error_page 405 =200 $uri;
 }
 ```
 
