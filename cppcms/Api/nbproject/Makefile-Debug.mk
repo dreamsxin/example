@@ -54,7 +54,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-Wl,-rpath,/usr/local/lib -lcppcms -lcppdb
+LDLIBSOPTIONS=-Wl,-rpath,/usr/local/lib -lcppcms -lcppdb -lbooster
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}

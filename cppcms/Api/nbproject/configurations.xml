@@ -52,6 +52,7 @@
           <linkerLibItems>
             <linkerLibLibItem>cppcms</linkerLibLibItem>
             <linkerLibLibItem>cppdb</linkerLibLibItem>
+            <linkerLibLibItem>booster</linkerLibLibItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>

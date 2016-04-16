@@ -1,14 +1,18 @@
 #ifndef AD_H
 #define AD_H
 
+#include <cppcms/json.h>
+#include <cppcms/cppcms_error.h>
 #include <cppcms/application.h>
 #include <cppcms/service.h>
+#include <cppcms/http_request.h>
 #include <cppcms/http_response.h>
 #include <cppcms/url_dispatcher.h>
 #include <cppcms/url_mapper.h>
 #include <cppdb/frontend.h>
 #include <iostream>
 #include <sys/types.h>
+#include <booster/posix_time.h>
 
 class ad : public cppcms::application {
 public:
