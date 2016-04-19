@@ -264,3 +264,11 @@ auth_file = /etc/pgbouncer/userlist.txt
 ```shell
 psql -h 127.0.0.1 -p 6432 -U postgres ads
 ```
+
+## pg_dump 备份
+
+```shell
+/usr/bin/pg_dump --host 127.0.0.1 --port 5432 --username "postgres" --no-password  --format plain --data-only --inserts --column-inserts --verbose --file "/var/www/db.backup" --table "public.users" --table "public.blogs" --table "public.apps" --table "public.countries" --table "public.phone_apps" --table "public.phones" --table "public.projects"  "ads"
+
+/usr/lib/postgresql/9.5/bin/pg_dump --host 127.0.0.1 --port 5432 --username "postgres" --no-password  --format plain --data-only --inserts --column-inserts --verbose --file "/var/www/db.backup" "blog"
+```
