@@ -135,3 +135,8 @@ class MyApp(ShowBase):
 app = MyApp()
 app.run()
 ```
+taskMgr.add() 函数通知 Padda3D 的任务管理器，每一帧都要调用 spinCameraTask() 这个进程。这段进程是用来控制摄像机的。只要进程 spinCameraTask() 返回常量 Task.cont，任务管理器将会在其他的帧里继续调用这个进程。
+
+对于高级用法，您可以继承 AsyncTask 、覆盖 do_task 方法，让它做您想做的工作。
+
+在我们的代码中，程序 spinCameraTask() 的作用是每隔一段时间移动一下摄像机。镜头每秒旋转六度。头两行计算了摄像机的朝向：首先用角度计算，然后转换成弧度。setPos() 用来设置摄像机的位置。（记得 Y 代表横向，Z 代表纵向，所以这里只改变了 X、Y 的数值，Z 一直为3。）setHpr() 设置摄像机的方向。
