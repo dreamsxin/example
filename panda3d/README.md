@@ -258,3 +258,4 @@ app.run()
 当 pandaPosInterval1 开始运行时，它会用13秒的时间，逐渐让熊猫从（0，10，0）移动到（0，-10，0）。同样，当 pandaHprInterval1 运行时，会花3秒的时间让熊猫的朝向旋转180度。
 
 上面的 pandaPace 让熊猫的模型在一条线上移动、转圈、往回走、最后再转回去。代码 pandaPace.loop() 让 Sequence 开始循环播放。
+
