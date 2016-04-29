@@ -49,6 +49,7 @@ import direct.directbase.DirectStart
 
 base.run()
 ```
+
 有 import 的那一行自动的生成了一个 ShowBase 的实例，他初始化了这个引擎并且建立了一个空窗口。因为 ShowBase 使用了 Python 的 __builtin__ ，他的功能可以在类没有实例化的条件下被调用。为了教程的清晰，教程的其他位置会继续使用 ShowBase 类。
 
 ## 运行程序
@@ -57,3 +58,40 @@ base.run()
 python filename.py
 ```
 如果 Panda3D 已经完整的安装好了，您会看到一个标题为 Panda 的灰色窗口。现在这个窗口还没有任何功能，以后我们会为它添加各种功能。
+
+# 载入绿色的舞台
+
+Panda3D 包含了一个叫做 Scene Graph 的数据结构。Scene Graph 是一个渲染树，它包含了您所需要渲染的全部对象。树的根节点是一个名字叫做 render 的对象。只有在第一个对象插入后才会进行渲染。在被加入到场景（Scene GRaph）之前，都不会被渲染。
+
+为了在 Scene Graph 中加入一片绿色草地的场景，我们需要使用 reparentTo() 方法。这个方法可以设置了模型的父节点，也就是说给模型在 Scene Graph 里面安排了一个位置。这样做使得模型在场景中可见。
+
+最后，我们调节模型的位置和缩放。在我们编写的这个程序的情况下，模型显得有点大，而且或多或少地有一点偏移出我们设想中的视角。所以我们用 setScale() 和 setPos 分别调整模型的大小和位置。
+
+Panda3D 使用“地理”坐标系统（译者按：右手系的一种，其不同于其他游戏引擎的左手系，这样，Panda3D在处理2D图像时的坐标就会有一点奇怪，或者是它直接使用了另一套坐标系），坐标（-8，42，0）的意思是在地图上的坐标（8，42），高度为0。如果您习惯 OpenGL/Direct3D 坐标，在常用的位置，举起你的右手，拇指作为X坐标，其余四指作为Y坐标，手掌作为Z坐标——面向你；然后向后倾斜，直到你的手到了四指指向别的方向，并且手掌朝上为止。移动“forward”相当于在Y坐标上改变正数。
+
+SceneGRaph.py
+
+```python
+#coding=utf-8
+from direct.showbase.ShowBase import ShowBase
+ 
+class MyApp(ShowBase):
+ 
+    def __init__(self):
+        ShowBase.__init__(self)
+ 
+        # Load the environment model.
+        # 载入 environment 模型。
+        self.environ = self.loader.loadModel("models/environment")
+        # Reparent the model to render.
+        # 将模型加入 render 。
+        self.environ.reparentTo(self.render)
+        # Apply scale and position transforms on the model.
+        # 对模型进行缩放、定位。
+        self.environ.setScale(0.25, 0.25, 0.25)
+        self.environ.setPos(-8, 42, 0)
+ 
+ 
+app = MyApp()
+app.run()
+```
