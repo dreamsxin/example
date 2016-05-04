@@ -127,3 +127,24 @@ pm = static
 pm.max_children = 30
 request_terminate_timeout = 900
 ```
+
+## 安装 nginx-rtmp-module
+```shell
+sudo apt-get source nginx
+cd nginx-1.8.1/debian/modules/
+sudo git clone https://github.com/arut/nginx-rtmp-module.git
+```
+
+编辑 `debian/rules` 追加 `--add-module=$(MODULESDIR)/nginx-rtmp-module`
+
+下载nginx的依赖包
+`sudo apt-get build-dep nginx`
+
+打包
+`sudo dpkg-buildpackage -b`
+
+或者
+
+```shell
+./configure --add-module=debian/modules/nginx-rtmp-module
+```

@@ -130,3 +130,14 @@ end
 ```as3
 NetConnection(evt.target).call("dumpON", null);
 ```
+
+rtmp 的视频流`rtmp://localhost/live/test`，也可以通过 http 方式读取`http://localhost/live/test.flv`， 也可以通过 rtsp 方式读取 `rtsp://localhost/live/test.sdp`
+
+
+# 使用自带 http 服务
+
+MonaServer本身已经自带了HTTP服务，只需要把网页文件放入“www”目录下即可访问。
+
+# 使用 OpenVSX 转换编码
+
+`bin/vsx -v --capture=rtmp://localhost/live/test --live=8080 --mkvlive --httplive`
