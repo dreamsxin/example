@@ -48,7 +48,7 @@ function onConnection(client)
 		local pathFile = mona:absolutePath(path) .. "dump_" .. publication.name .. ".ts"
 		NOTE("Begin dumping file 'dump_" , publication.name , ".ts'")
 		publication.file = io.open(pathFile, "wb")
-		publication.flvWriter = mona:createMediaWriter("mp2t")
+		publication.flvWriter = mona:createMediaWriter("mp2t") --  保存为 ts 文件，也可以保存为 flv
 		
 		function publication:onVideo(time,packet)
 			publication:write(2, time, packet)
