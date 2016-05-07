@@ -45,10 +45,10 @@ function onConnection(client)
 	function client:onPublish(publication)
 		
 		-- ************** DUMP FLV ****************	
-		local pathFile = mona:absolutePath(path) .. "dump_" .. publication.name .. ".ts"
-		NOTE("Begin dumping file 'dump_" , publication.name , ".ts'")
+		local pathFile = mona:absolutePath(path) .. "dump_" .. publication.name .. ".mp4"
+		NOTE("Begin dumping file 'dump_" , publication.name , ".mp4'")
 		publication.file = io.open(pathFile, "wb")
-		publication.flvWriter = mona:createMediaWriter("mp2t") --  保存为 ts 文件，也可以保存为 flv
+		publication.flvWriter = mona:createMediaWriter("mp4") --  保存为 ts 文件，也可以保存为 flv
 		
 		function publication:onVideo(time,packet)
 			publication:write(2, time, packet)
@@ -69,7 +69,7 @@ function onConnection(client)
 	
 	function client:onUnpublish(publication)
 		if publication.file then
-			NOTE("End dumping file 'dump_" , publication.name , ".ts'")
+			NOTE("End dumping file 'dump_" , publication.name , ".mp4'")
 			publication.file:close()
 		end
 	end
@@ -141,3 +141,10 @@ MonaServer本身已经自带了HTTP服务，只需要把网页文件放入“www
 # 使用 OpenVSX 转换编码
 
 `bin/vsx -v --capture=rtmp://localhost/live/test --live=8080 --mkvlive --httplive`
+sudo ./vsx -v --capture=rtmp://192.168.1.239/live/test2 --live=8080 --mkvlive --httplive
+
+--httplive=8080 or --httplive=http://0.0.0.0:8080
+HTTPLive Streaming Server listening address and port string delimited by a colon. An HTTPLive capable client, such as any Apple iOS device (iPhone, iPad) or Safari can access the stream at the URL http[s]://[username:password@][listener-address]:[port]/httplive
+
+--mkvlive=8080 or --mkvlive=http://0.0.0.0:8080
+HTTP Matroska / WebM encapsulated live content streaming server listening address and port string delimited by a colon. An HTML5 capable client can access the stream at the URL http[s]://[username:password@][listener-address]:[port]/mkvlive
