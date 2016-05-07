@@ -44,6 +44,8 @@ CONFIG="./conf/hls.conf"
 
 # 启动
 ```shell
+sudo ./objs/nginx/sbin/nginx
+
 ./objs/srs -c conf/hls.conf
 # or
 ./etc/init.d/srs start
