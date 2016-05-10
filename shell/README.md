@@ -18,3 +18,10 @@ netstat -n | awk '/^tcp/ {++S[$NF]} END {for(a in S) print a, S[a]}'
 ```shell
 ps -ef | grep apache | wc -l
 ```
+
+wget 断点续传
+
+```shell
+# -O 指定文件名保存 -c 继续执行上次终端的任务
+sudo wget -c -O 保存到本地的文件名 "下载地址"
+```

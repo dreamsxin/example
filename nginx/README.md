@@ -148,3 +148,39 @@ sudo git clone https://github.com/arut/nginx-rtmp-module.git
 ```shell
 ./configure --add-module=debian/modules/nginx-rtmp-module
 ```
+
+Push和pull模式，用在多个server协助的情况下，输出流可以push，输入流可以pull。
+
+```conf 
+application mypush {
+    live on;
+
+    # Every stream published here
+    # is automatically pushed to 
+    # these two machines
+    push rtmp1.example.com;
+    push rtmp2.example.com:1934;
+}
+
+application mypull {
+    live on;
+
+    # Pull all streams from remote machine
+    # and play locally
+    pull rtmp://rtmp3.example.com pageUrl=www.example.com/index.html;
+}
+```
+
+nginx-rtmp拉流是的live选项的含义：
+
+pull rtmp://rtmp3.example.com/test  live=1 name=test static;
+
+rtmp的play包，有几个参数：
+-2：猜这个流类型，先试live，然后vod。
+-1：live类型，若这个流是点播，就失败。
+0：vod类型，若这个流是直播，就失败。
+
+因为rtmp播放时，例如：rtmp://xx/app/stream ，无法判断该rtmp流是直播还是点播，所以需要加这个选项进行区分。
+
+static：
+默认情况下，nginx-rtmp切hls的时候是要求用户访问才会切片，加static后，只有有流接入就会切片

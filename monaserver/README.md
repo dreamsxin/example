@@ -2,7 +2,8 @@
 
 
 ```shell
-git clone http://luajit.org/git/luajit-2.0.git
+# git clone http://luajit.org/git/luajit-2.0.git
+git clone https://github.com/dreamsxin/luajit-2.0.git
 cd luajit && make -j4 && sudo make install && cd ..
 ```
 

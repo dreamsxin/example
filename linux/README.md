@@ -43,3 +43,28 @@ mount /dev/xdb1 /www
 执行 `mount -a` 挂载新分区
 
 /dev/xdb1   /var/lib/postgresql ext4    barrier=0  0  0
+
+
+
+
+# 网卡配置
+```ini
+auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet static
+address 192.168.1.108
+#gateway 192.168.1.108
+netmask 255.255.255.0
+dns-nameservers 220.248.192.12 220.248.192.13
+mtu 1200
+
+auto eth1
+iface eth1 inet static
+address 113.195.207.216
+netmask 255.255.255.128
+gateway 113.195.207.129
+dns-nameservers 220.248.192.12 220.248.192.13
+mtu 1200
+```
