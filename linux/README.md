@@ -18,6 +18,8 @@ fdisk /dev/xdb
 ## 格式化新分区
 ```shell
 mkfs.ext4 /dev/vdb1
+mkfs.ext4 /dev/vdc1
+mkfs.ext4 /dev/vdc2
 ```
 
 ## 挂载分区到/var/www
@@ -27,8 +29,16 @@ mkdir /mnt/www
 mount /dev/xdb1 /mnt/www
 service apache2ctl stop 
 mv /www/* /mnt/www
-umount /dev/www
+umount /mnt/www
 mount /dev/xdb1 /www 
+
+mount /dev/vdc1 /tmp
+
+mkdir /mnt/log
+mount /dev/vdc2 /mnt/log
+mv /var/log/* /mnt/log
+umount /mnt/log
+mount /dev/vdc2 /var/log
 ```
 
 ## 实现开机自动挂在
@@ -37,6 +47,9 @@ mount /dev/xdb1 /www
 /dev/xdb1   /var/www ext4    defaults    0  0
 # or
 /dev/xdb1   /var/www ext4    barrier=0  0  0
+
+/dev/vdc1   /tmp   ext4    defaults        0 0
+/dev/vdc2   /var/log   ext4    defaults        0 0
 ```
 然后使用`cat /etc/fstab`命令查看，出现以下信息就表示写入成功。
 

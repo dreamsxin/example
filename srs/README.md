@@ -56,3 +56,49 @@ sudo ./objs/nginx/sbin/nginx
 ```shell
 tail -f ./objs/srs.log
 ```
+
+# HTTP 回调
+
+当客户端连接服务器时触发on_connect，会给指定的 url 发送如下信息
+```json
+{
+	"action": "on_connect",
+	"client_id": 1985,
+	"ip": "192.168.1.10", 
+	"vhost": "video.test.com", 
+	"app": "live",
+	"tcUrl": "rtmp://x/x?key=xxx",
+	"pageUrl": "http://x/x.html"
+}
+```
+
+当客户端发布流时触发on_publish，会给指定的 url 发送如下信息
+```json
+{
+	"action": "on_publish",
+	"client_id": 1985,
+	"ip": "192.168.1.10", 
+	"vhost": "video.test.com", 
+	"app": "live",
+	"tcUrl": "rtmp://x/x?key=xxx",
+	"stream": "livestream"
+}
+```
+
+当DVR录制关闭一个flv文件时
+```json
+{
+	"action": "on_dvr",
+	"client_id": 1985,
+	"ip": "192.168.1.10", 
+	"vhost": "video.test.com", 
+	"app": "live",
+	"stream": "livestream",
+	"cwd": "/opt",
+	"file": "./l.xxx.flv"
+}
+```
+
+HTTP服务器返回HTTP 200，内容为0时，说明允许，返回其他数字时，将会禁止
+
+比如使用token认证，客户端请求带token的地址：`rtmp://vhost/app?token=xxxx/stream`，在on_connect回调接口中，根据tcUrl值认证。
