@@ -4,6 +4,10 @@
 git clone https://github.com/dreamsxin/srs.git
 cd srs/trunk
 ./configure --with-ffmpeg && make -j4
+
+sudo make install
+sudo ln -sf /usr/local/srs/etc/init.d/srs /etc/init.d/srs
+sudo update-rc.d srs defaults
 ```
 
 # 配置拉取第三方流 hls
