@@ -106,3 +106,68 @@ tail -f ./objs/srs.log
 HTTP服务器返回HTTP 200，内容为0时，说明允许，返回其他数字时，将会禁止
 
 比如使用token认证，客户端请求带token的地址：`rtmp://vhost/app?token=xxxx/stream`，在on_connect回调接口中，根据tcUrl值认证。
+
+
+## 转码保存为mp4
+```shell
+# main config for srs.
+# @see full.conf for detail config.
+
+listen              1935;
+max_connections     1000;
+srs_log_tank        file;
+srs_log_file        ./objs/srs.log;
+http_api {
+    enabled         on;
+    listen          1985;
+}
+http_server {
+    enabled         on;
+    listen          8080;
+    dir             ./objs/nginx/html;
+}
+stats {
+    network         0;
+    disk            sda sdb xvda xvdb;
+}
+vhost __defaultVhost__ {
+	http_hooks {
+	        # whether the http hooks enalbe.
+        	# default off.
+	        enabled         off;
+        	#on_publish      http://api.eotu.com:81/video/publish;
+		#on_start_dvr	http://localhost/on_start_dvr;
+		#on_dvr		http://localhost/on_dvr;
+	}
+	dvr {
+        enabled         on;
+        dvr_path        ./objs/nginx/html/live/[app]/[stream].[timestamp].flv;
+        dvr_plan        session;
+        dvr_duration    30;
+        dvr_wait_keyframe on;
+        time_jitter full;
+	}
+	    transcode {
+		enabled     on;
+		ffmpeg      /usr/local/bin/ffmpeg;
+		engine ff {
+		    enabled         on;
+		    vfilter {
+		    }
+		    vcodec          libx264;
+		    vthreads        4;
+		    vprofile        main;
+		    vpreset         medium;
+		    vparams {
+		    }
+		    acodec          libvorbis;
+		    aparams {
+		    }
+		    iformat	    flv;
+		    oformat         mp4;
+		    output          ./objs/nginx/html/[app]/[stream].mp4;
+		}
+	    }
+}
+
+```

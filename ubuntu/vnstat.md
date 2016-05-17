@@ -29,6 +29,9 @@ vnstat -i eth1 -h
 vnstat -i eth1 -d
 ```
 
+- rx: 下行流量
+- tx: 上行流量
+
 ## 改默认监控网卡
 ```shell
 sudo vi /etc/vnstat.conf
