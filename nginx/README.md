@@ -128,6 +128,21 @@ pm.max_children = 30
 request_terminate_timeout = 900
 ```
 
+## 限速
+
+1、在nginx.conf里的http{}里加上如下代码：
+```ini
+#ip limit
+limit_conn_zone $binary_remote_addr zone=perip:10m;
+limit_conn_zone $server_name zone=perserver:10m;
+```
+2、在需要限制并发数和下载带宽的网站配置server{}里加上如下代码：
+```ini
+limit_conn perip 2; //限制并发连接数
+limit_conn perserver 20; // 限制同一server并发连接数
+limit_rate 100k; // 限制下载速度
+```
+
 ## 安装 nginx-rtmp-module
 ```shell
 sudo apt-get source nginx
@@ -184,3 +199,12 @@ rtmp的play包，有几个参数：
 
 static：
 默认情况下，nginx-rtmp切hls的时候是要求用户访问才会切片，加static后，只有有流接入就会切片
+
+## 统计
+```shell
+cat  access.log.1| sed -n '/21\/May\/2016:21/,/21\/May\/2016:21/p'|more
+# 统计指定时间段连接数
+cat  access.log.1| sed -n '/21\/May\/2016:21/,/21\/May\/2016:21/p'|wc -l
+# 排除相同IP
+cat access.log.1| sed -n '/21\/May\/2016:21/,/21\/May\/2016:21/p'|awk '{print $1}'|uniq -c|wc -l
+```
