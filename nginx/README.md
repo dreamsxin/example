@@ -118,6 +118,13 @@ server {
 		deny all;
 	}
 
+	location /nginx-status {
+		stub_status on;
+		access_log off;
+		#加入访问限制
+		allow all;
+		# deny all;
+	}
 	error_page 405 =200 $uri;
 }
 ```

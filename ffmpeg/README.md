@@ -6,7 +6,7 @@ sudo apt-get install ffmpeg
 
 # or
 
-sudo apt-get install libx264-dev x264 libfaac-dev libfaac0 yasm libmp3lame-dev libopencore-amrwb-dev libtheora-dev libogg-dev libvorbis-dev libvpx-dev libxvidcore-dev libopencore-amrnb-dev
+sudo apt-get install libx264-dev x264 libfaac-dev libfaac0 yasm libmp3lame-dev libopencore-amrwb-dev libtheora-dev libogg-dev libvorbis-dev libvpx-dev libxvidcore-dev libopencore-amrnb-dev libsdl1.2-dev
 #git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg
 wget http://ffmpeg.org/releases/ffmpeg-3.0.2.tar.bz2
 cd ffmpeg
@@ -48,6 +48,8 @@ convert -sample 25%x25% input.jpg output.jpg
 
 ## 转换文件
 ```shell
+ffmpeg -i 中国好声音抚州赛区.flv -vcodec libx264 -r 15 中国好声音抚州赛区.mp4
+ffmpeg -i test.flv  -c copy output.mp4
 ffmpeg -i test.flv  -c copy -copyts output.mp4
 ffmpeg -i input.flv -vcodec libx264  -b 200k -r 24 -ab 64k -ar 32000 output.mp4
 ffmpeg -threads 2 -i input.flv -f ogg  -acodec libvorbis -ac 2 -ab 128k -ar 44100 output.ogg

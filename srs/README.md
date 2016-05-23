@@ -171,3 +171,12 @@ vhost __defaultVhost__ {
 }
 
 ```
+
+# 压力测试
+
+```shell
+git clone https://github.com/dreamsxin/srs-bench.git
+cd srs-bench
+./configure && make
+./objs/sb_rtmp_load -c 1 -r rtmp://127.0.0.1:1935/live/test2
+```
