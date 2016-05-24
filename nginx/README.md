@@ -215,3 +215,64 @@ cat  access.log.1| sed -n '/21\/May\/2016:21/,/21\/May\/2016:21/p'|wc -l
 # 排除相同IP
 cat access.log.1| sed -n '/21\/May\/2016:21/,/21\/May\/2016:21/p'|awk '{print $1}'|uniq -c|wc -l
 ```
+
+# 伪流媒体服务
+
+```shell
+apt-add-repository ppa:nginx/stable
+apt-get update
+apt-get install nginx
+```
+
+不过这个源将SPDY作为额外模块，因此如果你需要启用SPDY或者执行service nginx start后没有反应则应该执行：
+
+```shell
+apt-get install nginx-extras
+```
+
+或者使用官方源
+
+```shell
+deb http://nginx.org/packages/ubuntu/ precise nginx
+deb-src http://nginx.org/packages/ubuntu/ precise nginx
+```
+
+## 配置模块 ngx_http_mp4_module
+
+为H.264/AAC文件，主要是以 .mp4、.m4v、和.m4a为扩展名的文件， 提供伪流媒体服务端支持。
+
+伪流媒体是与Flash播放器一起配合使用的。 播放器向服务端发送HTTP请求，请求中的查询串是以开始时间为参数的(以 start简单命名)，而服务端以流响应，这样流的开始 位置就能于请求中的时间相对应。 例如：
+
+`http://example.com/elephants_dream.mp4?start=238.88`
+这样就允许随意拖放，或者从节目的中途开始回放。
+
+```conf
+location /live/ {
+    mp4;
+    mp4_buffer_size     1m;
+    mp4_max_buffer_size 5m;
+}
+```
+
+## 配置模块 ngx_http_flv_module
+
+为Flash Video(FLV)文件 提供服务端伪流媒体支持
+
+通过返回以请求偏移位置开始的文件内容，该模块专门处理 在查询串中有start参数的请求, 和有预先设置到FLV头部的请求。
+
+```conf
+location ~ \.flv$ {
+    flv;
+}
+```
+
+## 配置模块 ngx_http_hls_module
+
+location / {
+    hls;
+    hls_fragment            5s;
+    hls_buffers             10 10m;
+    hls_mp4_buffer_size     1m;
+    hls_mp4_max_buffer_size 5m;
+    root /var/video/;
+}
