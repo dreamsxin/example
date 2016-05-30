@@ -78,7 +78,7 @@ ffmpeg -i input.ogg -i input.ogv -acodec copy -vcodec copy mixed.ogg
 
 画面部分
 -b <比特率> 指定压缩比特率，似乎ffmpeg是自动VBR的，指定了就大概是平均比特率，比如768，1500这样的就是原来默认项目中有的 
--qscale <数值> 以<数值>质量为基础的VBR，取值0.01-255，约小质量越好 
+-qscale <数值> 以<数值>质量为基础的VBR，取值0.01-255，越小质量越好 
 -qmin <数值> 设定最小质量，与-qmax（设定最大质量）共用，比如-qmin 10 -qmax 31 
 -sameq 使用和源同样的质量 
 

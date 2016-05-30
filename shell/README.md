@@ -25,3 +25,11 @@ wget 断点续传
 # -O 指定文件名保存 -c 继续执行上次终端的任务
 sudo wget -c -O 保存到本地的文件名 "下载地址"
 ```
+
+压缩图片
+
+```shell
+sudo apt-get install optipng
+optipng xxx.png
+jpegotim xxx.jpg
+```
