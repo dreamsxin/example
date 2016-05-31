@@ -31,5 +31,8 @@ sudo wget -c -O 保存到本地的文件名 "下载地址"
 ```shell
 sudo apt-get install optipng
 optipng xxx.png
-jpegotim xxx.jpg
+sudo apt-get install jpegoptim
+jpegoptim xxx.jpg
+# 用50%质量压缩图片:
+jpegoptim -m50 xxx.jpg
 ```
