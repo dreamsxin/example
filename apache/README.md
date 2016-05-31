@@ -20,9 +20,21 @@ sudo a2enmod ratelimit
 ```
 
 ```conf
+sudo vi /etc/apache2/mods-enabled/mpm_prefork.conf
+<IfModule mpm_prefork_module>
+        ServerLimit 1000
+        StartServers        10
+        MinSpareServers     20
+        MaxSpareServers     100
+        MaxRequestWorkers   1000
+        MaxConnectionsPerChild   0
+</IfModule>
+```
+
+```conf
 listen = 127.0.0.1:9000
 pm = dynamic
-pm.max_children = 50
+pm.max_children = 200
 pm.start_servers = 100
 pm.min_spare_servers = 30
 pm.max_spare_servers = 200
