@@ -97,7 +97,7 @@ sails generate api user
 + 在生产环境中可以关闭该功能，修改文件`config/blueprints.js`
 
 ```json
-reset: false,
+rest: false,
 shortcuts: false,
 ```
 
@@ -183,3 +183,76 @@ module.exports = {
 # 日志级别 `config/log.js`
 `silly`, `verbose`, `info`, `debug`, `warn`, `error`
 默认 `debug`
+
+# 策略 policies
+
+可以作用在controller的action上，当条件通过，会`next()`它，继续执行action方法，当条件不满足时，可以中断该请求。
+
+## 自带策略 sessionAuth
+```shell
+// policies/sessionAuth.js
+/**
+ * sessionAuth
+ *
+ * @module      :: Policy
+ * @description :: Simple policy to allow any authenticated user
+ *                 Assumes that your login action in one of your controllers sets `req.session.authenticated = true;`
+ * @docs        :: http://sailsjs.org/#!/documentation/concepts/Policies
+ *
+ */
+module.exports = function(req, res, next) {
+
+  // User is allowed, proceed to the next policy, 
+  // or if this is the last policy, the controller
+  if (req.session.authenticated) {
+    return next();
+  }
+
+  // User is not allowed
+  // (default res.forbidden() behavior can be overridden in `config/403.js`)
+  return res.forbidden('You are not permitted to perform this action.');
+};
+```
+
+## 定义策略 canWrite
+```shell
+// policies/canWrite.js
+module.exports = function canWrite (req, res, next) {
+  var targetFolderId = req.param('id');
+  var userId = req.session.user.id;
+
+  Permission
+  .findOneByFolderId( targetFolderId )
+  .exec( function foundPermission (err, permission) {
+
+    // Unexpected error occurred-- skip to the app's default error (500) handler
+    if (err) return next(err);
+
+    // No permission exists linking this user to this folder.  Maybe they got removed from it?  Maybe they never had permission in the first place?  Who cares?
+    if ( ! permission ) return res.redirect('/notAllowed');
+
+    // OK, so a permission was found.  Let's be sure it's a "write".
+    if ( permission.type !== 'write' ) return res.redirect('/notAllowed');
+
+    // If we made it all the way down here, looks like everything's ok, so we'll let the user through
+    next();
+  });
+};
+```
+
+## 指定策略
+修改 `config/policies.js`
+```json
+RabbitController: {
+	// Apply the `false` policy as the default for all of RabbitController's actions
+	// (`false` prevents all access, which ensures that nothing bad happens to our rabbits)
+	'*': false, // '*': 'sessionAuth',
+
+	// For the action `nurture`, apply the 'isRabbitMother' policy (this overrides `false` above)
+	 nurture : 'isRabbitMother',
+
+	// Apply the `isNiceToAnimals` AND `hasRabbitFood` policies before letting any users feed our rabbits
+	 feed : ['isNiceToAnimals', 'hasRabbitFood'],
+	 edit: 'canWrite'
+}
+```
