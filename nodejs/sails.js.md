@@ -9,7 +9,7 @@ sails new todo
 ```
 
 项目架构
-
+```list
 .
 ├── api
 │   ├── controllers
@@ -26,6 +26,7 @@ sails new todo
 ├── Gruntfile.js
 ├── README.md
 └── app.js
+```
 
 `api/`
 
@@ -77,15 +78,15 @@ sails generate api user
 Sails中要理解路由，首先要记得这个名词blueprint，中文翻译为：蓝图。我不知道官方是否解释过为什么要用个单词，但以我的理解，Sails的blueprint是负责指挥每一条客户端请求应该分配到服务器端的哪个Action去，所以叫蓝图吧。
 blueprint主要分为三种：RESTful routes、Shortcut routes、Action routes。
 
-RESTful routes
+## RESTful routes
 
 当路径诸如：/:modelIdentity 或者 /:modelIdentity/:id的时候，blueprint会根据HTTP的动作（GET、POST、DELETE、PUT等）来分配到相应的Controller下相应的Action来处理。例如一个POST请求/user会创建一个用户，一个DELETE请求/user/123会删除id为123的用户。
 
-Shortcut routes
+## Shortcut routes
 
 这种路由主要是方便开发，请求的参数可以直接写在请求路径中，例如/user/create?name=joe会创建一个新的用户，/user/update/1?name=mike会更新id为1的用户的名字。shortcut routes在开发环境很便利，但是在生产环境下需要关闭。
 
-Action routes
+## Action routes
 
 这种路由会自动的为Controller层的每一个Action创建一个路由，例如你的Controller层有一个FooController.js，里面有一个Actionbar，那么请求/foo/bar就会分配到barAction。
 
@@ -147,7 +148,7 @@ autoUpdatedAt: 'updated'
 sails generate controller home
 ```
 
-## 创建 action
+## 创建 action，视图变量绑定
 ```js
 module.exports = {
 	index: function (req, res){
