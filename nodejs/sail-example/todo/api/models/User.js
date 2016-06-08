@@ -6,11 +6,25 @@
  */
 
 module.exports = {
-  tableName: 'users',
-  autoCreatedAt: 'created',
-  autoUpdatedAt: 'updated',
-  attributes: {
-
-  }
+	tableName: 'users',
+	autoCreatedAt: 'created',
+	autoUpdatedAt: 'updated',
+	attributes: {
+		username: {
+			type: 'string',
+			primaryKey: true,
+			unique: true,
+			maxLength: 32
+		},
+		email: {
+			type: 'string',
+			required: true,
+			maxLength: 128
+		},
+		password: {
+			type: 'string',
+			required: true
+		},
+	}
 };
 

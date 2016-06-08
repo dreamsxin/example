@@ -63,3 +63,5 @@ npm install sails-postgresq
 autoCreatedAt: 'created',
 autoUpdatedAt: 'updated'
 ```
+
+# 更改首页视图，增加用户列表显示
