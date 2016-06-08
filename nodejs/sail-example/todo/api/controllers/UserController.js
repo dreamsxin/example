@@ -6,6 +6,9 @@
  */
 
 module.exports = {
+	index: function (req, res){
+		return res.view("home/index",{title:"用户列表", content:""});
+	}
 	
 };
 

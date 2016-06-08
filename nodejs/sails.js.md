@@ -94,6 +94,7 @@ Action routes
 在生产环境中可以关闭该功能，修改文件`config/blueprints.js`
 
 ```json
+reset: false,
 shortcuts: false,
 ```
 
