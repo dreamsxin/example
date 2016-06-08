@@ -146,3 +146,17 @@ autoUpdatedAt: 'updated'
 ```shell
 sails generate controller home
 ```
+
+## 创建 action
+```js
+module.exports = {
+	index: function (req, res){
+		sails.log.debug('silly日志！');
+		return res.view("home/index",{title:"首页", content:"欢迎使用 Sails"});
+	}
+};
+```
+
+# 日志级别 `config/log.js`
+`silly`, `verbose`, `info`, `debug`, `warn`, `error`
+默认 `debug`
