@@ -33,12 +33,12 @@ sails new todo
 
 `api/`
 
-`api` 目录下是你要构建应用的核心所在，常说的MVC的设计结构就体现在这里
-`api/controllers`：控制层，该层是Http请求的入口。Sails官方建议该层只处理请求的转发和页面的渲染，具体的逻辑实现应该交给Service层。
-`api/models`：模型层，在Sails中，对于Model采用的是充血模型，除了可以在模型中定于属性之外，还可以定义包含逻辑处理的函数。在Sails中，所有Model都可以全局性访问。
-`api/policies`：过滤层，该层在Controller层之前对Http请求做处理，在这一层中，可以定于一些规则来过滤Http请求，比如身份认证什么的。
-`api/responses`：http响应的方法都放这里，例如服务器错误、请求错误、404错误等，定义在responses文件夹里面的方法，都会赋值到controller层的req对象中。
-`api/services`：服务层，该层包含逻辑处理的方法，在Sails中，所有Service都可以全局性访问。
++ `api` 目录下是你要构建应用的核心所在，常说的MVC的设计结构就体现在这里
++ `api/controllers`：控制层，该层是Http请求的入口。Sails官方建议该层只处理请求的转发和页面的渲染，具体的逻辑实现应该交给Service层。
++ `api/models`：模型层，在Sails中，对于Model采用的是充血模型，除了可以在模型中定于属性之外，还可以定义包含逻辑处理的函数。在Sails中，所有Model都可以全局性访问。
++ `api/policies`：过滤层，该层在Controller层之前对Http请求做处理，在这一层中，可以定于一些规则来过滤Http请求，比如身份认证什么的。
++ `api/responses`：http响应的方法都放这里，例如服务器错误、请求错误、404错误等，定义在responses文件夹里面的方法，都会赋值到controller层的req对象中。
++ `api/services`：服务层，该层包含逻辑处理的方法，在Sails中，所有Service都可以全局性访问。
 
 `views/`
 
@@ -78,8 +78,9 @@ sails generate api user
 
 # 默认路由
 
-Sails中要理解路由，首先要记得这个名词blueprint，中文翻译为：蓝图。我不知道官方是否解释过为什么要用个单词，但以我的理解，Sails的blueprint是负责指挥每一条客户端请求应该分配到服务器端的哪个Action去，所以叫蓝图吧。
-blueprint主要分为三种：RESTful routes、Shortcut routes、Action routes。
++ Sails中要理解路由，首先要记得这个名词blueprint，中文翻译为：蓝图。
++ 我不知道官方是否解释过为什么要用个单词，但以我的理解，Sails的blueprint是负责指挥每一条客户端请求应该分配到服务器端的哪个Action去，所以叫蓝图吧。
++ blueprint主要分为三种：RESTful routes、Shortcut routes、Action routes。
 
 ## RESTful routes
 
@@ -91,11 +92,9 @@ blueprint主要分为三种：RESTful routes、Shortcut routes、Action routes�
 
 ## Action routes
 
-这种路由会自动的为Controller层的每一个Action创建一个路由，例如你的Controller层有一个FooController.js，里面有一个Actionbar，那么请求/foo/bar就会分配到barAction。
-
-当然Sails也会提供自定义的路由，用户可以在config/routes.js和config/polices.js这两个配置文件中选择关闭或者打开blueprint提供的路由，和定义自己的路由。
-
-在生产环境中可以关闭该功能，修改文件`config/blueprints.js`
++ 这种路由会自动的为Controller层的每一个Action创建一个路由，例如你的Controller层有一个FooController.js，里面有一个Actionbar，那么请求/foo/bar就会分配到barAction。
++ 当然Sails也会提供自定义的路由，用户可以在config/routes.js和config/polices.js这两个配置文件中选择关闭或者打开blueprint提供的路由，和定义自己的路由。
++ 在生产环境中可以关闭该功能，修改文件`config/blueprints.js`
 
 ```json
 reset: false,
@@ -146,9 +145,9 @@ migrate: 'alter'
 
 `migrate` 说明：
 
-`safe` - never auto-migrate my database(s). I will do it myself (by hand)[不自动合并数据，需要手动控制]
-`alter` - auto-migrate, but attempt to keep my existing data (experimental)[与老数据自动合并，当添加新字段后，数据表才会被删除，推荐使用]
-`drop` - wipe/drop ALL my data and rebuild models every time I lift Sails[每次都删除数据表，建立新表，插入新数据]
++ `safe` - never auto-migrate my database(s). I will do it myself (by hand)[不自动合并数据，需要手动控制]
++ `alter` - auto-migrate, but attempt to keep my existing data (experimental)[与老数据自动合并，当添加新字段后，数据表才会被删除，推荐使用]
++ `drop` - wipe/drop ALL my data and rebuild models every time I lift Sails[每次都删除数据表，建立新表，插入新数据]
 
 
 # 更改自动更新日期字段名
