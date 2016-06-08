@@ -123,18 +123,35 @@ npm install sails-postgresq
 ```
 修改 `config/connections.js` 增加，也可以在 `config/local.js` 下增加
 ```json
-   postgresql: {
-     adapter: 'sails-postgresql',
-     host: 'localhost',
-     user: 'postgres',
-     password: '123456',
-     database: 'zupu'
-   },
+{
+	postgresql: {
+		adapter: 'sails-postgresql',
+		host: 'localhost',
+		user: 'postgres',
+		password: '123456',
+		database: 'zupu'
+	}
+}
 ```
 修改 `config/models.js` 增加一行
 ```json
- connection: 'postgresql',
+connection: 'postgresql',
+migrate: 'alter'
 ```
+
+如果需要通过rest接口修改表结构，需要设置
+```shell
+migrate: 'alter'
+```
+
+`migrate` 说明：
+
+`safe` - never auto-migrate my database(s). I will do it myself (by hand)[不自动合并数据，需要手动控制]
+
+`alter` - auto-migrate, but attempt to keep my existing data (experimental)[与老数据自动合并，当添加新字段后，数据表才会被删除，推荐使用]
+
+`drop` - wipe/drop ALL my data and rebuild models every time I lift Sails[每次都删除数据表，建立新表，插入新数据]
+
 
 # 更改自动更新日期字段名
 ```json
