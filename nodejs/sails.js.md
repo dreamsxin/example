@@ -155,6 +155,13 @@ module.exports = {
 		return res.view("home/index",{title:"首页", content:"欢迎使用 Sails"});
 	}
 };
+# or
+module.exports = {
+	index: function (req, res){
+		sails.log.debug('silly日志！');
+		return res.view({title:"首页", content:"欢迎使用 Sails"});
+	}
+};
 ```
 
 # 日志级别 `config/log.js`
