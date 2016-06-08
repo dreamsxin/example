@@ -1,5 +1,6 @@
 # 安装sails.js
 ```shell
+sudo apt-get install nodejs npm
 sudo npm install sails -g
 ```
 
