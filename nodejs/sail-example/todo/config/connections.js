@@ -88,5 +88,11 @@ module.exports.connections = {
   * More adapters: https://github.com/balderdashy/sails                      *
   *                                                                          *
   ***************************************************************************/
-
+  postgresql: {
+    adapter: 'sails-postgresql',
+    host: 'localhost',
+    user: 'postgres',
+    password: '123456',
+    database: 'zupu'
+  },
 };
