@@ -8,8 +8,16 @@ window.onload = function () {
 	];
 	var radius = 20;
 
+	var line = {
+		stroke: "blue",
+		fill: "blue",
+		"stroke-width": 1,
+		"stroke-linecap": "round",
+		"stroke-linejoin": "round"
+	};
 	var paper = Raphael(0, 30, 400, 230);
-	var text = paper.text(200, 15, "舞台屏幕").attr({font:"30px Arial", opacity: 0.5, fill: "#0f0"});
+	var c = paper.rect(175, 0, 50, 5).attr(line);
+	var text = paper.text(200, 15, "舞台屏幕").attr({font:"20px Arial", opacity: 0.5, fill: "#0f0"});
 
 	for (var i = 0; i < seats.length; i++)
 	{
