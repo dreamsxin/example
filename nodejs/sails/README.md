@@ -9,6 +9,8 @@ sudo npm install sails -g
 # 创建应用
 ```shell
 sails new todo
+# or
+sails generate new todo
 ```
 
 项目架构
@@ -64,7 +66,17 @@ Sails的启动文件，无论是$ sails lift命令或者$ npm start命令都会�
 ```shell
 cd todo
 sails lift
+# or
+sails lift --prod # 当服务器崩溃时，它会自动重新启动。
 ```
+
+设置 `config/local.js`：
+```shell
+{
+	environment: process.env.NODE_ENV || 'development'
+}
+```
+所有生产环境设置都储存在 `config/env/production.js`
 
 可以浏览 `http://localhost:1337/` 看到一个引导页
 
