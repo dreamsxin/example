@@ -25,19 +25,17 @@ jQuery.fn.extend({
 
 		for (var i = 1; i < options.rows; i++) {
 			for (var j = 1; j < options.columns; j++) {
+				var index = (i - 1)*options.columns + j;
 				var y = i * 2.5 * options.radius,
 					x = j * 2.5 * options.radius;
 				
 				var label = i + "排" + j + "座";
-				console.log(label, i);
-				if (i < options.labels.length + 1) {
-					var labels = options.labels[i-1];
-					if (j < labels.length + 1) {
-						label = labels[j-1];
-					}
+				if (options.labels[index]) {
+					label = options.labels[index];
 				}
 				var seat = paper.circle(x, y, options.radius).attr({"title": label, stroke: "none", fill: "#f00", opacity: .4});
 				seat.data("label", label);
+				seat.data("value", index);
 				seat.mouseover(function(){
 					this.attr("opacity", 1);
 				});

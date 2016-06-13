@@ -2,23 +2,36 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8">
-	<script src="https://code.jquery.com/jquery-3.0.0.js"></script>
+	<link rel="stylesheet" href="bootstrap.min.css">
+	<link rel="stylesheet" href='bootstrap-tagsinput.css'>
+	<script src="jquery.js"></script>
 	<script src='raphael-min.js'></script>
 	<script src='seatmap.js'></script>
+	<script src="bootstrap.min.js"></script>
+	<script src='bootstrap-tagsinput.min.js'></script>
 </head>
 <body>
-<div id='seatLabel'></div>
 <div id='selectedSeat'></div>
+<input id="seats" type="text" />
+<div id='seatLabel'></div>
 <script>
 $(document).ready(function () {
-	$('#selectedSeat').showSeats({labels: [["1排1座", "1排3座", "1排5座"],["2排1座", "2排2座", "2排3座"],["3排1座", "3排2座", "3排3座"]], click:function(){
+	var tags = $('#seats');
+	tags.tagsinput({
+		itemValue: 'value',
+		itemText: 'label'
+	});
+	$('#selectedSeat').showSeats({labels: {1:"1排01座", 2:"1排3座", 3:"1排5座", 31:"2排1座", 32:"2排2座", 33:"2排3座",61:"3排1座", 62:"3排2座", 63:"3排3座"}, click:function(){
 		console.log(this)
 		if (this.attrs.fill == "#f00") {
 			this.attr("fill", "#000");
+			tags.tagsinput('add', { "value": this.data("value") , "label": this.data("label")});
+			$('#seatLabel').html('选择了位置： ' + this.data("label"));
 		} else {
 			this.attr("fill", "#f00");
+			tags.tagsinput('remove', { "value": this.data("value") , "label": this.data("label")});
+			$('#seatLabel').html('取消了位置： ' + this.data("label"));
 		}
-		$('#seatLabel').html('选择了位置： ' + this.data("label"));
 	}});
 });
 </script>
