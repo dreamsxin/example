@@ -4,6 +4,7 @@ jQuery.fn.extend({
 	seatSelected: null,
 	initSeats : function(options){
 		this.options = jQuery.extend({ //默认参数选项列表
+			stage: 'top',
 			rows: 10,
 			columns: 30,
 			labels: null,
@@ -29,17 +30,29 @@ jQuery.fn.extend({
 			fill: "blue",
 			"stroke-width": 1,
 			"stroke-linecap": "round",
-			"stroke-linejoin": "round"
+			"stroke-linejoin": "round",
+			title: "舞台屏幕"
 		};
 
 		console.log(this.options);
 
 		this.seatSelected = this.options.click;
 
-		this.paper.setSize(this.options.radius * this.options.columns * 2.5, this.options.radius * this.options.rows * 2.5);
+		var width = this.options.radius * this.options.columns * 2.5;
+		var height = this.options.radius * this.options.rows * 2.5;
+		this.paper.setSize(width , height);
 		console.log(this.paper);
-		var text = this.paper.text((this.options.radius * this.options.columns * 2.5)/2, 15, "舞台屏幕").attr({font:"20px Arial", opacity: 0.5, fill: "#0f0"});
-		var c = this.paper.rect((this.options.radius * this.options.columns * 2.5)/2 - 25, 0, 50, 5).attr(line);
+		if (this.options.stage == 'top') {
+			var stage = this.paper.rect(width/2 - 25, 0, 50, 20).attr(line);
+		} else if (this.options.stage == 'center') {
+			var stage = this.paper.rect(width/2 - 25,  height/2 - 10, 50, 20).attr(line);
+		} else if (this.options.stage == 'bottom') {
+			var stage = this.paper.rect( width/2 - 25, height - 20, 50, 20).attr(line);
+		} else if (this.options.stage == 'left') {
+			var stage = this.paper.rect(0, height/2 - 10, 50, 20).attr(line);
+		} else if (this.options.stage == 'right') {
+			var stage = this.paper.rect(width - 50, height/2 - 10, 50, 20).attr(line);
+		}
 
 		for (var i = 1; i < this.options.rows; i++) {
 			for (var j = 1; j < this.options.columns; j++) {
