@@ -1,11 +1,27 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-	<meta http-equiv=Content-Type content="text/html;charset=utf-8">
+	<meta charset="utf-8">
+	<script src="https://code.jquery.com/jquery-3.0.0.js"></script>
 	<script src='raphael-min.js'></script>
 	<script src='seatmap.js'></script>
 </head>
 <body>
-<p id='selectedSeat' />
+<div id='seatLabel'></div>
+<div id='selectedSeat'></div>
+<script>
+$(document).ready(function () {
+	$('#selectedSeat').showSeats({labels: [["1排1座", "1排3座", "1排5座"],["2排1座", "2排2座", "2排3座"],["3排1座", "3排2座", "3排3座"]], click:function(){
+		console.log(this)
+		if (this.attrs.fill == "#f00") {
+			this.attr("fill", "#000");
+		} else {
+			this.attr("fill", "#f00");
+		}
+		$('#seatLabel').html('选择了位置： ' + this.data("label"));
+	}});
+});
+</script>
 </body>
 
 </html>
