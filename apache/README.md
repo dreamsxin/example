@@ -39,3 +39,19 @@ pm.start_servers = 100
 pm.min_spare_servers = 30
 pm.max_spare_servers = 200
 ```
+
+# 记录请求数据到日志
+```shell
+sudo a2enmod dump_io
+```
+
+## 修改配置 `apache2.conf`
+```conf
+DumpIOInput On
+
+# Enable dumping of all output at a specific LogLevel level such as notice or debug:
+DumpIOLogLevel debug
+
+# If you want to enable dumping of all output, enter:
+DumpIOOutput On
+```
