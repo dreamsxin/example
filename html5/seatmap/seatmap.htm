@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8">
+	<title>座位配置</title>
 	<link rel="stylesheet" href="bootstrap.min.css">
 	<link rel="stylesheet" href='bootstrap-tagsinput.css'>
 	<script src="jquery.js"></script>
@@ -13,6 +14,7 @@
 </head>
 <body>
 <div id='selectedSeat'></div>
+
 <form id="seatForm" class="form-inline" method="post" action="#">
 	<div class="form-group">
 		<input type="number" class="form-control" id="rows" placeholder="排数" value="10">
@@ -20,7 +22,7 @@
 	<div class="form-group">
 		<input type="number" class="form-control" id="columns" placeholder="列数" value="30">
 	</div>
-	<button type="submit" class="btn btn-default">确定</button>
+	<button type="submit" class="btn btn-default">场所范围设置</button>
 </form>
 <div id="modeBtns" class="btn-group" role="group" aria-label="...">
   <button type="button" class="btn btn-default active" id="seatsBtn">选择座位</button>

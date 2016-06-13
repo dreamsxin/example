@@ -54,11 +54,11 @@ jQuery.fn.extend({
 				var y = i * 2.5 * this.options.radius,
 					x = j * 2.5 * this.options.radius;
 				
-				var label = i + "排" + j + "座";
+				var label = "位置:" + i + "排" + j + "列";
 				if (this.options.labels[index]) {
 					label = this.options.labels[index];
 				}
-				var seat = this.paper.circle(x, y, this.options.radius).attr({"title": label, stroke: "#f00", fill: "#f00", opacity: .4});
+				var seat = this.paper.circle(x, y, this.options.radius).attr({"title": label, stroke: "#f00", fill: "#f00", opacity: .6});
 				seat.data("label", label);
 				seat.data("value", index);
 				seat.mouseover(function(){
@@ -66,7 +66,7 @@ jQuery.fn.extend({
 				});
 
 				seat.mouseout(function(){
-					this.attr("opacity", .4);
+					this.attr("opacity", .6);
 				});
 
 				seat.click(this.seatSelected);
