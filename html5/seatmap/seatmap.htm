@@ -15,6 +15,8 @@
 <div id='selectedSeat'></div>
 <form id="seatForm" class="form-inline">
 	<div class="form-group">
+	</div>
+	<div class="form-group">
 		<input type="number" class="form-control" id="rows" placeholder="排数" value="10">
 	</div>
 	<div class="form-group">
@@ -22,6 +24,11 @@
 	</div>
 	<button type="submit" class="btn btn-default">确定</button>
 </form>
+操作模式
+<select id="seatMode" >
+	<option value ="1">选择座位</option>
+	<option value ="2">设置座位编号</option>
+</select>
 <input id="seats" type="text" />
 <div id='seatLabel'></div>
 <script>
@@ -32,15 +39,22 @@ $(document).ready(function () {
 		itemText: 'label'
 	});
 	var seatChart = $('#selectedSeat').initSeats({labels: {1:"1排01座", 2:"1排3座", 3:"1排5座", 31:"2排1座", 32:"2排2座", 33:"2排3座",61:"3排1座", 62:"3排2座", 63:"3排3座"}, click:function(){
-		console.log(this)
-		if (this.attrs.fill == "#f00") {
-			this.attr("fill", "#000");
-			tags.tagsinput('add', { "value": this.data("value") , "label": this.data("label")});
-			$('#seatLabel').html('选择了位置： ' + this.data("label"));
+		if ($('#seatMode').val() == 1) { // 选择座位
+			if (this.attrs.fill == "#f00") {
+				this.attr("fill", "#000");
+				tags.tagsinput('add', { "value": this.data("value") , "label": this.data("label")});
+				$('#seatLabel').html('选择了位置： ' + this.data("label"));
+			} else {
+				this.attr("fill", "#f00");
+				tags.tagsinput('remove', { "value": this.data("value") , "label": this.data("label")});
+				$('#seatLabel').html('取消了位置： ' + this.data("label"));
+			}
 		} else {
-			this.attr("fill", "#f00");
-			tags.tagsinput('remove', { "value": this.data("value") , "label": this.data("label")});
-			$('#seatLabel').html('取消了位置： ' + this.data("label"));
+			var label = prompt("请输入座位" + this.data("value") + "编号","");
+			if (label != null && label != "") {
+				this.data("label", label);
+				this.attr("title", label);
+			}
 		}
 	}});
 	console.log(seatChart);
