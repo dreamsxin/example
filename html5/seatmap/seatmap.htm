@@ -13,7 +13,7 @@
 </head>
 <body>
 <div id='selectedSeat'></div>
-<form id="seatForm" class="form-inline">
+<form id="seatForm" class="form-inline" method="post" action="#">
 	<div class="form-group">
 	</div>
 	<div class="form-group">
@@ -68,8 +68,8 @@ $(document).ready(function () {
 		}
 	}});
 	console.log(seatChart);
-	$('#seatForm').submit(function() {
-		event.preventDefault();
+	$('#seatForm').submit(function(e) {
+		e.preventDefault();
 		seatChart.clear();
 		seatChart.drawSeats({stage: $('#stage').val(), rows: $('#rows').val(), columns: $('#columns').val()});
 		return false;
