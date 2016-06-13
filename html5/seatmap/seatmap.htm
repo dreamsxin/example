@@ -15,18 +15,6 @@
 <div id='selectedSeat'></div>
 <form id="seatForm" class="form-inline" method="post" action="#">
 	<div class="form-group">
-	</div>
-	<div class="form-group">
-		<label>舞台位置</label>
-		<select class="form-control" id="stage" >
-			<option value ="top">顶部</option>
-			<option value ="center">中间</option>
-			<option value ="bottom">底部</option>
-			<option value ="left">左边</option>
-			<option value ="right">右边</option>
-		</select>
-	</div>
-	<div class="form-group">
 		<input type="number" class="form-control" id="rows" placeholder="排数" value="10">
 	</div>
 	<div class="form-group">
@@ -34,12 +22,15 @@
 	</div>
 	<button type="submit" class="btn btn-default">确定</button>
 </form>
-操作模式
-<select id="seatMode" >
-	<option value ="1">选择座位</option>
-	<option value ="2">设置座位编号</option>
-</select>
-<input id="seats" type="text" />
+<div id="modeBtns" class="btn-group" role="group" aria-label="...">
+  <button type="button" class="btn btn-default active" id="seatsBtn">选择座位</button>
+  <button type="button" class="btn btn-default" id="stageBtn">选择舞台</button>
+  <button type="button" class="btn btn-default" id="seatBtn">设置座位编号</button>
+</div>
+<br/>
+座位占位<input id="seats" type="text" />
+<br/>
+舞台占位<input id="stages" type="text" />
 <div id='seatLabel'></div>
 <script>
 $(document).ready(function () {
@@ -48,22 +39,45 @@ $(document).ready(function () {
 		itemValue: 'value',
 		itemText: 'label'
 	});
+	var stagesTags = $('#stages');
+	stagesTags.tagsinput({
+		itemValue: 'value',
+		itemText: 'label'
+	});
 	var seatChart = $('#selectedSeat').initSeats({labels: {1:"1排01座", 2:"1排3座", 3:"1排5座", 31:"2排1座", 32:"2排2座", 33:"2排3座",61:"3排1座", 62:"3排2座", 63:"3排3座"}, click:function(){
-		if ($('#seatMode').val() == 1) { // 选择座位
-			if (this.attrs.fill == "#f00") {
-				this.attr("fill", "#000");
+		console.log(this.attrs);
+		if (seatChart.mode == 0) { // 选择座位
+			if (this.attrs.fill != "#009900") {
+				this.attr("fill", "#009900");
 				tags.tagsinput('add', { "value": this.data("value") , "label": this.data("label")});
+				stagesTags.tagsinput('remove', { "value": this.data("value") , "label": this.data("label")});
 				$('#seatLabel').html('选择了位置： ' + this.data("label"));
 			} else {
 				this.attr("fill", "#f00");
 				tags.tagsinput('remove', { "value": this.data("value") , "label": this.data("label")});
 				$('#seatLabel').html('取消了位置： ' + this.data("label"));
 			}
-		} else {
+		} else if (seatChart.mode == 1) { // 设置座位
+			if (this.attrs.stroke == "#f00") {
+				this.attr("stroke", "#300");
+			} else {
+				this.attr("stroke", "#f00");
+			}
 			var label = prompt("请输入座位" + this.data("value") + "编号","");
 			if (label != null && label != "") {
 				this.data("label", label);
 				this.attr("title", label);
+			}
+		} else if (seatChart.mode == 2) { // 选择舞台座位
+			if (this.attrs.fill != "#6699FF") {
+				this.attr("fill", "#6699FF");
+				stagesTags.tagsinput('add', { "value": this.data("value") , "label": this.data("label")});
+				tags.tagsinput('remove', { "value": this.data("value") , "label": this.data("label")});
+				$('#seatLabel').html('选择了舞台： ' + this.data("label"));
+			} else {
+				this.attr("fill", "#f00");
+				stagesTags.tagsinput('remove', { "value": this.data("value") , "label": this.data("label")});
+				$('#seatLabel').html('取消了舞台： ' + this.data("label"));
 			}
 		}
 	}});
@@ -72,6 +86,27 @@ $(document).ready(function () {
 		e.preventDefault();
 		seatChart.clear();
 		seatChart.drawSeats({stage: $('#stage').val(), rows: $('#rows').val(), columns: $('#columns').val()});
+		return false;
+	});
+	$('#seatsBtn').click(function(e) {
+		e.preventDefault();
+		$("#modeBtns .btn").removeClass('active');
+		$(this).addClass('active');
+		seatChart.setMode(0);
+		return false;
+	});
+	$('#seatBtn').click(function(e) {
+		e.preventDefault();
+		$("#modeBtns .btn").removeClass('active');
+		$(this).addClass('active');
+		seatChart.setMode(1);
+		return false;
+	});
+	$('#stageBtn').click(function(e) {
+		e.preventDefault();
+		$("#modeBtns .btn").removeClass('active');
+		$(this).addClass('active');
+		seatChart.setMode(2);
 		return false;
 	});
 });
