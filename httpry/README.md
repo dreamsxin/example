@@ -43,5 +43,5 @@ sudo httpry -i eth0 -m get,head
 ```
 
 ```shel;
-sudo tcpdump  -XvvennSs 0 -i eth0 tcp[20:2]=0x4745 or tcp[20:2]=0x4854  or tcp[20:2]=0x504F and port 81
+sudo tcpdump  -XvvennSs 0 -i eth0 tcp[20:2]=0x4745 or tcp[20:2]=0x4854  or tcp[20:2]=0x504F and port 81 -w ./http.cap
 ```
