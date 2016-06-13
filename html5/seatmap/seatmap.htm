@@ -7,11 +7,21 @@
 	<script src="jquery.js"></script>
 	<script src='raphael-min.js'></script>
 	<script src='seatmap.js'></script>
+	<script src='form.js'></script>
 	<script src="bootstrap.min.js"></script>
 	<script src='bootstrap-tagsinput.min.js'></script>
 </head>
 <body>
 <div id='selectedSeat'></div>
+<form id="seatForm" class="form-inline">
+	<div class="form-group">
+		<input type="number" class="form-control" id="rows" placeholder="排数" value="10">
+	</div>
+	<div class="form-group">
+		<input type="number" class="form-control" id="columns" placeholder="列数" value="30">
+	</div>
+	<button type="submit" class="btn btn-default">确定</button>
+</form>
 <input id="seats" type="text" />
 <div id='seatLabel'></div>
 <script>
@@ -21,7 +31,7 @@ $(document).ready(function () {
 		itemValue: 'value',
 		itemText: 'label'
 	});
-	$('#selectedSeat').showSeats({labels: {1:"1排01座", 2:"1排3座", 3:"1排5座", 31:"2排1座", 32:"2排2座", 33:"2排3座",61:"3排1座", 62:"3排2座", 63:"3排3座"}, click:function(){
+	var seatChart = $('#selectedSeat').initSeats({labels: {1:"1排01座", 2:"1排3座", 3:"1排5座", 31:"2排1座", 32:"2排2座", 33:"2排3座",61:"3排1座", 62:"3排2座", 63:"3排3座"}, click:function(){
 		console.log(this)
 		if (this.attrs.fill == "#f00") {
 			this.attr("fill", "#000");
@@ -33,6 +43,13 @@ $(document).ready(function () {
 			$('#seatLabel').html('取消了位置： ' + this.data("label"));
 		}
 	}});
+	console.log(seatChart);
+	$('#seatForm').submit(function() {
+		event.preventDefault();
+		seatChart.clear();
+		seatChart.drawSeats({rows: $('#rows').val(), columns: $('#columns').val()});
+		return false;
+	});
 });
 </script>
 </body>

@@ -1,13 +1,28 @@
 jQuery.fn.extend({
+	paper: null,
+	options: null,
 	seatSelected: null,
-	showSeats : function(options){
-		var options = jQuery.extend({ //默认参数选项列表
+	initSeats : function(options){
+		this.options = jQuery.extend({ //默认参数选项列表
 			rows: 10,
 			columns: 30,
 			labels: null,
 			radius: 20,
 			selected: null
 		}, options);
+		this.paper = Raphael($(this).attr("id"), 0, 0);
+		console.log(this.paper);
+		return this.drawSeats(this.options);
+	},
+	clear: function(){
+		console.log(this);
+		this.paper.clear();
+	},
+	drawSeats : function(options){
+		if (!this.paper) {
+			return false;
+		}
+		this.options = jQuery.extend(this.options, options);
 
 		var line = {
 			stroke: "blue",
@@ -17,23 +32,26 @@ jQuery.fn.extend({
 			"stroke-linejoin": "round"
 		};
 
-		this.seatSelected = options.click;
+		console.log(this.options);
 
-		var paper = Raphael($(this).attr("id"), options.radius * options.columns * 2.5, options.radius * options.rows * 2.5);
-		var text = paper.text((options.radius * options.columns * 2.5)/2, 15, "舞台屏幕").attr({font:"20px Arial", opacity: 0.5, fill: "#0f0"});
-		var c = paper.rect((options.radius * options.columns * 2.5)/2 - 25, 0, 50, 5).attr(line);
+		this.seatSelected = this.options.click;
 
-		for (var i = 1; i < options.rows; i++) {
-			for (var j = 1; j < options.columns; j++) {
-				var index = (i - 1)*options.columns + j;
-				var y = i * 2.5 * options.radius,
-					x = j * 2.5 * options.radius;
+		this.paper.setSize(this.options.radius * this.options.columns * 2.5, this.options.radius * this.options.rows * 2.5);
+		console.log(this.paper);
+		var text = this.paper.text((this.options.radius * this.options.columns * 2.5)/2, 15, "舞台屏幕").attr({font:"20px Arial", opacity: 0.5, fill: "#0f0"});
+		var c = this.paper.rect((this.options.radius * this.options.columns * 2.5)/2 - 25, 0, 50, 5).attr(line);
+
+		for (var i = 1; i < this.options.rows; i++) {
+			for (var j = 1; j < this.options.columns; j++) {
+				var index = (i - 1)*this.options.columns + j;
+				var y = i * 2.5 * this.options.radius,
+					x = j * 2.5 * this.options.radius;
 				
 				var label = i + "排" + j + "座";
-				if (options.labels[index]) {
-					label = options.labels[index];
+				if (this.options.labels[index]) {
+					label = this.options.labels[index];
 				}
-				var seat = paper.circle(x, y, options.radius).attr({"title": label, stroke: "none", fill: "#f00", opacity: .4});
+				var seat = this.paper.circle(x, y, this.options.radius).attr({"title": label, stroke: "none", fill: "#f00", opacity: .4});
 				seat.data("label", label);
 				seat.data("value", index);
 				seat.mouseover(function(){
@@ -47,6 +65,6 @@ jQuery.fn.extend({
 				seat.click(this.seatSelected);
 			}
 		}
- 
+		return this;
 	}
 }); 
