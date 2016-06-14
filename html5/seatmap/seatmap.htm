@@ -13,9 +13,9 @@
 	<script src='bootstrap-tagsinput.min.js'></script>
 </head>
 <body>
-<div id='selectedSeat'></div>
+<div id='selectedSeat' style="background:#333"></div>
 
-<form id="seatForm" class="form-inline" method="post" action="#">
+<form id="seatChartForm" class="form-inline" method="post" action="#">
 	<div class="form-group">
 		<input type="number" class="form-control" id="rows" placeholder="排数" value="10">
 	</div>
@@ -24,10 +24,29 @@
 	</div>
 	<button type="submit" class="btn btn-default">场所范围设置</button>
 </form>
+
 <div id="modeBtns" class="btn-group" role="group" aria-label="...">
-  <button type="button" class="btn btn-default active" id="seatsBtn">选择座位</button>
+  <button type="button" class="btn btn-default active" id="seatBtn">选择座位</button>
   <button type="button" class="btn btn-default" id="stageBtn">选择舞台</button>
-  <button type="button" class="btn btn-default" id="seatBtn">设置座位编号</button>
+</div>
+<div class="panel panel-default">
+	<div class="panel-body">
+		<form id="seatForm" class="form" method="post" action="#">
+			<div class="form-group">
+				<label>当前座位编号</label>
+				<input type="number" class="form-control" id="seatindex" value="" readonly="readonly" />
+			</div>
+			<div class="form-group">
+				<label>座位号</label>
+				<input type="text" class="form-control" id="seatlabel" placeholder="座位号：几排几座" value="" />
+			</div>
+			<div class="form-group">
+				<label>价格</label>
+				<input type="number" class="form-control" id="seatprice" placeholder="价格" value="30" />
+			</div>
+			<button type="submit" class="btn btn-default">修改座位信息</button>
+		</form>
+	</div>
 </div>
 <br/>
 座位占位<input id="seats" type="text" />
@@ -46,69 +65,56 @@ $(document).ready(function () {
 		itemValue: 'value',
 		itemText: 'label'
 	});
-	var seatChart = $('#selectedSeat').initSeats({labels: {1:"1排01座", 2:"1排3座", 3:"1排5座", 31:"2排1座", 32:"2排2座", 33:"2排3座",61:"3排1座", 62:"3排2座", 63:"3排3座"}, click:function(){
-		console.log(this.attrs);
-		if (seatChart.mode == 0) { // 选择座位
-			if (this.attrs.fill != "#009900") {
-				this.attr("fill", "#009900");
-				tags.tagsinput('add', { "value": this.data("value") , "label": this.data("label")});
-				stagesTags.tagsinput('remove', { "value": this.data("value") , "label": this.data("label")});
-				$('#seatLabel').html('选择了位置： ' + this.data("label"));
-			} else {
-				this.attr("fill", "#f00");
-				tags.tagsinput('remove', { "value": this.data("value") , "label": this.data("label")});
-				$('#seatLabel').html('取消了位置： ' + this.data("label"));
-			}
-		} else if (seatChart.mode == 1) { // 设置座位
-			if (this.attrs.stroke == "#f00") {
-				this.attr("stroke", "#300");
-			} else {
-				this.attr("stroke", "#f00");
-			}
-			var label = prompt("请输入座位" + this.data("value") + "编号","");
-			if (label != null && label != "") {
-				this.data("label", label);
-				this.attr("title", label);
-			}
-		} else if (seatChart.mode == 2) { // 选择舞台座位
-			if (this.attrs.fill != "#6699FF") {
-				this.attr("fill", "#6699FF");
-				stagesTags.tagsinput('add', { "value": this.data("value") , "label": this.data("label")});
-				tags.tagsinput('remove', { "value": this.data("value") , "label": this.data("label")});
-				$('#seatLabel').html('选择了舞台： ' + this.data("label"));
-			} else {
-				this.attr("fill", "#f00");
-				stagesTags.tagsinput('remove', { "value": this.data("value") , "label": this.data("label")});
-				$('#seatLabel').html('取消了舞台： ' + this.data("label"));
-			}
+	var seatChart = $('#selectedSeat').initSeats({
+		labels: {1:"1排01座", 2:"1排3座", 3:"1排5座", 31:"2排1座", 32:"2排2座", 33:"2排3座",61:"3排1座", 62:"3排2座", 63:"3排3座"}, 
+		selectSeat:function(obj){
+			tags.tagsinput('add', { "value": obj.data("index") , "label": obj.data("label")});
+			stagesTags.tagsinput('remove', { "value": obj.data("index") , "label": obj.data("label")});
+			$('#seatLabel').html('选择了位置： ' + obj.data("label"));
+
+			$('#seatindex').val(obj.data("index"));
+			$('#seatlabel').val(obj.data("label"));
+		}, 
+		unSelectSeat:function(obj){
+			tags.tagsinput('remove', { "value": obj.data("index") , "label": obj.data("label")});
+			$('#seatLabel').html('取消了位置： ' + obj.data("label"));
+		}, 
+		selectStage:function(obj){
+			stagesTags.tagsinput('add', { "value": obj.data("index") , "label": obj.data("label")});
+			tags.tagsinput('remove', { "value": obj.data("index") , "label": obj.data("label")});
+			$('#seatLabel').html('选择了舞台： ' + obj.data("label"));
+		}, 
+		unSelectStage:function(obj){
+			stagesTags.tagsinput('remove', { "value": obj.data("index") , "label": obj.data("label")});
+			$('#seatLabel').html('取消了舞台： ' + obj.data("label"));
 		}
-	}});
+	});
 	console.log(seatChart);
-	$('#seatForm').submit(function(e) {
+	$('#seatChartForm').submit(function(e) {
 		e.preventDefault();
 		seatChart.clear();
 		seatChart.drawSeats({stage: $('#stage').val(), rows: $('#rows').val(), columns: $('#columns').val()});
 		return false;
 	});
-	$('#seatsBtn').click(function(e) {
+	$('#seatForm').submit(function(e) {
 		e.preventDefault();
-		$("#modeBtns .btn").removeClass('active');
-		$(this).addClass('active');
-		seatChart.setMode(0);
+		var seat = seatChart.getSelectSeat();
+		seat.data("label", $('#seatlabel').val());
+		seat.attr("title", $('#seatlabel').val());
 		return false;
 	});
 	$('#seatBtn').click(function(e) {
 		e.preventDefault();
 		$("#modeBtns .btn").removeClass('active');
 		$(this).addClass('active');
-		seatChart.setMode(1);
+		seatChart.setMode(0);
 		return false;
 	});
 	$('#stageBtn').click(function(e) {
 		e.preventDefault();
 		$("#modeBtns .btn").removeClass('active');
 		$(this).addClass('active');
-		seatChart.setMode(2);
+		seatChart.setMode(1);
 		return false;
 	});
 });
