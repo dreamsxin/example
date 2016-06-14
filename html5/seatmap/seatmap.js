@@ -58,11 +58,11 @@ jQuery.fn.extend({
 				var y = i * 2.5 * this.options.radius,
 					x = j * 2.5 * this.options.radius;
 				
-				var label = "位置:" + i + "排" + j + "列";
+				var label = i + "排" + j + "列";
 				if (this.options.labels[index]) {
 					label = this.options.labels[index];
 				}
-				var seat = this.paper.circle(x, y, this.options.radius).attr({"title": label, stroke: "#fff", "stroke-width": 5, fill: "#333", opacity: .6});
+				var seat = this.paper.circle(x, y, this.options.radius).attr({"title": "编号:" + index + "，位置:" + label, stroke: "#fff", "stroke-width": 5, fill: "#333", opacity: .6});
 				seat.data("label", label);
 				seat.data("index", index);
 				seat.mouseover(function(){

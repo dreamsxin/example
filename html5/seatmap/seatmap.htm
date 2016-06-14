@@ -100,7 +100,8 @@ $(document).ready(function () {
 		e.preventDefault();
 		var seat = seatChart.getSelectSeat();
 		seat.data("label", $('#seatlabel').val());
-		seat.attr("title", $('#seatlabel').val());
+		seat.attr("title", "编号:" + seat.data('index') + "，位置:" + $('#seatlabel').val());
+		alert('修改成功');
 		return false;
 	});
 	$('#seatBtn').click(function(e) {
