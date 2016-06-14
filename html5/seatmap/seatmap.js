@@ -63,6 +63,7 @@ jQuery.fn.extend({
 					label = this.options.labels[index];
 				}
 				var seat = this.paper.circle(x, y, this.options.radius).attr({"title": "编号:" + index + "，位置:" + label, stroke: "#fff", "stroke-width": 5, fill: "#333", opacity: .6});
+				seat.data("pos",  i + "排" + j + "列");
 				seat.data("label", label);
 				seat.data("index", index);
 				seat.mouseover(function(){
@@ -100,12 +101,14 @@ jQuery.fn.extend({
 						if (this.attrs.fill != "#bf852f") {
 							this.attr("fill", "#bf852f");
 							this.attr("opacity", 1);
+							this.attr("title", "舞台编号:" + seat.data('index') + "，位置:" + this.data("pos"));
 							if (seatChart.options.selectStage && $.isFunction(seatChart.options.selectStage))
 							{
 								seatChart.options.selectStage(this);
 							}
 						} else {
 							this.attr("fill", "#333");
+							this.attr("title", "编号:" + seat.data('index') + "，位置:" + this.data("label"));
 							if (seatChart.options.unSelectStage && $.isFunction(seatChart.options.unSelectStage))
 							{
 								seatChart.options.unSelectStage(this);
