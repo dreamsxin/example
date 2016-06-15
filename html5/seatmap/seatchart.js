@@ -79,12 +79,14 @@ jQuery.fn.extend({
 					if (this.attrs.fill == "#333") {
 						this.attr("opacity", 1);
 					}
+					this.tooltip({ msg: this.attrs.title});
 				});
 
 				seat.mouseout(function(){
 					if (this.attrs.fill == "#333") {
 						this.attr("opacity", .6);
 					}
+					this.untooltip();
 				});
 
 				if (isSeat) {
