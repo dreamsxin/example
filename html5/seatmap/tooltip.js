@@ -20,7 +20,7 @@ Raphael.el.tooltip = function (obj, w, h) {
 
     //text tooltip
     this.tt.push(this.paper.rect(x, y, w, h, 5).attr({ "stroke-width": 2, "stroke": "#fff", "fill": "#333" }));
-    this.tt.push(text.attr({x:x + w/2, y:y + h/2, "stroke-width": 1, "text-anchor": "middle", "stroke": "#fff", "font-size": 13, "fill": "#000" }));
+    this.tt.push(text.attr({x:x + w/2, y:y + h/2, "text-anchor": "middle", "font-size": 13, "fill": "#fff" }));
    
 	text.toFront();
 
