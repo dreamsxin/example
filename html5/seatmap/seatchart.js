@@ -3,12 +3,13 @@ jQuery.fn.extend({
 	options: null,
 	mode: 0,
 	cuurentSeat: null,
-	initSeats : function(options){
+	seatChart : function(options){
 		this.options = jQuery.extend({ //默认参数选项列表
 			stage: 'top',
 			rows: 10,
 			columns: 30,
-			labels: null,
+			seats: null,
+			stages: null,
 			radius: 20,
 			selectSeat: null,
 			unSelectSeat: null,
@@ -59,10 +60,18 @@ jQuery.fn.extend({
 					x = j * 2.5 * this.options.radius;
 				
 				var label = i + "排" + j + "列";
-				if (this.options.labels[index]) {
-					label = this.options.labels[index];
+				var isSeat = 0, isStage = 0;
+				if (this.options.seats[index]) {
+					label = this.options.seats[index];
+					isSeat = 1;
+					this.attr("fill", "#009900");
+					this.attr("opacity", 1);
+				} else if (this.options.stages[index]) {
+					label = this.options.stages[index];
+					isStage = 1;
 				}
 				var seat = this.paper.circle(x, y, this.options.radius).attr({"title": "编号:" + index + "，位置:" + label, stroke: "#fff", "stroke-width": 5, fill: "#333", opacity: .6});
+				
 				seat.data("pos",  i + "排" + j + "列");
 				seat.data("label", label);
 				seat.data("index", index);
@@ -77,6 +86,23 @@ jQuery.fn.extend({
 						this.attr("opacity", .6);
 					}
 				});
+
+				if (isSeat) {
+					seat.attr("fill", "#009900");
+					seat.attr("opacity", 1);
+					if (seatChart.options.selectSeat && $.isFunction(seatChart.options.selectSeat))
+					{
+						seatChart.options.selectSeat(seat);
+					}
+				} else if (isStage) {
+					seat.attr("fill", "#bf852f");
+					seat.attr("opacity", 1);
+					this.attr("title", "舞台编号:" + seat.data('index') + "，位置:" + this.data("pos"));
+					if (seatChart.options.selectStage && $.isFunction(seatChart.options.selectStage))
+					{
+						seatChart.options.selectStage(seat);
+					}
+				}
 
 				seat.click(function(){
 					console.log(this.attrs);

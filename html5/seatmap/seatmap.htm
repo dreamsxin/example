@@ -7,7 +7,7 @@
 	<link rel="stylesheet" href='bootstrap-tagsinput.css'>
 	<script src="jquery.js"></script>
 	<script src='raphael-min.js'></script>
-	<script src='seatmap.js'></script>
+	<script src='seatchart.js'></script>
 	<script src='form.js'></script>
 	<script src="bootstrap.min.js"></script>
 	<script src='bootstrap-tagsinput.min.js'></script>
@@ -65,8 +65,9 @@ $(document).ready(function () {
 		itemValue: 'value',
 		itemText: 'label'
 	});
-	var seatChart = $('#selectedSeat').initSeats({
-		labels: {1:"1排01座", 2:"1排3座", 3:"1排5座", 31:"2排1座", 32:"2排2座", 33:"2排3座",61:"3排1座", 62:"3排2座", 63:"3排3座"}, 
+	var seatChart = $('#selectedSeat').seatChart({
+		seats: {1:"1排01座", 2:"1排3座", 3:"1排5座", 31:"2排1座", 32:"2排2座", 33:"2排3座",61:"3排1座", 62:"3排2座", 63:"3排3座"}, 
+		stages: {134:"场景舞台", 135:"场景舞台", 136:"场景舞台", 165:"场景舞台"}, 
 		selectSeat:function(obj){
 			tags.tagsinput('add', { "value": obj.data("index") , "label": obj.data("label")});
 			stagesTags.tagsinput('remove', { "value": obj.data("index") , "label": obj.data("label")});
