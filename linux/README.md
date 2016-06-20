@@ -96,10 +96,10 @@ iptables -A FORWARD -d 192.168.1.159  -m limit --limit 30/s -j ACCEPT
 ```shell
 sudo iptables -A FORWARD -d 192.168.1.159 -j DROP
 sudo iptables -A FORWARD -s 192.168.1.159 -j DROP
-#在位置2插入规则
-sudo iptables -I FORWARD 2 -d 192.168.1.159 -j DROP
 
 sudo iptables -A INPUT -s 111.173.141.211 -p TCP -j DROP
+# 指定优先级
+sudo iptables -I FORWARD 2 -d 192.168.1.159 -j DROP
 ```
 
 ## 显示规则编号
