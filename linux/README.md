@@ -88,8 +88,11 @@ mtu 1200
 
 # 限速
 ```shel
-iptables -A FORWARD -s 192.168.1.159  -m limit --limit 30/s -j ACCEPT
-iptables -A FORWARD -d 192.168.1.159  -m limit --limit 30/s -j ACCEPT
+iptables -A FORWARD -s 192.168.1.159  -m limit --limit 100/s -j ACCEPT
+iptables -A FORWARD -d 192.168.1.159  -m limit --limit 100/s -j ACCEPT
+# 指定优先级
+sudo iptables -I FORWARD 1 -s 192.168.1.159  -m limit --limit 100/s -j ACCEPT
+sudo iptables -I FORWARD 1 -d 192.168.1.159  -m limit --limit 100/s -j ACCEPT
 ```
 
 # 断开指定ip
@@ -97,9 +100,14 @@ iptables -A FORWARD -d 192.168.1.159  -m limit --limit 30/s -j ACCEPT
 sudo iptables -A FORWARD -d 192.168.1.159 -j DROP
 sudo iptables -A FORWARD -s 192.168.1.159 -j DROP
 
-sudo iptables -A INPUT -s 111.173.141.211 -p TCP -j DROP
+sudo iptables -A INPUT -s 192.168.1.159 -p TCP -j DROP
+sudo iptables -A INPUT -d 192.168.1.159 -p TCP -j DROP
 # 指定优先级
-sudo iptables -I FORWARD 2 -d 192.168.1.159 -j DROP
+sudo iptables -I FORWARD 1 -s 192.168.1.159 -j DROP
+sudo iptables -I FORWARD 1 -d 192.168.1.159 -j DROP
+
+sudo iptables -I INPUT 1 -s 192.168.1.159 -p TCP -j DROP
+sudo iptables -I INPUT 1 -d 192.168.1.159 -p TCP -j DROP
 ```
 
 ## 显示规则编号
