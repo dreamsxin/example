@@ -81,3 +81,37 @@ gateway 113.195.207.129
 dns-nameservers 220.248.192.12 220.248.192.13
 mtu 1200
 ```
+
+# iptables 优先级
+
+在前面的规则优先执行
+
+# 限速
+```shel
+iptables -A FORWARD -s 192.168.1.159  -m limit --limit 30/s -j ACCEPT
+iptables -A FORWARD -d 192.168.1.159  -m limit --limit 30/s -j ACCEPT
+```
+
+# 断开指定ip
+```shell
+sudo iptables -A FORWARD -d 192.168.1.159 -j DROP
+sudo iptables -A FORWARD -s 192.168.1.159 -j DROP
+#在位置2插入规则
+sudo iptables -I FORWARD 2 -d 192.168.1.159 -j DROP
+
+sudo iptables -A INPUT -s 111.173.141.211 -p TCP -j DROP
+```
+
+## 显示规则编号
+```shell
+sudo iptables -L FORWARD --line-numbers
+sudo iptables -L INPUT --line-numbers
+```
+
+## 删除规则
+```shell
+sudo iptables -D FORWARD 8
+sudo iptables -D FORWARD 9
+
+sudo iptables -D INPUT 21
+```
