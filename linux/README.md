@@ -39,6 +39,13 @@ mount /dev/vdc2 /mnt/log
 mv /var/log/* /mnt/log
 umount /mnt/log
 mount /dev/vdc2 /var/log
+
+mkfs.ext4 /dev/vdc3
+mkdir /mnt/pg_xlog
+mount /dev/vdc3 /mnt/pg_xlog
+mv /var/log/* /mnt/pg_xlog
+umount /mnt/pg_xlog
+mount /dev/vdc3 /var/lib/postgresql/9.4/main/pg_xlog
 ```
 
 ## 实现开机自动挂在

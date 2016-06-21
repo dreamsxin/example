@@ -272,3 +272,24 @@ psql -h 127.0.0.1 -p 6432 -U postgres ads
 
 /usr/lib/postgresql/9.5/bin/pg_dump --host 127.0.0.1 --port 5432 --username "postgres" --no-password  --format plain --data-only --inserts --column-inserts --verbose --file "/var/www/db.backup" "blog"
 ```
+
+# 恢复 pg_xlog
+
+```shell
+sudo -u postgres /usr/lib/postgresql/9.4/bin/pg_resetxlog  .
+```
+
+# 查看数据库占用空间
+
+```sql
+select pg_database.datname, pg_database_size(pg_database.datname) AS size from pg_database;
+```
+
+# 查看表占用空间
+
+```sql
+# 所有表
+select relname, pg_size_pretty(pg_relation_size(relid)) from pg_stat_user_tables where schemaname='public' order by pg_relation_size(relid) desc;
+# 指定表
+select pg_size_pretty(pg_table_size('phone_signs'));
+```
