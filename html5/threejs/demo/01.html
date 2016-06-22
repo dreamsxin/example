@@ -23,7 +23,7 @@ body {
 	<div id="container"></div>
 	<script>
 	var scene = new THREE.Scene(); // 场景
-	var camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 1, 200); // 透视相机
+	var camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 1, 500); // 透视相机
 	var renderer = new THREE.WebGLRenderer(); // 渲染器
 
 	renderer.setSize(window.innerWidth, window.innerHeight);  // 设置渲染器的大小为窗口的内宽度，也就是内容区的宽度
@@ -49,10 +49,28 @@ body {
 	geometry.vertices.push(p2);
 	geometry.colors.push( color1, color2 );
 
-	var line = new THREE.Line( geometry, material, THREE.LinePieces );
+	var line = new THREE.Line( geometry, material, THREE.LineSegments );
 	scene.add(line);
 
-	camera.position.z = 100;
+	// 画多条直线组成网格
+	var geometry = new THREE.Geometry();
+
+    geometry.vertices.push( new THREE.Vector3( - 100, 0, 0 ) );
+    geometry.vertices.push( new THREE.Vector3( 100, 0, 0 ) );
+
+
+    for ( var i = 0; i <= 20; i ++ ) {
+        var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0xffffff, opacity: 0.5 } ) );
+        line.position.y = 100 - ( i * 10 );
+        scene.add( line );
+
+        var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0xffffff, opacity: 0.5 } ) );
+        line.position.x = 100 - ( i * 10 );
+        line.rotation.z = 90 * Math.PI / 180;
+        scene.add( line );
+	}
+
+	camera.position.z = 500;
 	function render() {
 		requestAnimationFrame(render);
 		cube.rotation.x += 0.1;

@@ -104,7 +104,11 @@ point1.set(4,8,9);
 
 ## 画一条彩色线
 
+在 Three.js 中，一条线由点，材质和颜色组成。Threejs中没有提供单独画点的函数，它必须被放到一个THREE.Geometry形状中，这个结构中包含一个数组vertices，这个vertices就是存放无数的点（THREE.Vector3）的数组。
+
 Three.js 中自定义形状使用的是 Geometry 类,它是其他如 CubeGeometry、SphereGeometry 等几何形状的父类。
+
+线类型常量：有不闭合折线(THREE.LineStrip)、多组双顶点线段(THREE.LinePieces)
 
 ```js
 var geometry = new THREE.Geometry();
