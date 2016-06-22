@@ -70,12 +70,37 @@ body {
         scene.add( line );
 	}
 
-	camera.position.z = 500;
+	camera.position.z = 300; // 设置相机的位置坐标
+	// camera.up.x = 0; //设置相机的上为「x」轴方向
+	// camera.up.y = 1; //设置相机的上为「y」轴方向
+	// camera.up.z = 0; //设置相机的上为「z」轴方向
+	// camera.lookAt( {x:0, y:0, z:0 } );//设置视野的中心坐标
+
+	var radian = (2*Math.PI / 360);
+	var angle = 0;
 	function render() {
-		requestAnimationFrame(render);
 		cube.rotation.x += 0.1;
 		cube.rotation.y += 0.1;
+
+		
+		// 相机绕y轴旋转
+		angle += 1;
+		angle = angle%360;
+
+		camera.position.z = 300 * Math.sin(angle * radian);
+		camera.position.x = 300 * Math.cos(angle * radian);
+
+		camera.lookAt( {x:0, y:0, z:0} );
+
+		// 改变相机
+		//if (camera.rotation.y < Math.PI) {
+		//	camera.rotation.y += Math.PI / 180;
+		//} else {
+		//	camera.rotation.y = 0;
+		//}
+		
 		renderer.render(scene, camera);
+		requestAnimationFrame(render);
 	}
 	render();
 	</script>
