@@ -137,4 +137,19 @@ scene.add(line);
 - linejoin 两个线条的连接点处的外观，默认是“round”，表示圆角。
 - vertexcolors 定义线条材质是否使用顶点颜色，这是一个boolean值。意思是，线条各部分的颜色会根据顶点的颜色来进行插值。（如果关于插值不是很明白，可以qq问我，qq在前言中你一定能够找到，嘿嘿，虽然没有明确写出）
 
-## 长方体 Three.BoxGeometry
+## 长方体 `Three.BoxGeometry` `CubeGeometry`
+
+```js
+var geometry = new THREE.BoxGeometry(10,10,10);
+var material = new THREE.MeshBasicMaterial({color: 0x00ff00});
+var cube = new THREE.Mesh(geometry, material);
+scene.add(cube);
+```
+
+## 光源 `THREE.Light`
+
+### 环境光 `THREE.AmbientLight`
+
+### 点光源 `THREE.PointLight`
+
+### 聚光灯 `THREE.SpotLight`
