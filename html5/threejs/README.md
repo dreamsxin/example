@@ -74,3 +74,61 @@ var material = new THREE.MeshBasicMaterial({color: 0x00ff00});
 var cube = new THREE.Mesh(geometry, material);
 scene.add(cube);
 ```
+
+# 3D世界的组成
+
+在计算机世界里，3D世界是由点组成，两个点能够组成一条直线，三个不在一条直线上的点就能够组成一个三角形面，无数三角形面就能够组成各种形状的物体，我们通常把这种网格模型叫做Mesh模型。给物体贴上皮肤，或者专业点就叫做纹理，那么这个物体就活灵活现了。最后无数的物体就组成了我们的3D世界。
+
+## 定义一个点
+
+在三维空间中的某一个点可以用一个坐标点来表示。一个坐标点由x,y,z三个分量构成。在three.js中，点可以在右手坐标系中表示：
+
+在 Three.js 是用一个向量来表示的：
+
+```js
+THREE.Vector3 = function ( x, y, z ) {
+	this.x = x || 0;
+	this.y = y || 0;
+	this.z = z || 0;
+};
+```
+
+假设有一个点x=4，y=8，z=9，可以这样定义它：
+
+```js
+var point1 = new THREE.Vecotr3(4,8,9);
+# or
+var point1 = new THREE.Vector3();
+point1.set(4,8,9);
+```
+
+## 画一条彩色线
+
+Three.js 中自定义形状使用的是 Geometry 类,它是其他如 CubeGeometry、SphereGeometry 等几何形状的父类。
+
+```js
+var geometry = new THREE.Geometry();
+var material = new THREE.LineBasicMaterial( { vertexColors: true } );
+var color1 = new THREE.Color( 0x444444 ), color2 = new THREE.Color( 0xFF0000 );
+
+// 线的材质可以由2点的颜色决定
+var p1 = new THREE.Vector3( -100, 0, 100 );
+var p2 = new THREE.Vector3(  100, 0, -100 );
+geometry.vertices.push(p1);
+geometry.vertices.push(p2);
+geometry.colors.push( color1, color2 );
+
+var line = new THREE.Line( geometry, material, THREE.LinePieces );
+scene.add(line);
+```
+
+## 线条的材质 `THREE.LineBasicMaterial`
+
+参数：
+
+- parameters 是一个定义材质外观的对象，它包含多个属性来定义材质，这些属性是：
+- color 线条的颜色，用16进制来表示，默认的颜色是白色。
+- linewidth 线条的宽度，默认时候1个单位宽度。
+- linecap 线条两端的外观，默认是圆角端点，当线条较粗的时候才看得出效果，如果线条很细，那么你几乎看不出效果了。
+- linejoin 两个线条的连接点处的外观，默认是“round”，表示圆角。
+- vertexcolors 定义线条材质是否使用顶点颜色，这是一个boolean值。意思是，线条各部分的颜色会根据顶点的颜色来进行插值。（如果关于插值不是很明白，可以qq问我，qq在前言中你一定能够找到，嘿嘿，虽然没有明确写出）
