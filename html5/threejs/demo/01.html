@@ -32,10 +32,39 @@ body {
 	document.getElementById( 'container' ).appendChild( renderer.domElement );
 
 	// 添加正方体
-	var geometry = new THREE.CubeGeometry(10,10,10);
+	var geometry = new THREE.BoxGeometry(10,10,10);
 	var material = new THREE.MeshBasicMaterial({color: 0x00ff00});
 	var cube = new THREE.Mesh(geometry, material);
 	scene.add(cube);
+
+	// 添加正方体2
+	var geometry = new THREE.BoxGeometry( 15, 15, 15, 1, 1, 1 );
+	//var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+	//var cube2 = new THREE.Mesh( geometry, material );
+
+	var box = new THREE.Object3D()
+
+	box.add(new THREE.LineSegments(
+		new THREE.WireframeGeometry( geometry ),
+		new THREE.LineBasicMaterial( {
+			color: 0xffffff,
+			transparent: true,
+			opacity: 0.5
+		})
+	));
+
+	box.add(new THREE.Mesh(geometry,
+		new THREE.MeshPhongMaterial( {
+			color: 0x156289,
+			emissive: 0x072534,
+			side: THREE.DoubleSide,
+			shading: THREE.FlatShading
+		})
+	));
+
+	box.position.x = 20;
+
+	scene.add(box);
 
 	// 添加线条
 	var geometry = new THREE.Geometry();
