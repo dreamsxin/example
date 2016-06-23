@@ -282,3 +282,20 @@ loader.load("../three.js/examples/textures/758px-Canestra_di_frutta_(Caravaggio)
 ```js
 var material = new THREE.MeshBasicMaterial({map:texture});
 ```
+
+### 多面体材质，每个面一种材质
+
+```js
+var materials = [];
+
+var texture1 = new THREE.TextureLoader().load( "../three.js/examples/textures/crate.gif" );
+materials.push( new THREE.MeshBasicMaterial( { map: texture1 } ) );
+
+var texture2 = new THREE.TextureLoader().load( "../three.js/examples/textures/hardwood2_diffuse.jpg" );
+materials.push( new THREE.MeshBasicMaterial( { map: texture2 } ) );
+
+var texture3 = new THREE.TextureLoader().load( "../three.js/examples/textures/brick_bump.jpg" );
+materials.push( new THREE.MeshBasicMaterial( { map: texture3 } ) );
+
+var material = new THREE.MultiMaterial( materials );
+```

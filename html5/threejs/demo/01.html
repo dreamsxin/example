@@ -81,7 +81,7 @@ body {
 
 	}
 
-	var cube = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial( materials ));
+	var cube = new THREE.Mesh(geometry, new THREE.MultiMaterial( materials ));
 	cube.position.x = 50;
 	scene.add(cube);
 
