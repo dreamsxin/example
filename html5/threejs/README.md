@@ -224,13 +224,20 @@ scene.add(light);
 
 - Image：这是一个图片类型。
 - Mapping：是一个THREE.UVMapping()类型，它表示的是纹理坐标。
-- wrapS：表示x轴的纹理的回环方式，就是当纹理的宽度小于需要贴图的平面的宽度的时候，平面剩下的部分应该p以何种方式贴图的问题。
+- wrapS：表示x轴的纹理的回环方式，就是当纹理的宽度小于需要贴图的平面的宽度的时候，平面剩下的部分应该以何种方式贴图的问题。
 - wrapT：表示y轴的纹理的回环方式。
 - magFilter 表示过滤的方式，这是OpenGL的基本概念。
 - minFilter 表示过滤的方式，这是OpenGL的基本概念。
 - format：表示加载的图片的格式，这个参数可以取值 `THREE.RGBAFormat`、`THREE.RGBFormat`等。THREE.RGBAFormat表示每个像素点要使用四个分量表示，分别是红、绿、蓝、透明来表示。THREE.RGBFormat则不使用透明，也就是说纹理不会有透明的效果。
 - type：表示存储纹理的内存的每一个字节的格式，是有符号，还是没有符号，是整形，还是浮点型。不过这里默认是无符号型（THREE.UnsignedByteType）。
 - anisotropy：各向异性过滤。使用各向异性过滤能够使纹理的效果更好，但是会消耗更多的内存、CPU、GPU时间。
+
+* wrapS/wrapT
+
+默认为THREE.ClampToEdgeWrapping(夹取),超过1.0的值被固定为1.0。超过1.0的其它地方的纹理，沿用最后像素的纹理。
+用于当叠加过滤时，需要从0.0到1.0精确覆盖且没有模糊边界的纹理。
+THREE.RepeatWrapping(重复)
+THREE.MirroredRepeatWrapping(镜像)
 
 ### 纹理坐标
 

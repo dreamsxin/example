@@ -63,17 +63,33 @@ body {
 	document.getElementById( 'container' ).appendChild( renderer.domElement );
 
 	// 添加正方体
-	var geometry = new THREE.CubeGeometry(10,10,10);
-	var material = new THREE.MeshBasicMaterial({color: 0x00ff00});
-	var cube = new THREE.Mesh(geometry, material);
+	var geometry = new THREE.CubeGeometry(30,30,30);
+	var materials = [];
+
+	for ( var i = 0; i < 6; i ++ ) {
+
+		if (i%3 == 0) {
+			var texture = new THREE.TextureLoader().load( "../three.js/examples/textures/crate.gif" );
+			materials.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+		} else if (i%3 == 1) {
+			var texture = new THREE.TextureLoader().load( "../three.js/examples/textures/hardwood2_diffuse.jpg" );
+			materials.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+		} else if (i%3 == 2) {
+			var texture = new THREE.TextureLoader().load( "../three.js/examples/textures/brick_bump.jpg" );
+			materials.push( new THREE.MeshBasicMaterial( { map: texture } ) );
+		}
+
+	}
+
+	var cube = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial( materials ));
+	cube.position.x = 50;
 	scene.add(cube);
 
 	// 添加正方体2
+	var texture = new THREE.TextureLoader().load( "../three.js/examples/textures/crate.gif" );
 	var geometry = new THREE.BoxGeometry( 20, 20, 20, 1, 1, 1 );
-	//var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
-	//var cube2 = new THREE.Mesh( geometry, material );
 
-	var box = new THREE.Object3D()
+	var box = new THREE.Object3D();
 
 	box.add(new THREE.LineSegments(
 		new THREE.WireframeGeometry( geometry ),
@@ -86,10 +102,7 @@ body {
 
 	box.add(new THREE.Mesh(geometry,
 		new THREE.MeshPhongMaterial( {
-			color: 0x156289,
-			emissive: 0x072534,
-			side: THREE.DoubleSide,
-			shading: THREE.FlatShading
+			map: texture
 		})
 	));
 
