@@ -56,7 +56,7 @@ body {
 	var loader = new THREE.TextureLoader();
 	var texture = loader.load("../three.js/examples/textures/758px-Canestra_di_frutta_(Caravaggio).jpg");
 
-	var material = new THREE.MeshBasicMaterial({map:texture});
+	var material = new THREE.MeshBasicMaterial({map:texture, side: THREE.DoubleSide});
 	var plane = new THREE.Mesh( geometry, material );
 	scene.add( plane );
 
