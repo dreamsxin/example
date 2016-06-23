@@ -150,6 +150,67 @@ scene.add(cube);
 
 ### 环境光 `THREE.AmbientLight`
 
+环境光就是在场景中无处不在的光，它对物体的影响是均匀的，也就是无论你从物体的那个角度观察，物体的颜色都是一样的，这就是伟大的环境光。可以把环境光放在任何一个位置，它的光线是不会衰减的，是永恒的某个强度的一种光源。
+```js
+// 添加环境光
+var ambientLight = new THREE.AmbientLight( 0x000000 );
+scene.add( ambientLight );
+```
+
 ### 点光源 `THREE.PointLight`
 
+点光源是理想化为质点的向四面八方发出光线的光源。点光源是抽象化了的物理概念，为了把物理问题的研究简单化。就像平时说的光滑平面，质点，无空气阻力一样，点光源在现实中也是不存在的，指的是从一个点向周围空间均匀发光的光源。
+
+参数：
+- Color：光的颜色
+- Intensity：光的强度，默认是1.0,就是说是100%强度的灯光，
+- distance：光的距离，从光源所在的位置，经过distance这段距离之后，光的强度将从Intensity衰减为0。 默认情况下，这个值为0.0，表示光源强度不衰减。
+
+```js
+// 添加点光源
+var lights = [];
+lights[ 0 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+lights[ 1 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+lights[ 2 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+
+lights[ 0 ].position.set( 0, 200, 0 );
+lights[ 1 ].position.set( 100, 200, 100 );
+lights[ 2 ].position.set( - 100, - 200, - 100 );
+
+scene.add( lights[ 0 ] );
+scene.add( lights[ 1 ] );
+scene.add( lights[ 2 ] );
+```
+
 ### 聚光灯 `THREE.SpotLight`
+
+参数：
+
+- Hex：聚光灯发出的颜色，如0xFFFFFF
+- Intensity：光源的强度，默认是1.0，如果为0.5，则强度是一半，意思是颜色会淡一些。和上面点光源一样。
+- Distance：光线的强度，从最大值衰减到0，需要的距离。 默认为0，表示光不衰减，如果非0，则表示从光源的位置到Distance的距离，光都在线性衰减。到离光源距离Distance时，光源强度为0.
+- Angle：聚光灯着色的角度，用弧度作为单位，这个角度是和光源的方向形成的角度。
+- exponent：光源模型中，衰减的一个参数，越大衰减约快。
+
+### 方向光 `THREE.DirectionalLight`
+
+当环境光和方向光同时存在的时候，可以把这种情况想成两种光源同时作用于物体，它产生的情况，和每种光源分别作用于物体，然后将两者的结果相加，是一样的效果：
+
+0x00FF00(绿色) + 0xFF0000(红色) = 0xFFFF00 (黄色)。
+
+```js
+light = new THREE.DirectionalLight(0xFF0000);
+light.position.set(0, 0,1);
+scene.add(light);
+```
+
+## 材质
+
+在渲染程序中，它是表面各可视属性的结合，这些可视属性是指表面的色彩、纹理、光滑度、透明度、反射率、折射率、发光度等。正是有了这些属性，才能让我们识别三维中的模型是什么做成的，也正是有了这些属性，我们计算机三维的虚拟世界才会和真实世界一样缤纷多彩。
+
+在场景中没有任何光源的情况下，物体不能反射光源到人的眼里，所以物体应该是黑色的。
+
+### Lambert 材质 `THREE.MeshLambertMaterial`
+
+这是在灰暗的或不光滑的表面产生均匀散射而形成的材质类型。Lambert 材质表面会在所有方向上均匀地散射灯光。Lambert材质会受环境光的影响，呈现环境光的颜色，与材质本身颜色关系不大。
+
