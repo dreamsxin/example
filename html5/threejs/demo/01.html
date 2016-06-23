@@ -46,6 +46,19 @@ body {
 	scene.add( lights[ 1 ] );
 	scene.add( lights[ 2 ] );
 
+	// 画一个平面，添加纹理
+	var geometry = new THREE.PlaneGeometry( 40, 40, 1 );
+	geometry.vertices[0].uv = new THREE.Vector2(0,0);
+	geometry.vertices[1].uv = new THREE.Vector2(1,0);
+	geometry.vertices[2].uv = new THREE.Vector2(1,1);
+	geometry.vertices[3].uv = new THREE.Vector2(0,1);
+
+	var loader = new THREE.TextureLoader();
+	var texture = loader.load("../three.js/examples/textures/758px-Canestra_di_frutta_(Caravaggio).jpg");
+
+	var material = new THREE.MeshBasicMaterial({map:texture});
+	var plane = new THREE.Mesh( geometry, material );
+	scene.add( plane );
 
 	document.getElementById( 'container' ).appendChild( renderer.domElement );
 

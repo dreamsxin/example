@@ -204,7 +204,7 @@ light.position.set(0, 0,1);
 scene.add(light);
 ```
 
-## 材质
+## 材质 `Material`
 
 在渲染程序中，它是表面各可视属性的结合，这些可视属性是指表面的色彩、纹理、光滑度、透明度、反射率、折射率、发光度等。正是有了这些属性，才能让我们识别三维中的模型是什么做成的，也正是有了这些属性，我们计算机三维的虚拟世界才会和真实世界一样缤纷多彩。
 
@@ -214,3 +214,64 @@ scene.add(light);
 
 这是在灰暗的或不光滑的表面产生均匀散射而形成的材质类型。Lambert 材质表面会在所有方向上均匀地散射灯光。Lambert材质会受环境光的影响，呈现环境光的颜色，与材质本身颜色关系不大。
 
+## 纹理 `THREE.Texture`
+
+3D世界的纹理由图片组成。将纹理以一定的规则映射到几何体上，一般是三角形上，那么这个几何体就有纹理皮肤了。
+
+那么在threejs中，或者任何3D引擎中，纹理应该怎么来实现呢？首先应该有一个纹理类，其次是有一个加载图片的方法，将这张图片和这个纹理类捆绑起来。
+
+各个参数的意义是：
+
+- Image：这是一个图片类型。
+- Mapping：是一个THREE.UVMapping()类型，它表示的是纹理坐标。
+- wrapS：表示x轴的纹理的回环方式，就是当纹理的宽度小于需要贴图的平面的宽度的时候，平面剩下的部分应该p以何种方式贴图的问题。
+- wrapT：表示y轴的纹理的回环方式。
+- magFilter 表示过滤的方式，这是OpenGL的基本概念。
+- minFilter 表示过滤的方式，这是OpenGL的基本概念。
+- format：表示加载的图片的格式，这个参数可以取值 `THREE.RGBAFormat`、`THREE.RGBFormat`等。THREE.RGBAFormat表示每个像素点要使用四个分量表示，分别是红、绿、蓝、透明来表示。THREE.RGBFormat则不使用透明，也就是说纹理不会有透明的效果。
+- type：表示存储纹理的内存的每一个字节的格式，是有符号，还是没有符号，是整形，还是浮点型。不过这里默认是无符号型（THREE.UnsignedByteType）。
+- anisotropy：各向异性过滤。使用各向异性过滤能够使纹理的效果更好，但是会消耗更多的内存、CPU、GPU时间。
+
+### 纹理坐标
+
+在正常的情况下，你在0.0到1.0的范围内指定纹理坐标，逆时针方向：左下角是[0,0]，左上角[0,1]，右下角[1,0]
+
+### 画一个平面 `THREE.PlaneGeometry`，并贴上一张图
+```js
+var geometry = new THREE.PlaneGeometry( 5, 20, 32 );
+var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+var plane = new THREE.Mesh( geometry, material );
+scene.add( plane );
+```
+
+### 为平面赋予纹理坐标
+
+```js
+var geometry = new THREE.PlaneGeometry( 5, 20, 32 );
+geometry.vertices[0].uv = new THREE.Vector2(0,0);
+geometry.vertices[1].uv = new THREE.Vector2(1,0);
+geometry.vertices[2].uv = new THREE.Vector2(1,1);
+geometry.vertices[3].uv = new THREE.Vector2(0,1);
+```
+
+### 加载纹理
+
+```js
+var texture = THREE.ImageUtils.loadTexture("../three.js/examples/textures/758px-Canestra_di_frutta_(Caravaggio).jpg");
+# or
+var loader = new THREE.TextureLoader();
+var texture = loader.load("../three.js/examples/textures/758px-Canestra_di_frutta_(Caravaggio).jpg");
+# or
+var texture = new THREE.Texture();
+var loader = new THREE.ImageLoader();
+loader.load("../three.js/examples/textures/758px-Canestra_di_frutta_(Caravaggio).jpg", function(image) {
+	texture.image = image;  
+	texture.needsUpdate = true;  
+});
+```
+
+### 将纹理应用于材质
+
+```js
+var material = new THREE.MeshBasicMaterial({map:texture});
+```
