@@ -277,3 +277,17 @@ http {
     }
 }
 ```
+
+# 验证
+```conf
+		access_by_lua '
+			local args = ngx.req.get_uri_args()
+			if (args.token == nil) then
+				ngx.exit(ngx.HTTP_FORBIDDEN)
+			end
+			local token = ngx.md5("push" .. args.id)
+			if (args.token ~= token) then
+				ngx.exit(ngx.HTTP_FORBIDDEN)
+			end
+		';
+```
