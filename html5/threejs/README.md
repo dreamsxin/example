@@ -299,3 +299,20 @@ materials.push( new THREE.MeshBasicMaterial( { map: texture3 } ) );
 
 var material = new THREE.MultiMaterial( materials );
 ```
+
+## 绘制网格 `THREE.GridHelper`
+
+```js
+var helper = new THREE.GridHelper(1000, 50, 0x303030, 0x303030);
+// helper.setColors(0x0000ff, 0x808080);
+scene.add( helper );
+```
+
+## 通过rotateX、rotateY、rotateZ函数来旋转物体
+
+除了通过直接更改Mesh的rotation属性来旋转物体，还可以调用Mesh的rotateX、rotateY、rotateZ这3个函数来旋转物体，代码如下：
+
+```js
+mesh.rotateY(0.01);
+renderer.render(scene, camera);
+```

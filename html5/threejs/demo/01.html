@@ -126,24 +126,27 @@ body {
 	scene.add(line);
 
 	// 画多条直线组成网格
-	var geometry = new THREE.Geometry();
+	var helper = new THREE.GridHelper(500, 10);
+	scene.add(helper);
+	//var geometry = new THREE.Geometry();
 
-    geometry.vertices.push( new THREE.Vector3( - 100, 0, 0 ) );
-    geometry.vertices.push( new THREE.Vector3( 100, 0, 0 ) );
+    //geometry.vertices.push( new THREE.Vector3( - 100, 0, 0 ) );
+    //geometry.vertices.push( new THREE.Vector3( 100, 0, 0 ) );
 
 
-    for ( var i = 0; i <= 20; i ++ ) {
-        var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0xffffff, opacity: 0.5 } ) );
-        line.position.y = 100 - ( i * 10 );
-        scene.add( line );
+    //for ( var i = 0; i <= 20; i ++ ) {
+        //var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0xffffff, opacity: 0.5 } ) );
+        //line.position.y = 100 - ( i * 10 );
+        //scene.add( line );
 
-        var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0xffffff, opacity: 0.5 } ) );
-        line.position.x = 100 - ( i * 10 );
-        line.rotation.z = 90 * Math.PI / 180;
-        scene.add( line );
-	}
+        //var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0xffffff, opacity: 0.5 } ) );
+        //line.position.x = 100 - ( i * 10 );
+        //line.rotation.z = 90 * Math.PI / 180;
+        //scene.add( line );
+	//}
 
 	camera.position.z = 300; // 设置相机的位置坐标
+	camera.position.y = 100;
 	// camera.up.x = 0; //设置相机的上为「x」轴方向
 	// camera.up.y = 1; //设置相机的上为「y」轴方向
 	// camera.up.z = 0; //设置相机的上为「z」轴方向
@@ -152,11 +155,16 @@ body {
 	var radian = (2*Math.PI / 360);
 	var angle = 0;
 	function render() {
-		cube.rotation.x += 0.1;
-		cube.rotation.y += 0.1;
+		// 旋转正方体
+		cube.rotateX(0.02);
+		cube.rotateY(0.02);
+		//cube.rotation.x += 0.1;
+		//cube.rotation.y += 0.1;
 
-		box.rotation.x += 0.005;
-		box.rotation.y += 0.005;
+		box.rotateZ(0.05);
+		box.rotateY(0.05);
+		//box.rotation.x += 0.005;
+		//box.rotation.y += 0.005;
 
 		// 相机绕y轴旋转
 		angle += 1;
