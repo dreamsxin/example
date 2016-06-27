@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>多视图</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<script src="../three.js/build/three.js"></script>
+<style>
+html, body {
+	height: 100%;
+}
+
+body {
+	background-color: #ffffff;
+	margin: 0;
+	font-family: Arial;
+	overflow: hidden;
+}
+</style>
+</head>
+<body>
+
+	<div id="container"></div>
+	<script>
+	var scene = new THREE.Scene(); // 场景
+	var camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 1, 500); // 透视相机
+	var camera2 = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 1, 500); // 透视相机
+	var renderer = new THREE.WebGLRenderer(); // 渲染器
+
+	renderer.setSize(window.innerWidth, window.innerHeight);  // 设置渲染器的大小为窗口的内宽度，也就是内容区的宽度
+
+	// 添加环境光
+	var ambientLight = new THREE.AmbientLight( 0x000000 );
+	scene.add( ambientLight );
+
+	// 添加点光源
+	var lights = [];
+	lights[ 0 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+	lights[ 1 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+	lights[ 2 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+
+	lights[ 0 ].position.set( 0, 200, 0 );
+	lights[ 1 ].position.set( 100, 200, 100 );
+	lights[ 2 ].position.set( - 100, - 200, - 100 );
+
+	scene.add( lights[ 0 ] );
+	scene.add( lights[ 1 ] );
+	scene.add( lights[ 2 ] );
+
+	document.getElementById( 'container' ).appendChild( renderer.domElement );
+
+	// 添加正方体2
+	var texture = new THREE.TextureLoader().load( "../three.js/examples/textures/crate.gif" );
+	var geometry = new THREE.BoxGeometry( 20, 20, 20, 1, 1, 1 );
+
+	var box = new THREE.Object3D();
+
+	box.add(new THREE.LineSegments(
+		new THREE.WireframeGeometry( geometry ),
+		new THREE.LineBasicMaterial( {
+			color: 0xffffff,
+			transparent: true,
+			opacity: 0.5
+		})
+	));
+
+	box.add(new THREE.Mesh(geometry,
+		new THREE.MeshPhongMaterial( {
+			map: texture
+		})
+	));
+
+	box.position.x = 20;
+
+	scene.add(box);
+
+	// 画多条直线组成网格
+	var helper = new THREE.GridHelper(500, 10);
+	scene.add(helper);
+
+	camera.position.z = 300; // 设置相机的位置坐标
+	camera.position.y = 100;
+
+	camera2.position.z = 300; // 设置相机的位置坐标
+	camera2.position.y = -100;
+	// camera.up.x = 0; //设置相机的上为「x」轴方向
+	// camera.up.y = 1; //设置相机的上为「y」轴方向
+	// camera.up.z = 0; //设置相机的上为「z」轴方向
+	// camera.lookAt( {x:0, y:0, z:0 } );//设置视野的中心坐标
+
+	var radian = (2*Math.PI / 360);
+	var angle = 0;
+	function render() {
+		box.rotateZ(0.05);
+		box.rotateY(0.05);
+
+		// 相机绕y轴旋转
+		angle += 1;
+		angle = angle%360;
+		camera.position.z = 300 * Math.sin(angle * radian);
+		camera.position.x = 300 * Math.cos(angle * radian);
+		camera.lookAt( {x:0, y:0, z:0} );
+
+		renderer.setViewport( 0, 0, window.innerWidth/2, window.innerHeight);
+		renderer.setScissor( 0, 0, window.innerWidth/2, window.innerHeight );
+		renderer.setScissorTest( true );
+
+		camera.aspect = (window.innerWidth/2)/window.innerHeight;
+		camera.updateProjectionMatrix();
+		renderer.render(scene, camera);
+
+		// 相机绕y轴旋转
+		camera2.position.z = 300 * Math.sin(angle * radian);
+		camera2.position.x = 300 * Math.cos(angle * radian);
+		camera2.lookAt( {x:0, y:0, z:0} );
+
+		renderer.setViewport( window.innerWidth/2, 0, window.innerWidth/2, window.innerHeight);
+		renderer.setScissor( window.innerWidth/2, 0, window.innerWidth/2, window.innerHeight );
+		renderer.setScissorTest( true );
+
+		camera2.aspect = (window.innerWidth/2)/window.innerHeight;
+		camera2.updateProjectionMatrix();
+		renderer.render(scene, camera2);
+		requestAnimationFrame(render);
+	}
+	render();
+	</script>
+</body>
+</html>
