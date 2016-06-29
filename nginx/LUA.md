@@ -291,3 +291,36 @@ http {
 			end
 		';
 ```
+
+# 数据收集
+
+```conf
+location /1.gif {
+	#伪装成gif文件
+	default_type image/gif;
+
+	#本身关闭access_log，通过subrequest记录log
+	access_log off;
+	access_by_lua "
+		-- 用户跟踪cookie名为__utrace
+		local uid = ngx.var.cookie___utrace
+		if not uid then
+			-- 如果没有则生成一个跟踪cookie，算法为md5(时间戳+IP+客户端信息)
+			uid = ngx.md5(ngx.now() .. ngx.var.remote_addr .. ngx.var.http_user_agent)
+		end
+		ngx.header['Set-Cookie'] = {'__utrace=' .. uid .. '; path=/'}
+		if ngx.var.arg_domain then
+			-- 通过subrequest到/i-log记录日志，将参数和用户跟踪cookie带过去
+			ngx.location.capture('/i-log?' .. ngx.var.args .. '&utrace=' .. uid)
+		end
+	";
+
+	#此请求不缓存
+	add_header Expires "Fri, 01 Jan 1980 00:00:00 GMT";
+	add_header Pragma "no-cache";
+	add_header Cache-Control "no-cache, max-age=0, must-revalidate";
+
+	#返回一个1×1的空gif图片
+	empty_gif;
+}
+```

@@ -173,11 +173,14 @@ sudo git clone https://github.com/arut/nginx-rtmp-module.git
 
 编辑 `debian/rules` 追加 `--add-module=$(MODULESDIR)/nginx-rtmp-module`
 
-下载nginx的依赖包
+## 下载nginx的依赖包
 `sudo apt-get build-dep nginx`
 
-打包
+## 打包，会在上层目录生成 deb 文件
 `sudo dpkg-buildpackage -b`
+
+## 安装
+`sudo dpkg --install nginx-full_1.8.1-0+precise0_amd64.deb`
 
 或者
 
