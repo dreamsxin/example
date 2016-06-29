@@ -407,3 +407,25 @@ log_by_lua
 log_by_lua_file
 
 log阶段处理，比如记录访问量/统计平均响应时间
+
+# 启用php-fpm状态功能
+
+`php-fpm.conf`
+
+```conf
+pm.status_path = /status
+```
+
+## 配置 
+```conf
+server {
+    listen  *:80 default_server;
+    server_name _;
+    location ~ ^/(status|ping)$
+    {
+        include fastcgi_params;
+        fastcgi_pass 127.0.0.1:9000;
+        fastcgi_param SCRIPT_FILENAME $fastcgi_script_name;
+    }
+}
+```
