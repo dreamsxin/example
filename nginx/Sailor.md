@@ -18,24 +18,6 @@ sudo luarocks install luafilesystem
 sudo luarocks install luapgsql PQ_INCDIR=/usr/include/postgresql
 ```
 
-# 创建项目
-
-```shell
-sailor create 'Hello Word' /var/www/html/lua
-```
-
-## 目录结构
-
-默认的Sailor应用程序将具有以下目录树结构：
-
-- /conf - configuration files, open and edit them.
-- /controllers - controllers you will make!
-- /themes - default layout files.
-- /models - models you will make!
-- /pub - publicly accessible files (js libraries, for example)
-- /runtime - temporary files generated during runtime.
-- /views - this is where your lua pages in .lp will go
-
 # 配置 nginx
 
 ## HTTP 段加入
@@ -58,6 +40,24 @@ location ~* ^/hello_word/.+\.(?:css|eot|js|json|png|svg|ttf|woff)$ {
 }
 ```
 
+# 创建项目
+
+```shell
+sailor create 'Hello Word' /var/www/html/lua
+```
+
+## 目录结构
+
+默认的Sailor应用程序将具有以下目录树结构：
+
+- /conf - configuration files, open and edit them.
+- /controllers - controllers you will make!
+- /themes - default layout files.
+- /models - models you will make!
+- /pub - publicly accessible files (js libraries, for example)
+- /runtime - temporary files generated during runtime.
+- /views - this is where your lua pages in .lp will go
+
 # 控制器 Controllers
 
 ```lua
@@ -69,7 +69,35 @@ function main.index(page)
     page:render("index", { msg = "Hello"})
 end
 
+function main.hello(page)
+    page:write( "Hello world!")
+end
+
 return main --don't forget to return your controller at the end of the file.
+```
+
+访问地址：`http://localhost/app/index.lua?r=main/hello`
+
+使用 `page:write`
+
+```lua
+local main = {}
+
+function main.index(page)
+    page:write("Hello")
+end
+return main
+```
+
+使用 `page:inspect` 进行调试，需要设置 `conf.debug.inspect = true`
+
+```lua
+local main = {}
+
+function main.index(page)
+    page:inspect(page.POST)
+end
+return main
 ```
 
 # 视图 views
@@ -119,4 +147,70 @@ post.relations = {
 function post.test() return "test" end -- A public method
 
 return post
+```
+
+# 保存数据
+
+```lua
+local post = sailor.model("post"):new()
+local saved
+if next(page.POST) then
+	post:get_post(page.POST)
+	saved = post:save()
+end
+```
+
+# 配置 access
+
+
+```lua
+
+```
+
+```lua
+local M = {}
+
+local access = require "sailor.access"
+
+function M.index(page)
+	local access = require "sailor.access"
+	if access.is_guest() then
+		return 404
+	end
+end
+
+-- 使用 model 登录
+function M.login(page)
+	access.settings({model = 'user'})
+	if next(page.POST) then
+		local login, err = access.login(page.POST.username, page.POST.password)
+		if not login then
+			user.errors.password = err
+		end
+	end
+	page:render('login',{user = user})
+end
+
+-- 外部判断登录
+function M.adminLogin(page)
+	local u
+	if page.POST.username then
+		local user = sailor.model('user')
+		u = Model:find_by_attributes{ username = page.POST.username }
+	}
+
+	if u ~= nil and page.POST.password then
+		if access.hash(page.POST.username, page.POST.password) == u.password then
+			page:inspect("is equal")
+			access.grant({id=1,username='admin'})
+			page:redirect('main/index')
+		end
+	end
+	page:render('admin')
+end
+
+function M.logout(page)
+	access.logout()
+	page:redirect('user/login')
+end
 ```
