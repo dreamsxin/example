@@ -1,4 +1,12 @@
 # 编译安装
+
+```shell
+git clone --depth 1 git://github.com/mstorsjo/fdk-aac.git
+cd fdk-aac
+autoreconf -fiv
+./configure --disable-shared
+```
+
 ```shell
 sudo add-apt-repository ppa:kirillshkrogalev/ffmpeg-next
 sudo apt-get update
@@ -10,7 +18,7 @@ sudo apt-get install libx264-dev x264 libfaac-dev libfaac0 yasm libmp3lame-dev l
 #git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg
 wget http://ffmpeg.org/releases/ffmpeg-3.0.2.tar.bz2
 cd ffmpeg
-./configure --enable-gpl --enable-version3 --enable-nonfree --enable-postproc --enable-libfaac --enable-libmp3lame --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libx264 --enable-libxvid --enable-x11grab --enable-pthreads --enable-libspeex
+./configure --enable-gpl --enable-version3 --enable-nonfree --enable-postproc --enable-libfaac --enable-libmp3lame --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libx264 --enable-libxvid --enable-x11grab --enable-pthreads --enable-libspeex --enable-libfdk_aac
 make && sudo make install
 ```
 
