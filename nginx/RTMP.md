@@ -69,8 +69,20 @@ rtmp {
 			live on;
 			// ffmpeg 要开启 --enable-libfdk_aac
 
+			#HLS SETTINGS
+			hls on;
+			hls_path /tmp/hls;
+			hls_nested on;
+			hls_type live;
+			hls_fragment 5s;
+			hls_playlist_length 15s;
+
+			hls_variant _high  BANDWIDTH=1200000;
+			hls_variant _mid BANDWIDTH=664000;
+			hls_variant _low BANDWIDTH=362000;
+
 			exec ffmpeg -i rtmp://localhost/live/$name
-			-c:a libfdk_aac -b:a 32k  -c:v libx264 -b:v 128K -f flv rtmp://localhost/hls/$name_low
+			-c:a libfdk_aac -b:a 48k  -c:v libx264 -b:v 128K -f flv rtmp://localhost/hls/$name_low
 			-c:a libfdk_aac -b:a 64k  -c:v libx264 -b:v 256k -f flv rtmp://localhost/hls/$name_mid
 			-c:a libfdk_aac -b:a 128k -c:v libx264 -b:v 512K -f flv rtmp://localhost/hls/$name_hi;
 		}

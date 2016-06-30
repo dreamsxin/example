@@ -99,3 +99,43 @@ ffmpeg -i input.ogg -i input.ogv -acodec copy -vcodec copy mixed.ogg
 
 这样，要得到一个高画质音质低容量的MP4的话，首先画面最好不要用固定比特率，而用VBR参数让程序自己去 
 判断，而音质参数可以在原来的基础上提升一点，听起来要舒服很多，也不会太大
+
+# ffmpeg 与 rtmp
+
+1、将文件当做直播送至live
+ffmpeg -re -i localFile.mp4 -c copy -f flv rtmp://server/live/streamName
+
+2、将直播媒体保存至本地文件
+ffmpeg -i rtmp://server/live/streamName -c copy dump.flv
+
+3、将其中一个直播流，视频改用h264压缩，音频不变，送至另外一个直播服务流
+ffmpeg -i rtmp://server/live/originalStream -c:a copy -c:v libx264 -vpre slow -f flv rtmp://server/live/h264Stream
+
+4、将其中一个直播流，视频改用h264压缩，音频改用faac压缩，送至另外一个直播服务流
+ffmpeg -i rtmp://server/live/originalStream -c:a libfaac -ar 44100 -ab 48k -c:v libx264 -vpre slow -vpre baseline -f flv rtmp://server/live/h264Stream
+
+5、将其中一个直播流，视频不变，音频改用faac压缩，送至另外一个直播服务流
+ffmpeg -i rtmp://server/live/originalStream -acodec libfaac -ar 44100 -ab 48k -vcodec copy -f flv rtmp://server/live/h264_AAC_Stream
+
+6、将一个高清流，复制为几个不同视频清晰度的流重新发布，其中音频不变
+ffmpeg -re -i rtmp://server/live/high_FMLE_stream 
+-acodec copy -vcodec x264lib -s 640×360 -b 500k -vpre medium -vpre baseline rtmp://server/live/baseline_500k 
+-acodec copy -vcodec x264lib -s 480×272 -b 300k -vpre medium -vpre baseline rtmp://server/live/baseline_300k 
+-acodec copy -vcodec x264lib -s 320×200 -b 150k -vpre medium -vpre baseline rtmp://server/live/baseline_150k 
+-acodec libfaac -vn -ab 48k rtmp://server/live/audio_only_AAC_48k
+
+7、功能一样，只是采用-x264opts选项
+ffmpeg -re -i rtmp://server/live/high_FMLE_stream 
+-c:a copy -c:v x264lib -s 640×360 -x264opts bitrate=500:profile=baseline:preset=slow rtmp://server/live/baseline_500k 
+-c:a copy -c:v x264lib -s 480×272 -x264opts bitrate=300:profile=baseline:preset=slow rtmp://server/live/baseline_300k
+-c:a copy -c:v x264lib -s 320×200 -x264opts bitrate=150:profile=baseline:preset=slow rtmp://server/live/baseline_150k
+-c:a libfaac -vn -b:a 48k rtmp://server/live/audio_only_AAC_48k
+
+8、将当前摄像头及音频通过DSSHOW采集，视频h264、音频faac压缩后发布
+ffmpeg -r 25 -f dshow -s 640×480 -i video=”video source name”:audio=”audio source name” -vcodec libx264 -b 600k -vpre slow -acodec libfaac -ab 128k rtmp://server/application/stream_name
+
+9、将一个JPG图片经过h264压缩循环输出为mp4视频
+ffmpeg -i INPUT.jpg -an -vcodec libx264 -coder 1 -flags +loop -cmp +chroma -subq 10 -qcomp 0.6 -qmin 10 -qmax 51 -qdiff 4 -flags2 +dct8x8 -trellis 2 -partitions +parti8x8+parti4x4 -crf 24 -threads 0 -r 25 -g 25 -y OUTPUT.mp4
+
+10、将普通流视频改用h264压缩，音频不变，送至高清流服务(新版本FMS live=1)
+ffmpeg -i rtmp://server/live/originalStream -c:a copy -c:v libx264 -vpre slow -f flv “rtmp://server/live/h264Stream live=1″
