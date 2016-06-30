@@ -92,7 +92,7 @@ rtmp {
 			live on;
 
 			hls on;
-                        hls_continuous on;
+                        #hls_continuous on;
                         hls_fragment 5s;
                         hls_playlist_length 30s;
                         hls_path /var/www/html/video/hls;
