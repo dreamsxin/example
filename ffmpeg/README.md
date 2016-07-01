@@ -29,12 +29,10 @@ make && sudo make install
 ffmpeg -codecs
 ```
 
-# 读取摄像头，推送到rtmp
+# 读取摄像头和麦克风推送到rtmp
 
 ```shell
-ffmpeg -f video4linux2 -i /dev/video0 -c:v libx264 -an -f flv rtmp://192.168.1.108/live/test
-ffmpeg -f video4linux2 -i /dev/video0 -s 320x240 -f flv rtmp://192.168.1.108/live/test
-ffmpeg -f -f v4l2 -framerate 25 -video_size 320х240 -i /dev/video0 -c:v libx264 -an -f flv rtmp://192.168.1.108/live/test
+ffmpeg -f alsa -ac 1 -i pulse -acodec aac -f video4linux2  -s 1280x720 -i /dev/video0 -acodec libfdk_aac -vcodec libx264 -preset ultrafast -vprofile baseline -vlevel 1.0  -s 640x480 -b:v 800k -r 25  -pix_fmt yuv420p -f flv rtmp://192.168.1.108/live/test
 ```
 
 # 屏幕录像，推送到rtmp
