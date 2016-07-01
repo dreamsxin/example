@@ -35,6 +35,12 @@ rtmp {
 			# Async notify about an flv recorded
 			on_record_done http://localhost:8080/record_done;
 
+			# track client info
+			exec_play bash -c "echo $addr $pageurl >> /tmp/clients";
+			exec_publish bash -c "echo $addr $flashver >> /tmp/publishers";
+
+			# convert recorded file to mp4 format
+			exec_record_done ffmpeg -y -i $path -acodec libmp3lame -ar 44100 -ac 1 -vcodec libx264 $dirname/$basename.mp4;
 		}
 
 		location ~ \.mp4$ {
@@ -69,22 +75,16 @@ rtmp {
 			live on;
 			// ffmpeg 要开启 --enable-libfdk_aac
 
-			#HLS SETTINGS
-			hls on;
-			hls_path /tmp/hls;
-			hls_nested on;
-			hls_type live;
-			hls_fragment 5s;
-			hls_playlist_length 15s;
+			exec /usr/local/bin/ffmpeg -i rtmp://localhost/live/$name
+			-c:a libfdk_aac -b:a 32k  -c:v libx264 -b:v 128K -f flv rtmp://localhost/hls/$name_low 
+			-c:a libfdk_aac -b:a 64k  -c:v libx264 -b:v 256k -f flv rtmp://localhost/hls/$name_mid 
+			-c:a libfdk_aac -b:a 128k -c:v libx264 -b:v 512k -f flv rtmp://localhost/hls/$name_norm 
+			-c:a libfdk_aac -b:a 128k -c:v libx264 -b:v 1000k -f flv rtmp://localhost/hls/$name_high;
 
-			hls_variant _high  BANDWIDTH=1200000;
-			hls_variant _mid BANDWIDTH=664000;
-			hls_variant _low BANDWIDTH=362000;
-
-			exec ffmpeg -i rtmp://localhost/live/$name
-			-c:a libfdk_aac -b:a 48k  -c:v libx264 -b:v 128K -f flv rtmp://localhost/hls/$name_low
-			-c:a libfdk_aac -b:a 64k  -c:v libx264 -b:v 256k -f flv rtmp://localhost/hls/$name_mid
-			-c:a libfdk_aac -b:a 128k -c:v libx264 -b:v 512K -f flv rtmp://localhost/hls/$name_hi;
+			exec /usr/local/bin/ffmpeg -i rtmp://localhost/live/$name
+			-c:a copy -c:v libx264 -b:v 128K -g 30 -f flv rtmp://localhost/hls/$name_low 
+			-c:a copy -c:v libx264 -b:v 256k -g 30 -f flv rtmp://localhost/hls/$name_mid 
+			-c:a copy -c:v libx264 -b:v 512k -g 30 -f flv rtmp://localhost/hls/$name_high;
 		}
 
 		application hls {
@@ -94,9 +94,39 @@ rtmp {
 			hls_path /var/www/html/video/hls;
 			hls_nested on;
 
-			hls_variant _low BANDWIDTH=160000;
-			hls_variant _mid BANDWIDTH=320000;
-			hls_variant _hi  BANDWIDTH=640000;
+			hls_variant _low BANDWIDTH=160000,CODECS=H264;
+			hls_variant _mid BANDWIDTH=320000,CODECS=H264;
+			hls_variant _high BANDWIDTH=640000,CODECS=H264;
+			#hls_variant _norm BANDWIDTH=640000;
+			#hls_variant _high BANDWIDTH=1128000;
+		}
+
+		application encoder {
+			live on;
+
+			wait_video on;
+
+			exec ffmpeg -i rtmp://localhost/encoder/$name
+			-c:a libfdk_aac -b:a 128k -c:v libx264 -b:v 2500k -f flv -g 30 -r 30 -s 1280x720 -preset superfast -profile:v baseline rtmp://localhost/hls2/$name_720p2628kbs
+			-c:a libfdk_aac -b:a 128k -c:v libx264 -b:v 1000k -f flv -g 30 -r 30 -s 854x480 -preset superfast -profile:v baseline rtmp://localhost/hls2/$name_480p1128kbs
+			-c:a libfdk_aac -b:a 128k -c:v libx264 -b:v 750k -f flv -g 30 -r 30 -s 640x360 -preset superfast -profile:v baseline rtmp://localhost/hls2/$name_360p878kbs
+			-c:a libfdk_aac -b:a 128k -c:v libx264 -b:v 400k -f flv -g 30 -r 30 -s 426x240 -preset superfast -profile:v baseline rtmp://localhost/hls2/$name_240p528kbs
+			-c:a libfdk_aac -b:a 64k -c:v libx264 -b:v 200k -f flv -g 15 -r 15 -s 426x240 -preset superfast -profile:v baseline rtmp://localhost/hls2/$name_240p264kbs;
+		}
+
+		application hls2 {
+			live on;
+			hls on;
+			hls_fragment_naming system;
+			hls_fragment 5s;
+			hls_path HTTP_DOCUMENTROOT/data/hls;
+			hls_nested on;
+
+			hls_variant _720p2628kbs BANDWIDTH=2628000,RESOLUTION=1280x720;
+			hls_variant _480p1128kbs BANDWIDTH=1128000,RESOLUTION=854x480;
+			hls_variant _360p878kbs BANDWIDTH=878000,RESOLUTION=640x360;
+			hls_variant _240p528kbs BANDWIDTH=528000,RESOLUTION=426x240;
+			hls_variant _240p264kbs BANDWIDTH=264000,RESOLUTION=426x240;
 		}
 
 		application live2 {
@@ -128,6 +158,7 @@ rtmp {
 			# Async notify about an flv recorded
 			#on_record_done http://localhost:8080/record_done;
 		}
+
 	}
 }
 ```

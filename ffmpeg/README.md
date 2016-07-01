@@ -27,6 +27,12 @@ make && sudo make install
 ffmpeg -codecs
 ```
 
+# 读取摄像头，推送到rtmp
+
+```shell
+ffmpeg -f video4linux2 -i /dev/video0 -c:v libx264 -an -f flv rtmp://192.168.1.108/live/test
+```
+
 # 格式转换
 
 `https://www.ffmpeg.org/ffmpeg.html#Video-and-Audio-file-format-conversion`
