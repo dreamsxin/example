@@ -18,7 +18,9 @@ sudo apt-get install libx264-dev x264 libfaac-dev libfaac0 yasm libmp3lame-dev l
 #git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg
 wget http://ffmpeg.org/releases/ffmpeg-3.0.2.tar.bz2
 cd ffmpeg
-./configure --enable-gpl --enable-version3 --enable-nonfree --enable-postproc --enable-libfaac --enable-libmp3lame --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libx264 --enable-libxvid --enable-x11grab --enable-pthreads --enable-libspeex --enable-libfdk_aac
+
+./configure --enable-gpl --enable-version3 --enable-nonfree --enable-postproc --enable-libfaac --enable-libmp3lame --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libx264 --enable-libxvid --enable-x11grab --enable-pthreads --enable-libspeex --enable-libfdk_aac --enable-decoder=h264
+
 make && sudo make install
 ```
 
@@ -31,8 +33,22 @@ ffmpeg -codecs
 
 ```shell
 ffmpeg -f video4linux2 -i /dev/video0 -c:v libx264 -an -f flv rtmp://192.168.1.108/live/test
+ffmpeg -f video4linux2 -i /dev/video0 -s 320x240 -f flv rtmp://192.168.1.108/live/test
+ffmpeg -f -f v4l2 -framerate 25 -video_size 320х240 -i /dev/video0 -c:v libx264 -an -f flv rtmp://192.168.1.108/live/test
 ```
 
+# 屏幕录像，推送到rtmp
+```shell
+ffmpeg -f alsa -ac 1 -i pulse -acodec aac -f x11grab -s 1600x900 -i :0.0 -qscale 1 -ar 22050 -ab 64k -ac 1 -acodec libmp3lame -f flv rtmp://192.168.1.108/live/test
+
+ffmpeg -f alsa -ac 1 -i pulse -acodec aac -f x11grab -s 1600x900 -i :0.0 -r 10 -b:v 10000k -qscale 1 -ar 22050 -ab 64k -ac 1 -acodec libmp3lame -f flv rtmp://192.168.1.108/live/test
+```
+
+## 屏幕录像，同时录音
+```shell
+#ffmpeg -f oss -i /dev/dsp-f x11grab -r 30 -s 1024x768 -i :0.0  output.mkv  
+#ffmpeg -ac 2 -f oss -i /dev/dsp -f x11grab -r 30 -s 1024x768 -i :0.0 -acodec pcm_s16le -vcodec libx264 -vpre lossless_ultrafast -threads 0 output.mkv  
+```
 # 格式转换
 
 `https://www.ffmpeg.org/ffmpeg.html#Video-and-Audio-file-format-conversion`
