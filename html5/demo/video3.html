@@ -1,0 +1,29 @@
+<table id="box">
+        <tr><td>
+<video id="video" onplay="init()" ontimeupdate="draw()" onloadeddata="copy()" controls>
+  <source src="mov_bbb.mp4" type="video/mp4">
+  <source src="mov_bbb.ogg" type="video/ogg">
+</video></td><td>
+<canvas id="videocopy"></canvas>
+</td></tr>
+</table>
+<script>
+var video = document.getElementById('video');
+var canvas = document.getElementById('videocopy');
+var box  = document.getElementById('box');
+function init(){
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        box.style.transformOrigin = 'top left';
+        box.style.transform = 'scale(2, 2)';
+}
+function draw(){
+        canvas.getContext('2d').drawImage(video, 0, 0);
+}
+function copy(){
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+}
+copy();
+</script>

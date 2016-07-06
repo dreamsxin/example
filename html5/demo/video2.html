@@ -1,0 +1,22 @@
+<video id="video" onplay="init()" ontimeupdate="draw()" onloadeddata="copy()" style="zoom:1;" controls>
+  <source src="mov_bbb.mp4" type="video/mp4">
+  <source src="mov_bbb.ogg" type="video/ogg">
+</video>
+<canvas id="videocopy" style="zoom:1;"></canvas>
+<script>
+var video = document.getElementById('video');
+var canvas = document.getElementById('videocopy');
+function init(){
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+}
+function draw(){
+        canvas.getContext('2d').drawImage(video, 0, 0);
+}
+function copy(){
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+}
+copy();
+</script>
