@@ -1,0 +1,87 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<style>
+.vrbtn { 
+	position:fixed; 
+	top:50px;
+	right:0;
+	z-index:999;
+}
+</style>
+</head>
+<body onresize="resize()" style="overflow: hidden;boder:0px;margin:0px;background-color:#000">
+<button onclick="showvr()" class="vrbtn">開啓VR模式</button>
+<table id="box" border="0" cellspacing="0" cellpadding="0">
+	<tr><td style="border:0px;padding:0px">
+<video id="video" onplay="init()" onloadeddata="copy()" controls webkit-playsinline loop="loop">
+  <source src="mov_bbb.mp4" type="video/mp4">
+  <source src="mov_bbb.ogg" type="video/ogg">
+</video></td><td id="vrtd" style="display:none;border:0px;padding:0px">
+<canvas id="videocopy"></canvas>
+</td></tr>
+</table>
+<script>
+var video = document.getElementById('video');
+var canvas = document.getElementById('videocopy');
+var box  = document.getElementById('box');
+var vrtd = document.getElementById('vrtd');
+function showvr() {
+	if (vrtd.style.display == 'none') {
+		document.getElementById('vrtd').style.display = '';
+	} else {
+		document.getElementById('vrtd').style.display = 'none';
+	}
+	resize();	
+}
+function init(){
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+	box.style.transformOrigin = 'top left';
+	var r1 = document.body.clientWidth/box.clientWidth;
+	var r2 = window.innerHeight/box.clientHeight;
+	var r = 1;
+	if (r1 > r2) {
+		r = r2;
+	} else {
+		r = r1;
+	}
+	box.style.transform = 'scale(' + r + ', '+ r +')';
+	var width = box.clientWidth*r;
+        box.style.marginLeft = (window.innerWidth-width)/2 + 'px';
+
+	var height = box.clientHeight*r;
+	box.style.marginTop = (window.innerHeight-height)/2 + 'px';
+	draw();
+}
+function resize(){
+        var r1 = document.body.clientWidth/box.clientWidth;
+        var r2 = window.innerHeight/box.clientHeight;
+        var r = 1;
+        if (r1 > r2) {
+                r = r2;
+        } else {
+                r = r1;
+        }
+
+        box.style.transform = 'scale(' + r + ', '+ r +')';
+        var width = box.clientWidth*r;
+        box.style.marginLeft = (window.innerWidth-width)/2 + 'px';
+	var height = box.clientHeight*r;
+        box.style.marginTop = (window.innerHeight-height)/2 + 'px';
+}
+function draw(){
+        setInterval(function render(){
+                canvas.getContext('2d').drawImage(video, 0, 0);
+        },0);
+}
+function copy(){
+	init();
+}
+copy();
+</script>
+</body>
+</html>
