@@ -1,4 +1,13 @@
-Ubuntu 编译 PHP7
+# PPA 安装
+
+```shell
+sudo apt-get install python-software-properties
+sudo add-apt-repository ppa:ondrej/php
+sudo apt-get purge php5-fpm
+sudo apt-get install php7.1-cli php7.1-dev php7.1-dev php7.1-curl php7.1-pgsql php7.1-mcrypt
+```
+
+# Ubuntu 编译 PHP7
 ----------------
 
 ```shell
@@ -12,14 +21,34 @@ sudo make install
 
 ```
 
-安装扩展
+## 安装扩展
 
 ```shell
 /usr/local/php/bin/phpize
 ./configure CFLAGS="-g3 -O0 -std=gnu90 -Wall -Werror -Wno-error=uninitialized" --with-php-config=/usr/local/php/bin/php-config
 ```
 
-解压文件乱码
+## apache
+```conf
+LoadModule php7_module modules/libphp7.so
+
+<FilesMatch \.php$>
+    SetHandler application/x-httpd-php
+</FilesMatch>
+
+<FilesMatch "\.ph(p[2-7]?|tml)$">
+    SetHandler application/x-httpd-php
+</FilesMatch>
+
+<FilesMatch "\.phps$">
+    SetHandler application/x-httpd-php-source
+</FilesMatch>
+
+RewriteEngine On
+RewriteRule (.*\.php)s$ $1 [H=application/x-httpd-php-source]
+```
+
+# 解压文件乱码
 ------------
 
 在 Ubuntu 下，当PHP的执行用户为 www-data 时，调用 shell 命令进行解压时，有可能乱码，因为 www-data 用户语言环境没有设置。正确的方法如下：

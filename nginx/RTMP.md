@@ -158,6 +158,16 @@ rtmp {
 			# Async notify about an flv recorded
 			#on_record_done http://localhost:8080/record_done;
 		}
+		
+		application myapp {
+			live on;
+			recorder rec1 {
+				record all manual;
+				record_suffix all.flv;
+				record_path /tmp/rec;
+				record_unique on;
+			}
+		}
 
 	}
 }
@@ -223,7 +233,37 @@ server {
         }
 
 	location ~ \.html {
+	}   
+
+	// Record（控制录制开始、结束）、DROP（断开指定推送、订阅）、Redirect（重定向推送或播放流地址）
+	// http://server.com/control/record/start|stop?srv=SRV&app=APP&name=NAME&rec=REC
+	// curl http://localhost:8080/control/record/start?app=myapp&name=mystream&rec=rec1
+	// curl http://localhost:8080/control/record/stop?app=myapp&name=mystream&rec=rec1
+	// http://server.com/control/drop/publisher|subscriber|client?srv=SRV&app=APP&name=NAME&addr=ADDR&clientid=CLIENTID
+	// curl http://localhost:8080/control/drop/publisher?app=myapp&name=mystream
+	// curl http://localhost:8080/control/drop/client?app=myapp&name=mystream
+	// curl http://localhost:8080/control/drop/client?app=myapp&name=mystream&addr=192.168.0.1
+	// curl http://localhost:8080/control/drop/client?app=myapp&name=mystream&clientid=1
+	// http://server.com/control/redirect/publisher|subscriber|client?srv=SRV&app=APP&name=NAME&addr=ADDR&clientid=CLIENTID&newname=NEWNAME
+	location /control {
+		rtmp_control all;
 	}
+
+        # This URL provides RTMP statistics in XML
+        location /stat {
+            rtmp_stat all;
+
+            # Use this stylesheet to view XML as web page
+            # in browser
+            rtmp_stat_stylesheet stat.xsl;
+        }
+
+        location /stat.xsl {
+            # XML stylesheet to view RTMP stats.
+            # Copy stat.xsl wherever you want
+            # and put the full directory path here
+            root /path/to/stat.xsl/;
+        }
 
 	// 自定义样式
 	location / {
@@ -231,4 +271,34 @@ server {
 		add_after_body /.theme/footer.html;
 	}
 }
+```
+
+# 统计
+
+```conf
+        location /stat {
+            rtmp_stat all;
+        }
+	//  http://127.0.0.1/statclient?app=app应用名&name=频道名
+	location /statclient {
+		proxy_pass http://127.0.0.1/stat;
+		xslt_stylesheet statclient.xsl app='$arg_app' name='$arg_name';
+		add_header Refresh "3; $request_uri";
+	}
+```
+
+`statclient.xsl`
+```xml
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+<xsl:output method="html"/>
+
+<xsl:param name="app"/>
+<xsl:param name="name"/>
+
+<xsl:template match="/">
+    <xsl:value-of select="count(//application[name=$app]/live/stream[name=$name]/client[not(publishing) and flashver])"/>
+</xsl:template>
+
+</xsl:stylesheet>
 ```
