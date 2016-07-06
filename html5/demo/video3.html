@@ -1,6 +1,6 @@
 <table id="box">
         <tr><td>
-<video id="video" onplay="init()" ontimeupdate="draw()" onloadeddata="copy()" controls>
+<video id="video" onplay="init()" onloadeddata="copy()" controls>
   <source src="mov_bbb.mp4" type="video/mp4">
   <source src="mov_bbb.ogg" type="video/ogg">
 </video></td><td>
@@ -16,14 +16,15 @@ function init(){
         canvas.height = video.videoHeight;
         box.style.transformOrigin = 'top left';
         box.style.transform = 'scale(2, 2)';
+        draw();
 }
 function draw(){
-        canvas.getContext('2d').drawImage(video, 0, 0);
+        setInterval(function render(){
+                canvas.getContext('2d').drawImage(video, 0, 0);
+        },0);
 }
 function copy(){
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
+        init();
 }
 copy();
 </script>
