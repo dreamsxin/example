@@ -19,7 +19,7 @@ netstat -n | awk '/^tcp/ {++S[$NF]} END {for(a in S) print a, S[a]}'
 ps -ef | grep apache | wc -l
 ```
 
-wget 断点续传
+# wget 断点续传
 
 ```shell
 # -O 指定文件名保存 -c 继续执行上次终端的任务
@@ -35,4 +35,14 @@ sudo apt-get install jpegoptim
 jpegoptim xxx.jpg
 # 用50%质量压缩图片:
 jpegoptim -m50 xxx.jpg
+```
+
+# 查找指定大小的文件，并按大小排序
+```shell
+find . -type f -size +100M  -print0 | xargs -0 du  | sort -nr
+```
+
+# 查找占用空间最大的目录，并按大小排序
+```shell
+du -hm --max-depth=2 | sort -nr | head -12
 ```
