@@ -1,3 +1,5 @@
+初学者可以看中文文档：https://github.com/KaiserY/rust-book-chinese
+
 # 下载安装
 
 ```shell
@@ -109,3 +111,5 @@ cargo run
 ```shell
 cargo new hello_world2 --bin
 ```
+
+这个命令传递了`--bin`参数因为我们的目标是直接创建一个可执行程序，而不是一个库。
