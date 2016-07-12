@@ -206,3 +206,13 @@ proxy = "http://127.0.0.1:8787/"
 [https]
 proxy = "https://127.0.0.1:8787/"
 ```
+
+我们可以通过 `cargo build --verbose` 看下最后执行的命令：
+```shell
+rustc src/main.rs --crate-name guessing_game --crate-type bin -g 
+	--out-dir /home/zhuzx/work/example/rust/guessing_game/target/debug 
+	--emit=dep-info,link 
+	-L dependency=/home/zhuzx/work/example/rust/guessing_game/target/debug 
+	-L dependency=/home/zhuzx/work/example/rust/guessing_game/target/debug/deps 
+	--extern rand=/home/zhuzx/work/example/rust/guessing_game/target/debug/deps/librand-49a08859d086fffe.rlib`
+```
