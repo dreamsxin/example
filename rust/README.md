@@ -61,6 +61,17 @@ Cargo 是 Rust 的构建系统和包管理工具，Cargo 负责三个工作：
 cargo --version
 ```
 
+## Cargo 包管理
+
+Rust 包管理使用 crate 格式的压缩包存储和发布库，官方有一个集中式的仓库，由于其使用了动态网站技术，给镜像增加了难度，不过在 Rust 社区努力下，中科大也加入了对 crates.io 的支持，实现方式见这个讨论。
+
+使用镜像只需要在项目根目录下新建一个 `.cargo/config` 文件，并在其中加入以下内容：
+
+```config
+[registry]
+index = "git://crates.mirrors.ustc.edu.cn/index"
+```
+
 ## 将之前项目转换到 Cargo
 
 让我们将 Hello World 程序迁移至 Cargo，现在需要做三件事：
@@ -99,6 +110,14 @@ path = "src/hello_world.rs
 ```shell
 cargo build
 ```
+
+### 发布构建（Building for Release）
+
+当你的项目准备好发布了，可以使用以下命令来优化编译项目。
+```shell
+cargo build --release
+````
+这些优化可以让 Rust 代码运行的更快，不过启用他们会让程序花更长的时间编译。这也是为何这是两种不同的配置，一个为了开发，另一个构建提供给用户的最终程序。
 
 ### 运行
 
@@ -163,4 +182,27 @@ fn main() {
         Ordering::Equal   => println!("You win!"),
     }
 }
+```
+
+* 如果无法通过 Cargo 下载包，可以使用代理
+
+```shell
+export http_proxy="http://127.0.0.1:8787";
+export HTTPS_PROXY="https://127.0.0.1:8787/";
+export FTP_PROXY=ftp://127.0.0.1:8787/";
+```
+
+或者配置 `.cargo/config`
+
+```conf
+[http]
+proxy = "127.0.0.1:8787"  # HTTP proxy to use for HTTP requests (defaults to none)
+timeout = 60000      # Timeout for each HTTP request, in milliseconds
+
+# or
+[http]
+proxy = "http://127.0.0.1:8787/"
+
+[https]
+proxy = "https://127.0.0.1:8787/"
 ```
