@@ -429,3 +429,21 @@ server {
     }
 }
 ```
+
+## 反向代理
+
+```shell
+server {
+	location / {
+		proxy_set_header Host $host;
+		proxy_set_header X-Real-IP $remote_addr;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+		#禁用缓存
+		proxy_buffering off;
+
+		#反向代理的地址
+		proxy_pass http://live1.eotu.com:81;     
+	}
+}
+```

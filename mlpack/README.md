@@ -72,3 +72,7 @@ C++ 程序中使用，需要加链接 `-lmlpack -larmadillo`
 mlpack_range_search --min=0.25 --max=1.05 --reference_file=csv/test_data_3_1000.csv --distances_file=out/distances.csv --neighbors_file=out/neighbors.csv
 mlpack_range_search --min=1 --max=4 --reference_file=csv/test.csv --distances_file=out/test_distances.csv --neighbors_file=out/test_neighbors.csv
 ```
+
+## 
+
+mlpack_knn -r dataset.csv -n neighbors_out.csv -d distances_out.csv -k 5 -v
