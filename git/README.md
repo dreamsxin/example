@@ -6,6 +6,18 @@ git config --global user.name "姓名全拼"
 git config --global user.email "gitlab留得邮箱地址"
 ```
 
+## 显示中文
+
+```shell
+git config --global core.quotepath false
+```
+
+## 忽略权限修改
+
+```shell
+git config core.filemode false
+```
+
 ## 统计指定用户一个月以来的代码行数变化
 ```shell
 git log --since=1.month.ago --author="liguodong" --pretty=tformat: --numstat | gawk '{ add += $1 ; subs += $2 ; loc += $1 - $2 } END { printf "added lines: %s removed lines : %s total lines: %s\n",add,subs,loc }' -

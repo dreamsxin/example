@@ -1,4 +1,5 @@
 # 安装 Postgresql
+
 ```shell
 # Ubuntu 12
 sudo add-apt-repository ppa:pitti/postgresql
@@ -6,6 +7,12 @@ sudo apt-get update
 sudo apt-get install postgresql
 # Ubuntu 14 到 Postgresql 官网
 ```
+
+## psql 使用
+
+- 查看所有库：\l
+- 查看所有表： \dt
+- 查看某个表的结构： \d 表名
 
 # 设置默认密码
 ```shell

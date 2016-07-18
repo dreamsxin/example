@@ -22,7 +22,8 @@ export PATH
 使用如下命令安装依赖软件：
 
 ```shell
-sudo apt-get install git gnupg flex bison gperf build-essential zip curl libc6-dev libncurses5-dev:i386 x11proto-core-dev libx11-dev:i386 libreadline6-dev:i386 libgl1-mesa- dri:i386 libgl1-mesa-dev g++-multilib mingw32 tofrodos python-markdown libxml2-utils xsltproc zlib1g-dev:i386 dpkg-dev
+sudo apt-get install git gnupg flex bison gperf build-essential zip curl g++-4.8-multilib
+sudo apt-get install libc6-dev libncurses5-dev:i386 x11proto-core-dev libx11-dev:i386 libreadline6-dev:i386 libgl1-mesa-dri:i386 libgl1-mesa-dev g++-multilib mingw32 tofrodos python-markdown libxml2-utils xsltproc zlib1g-dev:i386 dpkg-dev
 sudo ln -s /usr/lib/i386-linux-gnu/mesa/libGL.so.1 /usr/lib/i386-linux-gnu/libGL.so
 ```
 
@@ -58,6 +59,55 @@ repo sync
 ## 源代码的编译
 
 参考官方指南 Building the System 先用 `build/envsetup.sh` 设置环境变量，再调用 `lunch` 命令选择构建目标。之后即执行 `make -jN` 进行编译。我用的参数为 `-j4` 编译了大约两个小时：
+
+```shell
+source build/envsetup.sh
+lunch
+# lunch full-eng
+```
+
+### 选择要编译的机器
+
+- eng: 工程机
+- user:最终用户机
+- userdebug:调试测试机
+- tests:测试机
+
+执行 `lunch full-eng` 显示：
+```shell
+============================================
+PLATFORM_VERSION_CODENAME=REL
+PLATFORM_VERSION=5.1.1
+TARGET_PRODUCT=full
+TARGET_BUILD_VARIANT=eng
+TARGET_BUILD_TYPE=release
+TARGET_BUILD_APPS=
+TARGET_ARCH=arm
+TARGET_ARCH_VARIANT=armv7-a
+TARGET_CPU_VARIANT=generic
+TARGET_2ND_ARCH=
+TARGET_2ND_ARCH_VARIANT=
+TARGET_2ND_CPU_VARIANT=
+HOST_ARCH=x86_64
+HOST_OS=linux
+HOST_OS_EXTRA=Linux-3.13.0-83-generic-x86_64-with-Ubuntu-14.04-trusty
+HOST_BUILD_TYPE=release
+BUILD_ID=LMY49J
+OUT_DIR=out
+============================================
+```
+
+### 生成驱动目录
+
+https://developers.google.com/android/nexus/drivers#hammerheadlrx22c
+
+接下来需要在Android官网下载所需要的驱动，下载完成后,解压出来是三个.sh文件,放到Android源码目录下面,然后执行.会将相关驱动放到vender目录下面.
+
+### 执行编译
+
+```shell
+make -j4
+```
 
 ## 将代码导入 Android Studio
 
