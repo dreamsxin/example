@@ -109,6 +109,17 @@ https://developers.google.com/android/nexus/drivers#hammerheadlrx22c
 make -j4
 ```
 
+如果出现错误：`Invalid policyvers specified: 26`
+
+修改文件 `external//checkpolicy//checkpolicy.c`：
+```c
+long int n = strtol(optarg, NULL, 0);
+// 改为
+long int n;
+errno = 0;
+n = strtol(optarg, NULL, 0);
+```
+
 ## 将代码导入 Android Studio
 
 代码目录中含有一个名为 idegen 的模块，它能够为 Android 代码生成 Android Studio 下的工程文件。
