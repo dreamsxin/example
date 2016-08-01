@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>变脸</title>
+<script type="text/javascript" src="jquery-3.1.0.min.js"></script>
+<script type="text/javascript" src="jcanvas.min.js"></script>
+<script>
+var lastUpdate = new Date().getTime();
+var curShakeX=curShakeY=curShakeZ=lastShakeX=lastShakeY=lastShakeZ=0;
+function draw() {
+	var i = 1+Math.round(Math.random()*20);
+	if (i < 10) {
+		i = '0' + i;
+	}
+	var color = '#'+('00000'+(Math.random()*0x1000000<<0).toString(16)).substr(-6);
+
+	$('canvas').clearCanvas();
+	// Draw a full circle
+	$('canvas').drawArc({
+		strokeStyle: color,
+		strokeWidth: 5,
+		x: 80, y: 80,
+		radius: 64
+	});
+	$('canvas').drawImage({
+		source: 'img/'+i+'.png',
+		x: 15,
+		y: 15,
+		width: 128,
+		height: 128,
+		fromCenter: false // 是否以中心点为坐标原点
+	});
+}
+$(document).ready(function () {
+	if (window.DeviceMotionEvent) {
+		window.addEventListener('devicemotion', function(){
+			var curTime = new Date().getTime();
+			if ((curTime - lastUpdate) > 100) {
+				var diffTime = curTime -lastUpdate;
+				lastUpdate = curTime;
+				//获得重力加速
+				var acceleration =event.accelerationIncludingGravity;
+				curShakeX = acceleration.x;
+				curShakeY = acceleration.y;
+				curShakeZ = acceleration.z;
+
+				var speed = Math.abs(curShakeX + curShakeY + curShakeZ - lastShakeX - lastShakeY - lastShakeZ) / diffTime * 10000;
+				if (speed > 1000) {
+					draw();
+				}
+				lastShakeX = curShakeX;
+				lastShakeY = curShakeY;
+				lastShakeZ = curShakeZ;
+			}
+		}, false);
+	}
+	draw();
+});
+</script>
+</head>
+<body>
+<canvas width="160" height="160"></canvas>
+</body>
+</html>
