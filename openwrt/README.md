@@ -118,3 +118,17 @@ config interface 'lan'
 ```shell
 ssh -lroot 192.168.1.118
 ```
+
+在openwrt系统中发现没有shutdown命令，可以采用下面的命令关闭系统。
+
+```shell
+kill -USR1 1
+```
+
+注意：系统会立即关闭
+
+```shell
+kill -USR2 1
+```
+
+效果等于reboot。
