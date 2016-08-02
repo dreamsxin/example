@@ -26,6 +26,10 @@ git clone git://git.openwrt.org/openwrt.git
 #14.07
 git clone git://git.openwrt.org/14.07/openwrt.git
 
+# 可以配置代理
+# export HTTP_PROXY=http://127.0.0.1:8787
+# export HTTPS_PROXY=http://127.0.0.1:8787
+
 cd openwrt
 ./scripts/feeds update -a
 ./scripts/feeds install -a
@@ -38,19 +42,16 @@ make menuconfig
 # * `` (按下`m`)这个包会在生成刷新OpenWrt的镜像文件以后被编译，但是不会被包含进镜像文件 
 # * `` (按下`n`)这个包不会被编译
 
-# export HTTP_PROXY=http://127.0.0.1:8787
-# export HTTPS_PROXY=http://127.0.0.1:8787
-
-#先编译要用到的工具和库， 编译单个软件，进入编译选项选择要编译的软件后，如果没有make需执行以下：
-make prereq
-make tools/install
-make toolchain/install
+# 先编译要用到的工具和库， 编译单个软件，进入编译选项选择要编译的软件后，如果没有make需执行以下：
+#make prereq
+#make tools/install
+#make toolchain/install
 
 # 只编译某个模块
-# make package/name/compile
-make package/qos/clean
-make package/qos/compile
-make package/qos/install
+#make package/name/compile
+#make package/qos/clean
+#make package/qos/compile
+#make package/qos/install
 
 # 编译固件，V=99表示输出详细的debug信息
 make V=99
@@ -81,6 +82,7 @@ make -j4 V=99
 
 编译成功会生成镜像： bin/x86/openwrt-x86-*.vdi
 
+也可以从 img 文件生成 vdi 文件
 ```shell
 VBoxManage convertfromraw --format VDI openwrt-x86-generic-combined-ext4.img openwrt.vdi
 ```
