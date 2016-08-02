@@ -98,6 +98,11 @@ ffmpeg2theora -V 4000 -A 128 input.mp4 -o output.ogv
 ffmpeg -i input.ogg -i input.ogv -acodec copy -vcodec copy mixed.ogg
 ```
 
+# mp3：
+```shell
+ffmpeg -y -i bg.mp3  -strict -2 -acodec vorbis -ac 2 -aq 50 bg.ogg
+```
+
 # ffmpeg参数设定解说 
 -bitexact 使用标准比特率 
 -vcodec xvid 使用xvid压缩 
