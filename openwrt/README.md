@@ -59,6 +59,9 @@ make V=99
 
 # 清除
 make dirclean
+
+#恢复编译环境
+make defconfig
 ```
 
 # VirtualBox
