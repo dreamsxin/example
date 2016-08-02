@@ -33,6 +33,11 @@ cd openwrt
 # 配置编译选项
 make menuconfig
 
+# 同配置Linux内核类似，几乎每一个设置都有三个选项:y / m / n，分别代表如下含义：
+# * `` (按下`y`)这个包会被包含进固件镜像
+# * `` (按下`m`)这个包会在生成刷新OpenWrt的镜像文件以后被编译，但是不会被包含进镜像文件 
+# * `` (按下`n`)这个包不会被编译
+
 # export HTTP_PROXY=http://127.0.0.1:8787
 # export HTTPS_PROXY=http://127.0.0.1:8787
 
@@ -132,3 +137,43 @@ kill -USR2 1
 ```
 
 效果等于reboot。
+
+# 安装 LuCI Web 管理界面并设置开机自动启动
+```shell
+opkg update
+opkg install luci
+opkg install luci-i18n-base-zh-cn
+/etc/init.d/uhttpd start
+/etc/init.d/uhttpd enable
+```
+
+# 配置 PHP
+
+```shell
+opkg install -d udisk php5 php5-cgi php5-mod-ctype php5-mod-hash php5-mod-pdo php5-mod-pdo-pgsql php5-mod-session
+```
+
+修改 `/etc/php.ini`
+```ini
+extension=ctype.so
+extension=hash.so
+extension=pdo.so
+extension=pdo_pgsql.so
+extension=pgsql.so
+extension=session.so
+
+short_open_tag = On
+;doc_root = "/www" 
+date.timezone = Asia/Shanghai
+```
+
+## 配置 uhttpd
+
+在`/etc/config/uhttpd`最后添加：
+```config
+config uhttpd web
+list listen_http 0.0.0.0:88
+option home /var/www
+option index_page index.php
+list interpreter ".php=/usr/bin/php-cgi"
+```
