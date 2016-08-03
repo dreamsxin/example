@@ -4,9 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>变脸</title>
-<script type="text/javascript" src="jquery-3.1.0.min.js"></script>
-<script type="text/javascript" src="jcanvas.min.js"></script>
+<script type="text/javascript" src="js/jquery-3.1.0.min.js"></script>
+<script type="text/javascript" src="js/jcanvas.min.js"></script>
 <script>
+HTMLAudioElement.prototype.stop = function() {
+	this.pause();
+	this.currentTime = 0.0;
+}
+
 var lastUpdate = new Date().getTime();
 var curShakeX=curShakeY=curShakeZ=lastShakeX=lastShakeY=lastShakeZ=0;
 function draw() {
@@ -34,10 +39,15 @@ function draw() {
 	});
 }
 $(document).ready(function () {
+	$('canvas').on('click', function(){
+		$('#audioplayer').get(0).stop();
+		$('#audioplayer').get(0).play();
+		draw();
+	})
 	if (window.DeviceMotionEvent) {
 		window.addEventListener('devicemotion', function(){
 			var curTime = new Date().getTime();
-			if ((curTime - lastUpdate) > 100) {
+			if ((curTime - lastUpdate) > 200) {
 				var diffTime = curTime -lastUpdate;
 				lastUpdate = curTime;
 				//获得重力加速
@@ -66,6 +76,11 @@ $(document).ready(function () {
 <audio controls="controls" autoplay="autoplay">
 	<source src="sound/bg.ogg" type="audio/ogg" />
 	<source src="sound/bg.mp3" type="audio/mpeg" />
+	Your browser does not support the audio element.
+</audio>
+<audio id="audioplayer" controls="controls" preload="auto">
+	<source src="sound/click.ogg" type="audio/ogg" />
+	<source src="sound/click.mp3" type="audio/mpeg" />
 	Your browser does not support the audio element.
 </audio>
 </body>
