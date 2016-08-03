@@ -141,6 +141,11 @@ kill -USR1 1
 kill -USR2 1
 ```
 
+升级固件
+```shell
+sysupgrade -v openwrt-xxx-sysupgrade.bin 
+```
+
 效果等于reboot。
 
 # 安装 LuCI Web 管理界面并设置开机自动启动
