@@ -31,6 +31,7 @@ git clone git://git.openwrt.org/14.07/openwrt.git
 # export HTTPS_PROXY=http://127.0.0.1:8787
 
 cd openwrt
+#./scripts/feeds update packages
 ./scripts/feeds update -a
 ./scripts/feeds install -a
 
