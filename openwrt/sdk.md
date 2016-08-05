@@ -36,25 +36,25 @@ PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 include $(INCLUDE_DIR)/package.mk
 
 define Package/helloworld
-    SECTION:=utils
-    CATEGORY:=Utilities
-    TITLE:=Helloworld -- prints a snarky message
+	SECTION:=utils
+	CATEGORY:=Utilities
+	TITLE:=Helloworld -- prints a snarky message
 endef
 
 define Package/helloworld/description
-    It's my first package demo.
+	It's my first package demo.
 endef
 
-define Package/Prepare
-    echo "Here is Package/Prepare"
-    mkdir -p $(PKG_BUILD_DIR)
-    $(CP) ./src/* $(PKG_BUILD_DIR)/
+define Build/Prepare
+	echo "Here is Package/Prepare"
+	mkdir -p $(PKG_BUILD_DIR)
+	$(CP) ./src/* $(PKG_BUILD_DIR)/
 endef
 
 define Package/helloworld/install
-    echo "Here is Package/install"
-    $(INCLUDE_DIR) $(1)/bin
-    $(INCLUDE_BIN) $(PKG_BUILD_DIR)/helloworld$(1)/bin/
+	echo "Here is Package/install"
+	$(INSTALL_DIR) $(1)/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/helloworld $(1)/bin/
 endef
 
 $(eval $(call BuildPackage,helloworld))
@@ -63,7 +63,8 @@ $(eval $(call BuildPackage,helloworld))
 ## 创建 src 目录
 ```shell
 mkdir src
-touch helloword.c Makefile
+cd src
+touch helloworld.c Makefile
 ```
 
 `helloworld.c`：
@@ -107,4 +108,81 @@ scp bin/xxx/packages/base/helloworld_xxx.ipk root@192.168.1.118:/
 ```shell
 ssh root@192.168.1.118
 opkg install helloworld_xxx.ipk
+```
+
+## Makefile 说明
+
+```Makefile
+#------ OPENWRT集成非官方包之Makefile规则
+include $(TOPDIR)/rules.mk
+PKG_NAME:=[软件包名字 和文件夹名称一样]
+PKG_VERSION:=[软件包版本 自己写个]
+PKG_RELEASE:=1
+PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
+
+include $(INCLUDE_DIR)/package.mk
+
+define Package/$(PKG_NAME)
+	SECTION:=utils
+	CATEGORY:=[软件包在 menuconfig 里的位置 比如Utilities]
+	DEPENDS:=[依赖包 两个之间通过空格分隔 前面加+为默认显示 选中该软件包自动选中依赖包 不加+为默认不显示 选中依赖包才显示]
+	TITLE:=[标题]
+	PKGARCH:=[支持的平台，全部写all]
+	MAINTAINER:=[作者]
+endef
+
+define Package/$(PKG_NAME)/description
+	[软件包简介]
+endef
+
+# 非本目录下的源码文件, 拷贝到此相应目录下.
+# 如../../xucommon/xucommon.c, 则将 xucommon.c 拷贝到此目录下的源码的 ../../
+
+define Build/Prepare
+	mkdir -p $(PKG_BUILD_DIR)
+	$(CP) ./src/* $(PKG_BUILD_DIR)/
+endef
+
+define Build/Configure
+endef
+
+define Build/Compile
+endef
+
+define Package/$(PKG_NAME)/conffiles
+	[升级时保留文件/备份时备份文件 一个文件一行]
+endef
+
+define Package/$(PKG_NAME)/install
+	$(CP) ./files/* $(1)/
+endef
+
+define Package/$(PKG_NAME)/preinst
+	[安装前执行的脚本 记得加上#!/bin/sh 没有就空着]
+	#!/bin/sh
+	uci -q batch <<-EOF >/dev/null
+	delete ucitrack.@aria2[-1]
+	add ucitrack aria2
+	set ucitrack.@aria2[-1].init=aria2
+	commit ucitrack
+	EOF
+	exit 0
+endef
+
+define Package/$(PKG_NAME)/postinst
+	[安装后执行的脚本 记得加上#!/bin/sh 没有就空着]
+	#!/bin/sh
+	rm -f /tmp/luci-indexcache
+	exit 0
+endef
+
+Package/$(PKG_NAME)/prerm
+	[删除前执行的脚本 记得加上#!/bin/sh 没有就空着]
+endef
+
+Package/$(PKG_NAME)/postrm
+	[删除后执行的脚本 记得加上#!/bin/sh 没有就空着]
+endef
+
+$(eval $(call BuildPackage,$(PKG_NAME)))
 ```
