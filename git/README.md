@@ -1,6 +1,8 @@
 # GIT 使用
 
-工作区、版本库、暂存区
+工作区、版本库、暂存区（index）
+
+![Aaron Swartz](https://raw.githubusercontent.com/dreamsxin/example/master/git/img/0.png)
 
 ## 设置用户名和邮箱
 ```shell
@@ -77,6 +79,14 @@ git diff topic..master
 查看简单的diff结果，可以加上--stat参数
 ```shell
 git diff --stat
+```
+
+# 提交到版本库
+
+```shell
+git commit -m '提交已经add过的文件'
+git commit -am '会先把所有已经改动过的track文件add进来'
+git commit --amend -m '增补提交，覆盖上一次提交'
 ```
 
 ## 显示commit日志
