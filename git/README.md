@@ -187,3 +187,30 @@ git log --oneline
 git log --pretty=oneline
 git log --pretty=format:"%an %ae %ad %cn %ce %cd %cr %s" --graph
 ```
+
+## 回退
+
+参数 `--hard`、`--soft`、`--mixed` 决定了是否重置暂存区或工作区。
+
+
+`HEAD`
+
+这是当前分支版本顶端的别名，也就是在当前分支你最近的一个提交
+
+`Index`
+
+index也被称为staging area，是指一整套即将被下一个提交的文件集合。他也是将成为HEAD的父亲的那个commit
+
+`Working Copy`
+
+working copy代表你正在工作的那个文件集
+
+如果没有进行任何`git add`操作，或者进行了`git commit`操作，执行下面命令
+
+```shell
+git reset HEAD
+```
+
+任何事情都不会发生，这是因为我们告诉GIT重置这个分支到HEAD，而这个正是它现在所在的位置。
+
+`--soft` 只会改变 `HEAD` 也就是说，还保留暂存区信息。
