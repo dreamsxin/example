@@ -1,4 +1,10 @@
-# 
+# 安装 wifidog
+
+```shell
+make menuconfig
+```
+`Network`  ---> `Captive Portals`
+
 
 Wifidog将ping协议做为心跳机制向认证服务器发送当前状态信息。这可以实现为认证服务器每个节点的状态生成中央日志。
 

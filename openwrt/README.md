@@ -188,3 +188,23 @@ option home /var/www
 option index_page index.php
 list interpreter ".php=/usr/bin/php-cgi"
 ```
+
+## OpenWRT 配置版本信息
+
+```shell
+make menuconfig
+```
+`Image configuration` -> `Version configuration options`
+
+```txt
+--- Version configuration options                                                                                 │ │  
+(OpenWrt) Release distribution (NEW)                                                                              │ │  
+()    Release version nickname (NEW)                                                                              │ │  
+()    Release version number (NEW)                                                                                │ │  
+(http://downloads.openwrt.org/snapshots/trunk/%S/packages) Release repository (NEW)                               │ │  
+()    Manufacturer name (NEW)                                                                                     │ │  
+()    Manufacturer URL (NEW)                                                                                      │ │  
+()    Product name (NEW)                                                                                          │ │  
+()    Hardware revision (NEW)                                                                                     │ │  
+[*]   Version number in filenames (NEW)  
+```
