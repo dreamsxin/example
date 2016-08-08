@@ -67,7 +67,21 @@ Sails的启动文件，无论是`sails lift`命令或者`npm start`命令都会�
 cd todo
 sails lift
 # or
+sails lift --dev # assets 不会缓存
+# or
 sails lift --prod # 当服务器崩溃时，它会自动重新启动。
+```
+
+其他参数：
+- --verbose - with verbose logging enabled
+- --silly - with insane logging enabled
+
+# 代码热更新
+
+```shell
+sudo npm install -g forever
+forever -w start app.js
+supervisor -i .tmp,.git,views app.js
 ```
 
 设置 `config/local.js`：
