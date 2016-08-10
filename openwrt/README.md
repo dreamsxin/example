@@ -142,7 +142,14 @@ kill -USR1 1
 kill -USR2 1
 ```
 
-升级固件
+```shell
+halt
+poweroff
+reboot
+```
+
+# 升级固件
+
 ```shell
 sysupgrade -v openwrt-xxx-sysupgrade.bin 
 ```

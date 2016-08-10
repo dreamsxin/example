@@ -15,7 +15,7 @@ HTMLAudioElement.prototype.stop = function() {
 var lastUpdate = new Date().getTime();
 var curShakeX=curShakeY=curShakeZ=lastShakeX=lastShakeY=lastShakeZ=0;
 function draw() {
-	var i = 1+Math.round(Math.random()*20);
+	var i = 1+Math.round(Math.random()*26);
 	if (i < 10) {
 		i = '0' + i;
 	}
@@ -47,7 +47,7 @@ $(document).ready(function () {
 	if (window.DeviceMotionEvent) {
 		window.addEventListener('devicemotion', function(){
 			var curTime = new Date().getTime();
-			if ((curTime - lastUpdate) > 200) {
+			if ((curTime - lastUpdate) > 100) {
 				var diffTime = curTime -lastUpdate;
 				lastUpdate = curTime;
 				//获得重力加速

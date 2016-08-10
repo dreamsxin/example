@@ -111,3 +111,21 @@ secrets file = /usr/local/rsync/rsync.passwd
 rsync --daemon
 ```
 
+同步多台服务器
+```shell
+#!/bin/bash
+src=/var/www/
+des1=web1
+des2=web2
+host1=192.168.1.101
+host2=192.168.1.102
+user1=web
+user2=web
+
+/usr/local/bin/inotifywait -mrq --timefmt '%d/%m/%y %H:%M' --format '%T %w %f' -e modify,delete,create,attrib $src | while read file DATE TIME DIR;
+
+do	/usr/bin/rsync -vzrtopg --delete --progress $src $user1@$host1::$des1 --password-file=/etc/web.passwd
+	/usr/bin/rsync -vzrtopg --delete --progress $src $user2@$host2::$des2 --password-file=/etc/web.passwd
+	echo "${files} was rsynced" &gt;&gt; /var/log/rsync.log 2&gt;&1
+done
+```
