@@ -1,5 +1,15 @@
 # postgres主从流复制
 
+为了减少输入密码的操作，可以建立文件`.pgpass`
+
+```txt
+10.1.11.73:5678:postgres:replica:123456
+```
+
+```shell
+chmod 0400 .pgpass 
+```
+
 ## postgres的主配置
 
 主是10.45.241.141这台机器
@@ -32,17 +42,29 @@ wal_sender_timeout = 60s	# 设置流复制主机发送数据的超时时间
 max_connections = 100		# 这个设置要注意下，从库的max_connections必须要大于主库的
 ```
 
-停止主
+### 重启主服务
+
 ```
-service postgres stop
+service postgres restart
+sudo ufw allow from 10.45.243.27
 ```
 
-拷贝文件到从服务器
+### 拷贝文件到从服务器
 
 ```shell
 scp -r /var/lib/postgresql/9.4/main postgres@10.45.243.27:/var/lib/postgresql/9.4/
-sudo ufw allow from 10.45.243.27
 ```
+
+也可以在从库执行
+```shell
+pg_basebackup -D /var/lib/postgresql/9.4/main -F p -x -l basebackup -P -v -h 10.45.241.141 -p5432 -U postgres
+```
+- -F, --format=p|t       output format (plain (default), tar)
+- -x, --xlog             include required WAL files in backup (fetch mode)
+- -l, --label=LABEL      set backup label
+- -P, --progress         show progress information
+- -v, --verbose          output verbose messages
+- -W, --password         force password prompt (should happen automatically)
 
 查看复制状态
 
