@@ -1,7 +1,6 @@
 <?php
 
 try {
-
 	$loader = new \Phalcon\Loader();
 	$loader->registerDirs(array(
 		__DIR__.'/../app/controllers/'
@@ -16,7 +15,6 @@ try {
 	}, true);
 
 	$application = new \Phalcon\Mvc\Application($di);
-
 	echo $application->handle()->getContent();
 } catch (\Exception $e) {
 	echo $e->getMessage();
