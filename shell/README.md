@@ -31,10 +31,15 @@ sudo wget -c -O 保存到本地的文件名 "下载地址"
 ```shell
 sudo apt-get install optipng
 optipng xxx.png
+find ./images/ -iname *.png -print0 |xargs -0 optipng -o7
+find . -name '*.png' | xargs optipng -nc -nb -o7 -full
+find . -type f -name "*.png" -exec optipng {} \;
+
 sudo apt-get install jpegoptim
 jpegoptim xxx.jpg
 # 用50%质量压缩图片:
 jpegoptim -m50 xxx.jpg
+find . -type f -name "*.jpg" -exec jpegoptim {} \;
 ```
 
 # 查找指定大小的文件，并按大小排序
