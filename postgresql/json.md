@@ -93,12 +93,25 @@ SELECT jsonb_pretty('{"foo": [true, "bar"], "tags": {"a": 1, "b": null}}'::jsonb
 
 ## 更新`jsonb`字段
 
+`jsonb_set(target jsonb, path text[], new_value jsonb[, create_missing boolean])`
+
 ```sql
 INSERT INTO test_json (data) VALUES (NULL);
 UPDATE test_json SET data = '{}'::jsonb;
 UPDATE test_json SET data = jsonb_set(data, '{Profile}', '{"Username":"Love"}');
 UPDATE test_json SET data = jsonb_set(data, '{Profile, Age}', '18');
 UPDATE test_json SET data = jsonb_set(data, '{Profile, Age}', ((data#>>'{Profile, Age}')::int + 1)::text::jsonb);
+SELECT * FROM test_json;
+```
+
+## 拼接键值：
+
+```sql
+SELECT concat('abcde', 2, NULL, 22);		-- abcde222
+SELECT concat_ws(',', 'abcde', 2, NULL, 22);	-- abcde,2,22
+SELECT 'abcde' || 2 || 22;			-- abcde222
+
+UPDATE test_json SET data = jsonb_set(data, ('{' || concat_ws('Profile', 'Age')  || '}')::text[], '20');
 SELECT * FROM test_json;
 ```
 
