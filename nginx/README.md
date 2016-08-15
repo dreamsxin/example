@@ -447,3 +447,9 @@ server {
 	}
 }
 ```
+
+# 静态文件 POST 方式获取
+
+```conf
+error_page 405 =200 $uri;
+```
