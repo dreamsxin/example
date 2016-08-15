@@ -82,7 +82,7 @@ SELECT jsonb_build_object('foo',1,'bar',2); -- {"foo": 1, "bar": 2}
 -- jsonb_object(text[])
 -- jsonb_object(keys text[], values text[])
 
-json_object('{}')	-- {"a": "1", "b": "def", "c": "3.5"}
+json_object('{}')	-- {}
 json_object('{{a, 1},{b, "def"},{c, 3.5}}')	-- {"a": "1", "b": "def", "c": "3.5"}
 json_object('{a, b}', '{1,2}')			-- {"a": "1", "b": "2"}
 ```
