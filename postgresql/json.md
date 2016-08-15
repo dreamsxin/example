@@ -76,6 +76,16 @@ SELECT jsonb_build_array('foo',1,'bar',2); -- ["foo",1,"bar",2]
 SELECT jsonb_build_object('foo',1,'bar',2); -- {"foo": 1, "bar": 2}
 ```
 
+## `jsonb_object`
+
+```sql
+-- jsonb_object(text[])
+-- jsonb_object(keys text[], values text[])
+
+json_object('{{a, 1},{b, "def"},{c, 3.5}}')	-- {"a": "1", "b": "def", "c": "3.5"}
+json_object('{a, b}', '{1,2}')			-- {"a": "1", "b": "2"}
+```
+
 ## 删除元素
 
 ```sql
@@ -115,7 +125,7 @@ UPDATE test_json SET data = jsonb_set(data, ('{' || concat_ws('Profile', 'Age') 
 SELECT * FROM test_json;
 ```
 
-## `jsonb` 字段默认值自增
+## `jsonb` 字段默认值
 
 ```sql
 DROP SEQUENCE IF EXISTS test_data_seq CASCADE;
