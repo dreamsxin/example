@@ -7,6 +7,7 @@ md5sum * | sed -e 's/\([^ ]*\) \(.*\(\..*\)\)$/mv -v \2 \1\3/' | sh
 ISO 制作
 ```shell
 mkisofs -r -o iso1.iso iso1/
+sudo dd if=/dev/sr0 of=动物功夫系列.iso
 ```
 
 # 查看连接数

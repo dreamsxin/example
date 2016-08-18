@@ -26,3 +26,9 @@ sudo service denyhosts stop
 ```shell
 sudo rm /var/log/auth.log
 ```
+
+## 警告: 磁盘描述表明物理块大小为 2048 字节，但 Linux 认为它是 512 字节。  (udisks-error-quark, 0)
+
+```shell
+sudo dd if=/dev/zero of=/dev/sdb bs=2048 count=32
+```
