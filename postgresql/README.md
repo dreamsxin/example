@@ -5,7 +5,21 @@
 sudo add-apt-repository ppa:pitti/postgresql
 sudo apt-get update
 sudo apt-get install postgresql
-# Ubuntu 14 到 Postgresql 官网
+```
+
+## Ubuntu 14 到 Postgresql 官网 https://www.postgresql.org/download/linux/ubuntu/
+
+编辑 `/etc/apt/sources.list` 追加一行
+
+```conf
+deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main
+```
+
+执行
+```shell
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+sudo apt-get update 
+apt-get install postgresql-9.5
 ```
 
 ## psql 使用
