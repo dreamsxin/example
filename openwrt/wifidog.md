@@ -176,3 +176,35 @@ wifidog启动脚本中获取LuCI配置
 wifidog_enable=$(uci get wifidog.settings.wifidog_enable)
 offline_enable=$(uci get wifidog.settings.offline_enable)
 ```
+
+## 为认证添加ip地址
+
+打开http.c，找到
+```c
+/* Re-direct them to auth server */
+char *urlFragment;
+safe_asprintf(&urlFragment, "%sgw_address=%s&gw_port=%d&gw_id=%s&url=%s",
+auth_server->authserv_login_script_path_fragment,
+config->gw_address,
+config->gw_port,
+config->gw_id,
+url);
+debug(LOG_INFO, "Captured %s requesting [%s] and re-directing them to login page", r->clientAddr, url);
+http_send_redirect_to_auth(r, urlFragment, "Redirect to login page");
+free(urlFragment);
+```
+修改为
+```c
+/* Re-direct them to auth server */
+char *urlFragment;
+safe_asprintf(&urlFragment, "%sgw_address=%s&gw_port=%d&gw_id=%s&url=%s&clientip=%s",
+auth_server->authserv_login_script_path_fragment,
+config->gw_address,
+config->gw_port,
+config->gw_id,
+url,
+r->clientAddr);
+debug(LOG_INFO, "Captured %s requesting [%s] and re-directing them to login page", r->clientAddr, url);
+http_send_redirect_to_auth(r, urlFragment, "Redirect to login page");
+free(urlFragment);
+```

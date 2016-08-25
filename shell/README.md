@@ -52,3 +52,11 @@ find . -type f -size +100M  -print0 | xargs -0 du  | sort -nr
 ```shell
 du -hm --max-depth=2 | sort -nr | head -12
 ```
+
+# ssh 代理
+
+```shell
+ssh -C -v -N -D 127.0.0.1:7070 xxx@x.x.x.x -p 22022 -pw 密码
+ssh -qTfnN -D 7070 xxx@x.x.x.x -p 22
+ssh x.x.x.x -l username -p 22 -D 7070
+```

@@ -130,3 +130,42 @@ sudo iptables -D FORWARD 9
 
 sudo iptables -D INPUT 21
 ```
+
+## 记录用户操作
+
+### 使用环境变量记录用户操作
+
+在/etc/profile和/etc/bashrc中添加以下命令，并 source 一次
+```shell
+export PROMPT_COMMAND='{ date "+[ %Y%m%d %H:%M:%S `whoami` ] `history 1 | { read x cmd; echo "$cmd"; }`"; } >> /var/log/command.log'
+```
+
+
+这条命令会把登录用户所有按回车输入的内容都记录到command.log文件中去，即使是敲错的命令也一样；
+要保证command.log文件所有用户都可写，权限定为222比较合适，这样其他用户只能写，但是查看不了内容。最后使用chattr命令防止用户自行修改记录或删除文件，
+
+```shell
+touch /var/log/command.log
+chmod 722 /var/log/command.log
+// chattr -a 可以解除
+chattr +a /var/log/command.log
+```
+
+再配合logrotate定期进行log轮替。
+`/etc/logrotate.conf`
+```conf
+/var/log/command.log {
+	prerotate
+		/usr/bin/chattr -a /var/log/command.log
+	endscript
+	compress
+	delaycompress
+	notifempty
+	rotate 30
+	size 10M
+	create 0222 root root
+	postrotate
+		/usr/bin/chattr +a /var/log/command.log
+	endscript
+}
+```
