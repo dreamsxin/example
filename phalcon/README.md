@@ -105,3 +105,64 @@ max_connections = 100
 ```
 
 配置文件 `/etc/postgresql/9.5/main/pg_hba.conf`
+
+
+## 部署网站
+
+将代码 `mvc` 拷贝到 `/var/www/html` 目录
+
+修改 nginx 配置
+
+```shell
+server {
+    listen   80;
+    server_name localhost;
+
+    # 默认访问文件
+    index index.php index.html index.htm;
+
+    # 设置网站访问根目录
+    set $root_path '/var/www/html/mvc/public';
+    root $root_path;
+    # http 请求数据最大值
+    client_max_body_size 50M;
+    # 临时存放地址
+    client_body_temp_path /tmp;
+
+    # 按顺序检查文件是否存在，返回第一个找到的文件。结尾的斜线表示为文件夹。如果所有的文件都找不到，会进行一个内部重定向到最后一个参数。
+    try_files $uri $uri/ @rewrite;
+
+    location @rewrite {
+        rewrite ^/(.*)$ /index.php?_url=/$1;
+    }
+
+    # 所有php结尾的请求都会，发送到php-fpm进行处理
+    location ~ \.php {
+        fastcgi_pass unix:/run/php-fpm/php-fpm.sock;
+        fastcgi_index /index.php;
+
+        include /etc/nginx/fastcgi_params;
+
+        fastcgi_split_path_info    ^(.+\.php)(/.+)$;
+        fastcgi_param PATH_INFO    $fastcgi_path_info;
+        fastcgi_param PATH_TRANSLATED $document_root$fastcgi_path_info;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
+
+    # 所有静态文件请求都会，从设定的root目录读取，这里跟之前的root文件一致，所以可以不设置，不过也可以用来限制带宽和并发数
+    location ~* ^/(css|img|js|flv|swf|download)/(.+)$ {
+        root $root_path;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
+```
+
+重启
+```shell
+sudo service nginx restart
+# or
+sudo /etc/init.d/nginx restart
+```
