@@ -1,10 +1,34 @@
-# 环境
+# 系统环境
 
 ```shell
 sudo apt-get install git vim build-essential libpcre3-dev
 ```
 
+## 查看系统版本号
+
+```shell
+uname -a
+cat /etc/issue
+```
+
+## 修改编码
+
+编辑文件 `/etc/default/locale`
+```shell
+LANG="zh_CN.UTF-8"
+LANGUAGE="zh_CN:zh"
+LC_ALL="zh_CN.UTF-8"
+```
+
+运行
+```shell
+locale-gen zh_CN.UTF-8
+locale -a
+```
+
 ## 安装 nginx
+
+See https://github.com/dreamsxin/example/tree/master/nginx
 
 ```shell
 sudo add-apt-repository ppa:nginx/stable
@@ -13,6 +37,8 @@ sudo apt-get install nginx
 ```
 
 ## 安装 php-fpm
+
+See https://github.com/dreamsxin/example/tree/master/nginx
 
 ```shell
 sudo apt-get install python-software-properties
@@ -66,3 +92,16 @@ make -j4 && sudo make install
 extension=phalcon.so
 ```
 
+## 安装 PostgreSQL
+
+See https://github.com/dreamsxin/example/tree/master/postgresql
+
+配置文件 `/etc/postgresql/9.5/main/postgresql.conf`
+
+```conf
+listen_addresses = 'localhost,192.168.1.108'
+port = 5432
+max_connections = 100
+```
+
+配置文件 `/etc/postgresql/9.5/main/pg_hba.conf`
