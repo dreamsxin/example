@@ -66,13 +66,13 @@ ps -waux | grep php5
 
 ### 关闭重启php5进程
 ```shell
-sudo service php5-fpm stop
+sudo service php5.6-fpm stop
 # or
-sudo /etc/init.d/php5-fpm stop
+sudo /etc/init.d/php5.6-fpm stop
 
-sudo service php5-fpm start
-sudo service php5-fpm restart
-sudo service php5-fpm status
+sudo service php5.6-fpm start
+sudo service php5.6-fpm restart
+sudo service php5.6-fpm status
 ```
 
 ## 安装 phalcon 扩展
