@@ -8,6 +8,13 @@ nm /usr/lib/php/20160303/phalcon.so |  grep handle
 
 得到 `zim_Phalcon_Mvc_Application_handle`
 
+## 禁用Zend MM
+
+```shell
+ulimit -c unlimited
+export USE_ZEND_ALLOC=0
+export ZEND_DONT_UNLOAD_MODULES=1
+```
 ## 启动 gdb
 
 ```shell
@@ -17,7 +24,8 @@ gdb php -tui
 ## 设置断点
 
 ```shell
-break zim_Phalcon_Mvc_Application_handle  
+break zim_Phalcon_Mvc_Application_handle
+break zim_Phalcon_Mvc_Router_handle
 ```
 
 ## 运行程序
@@ -52,6 +60,8 @@ p uri
 p (*uri).value.str->len
 p (*uri).value.str->val
 p (char*)((*uri).value.str->val)
+p (char*)((real_uri).value.str->val)
+
 p (*uri).value.str->val[0]
 p /c (*uri).value.str->val
 p (*uri).value.str->val@6
@@ -76,3 +86,24 @@ break zim_Phalcon_Dispatcher_dispatch
 ```shell
 p (char*)(handler_name.value.str->val)
 ```
+
+## 相关命令
+
+与调试控制相关的命令
+
+- continue	继续运行程序直到下一个断点（类似于VS里的F5）
+- next		逐过程步进，不会进入子函数（类似VS里的F10）
+- step		逐语句步进，会进入子函数（类似VS里的F11）
+- until		运行至当前语句块结束
+- finish	运行至函数结束并跳出，并打印函数的返回值（类似VS的Shift+F11）
+
+- s:		step in
+- fin:		step out 跳出函数
+- until 行号:	可用于跳出循环，加快了调试速度。
+
+在 php 官方源码根目录中，存在`gdb`脚本文件 `.gdbinit`，我可以在`gdb`启动后引入
+```shell
+source .gdbinit
+```
+
+`gdb`在启动的时候，会在当前目录下查找 ".gdbinit" 文件，所以也可以把文件拷贝到当前目录。
