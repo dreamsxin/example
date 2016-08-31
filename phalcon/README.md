@@ -107,11 +107,29 @@ max_connections = 100
 配置文件 `/etc/postgresql/9.5/main/pg_hba.conf`
 
 
-## 部署网站
+## nginx 部署网站
 
-将代码 `mvc` 拷贝到 `/var/www/html` 目录
+在目录 `/etc/nginx/sites-available/` 下，包含所有站点配置文件，站点开启之后，会软链接到目录 `/etc/nginx/sites-enabled/` 下。
 
-修改 nginx 配置 `/etc/nginx/sites-available/default`，在目录 `/etc/nginx/sites-available/` 下，包含所有站点配置文件，站点开启之后，会软链接到目录 `/etc/nginx/sites-enabled/` 下
+
+将代码 `mvc` 目录拷贝到 `/var/www/html` 目录
+
+### 启用站点
+
+```shell
+sudo ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+sudo service nginx restart
+```
+
+### 关闭站点
+
+```shell
+sudo rm /etc/nginx/sites-enabled/default
+sudo service nginx restart
+```
+
+
+修改 nginx 配置 `/etc/nginx/sites-available/default`
 
 ```shell
 server {
@@ -161,6 +179,7 @@ server {
 ```
 
 重启
+
 ```shell
 sudo service nginx restart
 # or
