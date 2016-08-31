@@ -105,8 +105,41 @@ more -4 /etc/profile		// 每屏显示4行；
 more +/MAIL /etc/profile	// 从profile中的第一个MAIL单词的前两行开始显示；
 ```
 
-## 追加用户分组
+## 修改用户主分组
+
+```shell
+usermod -g groupname username
+```
+
+## 修改用户次分组
+
+```shell
+usermod -G groupname username
+```
+
+## 追加用户次分组
 
 ```shell
 gpasswd -a username groupname
+usermod -a -G groupname username
+```
+
+## 改变文件所有者和组
+
+```shell
+chown username:groupname file
+chown username file
+```
+
+## 改变文件权限
+
+```shell
+chmod u+x file			// 给file的属主增加执行权限
+chmod 751 file			// 给file的属主分配读、写、执行(7)的权限，给file的所在组分配读、执行(5)的权限，给其他用户分配执行(1)的权限
+chmod u=rwx,g=rx,o=x file	// 上例的另一种形式
+chmod =r file			// 为所有用户分配读权限
+chmod 444 file			// 同上例
+chmod a-wx,a+r   file		// 同上例
+chmod -R u+r directory		// 递归地给directory目录下所有文件和子目录的属主分配读的权限
+chmod 4755			// 设置用ID，给属主分配读、写和执行权限，给组和其他用户分配读、执行的权限。
 ```
