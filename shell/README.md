@@ -60,3 +60,53 @@ ssh -C -v -N -D 127.0.0.1:7070 xxx@x.x.x.x -p 22022 -pw 密码
 ssh -qTfnN -D 7070 xxx@x.x.x.x -p 22
 ssh x.x.x.x -l username -p 22 -D 7070
 ```
+
+# cat 
+
+## cat 创建文件
+
+```shell
+cat > hello.txt << EOF
+hello world
+EOF
+```
+
+## cat 查看文件
+
+```shell
+cat hello.txt
+```
+
+## cat 合并文件
+
+```shell
+cat hello1.txt hello2.txt hello3.txt > helloall.txt
+```
+
+# more
+
+more [参数选项] [文件]
+
+参数如下：
+- +num   从第num行开始显示；
+- -num   定义屏幕大小，为num行；
+- +/pattern   从pattern 前两行开始显示；
+- -c   从顶部清屏然后显示；
+- -d   提示Press space to continue, 'q' to quit.（按空格键继续，按q键退出），禁用响铃功能；
+- -l    忽略Ctrl+l （换页）字符；
+- -p    通过清除窗口而不是滚屏来对文件进行换页。和-c参数有点相似；
+- -s    把连续的多个空行显示为一行；
+- -u    把文件内容中的下划线去掉退出more的动作指令是q 
+
+```shell
+more -dc /etc/profile		// 显示提示，并从终端或控制台顶部显示；
+more +4 /etc/profile		// 从profile的第4行开始显示；
+more -4 /etc/profile		// 每屏显示4行；
+more +/MAIL /etc/profile	// 从profile中的第一个MAIL单词的前两行开始显示；
+```
+
+## 追加用户分组
+
+```shell
+gpasswd -a username groupname
+```

@@ -47,6 +47,14 @@ sudo apt-get update
 sudo apt-get install php5.6-fpm php5.6-cli php5.6-dev php5.6-dev php5.6-curl php5.6-pgsql php5.6-mcrypt php5.6-mbstring
 ```
 
+### 配置
+
+编辑 `/etc/php/5.6/fpm/pool.d/www.conf`
+
+```conf
+listen = /var/run/php5-fpm.sock
+```
+
 ### 开启php-fpm日志报告
 
 编辑 `/etc/php/5.6/fpm/php.ini`
@@ -156,6 +164,7 @@ server {
 
     # 所有php结尾的请求都会，发送到php-fpm进行处理
     location ~ \.php {
+	# 跟 php-fpm 配置文件里的 `listen` 项保持一致
         fastcgi_pass unix:/run/php-fpm/php-fpm.sock;
         fastcgi_index /index.php;
 
