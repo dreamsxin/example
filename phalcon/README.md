@@ -111,7 +111,7 @@ max_connections = 100
 
 将代码 `mvc` 拷贝到 `/var/www/html` 目录
 
-修改 nginx 配置
+修改 nginx 配置 `/etc/nginx/sites-available/default`，在目录 `/etc/nginx/sites-available/` 下，包含所有站点配置文件，站点开启之后，会软链接到目录 `/etc/nginx/sites-enabled/` 下
 
 ```shell
 server {
