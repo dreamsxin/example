@@ -185,3 +185,5 @@ sudo service nginx restart
 # or
 sudo /etc/init.d/nginx restart
 ```
+
+在浏览器中打开网址 `http://localhost`，会看到 `Hello world!` 字样
