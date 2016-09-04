@@ -11,7 +11,9 @@ sudo apt-get install php7.1-cli php7.1-dev php7.1-dev php7.1-curl php7.1-pgsql p
 ----------------
 
 ```shell
-# sudo apt-get install libxml2 libxml2-dev
+# sudo apt-get install libxml2-dev
+# sudo apt-get install libmcrypt-dev
+# sudo apt-get install libpostgresql-ocaml-dev
 # wget http://launchpadlibrarian.net/140087283/libbison-dev_2.7.1.dfsg-1_amd64.deb
 # wget http://launchpadlibrarian.net/140087282/bison_2.7.1.dfsg-1_amd64.deb
 # dpkg -i libbison-dev_2.7.1.dfsg-1_amd64.deb
@@ -20,6 +22,9 @@ sudo apt-get install php7.1-cli php7.1-dev php7.1-dev php7.1-curl php7.1-pgsql p
 ./buildconf --force
 
 ./configure --prefix=/usr/local/php --with-config-file-path=/usr/local/php/etc --with-fpm-user=www-data --with-fpm-group=www-data --with-pdo-pgsql --with-pdo-mysql --with-pdo-sqlite  --with-iconv-dir --with-freetype-dir --with-jpeg-dir --with-png-dir --with-zlib --with-libxml-dir=/usr --enable-xml --disable-rpath --enable-bcmath --enable-shmop --enable-sysvsem --enable-inline-optimization --with-curl --enable-mbregex --enable-mbstring --with-mcrypt --enable-ftp --with-gd --enable-gd-native-ttf --with-openssl --with-mhash --enable-pcntl --enable-sockets --with-xmlrpc --enable-zip --enable-soap --without-pear --with-gettext --disable-fileinfo --enable-maintainer-zts --enable-phpdbg-debug --enable-debug
+
+# 简易配置
+./configure --prefix=/usr/local/php --with-config-file-path=/usr/local/php/etc --with-pdo-pgsql --disable-rpath --enable-bcmath --enable-shmop --enable-sysvsem --enable-inline-optimization --with-curl --enable-mbregex --enable-mbstring --with-mcrypt --with-mhash --without-pear --with-gettext --disable-fileinfo --enable-maintainer-zts --enable-phpdbg-debug --enable-debug
 
 make -j4
 
