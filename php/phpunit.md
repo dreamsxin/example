@@ -1,6 +1,7 @@
 # phpunit
 
 ```shell
+wget https://phar.phpunit.de/phpunit.phar
 php phpunit.char unit-tests/
 ```
 
