@@ -5,16 +5,11 @@ git clone --depth 1 git://github.com/mstorsjo/fdk-aac.git
 cd fdk-aac
 autoreconf -fiv
 ./configure --disable-shared
+make -j4 && sudo make install
 ```
 
 ```shell
-sudo add-apt-repository ppa:kirillshkrogalev/ffmpeg-next
-sudo apt-get update
-sudo apt-get install ffmpeg
-
-# or
-
-sudo apt-get install libx264-dev x264 libfaac-dev libfaac0 yasm libmp3lame-dev libopencore-amrwb-dev libtheora-dev libogg-dev libvorbis-dev libvpx-dev libxvidcore-dev libopencore-amrnb-dev libsdl1.2-dev
+sudo apt-get install libx264-dev x264 libfaac-dev libfaac0 yasm libmp3lame-dev libopencore-amrwb-dev libtheora-dev libogg-dev libvorbis-dev libvpx-dev libxvidcore-dev libopencore-amrnb-dev libsdl1.2-dev libspeex-dev
 #git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg
 wget http://ffmpeg.org/releases/ffmpeg-3.0.2.tar.bz2
 cd ffmpeg

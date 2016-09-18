@@ -171,6 +171,62 @@ rtmp {
 
 	}
 }
+# or 
+rtmp {
+        server {
+                listen 1935;
+
+                application flv {
+                    play /var/www/html/video/flv;
+                }
+
+                application mp4 {
+                    play /var/www/html/video/mp4;
+                }
+
+                application live {
+                        live on;
+
+                        # Make HTTP request & use HTTP retcode
+                        # to decide whether to allow publishing
+                        # from this connection or not
+                        #on_publish http://localhost:8080/publish;
+
+                        # Same with playing
+                        #on_play http://localhost:8080/play;
+
+                        # Publish/play end (repeats on disconnect)
+                        #on_done http://localhost:8080/done;
+
+                        #record all;
+                        #record_unique on;
+                        #record_path /var/www/html/video/flv;
+
+                        # Async notify about an flv recorded
+                        #on_record_done http://localhost:8080/record_done;
+
+#                       exec /usr/local/bin/ffmpeg -i rtmp://localhost/live/$name -c:a libfdk_aac -b:a 32k  -c:v libx264 -b:v 128K -f flv rtmp://localhost/hls/$name_low -c:a libfdk_aac -b:a 64k -c:v libx264 -b:v 256k -f flv rtmp://localhost/hls/$name_mid -c:a libfdk_aac -b:a 128k -c:v libx264 -b:v 512k -f flv rtmp://localhost/hls/$name_norm -c:a libfdk_aac -b:a 128k -c:v libx264 -b:v 1000k -f flv rtmp://localhost/hls/$name_high;
+                        exec /usr/local/bin/ffmpeg -i rtmp://localhost/live/$name
+                        -c:a libfdk_aac -b:a 44k -c:v libx264 -b:v 128K -g 30 -f flv rtmp://localhost/hls/$name_low
+                        -c:a libfdk_aac -b:a 64k -c:v libx264 -b:v 256k -g 30 -f flv rtmp://localhost/hls/$name_mid
+                        -c:a libfdk_aac -b:a 128k -c:v libx264 -b:v 512k -g 30 -f flv rtmp://localhost/hls/$name_high;
+                }
+
+
+
+                application hls {
+                    live on;
+
+                    hls on;
+                    hls_path /var/www/html/video/hls;
+                    hls_nested on;
+                        hls_variant _low BANDWIDTH=160000;
+                        hls_variant _mid BANDWIDTH=320000;
+                        hls_variant _high  BANDWIDTH=640000;
+                }
+
+        }
+}
 ```
 
 ## 点播配置
