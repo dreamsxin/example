@@ -245,6 +245,8 @@ apt-get install nginx
 
 ```shell
 apt-get install nginx-extras
+# 查看模块
+nginx -V
 ```
 
 或者使用官方源

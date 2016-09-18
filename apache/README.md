@@ -1,3 +1,9 @@
+# 查看模块
+```shell
+apache2ctl -l
+sudo apache2ctl -M
+```
+
 # 开启限速模块
 文档 `http://httpd.apache.org/docs/2.4/mod/mod_ratelimit.html`
 ```shell
