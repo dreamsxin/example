@@ -147,3 +147,41 @@ sudo a2ensite default-ssl
         BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown
 </VirtualHost>
 ```
+
+## 使用 alias 与 URL重写
+
+```conf
+Alias /test "/var/www/html/test/public"
+<Directory /var/www/html/test/public">
+          Options FollowSymlinks Indexes MultiViews
+          AllowOverride All
+          Order allow,deny
+          Allow from all
+	<IfModule mod_rewrite.c>
+	    Options
+	    RewriteEngine On
+	    RewriteBase /test
+	    RewriteCond %{REQUEST_FILENAME} !-d
+	    RewriteCond %{REQUEST_FILENAME} !-f
+	    RewriteRule ^(.*)$ index.php?_url=/$1 [QSA,L]
+	</IfModule>
+</Directory>
+```
+```conf
+Alias /test "/var/www/html/test/public"
+<Directory /var/www/html/test/public">
+          Options Indexes MultiViews
+          AllowOverride All
+          Order allow,deny
+          Allow from all
+</Directory>
+
+<IfModule mod_rewrite.c>
+    Options +FollowSymlinks
+    RewriteEngine On
+    RewriteBase /test
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^(.*)$ index.php?_url=/$1 [QSA,L]
+</IfModule>
+```
