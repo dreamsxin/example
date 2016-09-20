@@ -32,6 +32,8 @@ ffmpeg -f alsa -ac 1 -i pulse -acodec aac -f video4linux2  -s 1280x720 -i /dev/v
 
 # 屏幕录像，推送到rtmp
 ```shell
+ffmpeg -f alsa -ac 1 -i pulse -acodec aac -f video4linux2  -s 640x360 -i /dev/video0 -acodec libfdk_aac -vcodec libx264 -preset ultrafast -vprofile baseline -vlevel 1.0  -s 640x480 -b:v 800k -r 25  -pix_fmt yuv420p -f flv rtmp://192.168.1.108/live/201609203000000eo99
+
 ffmpeg -f alsa -ac 1 -i pulse -acodec aac -f x11grab -s 1600x900 -i :0.0 -qscale 1 -ar 22050 -ab 64k -ac 1 -acodec libmp3lame -f flv rtmp://192.168.1.108/live/test
 
 ffmpeg -f alsa -ac 1 -i pulse -acodec aac -f x11grab -s 1600x900 -i :0.0 -r 10 -b:v 10000k -qscale 1 -ar 22050 -ab 64k -ac 1 -acodec libmp3lame -f flv rtmp://192.168.1.108/live/test

@@ -43,6 +43,17 @@ rtmp {
 			exec_record_done ffmpeg -y -i $path -acodec libmp3lame -ar 44100 -ac 1 -vcodec libx264 $dirname/$basename.mp4;
 		}
 
+		application live {
+                        live on;
+
+                        push rtmp://w.gslb.lecloud.com/live;
+
+                        exec /usr/local/bin/ffmpeg -i rtmp://localhost/live/$name
+                        -c:a libfdk_aac -b:a 44k -c:v libx264 -b:v 128K -g 30 -f flv rtmp://localhost/hls/$name_low
+                        -c:a libfdk_aac -b:a 64k -c:v libx264 -b:v 256k -g 30 -f flv rtmp://localhost/hls/$name_mid
+                        -c:a libfdk_aac -b:a 128k -c:v libx264 -b:v 512k -g 30 -f flv rtmp://localhost/hls/$name_high;
+                }
+
 		location ~ \.mp4$ {
 			mp4;
 			mp4_buffer_size     1m;
