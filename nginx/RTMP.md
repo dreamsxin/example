@@ -29,7 +29,10 @@ rtmp {
 			on_done http://localhost:8080/done;
 
 			record all;
-			record_unique on;
+			# 同一个 name 录制文件，是否添加时间戳
+			record_unique off;
+			# 同一个 name 录制文件，是否追加，还是覆盖
+                        record_append on
 			record_path /tmp/vc;
 
 			# Async notify about an flv recorded
