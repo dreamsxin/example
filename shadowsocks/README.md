@@ -7,6 +7,7 @@ sudo apt-get install python-m2crypto
 sudo apt-get install shadowsocks
 ```
 
+`/etc/shadowsocks.json`:
 ```json
 {
     "server":"0.0.0.0",
