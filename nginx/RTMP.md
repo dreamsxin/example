@@ -353,6 +353,14 @@ server {
 }
 ```
 
+`notify_update_strict`
+
+语法：notify_update_strict on|off
+上下文：rtmp, server, application
+描述：
+切换 on_update 回调严格模式。默认为 off。当设置为 on 时，所有连接错误，超时以及 HTTP 解析错误和空返回会被视为更新失败并导致连接终止。
+当设置为 off 时只有 HTTP 返回码不同于 2XX 时导致失败。
+
 ## 统计
 
 ```conf
