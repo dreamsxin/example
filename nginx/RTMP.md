@@ -29,7 +29,10 @@ rtmp {
 			on_done http://localhost:8080/done;
 
 			record all;
-			record_unique on;
+			# 同一个 name 录制文件，是否添加时间戳
+			record_unique off;
+			# 同一个 name 录制文件，是否追加，还是覆盖
+                        record_append on
 			record_path /tmp/vc;
 
 			# Async notify about an flv recorded
@@ -43,6 +46,17 @@ rtmp {
 			exec_record_done ffmpeg -y -i $path -acodec libmp3lame -ar 44100 -ac 1 -vcodec libx264 $dirname/$basename.mp4;
 		}
 
+		application live {
+                        live on;
+
+                        push rtmp://w.gslb.lecloud.com/live;
+
+                        exec /usr/local/bin/ffmpeg -i rtmp://localhost/live/$name
+                        -c:a libfdk_aac -b:a 44k -c:v libx264 -b:v 128K -g 30 -f flv rtmp://localhost/hls/$name_low
+                        -c:a libfdk_aac -b:a 64k -c:v libx264 -b:v 256k -g 30 -f flv rtmp://localhost/hls/$name_mid
+                        -c:a libfdk_aac -b:a 128k -c:v libx264 -b:v 512k -g 30 -f flv rtmp://localhost/hls/$name_high;
+                }
+
 		location ~ \.mp4$ {
 			mp4;
 			mp4_buffer_size     1m;
@@ -52,11 +66,13 @@ rtmp {
 		location ~ \.flv$ {
 			flv;
 		}
+
+		access_log /var/log/nginx/rtmp_access.log;
 	}
 }
 ```
 
-# 实例
+## 实例
 ```conf
 rtmp {
 	server {
@@ -171,6 +187,70 @@ rtmp {
 
 	}
 }
+# or 
+rtmp {
+        server {
+                listen 1935;
+
+                application flv {
+                    play /var/www/html/video/flv;
+                }
+
+                application mp4 {
+                    play /var/www/html/video/mp4;
+                }
+
+                application stream {
+                        live on;
+                }
+
+                application live {
+                        live on;
+
+                        # Make HTTP request & use HTTP retcode
+                        # to decide whether to allow publishing
+                        # from this connection or not
+                        #on_publish http://localhost:8080/publish;
+
+                        # Same with playing
+                        #on_play http://localhost:8080/play;
+
+                        # Publish/play end (repeats on disconnect)
+                        #on_done http://localhost:8080/done;
+
+                        #record all;
+                        #record_unique on;
+                        #record_path /var/www/html/video/flv;
+
+                        # Async notify about an flv recorded
+                        #on_record_done http://localhost:8080/record_done;
+
+                        #exec /usr/local/bin/ffmpeg -i rtmp://localhost/live/$name -c:a libfdk_aac -b:a 32k  -c:v libx264 -b:v 128K -f flv rtmp://localhost/hls/$name_low -c:a libfdk_aac -b:a 64k -c:v libx264 -b:v 256k -f flv rtmp://localhost/hls/$name_mid -c:a libfdk_aac -b:a 128k -c:v libx264 -b:v 512k -f flv rtmp://localhost/hls/$name_norm -c:a libfdk_aac -b:a 128k -c:v libx264 -b:v 1000k -f flv rtmp://localhost/hls/$name_high;
+                        exec /usr/local/bin/ffmpeg -i rtmp://localhost/live/$name
+                        -c:a libfdk_aac -b:a 44k -c:v libx264 -b:v 128K -g 30 -f flv rtmp://localhost/hls/$name_low
+                        -c:a libfdk_aac -b:a 64k -c:v libx264 -b:v 256k -g 30 -f flv rtmp://localhost/hls/$name_mid
+                        -c:a libfdk_aac -b:a 128k -c:v libx264 -b:v 512k -g 30 -f flv rtmp://localhost/hls/$name_high;
+                }
+
+		application show {
+                        live on;
+                        pull rtmp://192.168.1.108/live;
+                }
+
+
+                application hls {
+                    live on;
+
+                    hls on;
+                    hls_path /var/www/html/video/hls;
+                    hls_nested on;
+                        hls_variant _low BANDWIDTH=160000;
+                        hls_variant _mid BANDWIDTH=320000;
+                        hls_variant _high  BANDWIDTH=640000;
+                }
+
+        }
+}
 ```
 
 ## 点播配置
@@ -273,7 +353,15 @@ server {
 }
 ```
 
-# 统计
+`notify_update_strict`
+
+语法：notify_update_strict on|off
+上下文：rtmp, server, application
+描述：
+切换 on_update 回调严格模式。默认为 off。当设置为 on 时，所有连接错误，超时以及 HTTP 解析错误和空返回会被视为更新失败并导致连接终止。
+当设置为 off 时只有 HTTP 返回码不同于 2XX 时导致失败。
+
+## 统计
 
 ```conf
         location /stat {
@@ -301,4 +389,92 @@ server {
 </xsl:template>
 
 </xsl:stylesheet>
+```
+
+## 控制 control
+
+http 请求返回结果，成功`1`、失败`0`，在设置了push功能的情况下，无法切换流，在使用了 `exec` 情况下无法使用控制。
+
+```conf
+http {
+    server {
+        listen       8080;
+        server_name  localhost;
+        location /control {
+            rtmp_control all;
+        }
+     }
+}
+```
+
+### 录制 Record
+
+This sub-module starts and stops recordings created with manual flag. Syntax:
+
+http://server.com/control/record/start|stop?srv=SRV&app=APP&name=NAME&rec=REC
+
+- srv=SRV - optional server{} block number within rtmp{} block, default to first server{} block
+- app=APP - required application name
+- name=NAME - required stream name
+- rec=REC - optional recorder name, defaults to root (unnamed) recorder
+
+Example：
+```conf
+rtmp {
+    server {
+        listen 1935;
+        application myapp {
+            live on;
+            recorder rec1 {
+               record all manual;
+               record_suffix all.flv;
+               record_path /tmp/rec;
+               record_unique on;
+           }
+       }
+    }
+}
+```
+
+```shell
+curl "http://localhost:8080/control/record/start?app=myapp&name=mystream&rec=rec1"
+curl "http://localhost:8080/control/record/stop?app=myapp&name=mystream&rec=rec1"
+```
+
+### 断开客户端 Drop
+
+This sub-module provides a simple way to drop client connection. Syntax:
+
+http://server.com/control/drop/publisher|subscriber|client?srv=SRV&app=APP&name=NAME&addr=ADDR&clientid=CLIENTID
+
+- srv, app, name - the same as above
+- addr - optional client address (the same as returned by rtmp_stat)
+- clientid - optional nginx client id (displayed in log and stat)
+
+The first method drop/publisher drops publisher connection. The second drop/client drops every connection matching addr argument or all clients (including publisher) if addr is not specified.
+
+Examples：
+```shell
+curl http://localhost:8080/control/drop/publisher?app=myapp&name=mystream
+curl http://localhost:8080/control/drop/client?app=myapp&name=mystream
+curl http://localhost:8080/control/drop/client?app=myapp&name=mystream&addr=192.168.0.1
+curl http://localhost:8080/control/drop/client?app=myapp&name=mystream&clientid=1
+```
+
+### Redirect
+
+Redirect play/publish client to a new stream. Syntax:
+
+http://server.com/control/redirect/publisher|subscriber|client?srv=SRV&app=APP&name=NAME&addr=ADDR&clientid=CLIENTID&newname=NEWNAME
+
+- srv, app, name, addr, clients - the same as above
+- newname - new stream name to redirect to
+
+Examples：
+```shell
+ffmpeg -f alsa -ac 1 -i pulse -acodec aac -f video4linux2  -s 640x360 -i /dev/video0 -acodec libfdk_aac -vcodec libx264 -preset ultrafast -vprofile baseline -vlevel 1.0  -s 640x480 -b:v 800k -r 25  -pix_fmt yuv420p -f flv rtmp://localhost/live/mystream
+
+ffmpeg -f alsa -ac 1 -i pulse -acodec aac -f video4linux2  -s 640x360 -i /dev/video0 -acodec libfdk_aac -vcodec libx264 -preset ultrafast -vprofile baseline -vlevel 1.0  -s 640x480 -b:v 800k -r 25  -pix_fmt yuv420p -f flv rtmp://localhost/live/mystream2
+
+curl http://localhost:8080/control/redirect/publisher?app=myapp&name=mystream&newname=mystream2
 ```

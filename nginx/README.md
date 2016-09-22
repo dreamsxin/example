@@ -55,6 +55,27 @@ server {
 		deny all;
 	}
 }
+upstream myleft
+{
+    server 213.215.217.210:9090;
+    server 213.215.217.211:9090;
+}
+
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server ipv6only=on;
+        server_name *.myleftstudio.com;
+
+        location / {
+                proxy_pass http://myleft;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+                proxy_buffering off;
+        }
+
+}
 ```
 
 ## 配置php5监听端口 `/etc/php5/fpm/pool.d/www.conf`
@@ -245,6 +266,8 @@ apt-get install nginx
 
 ```shell
 apt-get install nginx-extras
+# 查看模块
+nginx -V
 ```
 
 或者使用官方源

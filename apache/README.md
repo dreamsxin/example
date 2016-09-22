@@ -1,3 +1,9 @@
+# 查看模块
+```shell
+apache2ctl -l
+sudo apache2ctl -M
+```
+
 # 开启限速模块
 文档 `http://httpd.apache.org/docs/2.4/mod/mod_ratelimit.html`
 ```shell
@@ -140,4 +146,42 @@ sudo a2ensite default-ssl
         BrowserMatch "MSIE [2-6]" nokeepalive ssl-unclean-shutdown downgrade-1.0 force-response-1.0
         BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown
 </VirtualHost>
+```
+
+## 使用 alias 与 URL重写
+
+```conf
+Alias /test "/var/www/html/test/public"
+<Directory /var/www/html/test/public">
+          Options FollowSymlinks Indexes MultiViews
+          AllowOverride All
+          Order allow,deny
+          Allow from all
+	<IfModule mod_rewrite.c>
+	    Options
+	    RewriteEngine On
+	    RewriteBase /test
+	    RewriteCond %{REQUEST_FILENAME} !-d
+	    RewriteCond %{REQUEST_FILENAME} !-f
+	    RewriteRule ^(.*)$ index.php?_url=/$1 [QSA,L]
+	</IfModule>
+</Directory>
+```
+```conf
+Alias /test "/var/www/html/test/public"
+<Directory /var/www/html/test/public">
+          Options Indexes MultiViews
+          AllowOverride All
+          Order allow,deny
+          Allow from all
+</Directory>
+
+<IfModule mod_rewrite.c>
+    Options +FollowSymlinks
+    RewriteEngine On
+    RewriteBase /test
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^(.*)$ index.php?_url=/$1 [QSA,L]
+</IfModule>
 ```

@@ -5,16 +5,11 @@ git clone --depth 1 git://github.com/mstorsjo/fdk-aac.git
 cd fdk-aac
 autoreconf -fiv
 ./configure --disable-shared
+make -j4 && sudo make install
 ```
 
 ```shell
-sudo add-apt-repository ppa:kirillshkrogalev/ffmpeg-next
-sudo apt-get update
-sudo apt-get install ffmpeg
-
-# or
-
-sudo apt-get install libx264-dev x264 libfaac-dev libfaac0 yasm libmp3lame-dev libopencore-amrwb-dev libtheora-dev libogg-dev libvorbis-dev libvpx-dev libxvidcore-dev libopencore-amrnb-dev libsdl1.2-dev
+sudo apt-get install libx264-dev x264 libfaac-dev libfaac0 yasm libmp3lame-dev libopencore-amrwb-dev libtheora-dev libogg-dev libvorbis-dev libvpx-dev libxvidcore-dev libopencore-amrnb-dev libsdl1.2-dev libspeex-dev
 #git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg
 wget http://ffmpeg.org/releases/ffmpeg-3.0.2.tar.bz2
 cd ffmpeg
@@ -32,6 +27,10 @@ ffmpeg -codecs
 # 读取摄像头和麦克风推送到rtmp
 
 ```shell
+ffmpeg -f alsa -ac 1 -i pulse -acodec aac -f video4linux2  -s 640x360 -i /dev/video0 -acodec libfdk_aac -vcodec libx264 -preset ultrafast -vprofile baseline -vlevel 1.0  -s 640x480 -b:v 800k -r 25  -pix_fmt yuv420p -f flv rtmp://192.168.1.108/live/test
+
+ffmpeg -f video4linux2  -s 1280x720 -i /dev/video0 -vcodec libx264 -preset ultrafast -vprofile baseline -vlevel 1.0  -s 640x480 -b:v 800k -r 25  -pix_fmt yuv420p -f flv rtmp://192.168.1.108/live/test
+
 ffmpeg -f alsa -ac 1 -i pulse -acodec aac -f video4linux2  -s 1280x720 -i /dev/video0 -acodec libfdk_aac -vcodec libx264 -preset ultrafast -vprofile baseline -vlevel 1.0  -s 640x480 -b:v 800k -r 25  -pix_fmt yuv420p -f flv rtmp://192.168.1.108/live/test
 ```
 
