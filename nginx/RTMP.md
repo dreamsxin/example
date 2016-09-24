@@ -1,6 +1,11 @@
 # nginx_rtmp_module
 
+`ngx_rtmp_relay_create_connection` -> `ngx_rtmp_client_handshake` -> `ngx_rtmp_handshake_create_challenge`
+
+`ngx_rtmp_handshake_recv` -> `ngx_rtmp_handshake_create_challenge`
 ```conf
+master_process off;
+
 rtmp {
 	server {
 		listen 1935;
@@ -472,7 +477,7 @@ http://server.com/control/redirect/publisher|subscriber|client?srv=SRV&app=APP&n
 
 Examples：
 ```shell
-ffmpeg -f alsa -ac 1 -i pulse -acodec aac -f video4linux2  -s 640x360 -i /dev/video0 -acodec libfdk_aac -vcodec libx264 -preset ultrafast -vprofile baseline -vlevel 1.0  -s 640x480 -b:v 800k -r 25  -pix_fmt yuv420p -f flv rtmp://localhost/live/mystream
+ffmpeg -f alsa -ac 1 -i pulse -acodec aac -f video4linux2  -s 640x360 -i /dev/video0 -acodec libfdk_aac -vcodec libx264 -preset ultrafast -vprofile baseline -vlevel 1.0  -s 640x480 -b:v 800k -r 25  -pix_fmt yuv420p -f flv "rtmp://localhost/live/mystream?uname=&token="
 
 ffmpeg -f alsa -ac 1 -i pulse -acodec aac -f video4linux2  -s 640x360 -i /dev/video0 -acodec libfdk_aac -vcodec libx264 -preset ultrafast -vprofile baseline -vlevel 1.0  -s 640x480 -b:v 800k -r 25  -pix_fmt yuv420p -f flv rtmp://localhost/live/mystream2
 
