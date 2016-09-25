@@ -1,5 +1,19 @@
 # nginx_rtmp_module
 
+字节序通常是大端排序。降序(Big-endian)大端字节序存储时，由左到右。
+
+## 握手
+
+一个 RTMP 连接以握手开始。RTMP 的握手不同于其他协议；RTMP 握手由三个固定长度的块组成，而不是像其他协议一样的带有报头的可变长度的块。
+客户端 (发起连接请求的终端) 和服务器端各自发送相同的三块。便于演示，当发送自客户端时这些块被指定为 C0、C1 和 C2；当发送自服务器端时这些块分别被指定为 S0、S1 和 S2。
+
+## 握手顺序
+
+握手以客户端发送 C0 和 C1 块开始。
+客户端必须等待接收到 S1 才能发送 C2。
+客户端必须等待接收到 S2 才能发送任何其他数据。
+服务器端必须等待接收到 C0 才能发送 S0 和 S1，也可以等待接收到 C1 再发送 S0 和 S1。服务器端必须等待接收到 C1 才能发送 S2。服务器端必须等待接收到 C2 才能发送任何其他数据。
+
 `ngx_rtmp_relay_create_connection` -> `ngx_rtmp_client_handshake` -> `ngx_rtmp_handshake_create_challenge`
 
 `ngx_rtmp_handshake_recv` -> `ngx_rtmp_handshake_create_challenge`
