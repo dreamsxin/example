@@ -17,6 +17,11 @@
 `ngx_rtmp_relay_create_connection` -> `ngx_rtmp_client_handshake` -> `ngx_rtmp_handshake_create_challenge`
 
 `ngx_rtmp_handshake_recv` -> `ngx_rtmp_handshake_create_challenge`
+
+`ngx_rtmp_relay_play` -> `next_play` -> `ngx_rtmp_play` -> `ngx_rtmp_notify_play` -> `ngx_rtmp_notify_play_handle`
+
+`ngx_rtmp_relay_on_result` -> `ngx_rtmp_relay_play_local`
+
 ```conf
 master_process off;
 
