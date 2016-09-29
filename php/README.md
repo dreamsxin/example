@@ -107,3 +107,23 @@ sudo apt-get install apache2-prefork-dev
 sudo apt-get purge php5-common -y
 sudo apt-get --purge autoremove -y
 ```
+
+## PHP CLI与CGI 和 PHP日志
+
+PHP错误跟踪，错误提示有助于，定位错误的位置，从而进行调试。与错误显示有关的命令有如下：
+
+1、直接显示
+```conf
+# 错误显示级别设置
+error_reporting=ALL
+# 是否显示错误
+display_errors=On|Of
+```
+
+2、把错误存入日志文件里
+```conf
+# 开启日志显示
+log_errors=On
+# 错误日志存放地址
+error_log=/var/log/php-error.log
+```
