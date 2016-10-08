@@ -51,11 +51,13 @@ sudo docker images dreamsxin/phalcon
 sudo cat ubuntu-14.04-x86_64-minimal.tar.gz  |docker import - ubuntu:14.04
 ```
 
-## 新建并启动镜像
+## 新建并启动容器
 
 ```shell
 sudo docker run -ti -p 8080:80 dreamsxin/phalcon:v1.3 -v
 ```
+
+可以在 docker run 的时候用 `--name` 参数指定容器的名称。
 
 ## 启动已终止容器
 
@@ -67,6 +69,19 @@ sudo docker start xxxxx
 
 ```shell
 sudo docker attach xxxxx
+```
+
+## 容器重命名
+
+```shell
+docker rename old容器名  new容器名
+```
+
+## 查看运行的容器
+
+```shell
+docker ps
+docker ps -a
 ```
 
 ## 删除容器
