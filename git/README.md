@@ -188,6 +188,24 @@ git log --pretty=oneline
 git log --pretty=format:"%an %ae %ad %cn %ce %cd %cr %s" --graph
 ```
 
+## 查看某个提交变动
+
+```shell
+git show db2de933d46f784ac5cfc9e363afb932825864a8
+```
+
+## 查看某个提交变动
+
+```shell
+git show db2de933d46f784ac5cfc9e363afb932825864a8
+```
+
+## 合并某个提交
+
+```shell
+git cherry-pick db2de933d46f784ac5cfc9e363afb932825864a8
+```
+
 ## 回退
 
 参数 `--hard`、`--soft`、`--mixed` 决定了是否重置暂存区或工作区。
