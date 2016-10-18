@@ -44,20 +44,24 @@ See https://github.com/dreamsxin/example/tree/master/nginx
 sudo apt-get install python-software-properties
 sudo add-apt-repository ppa:ondrej/php
 sudo apt-get update
-sudo apt-get install php5.6-fpm php5.6-cli php5.6-dev php5.6-dev php5.6-curl php5.6-pgsql php5.6-mcrypt php5.6-mbstring
+
+sudo apt-get install php5.6-fpm php5.6-cli php5.6-dev php5.6-curl php5.6-pgsql php5.6-mcrypt php5.6-mbstring
+// 或
+sudo apt-get install php7.1-fpm php7.1-cli php7.1-dev php7.1-curl php7.1-pgsql php7.1-mcrypt php7.1-mbstring
 ```
 
-### 配置
+### 配置 php-fpm
 
-编辑 `/etc/php/5.6/fpm/pool.d/www.conf`
+编辑 `/etc/php/5.6/fpm/pool.d/www.conf` 或 `/etc/php/7.1/fpm/pool.d/www.conf`
 
+设置 listen，默认配置是使用 unix sock，可以更改为 ip:port。
 ```conf
 listen = /var/run/php5-fpm.sock
 ```
 
 ### 开启php-fpm日志报告
 
-编辑 `/etc/php/5.6/fpm/php.ini`
+编辑 `/etc/php/5.6/fpm/php.ini` 或 `/etc/php/7.1/fpm/php.ini`
 
 ```conf
 error_reporting = E_ALL
@@ -66,10 +70,10 @@ display_errors = On
 php_flag[display_errors] = on
 ```
 
-### 查看php5运行进程
+### 查看php运行进程
 
 ```shell
-ps -waux | grep php5
+ps -waux | grep php
 ```
 
 ### 关闭重启php5进程
@@ -90,37 +94,41 @@ See https://github.com/dreamsxin/cphalcon/wiki/%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF
 ```shell
 git clone https://github.com/dreamsxin/cphalcon.git
 cd cphalcon/ext
+# 如果是 PHP7 下载 Phalcon7
+git clone https://github.com/dreamsxin/cphalcon7.git
+cd cphalcon7/ext
+
 phpize
 ./configure
 make -j4 && sudo make install
 ```
 
-编辑文件 `/etc/php/5.6/mods-available/pdo_pgsql.ini`，增加一行
+编辑文件 `/etc/php/5.6/mods-available/pdo_pgsql.ini` 或 `/etc/php/7.1/mods-available/pdo_pgsql.ini`，增加一行
 ```ini
 extension=phalcon.so
 ```
 
-## 安装 PostgreSQL
-
-See https://github.com/dreamsxin/example/tree/master/postgresql
-
-配置文件 `/etc/postgresql/9.5/main/postgresql.conf`
-
-```conf
-listen_addresses = 'localhost,192.168.1.108'
-port = 5432
-max_connections = 100
+也可以在 `mods-available`，新增文件 `phalcon.ini`：
+```ini
+extension=phalcon.so
 ```
 
-配置文件 `/etc/postgresql/9.5/main/pg_hba.conf`
-
+并使扩展生效：
+```shell
+sudo ln -s /etc/php/5.6/mods-available/phalcon.ini /etc/php/5.6/cli/conf.d/phalcon.ini
+sudo ln -s /etc/php/5.6/mods-available/phalcon.ini /etc/php/5.6/fpm/conf.d/phalcon.ini
+# 或
+sudo ln -s /etc/php/7.1/mods-available/phalcon.ini /etc/php/7.1/cli/conf.d/phalcon.ini
+sudo ln -s /etc/php/7.1/mods-available/phalcon.ini /etc/php/7.1/fpm/conf.d/phalcon.ini
+```
 
 ## nginx 部署网站
 
 在目录 `/etc/nginx/sites-available/` 下，包含所有站点配置文件，站点开启之后，会软链接到目录 `/etc/nginx/sites-enabled/` 下。
 
+### 创建站点目录结构
 
-将代码 `mvc` 目录拷贝到 `/var/www/html` 目录
+可以直接将示例将代码 `mvc` 目录拷贝到 `/var/www/html` 目录
 
 ### 启用站点
 
@@ -136,6 +144,7 @@ sudo rm /etc/nginx/sites-enabled/default
 sudo service nginx restart
 ```
 
+### 配置 nginx
 
 修改 nginx 配置 `/etc/nginx/sites-available/default`
 
@@ -147,7 +156,7 @@ server {
     # 默认访问文件
     index index.php index.html index.htm;
 
-    # 设置网站访问根目录
+    # 设置网站访问根目录，根据实际站点目录设置
     set $root_path '/var/www/html/mvc/public';
     root $root_path;
     # http 请求数据最大值
@@ -196,3 +205,17 @@ sudo /etc/init.d/nginx restart
 ```
 
 在浏览器中打开网址 `http://localhost`，会看到 `Hello world!` 字样
+
+## 安装 PostgreSQL
+
+See https://github.com/dreamsxin/example/tree/master/postgresql
+
+配置文件 `/etc/postgresql/9.5/main/postgresql.conf`
+
+```conf
+listen_addresses = 'localhost,192.168.1.108'
+port = 5432
+max_connections = 100
+```
+
+配置文件 `/etc/postgresql/9.5/main/pg_hba.conf`
