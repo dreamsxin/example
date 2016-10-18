@@ -2,6 +2,8 @@
 
 ```shell
 sudo apt-get install git vim build-essential libpcre3-dev
+# 安装 add-apt-repository 命令
+sudo apt-get install python-software-properties
 ```
 
 ## 查看系统版本号
@@ -41,7 +43,6 @@ sudo apt-get install nginx
 See https://github.com/dreamsxin/example/tree/master/nginx
 
 ```shell
-sudo apt-get install python-software-properties
 sudo add-apt-repository ppa:ondrej/php
 sudo apt-get update
 
