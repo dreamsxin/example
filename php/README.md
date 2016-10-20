@@ -127,3 +127,24 @@ log_errors=On
 # 错误日志存放地址
 error_log=/var/log/php-error.log
 ```
+
+# `php-fpm` 优化
+
+查询单个 `php-fpm` 进程占用的内存：
+
+```shell
+pmap $(pgrep php-fpm | head -1)
+```
+
+## php-fpm的配置公式
+
+`pm.start_servers = min_spare_servers + (max_spare_servers - min_spare_servers) / 2`
+
+## `pm.max_children` 的计算方法
+
+本机内存除以单个 `php-fpm` 进程占用的内存得到的数字为最大的限定值。
+
+- pm.max_children	静态方式下开启的php-fpm进程数量
+- pm.start_servers	动态方式下的起始php-fpm进程数量
+- pm.min_spare_servers	动态方式下的最小php-fpm进程数量
+- pm.max_spare_servers	动态方式下的最大php-fpm进程数量
