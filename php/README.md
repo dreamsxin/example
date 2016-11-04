@@ -29,7 +29,68 @@ sudo apt-get install php7.1-cli php7.1-dev php7.1-dev php7.1-curl php7.1-pgsql p
 make -j4
 
 sudo make install
+```
 
+# Fedora/RHEL/CentOS
+
+## Fedora 23
+
+```shell
+wget http://rpms.remirepo.net/fedora/remi-release-23.rpm
+dnf install remi-release-23.rpm
+dnf config-manager --set-enabled remi-php70
+yum install php70
+# or
+yum update
+```
+
+## RHEL version 7.2
+
+```shell
+wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+wget http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+rpm -Uvh remi-release-7.rpm epel-release-latest-7.noarch.rpm
+subscription-manager repos --enable=rhel-7-server-optional-rpms
+yum-config-manager --enable remi-php70
+yum install php70
+# or
+yum update
+```
+
+## RHEL version 6.7
+
+```shell
+wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
+wget http://rpms.remirepo.net/enterprise/remi-release-6.rpm
+rpm -Uvh remi-release-6.rpm epel-release-latest-6.noarch.rpm
+rhn-channel --add --channel=rhel-$(uname -i)-server-optional-6
+yum install php70
+# or
+yum update
+```
+
+## CentOS version 7.2
+
+```shell
+wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+wget http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+rpm -Uvh remi-release-7.rpm epel-release-latest-7.noarch.rpm
+yum-config-manager --enable remi-php70
+yum install php70
+# or
+yum update
+```
+
+## CentOS version 6.7
+
+```shell
+wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
+wget http://rpms.remirepo.net/enterprise/remi-release-6.rpm
+rpm -Uvh remi-release-6.rpm epel-release-latest-6.noarch.rpm
+yum-config-manager --enable remi-php70
+yum install php70
+# or
+yum update
 ```
 
 ## 安装扩展
