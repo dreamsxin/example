@@ -502,3 +502,41 @@ ffmpeg -f alsa -ac 1 -i pulse -acodec aac -f video4linux2  -s 640x360 -i /dev/vi
 
 curl http://localhost:8080/control/redirect/publisher?app=myapp&name=mystream&newname=mystream2
 ```
+
+
+# 单独编译 nginx 支持 rtmp
+
+```shell
+./configure --prefix=/usr/local/nginx --conf-path=/etc/nginx/rtmp.conf --http-log-path=/var/log/nginx/rtmp-access.log --error-log-path=/var/log/nginx/rtmp-error.log --lock-path=/var/lock/nginx-rtmp.lock --pid-path=/run/nginx-rtmp.pid --http-client-body-temp-path=/usr/local/nginx/body --http-fastcgi-temp-path=/usr/local/nginx/fastcgi --http-proxy-temp-path=/usr/local/nginx/proxy --http-scgi-temp-path=/usr/local/nginx/scgi --http-uwsgi-temp-path=/usr/local/nginx/uwsgi --with-debug --with-pcre-jit --with-http_stub_status_module --with-http_realip_module --with-http_auth_request_module --with-http_addition_module --with-http_flv_module --with-http_gunzip_module --with-http_gzip_static_module --with-http_image_filter_module --with-http_mp4_module --with-http_perl_module --with-http_random_index_module --with-http_secure_link_module --with-http_sub_module --with-http_xslt_module --with-stream --with-stream_ssl_module --with-threads --add-module=debian/modules/headers-more-nginx-module --add-module=debian/modules/nginx-auth-pam --add-module=debian/modules/nginx-cache-purge --add-module=debian/modules/nginx-dav-ext-module --add-module=debian/modules/nginx-development-kit --add-module=debian/modules/ngx-fancyindex --add-module=debian/modules/nginx-upstream-fair --add-module=debian/modules/ngx_http_substitutions_filter_module --add-module=debian/modules/nginx-rtmp-module
+```
+
+## 开机启动
+
+### 建立软连接
+
+```shell
+sudo ln -s /lib/init/upstart-job /etc/init.d/rtmp
+```
+
+### 建立启动配置文件
+
+`/etc/init/rtmp.conf`
+
+```shell
+description "nginx-rtmp - small, powerful, scalable web/proxy server"
+
+start on filesystem and static-network-up
+stop on runlevel [016]
+
+expect fork
+respawn
+
+pre-start script
+        [ -x /usr/local/nginx/sbin/nginx ] || { stop; exit 0; }
+        /usr/local/nginx/sbin/nginx -q -t -g 'daemon on; master_process on;' || { stop; exit 0; }
+end script
+
+exec /usr/local/nginx/sbin/nginx -g 'daemon on; master_process on;'
+
+pre-stop exec /usr/local/nginx/sbin/nginx -s quit
+```
