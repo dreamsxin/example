@@ -9,7 +9,7 @@
 -L 将端口绑定到本地客户端，正向代理
 
 
-## SSH 代理
+## 设置 SSH 代理
 
 ```shell
 ssh -C -v -N -D 127.0.0.1:7070 xxx@x.x.x.x -p 22022 -pw 密码
@@ -34,7 +34,7 @@ ssh -fCNR 8888:localhost:22 username@B.B.B.B
 在代理服务器 B 上运行命令，将端口 9999 数据转发到 8888，其中的*表示端口 9999 接受来自任意机器的访问：
 
 ```shell
-ssh -fCNL "*:9999:localhost:8888' localhost
+ssh -fCNL "*:9999:localhost:8888" localhost
 ```
 
 ### 第三步 在 C 机器上使用 SSH 登录 A 机器

@@ -1,28 +1,36 @@
-查看返回头信息
+# curl 使用
+
+
+## 查看返回头信息
 
 ```shell
 curl -I http://localhost
 ```
 
-指定情求头信息
+## 指定情求头信息
 
 ```shell
 curl -I -H "Accept-Language: es" http://localhost
 ```
 
-Post 数据
+让 nginx 返回 content-length 头信息
+```shell
+curl -v -H "Connection:keep-alive" http://localhost
+```
+
+## Post 数据
 
 ```shell
 curl -I -d "name=test&password=test" http://localhost
 ```
 
-传送二进制数据
+## 传送二进制数据
 
 ```shell
 curl -v --data-binary @xxx.bin  --header "application/octet-stream" http://localhost/
 ```
 
-指定请求方法
+## 指定请求方法
 
 ```shell
 curl -I -X DELETE http://localhost
