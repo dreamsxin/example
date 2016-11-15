@@ -32,3 +32,56 @@ sudo rm /var/log/auth.log
 ```shell
 sudo dd if=/dev/zero of=/dev/sdb bs=2048 count=32
 ```
+
+## 系统编码
+
+```shell
+apt-get install -y language-pack-en-base
+```
+
+`/etc/default/locale`
+```ini
+LANG="en_US.UTF-8"
+LANGUAGE="en_US:en"
+LC_ALL="en_US.UTF-8"
+```
+
+```shell
+sudo locale-gen
+# locale-gen zh_CN.UTF-8
+sudo dpkg-reconfigure locales
+```
+
+## 遇到 Hash Sum mismatch 错误
+```shell
+sudo apt-get update --fix-missing
+```
+
+# syslog 日志
+
+`/etc/rsyslog.conf`
+`/etc/rsyslog.d/50-default.conf`
+
+# 记录 crontab 日志
+
+## 修改 rsyslog
+
+`/etc/rsyslog.d/50-default.conf`
+
+将 cron 前面的注释符去掉
+```shell
+cron.*                          /var/log/cron.log
+```
+
+## 任务
+
+分时日月周
+```shell
+0 0 * * * /usr/bin/php /usr/share/nginx/www/apps/cli.php --task=report
+```
+
+## 重启 rsyslog
+
+```shell
+sudo service rsyslog restart
+```

@@ -1,3 +1,16 @@
+# SSH KEY 生成
+
+```shell
+ssh-keygen -t rsa -C "dreamsxin@qq.com"
+```
+
+## 查看 public key
+
+```shell
+cat ~/.ssh/id_rsa.pub
+```
+
+# 错误
 
 ```output
 Started GET "/test/Test" for 127.0.0.1 at 2016-09-28 17:19:33 +0800

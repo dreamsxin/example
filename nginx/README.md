@@ -37,6 +37,7 @@ server {
 
 	location ~ \.php {
 		fastcgi_pass unix:/run/php-fpm/php-fpm.sock;
+		#or fastcgi_pass unix:/run/php/php7.0-fpm.sock;
 		fastcgi_index /index.php;
 
 		include /etc/nginx/fastcgi_params;

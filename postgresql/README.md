@@ -31,13 +31,19 @@ apt-get install postgresql-9.5
 # 设置默认密码
 ```shell
 psql -U postgres
+# or
 sudo -u postgres psql 
-\passwd
+\password postgres
 ```
 
 # 远程连接修改pg_hba.conf
 ```conf
 host    all             all             0.0.0.0/0               md5
+```
+
+# 监听地址修改postgresql.conf
+```conf
+listen_addresses = 'localhost,192.168.1.100'
 ```
 
 # 备份与恢复
