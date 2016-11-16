@@ -2,8 +2,8 @@
 
 $server = new Phalcon\Socket\Server('localhost', 5000);
 $server->setOption(SOL_SOCKET, SO_REUSEADDR, 1);
+$server->setEvent(Phalcon\Socket\Server::USE_SELECT);
 $server->listen();
-$server->setBlocking(FALSE);
 $server->run(
 	function(Phalcon\Socket\Client $client){
 		$client->write("Connecting...\r\n");
