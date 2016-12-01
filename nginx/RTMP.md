@@ -116,14 +116,14 @@ rtmp {
 			// ffmpeg 要开启 --enable-libfdk_aac
 
 			exec /usr/local/bin/ffmpeg -i rtmp://localhost/live/$name
-			-c:a libfdk_aac -b:a 32k  -c:v libx264 -b:v 128K -f flv rtmp://localhost/hls/$name_low 
-			-c:a libfdk_aac -b:a 64k  -c:v libx264 -b:v 256k -f flv rtmp://localhost/hls/$name_mid 
-			-c:a libfdk_aac -b:a 128k -c:v libx264 -b:v 512k -f flv rtmp://localhost/hls/$name_norm 
+			-c:a libfdk_aac -b:a 32k  -c:v libx264 -b:v 128K -f flv rtmp://localhost/hls/$name_low
+			-c:a libfdk_aac -b:a 64k  -c:v libx264 -b:v 256k -f flv rtmp://localhost/hls/$name_mid
+			-c:a libfdk_aac -b:a 128k -c:v libx264 -b:v 512k -f flv rtmp://localhost/hls/$name_norm
 			-c:a libfdk_aac -b:a 128k -c:v libx264 -b:v 1000k -f flv rtmp://localhost/hls/$name_high;
 
 			exec /usr/local/bin/ffmpeg -i rtmp://localhost/live/$name
-			-c:a copy -c:v libx264 -b:v 128K -g 30 -f flv rtmp://localhost/hls/$name_low 
-			-c:a copy -c:v libx264 -b:v 256k -g 30 -f flv rtmp://localhost/hls/$name_mid 
+			-c:a copy -c:v libx264 -b:v 128K -g 30 -f flv rtmp://localhost/hls/$name_low
+			-c:a copy -c:v libx264 -b:v 256k -g 30 -f flv rtmp://localhost/hls/$name_mid
 			-c:a copy -c:v libx264 -b:v 512k -g 30 -f flv rtmp://localhost/hls/$name_high;
 		}
 
@@ -174,10 +174,10 @@ rtmp {
 			live on;
 
 			hls on;
-                        #hls_continuous on;
-                        hls_fragment 5s;
-                        hls_playlist_length 30s;
-                        hls_path /var/www/html/video/hls;
+      #hls_continuous on;
+      hls_fragment 5s;
+      hls_playlist_length 30s;
+      hls_path /var/www/html/video/hls;
 
 
 			# Make HTTP request & use HTTP retcode
@@ -198,7 +198,7 @@ rtmp {
 			# Async notify about an flv recorded
 			#on_record_done http://localhost:8080/record_done;
 		}
-		
+
 		application myapp {
 			live on;
 			recorder rec1 {
@@ -211,7 +211,7 @@ rtmp {
 
 	}
 }
-# or 
+# or
 rtmp {
         server {
                 listen 1935;
@@ -256,9 +256,9 @@ rtmp {
                         -c:a libfdk_aac -b:a 128k -c:v libx264 -b:v 512k -g 30 -f flv rtmp://localhost/hls/$name_high;
                 }
 
-		application show {
+								application show {
                         live on;
-                        pull rtmp://192.168.1.108/live;
+                        pull rtmp://loalhost/live;
                 }
 
 
@@ -274,6 +274,82 @@ rtmp {
                 }
 
         }
+}
+# or
+rtmp {
+        server {
+                listen loalhost:1935;
+
+                application flv {
+                    play /var/www/html/video/single/flv;
+                }
+
+                application mp4 {
+                    play /var/www/html/video/single/mp4;
+                }
+								application single {
+												 live on;
+
+												 on_publish http://loalhost:9090/rtmp/publish;
+												 on_play http://loalhost:9090/rtmp/play;
+												 on_update http://loalhost:9090/rtmp/update;
+												 notify_update_timeout 30;
+												 on_done http://loalhost:9090/rtmp/done;
+
+												 record all;
+												 record_unique off;
+												 record_append on;
+												 record_path /var/www/html/video/single/flv;
+
+												 on_record_done http://loalhost:9090/rtmp/record_done;
+
+												 push rtmp://w.gslb.lecloud.com/live;
+								 }
+
+								 application live {
+												 live on;
+												 on_publish http://loalhost:9090/rtmp/publish;
+
+												 on_play http://loalhost:9090/rtmp/play;
+
+												 on_update http://loalhost:9090/rtmp/update;
+												 notify_update_timeout 30;
+
+												 # Publish/play end (repeats on disconnect)
+												 #on_done http://loalhost:9090/rtmp/done;
+
+												 record all;
+												 record_unique off;
+												 record_append on;
+												 record_path /var/www/html/video/live/flv;
+
+												 # Async notify about an flv recorded
+												 on_record_done http://loalhost:9090/rtmp/record_done;
+
+												 # push rtmp://w.gslb.lecloud.com/live;
+												 exec /usr/local/bin/ffmpeg -i rtmp://localhost/live/$name -i rtmp://localhost/sound/$name -c:v copy -c:a copy -f flv rtmp://localhost/single/$name;
+								 }
+
+								 application sound {
+												 live on;
+												 on_publish http://loalhost:9090/rtmp/publish;
+
+												 on_play http://loalhost:9090/rtmp/play;
+
+												 on_update http://loalhost:9090/rtmp/update;
+												 notify_update_timeout 30;
+
+												 # Publish/play end (repeats on disconnect)
+												 on_done http://loalhost:9090/rtmp/done;
+
+								 }
+								 application show {
+												 live on;
+												 pull rtmp://loalhost/live;
+								 }
+
+								 access_log /var/log/nginx/rtmp-dev-access.log;
+				}
 }
 ```
 
