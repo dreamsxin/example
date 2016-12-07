@@ -1,3 +1,5 @@
 ext
 .temp
 *.log
+
+*.pid
