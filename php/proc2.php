@@ -31,6 +31,16 @@ if (isset($pipes[2])) {
 if (isset($pipes[1]) && $ret = fgets($pipes[1])) {
     echo $ret.PHP_EOL;
 }
+//get the parent pid of the process we want to kill
+$ppid = $status['pid'];
+//use ps to get all the children of this process, and kill them
+$pids = preg_split('/\s+/', `ps -o pid --no-heading --ppid $ppid`);
+foreach($pids as $pid) {
+    if(is_numeric($pid)) {
+        echo "Killing $pid\n";
+        posix_kill($pid, 9);
+    }
+}
 proc_terminate($process);
 proc_close($process);
 exit;
