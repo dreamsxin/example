@@ -88,6 +88,25 @@ sudo service php5.6-fpm restart
 sudo service php5.6-fpm status
 ```
 
+## 安装 imagick 扩展
+
+```shell
+sudo apt-get install libmagickwand-dev imagemagick
+```
+
+### 编译安装
+```shell
+git clone https://github.com/mkoppanen/imagick.git
+cd imagick
+phpize
+./configure
+make -j4 && sudo make install
+```
+或者
+```shell
+sudo pecl install imagick
+```
+
 ## 安装 phalcon 扩展
 
 See https://github.com/dreamsxin/cphalcon/wiki/%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%E5%AE%89%E8%A3%85%EF%BC%88Linux%EF%BC%89
