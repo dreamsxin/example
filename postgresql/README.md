@@ -46,6 +46,26 @@ host    all             all             0.0.0.0/0               md5
 listen_addresses = 'localhost,192.168.1.100'
 ```
 
+# 使用 pg_dump
+
+## 明文 导出指定表数据
+```shell
+sudo -u postgres pg_dump --format plain --data-only --inserts --column-inserts --verbose --file "db.backup" --table "public.adlogs" --table "public.ads" --table "public.apps" --table "public.countries" --table "public.phone_apps" --table "public.phones" --table "public.projects" --table "public.settings" --table "public.source_rules" --table "public.sources" --table "public.users" "ads"
+```
+
+## 执行 sql 文件
+
+```shell
+psql -d ads -f db.backup
+```
+
+也可直接在 sql 脚本开头加：`psql ads (-U postgres)<<!`，然后执行运行该脚本。
+
+也可以在psql交互界面中可以直接用：
+```shell
+\i db.backup
+```
+
 # 备份与恢复
 
 ## 注意目录权限

@@ -1,10 +1,14 @@
-# 开启慢请求日志
+# PHP-FPM 配置
+
+## 开启慢请求日志
 
 ```conf
 request_slowlog_timeout = 1
 ```
 
-# pool.d/www.conf
+## 开启错误日志 pool.d/www.conf
+
+`catch_workers_output = yes` 一定要放在对应的`[www]`组下
 
 ```conf
 catch_workers_output = yes
