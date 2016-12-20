@@ -22,6 +22,22 @@
 
 `ngx_rtmp_relay_on_result` -> `ngx_rtmp_relay_play_local`
 
+## hls 配置
+
+```conf
+application hls {
+    live on;
+
+    hls on;
+    hls_path /var/www/html/video/hls;
+    hls_continuous on;
+    hls_cleanup off;
+    hls_nested on;
+    hls_fragment 10s;
+    hls_playlist_length 1m;
+}
+```
+
 ```conf
 master_process off;
 
