@@ -6,10 +6,27 @@
 request_slowlog_timeout = 1
 ```
 
-## 开启错误日志 pool.d/www.conf
+## 开启错误日志
 
-`catch_workers_output = yes` 一定要放在对应的`[www]`组下
+`php.ini`设置
+```ini
+display_errors = On
+log_errors = On
+error_log = \var\log\php-error.log
+```
 
+`php-fpm.conf`最后增加
+```conf
+[www]
+catch_workers_output = yes
+error_log = log/error_log
+php_flag[display_errors] = on
+```
+
+上面其实就是在文件里的配置
+`pool.d\www.conf`
+
+`catch_workers_output = yes` 一定要放在对应的`[www]`组下，修改完重启。可以通过`phpinfo()`查看日志文件地址。
 ```conf
 catch_workers_output = yes
 php_flag[display_errors] = on
