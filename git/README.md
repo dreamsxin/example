@@ -232,3 +232,11 @@ git reset HEAD
 任何事情都不会发生，这是因为我们告诉GIT重置这个分支到HEAD，而这个正是它现在所在的位置。
 
 `--soft` 只会改变 `HEAD` 也就是说，还保留暂存区信息。
+
+＃ 代理设置
+
+```shell
+git config --global http.proxy http://host:port
+ssh -qTfnN -D 7070 username@host -p port
+export all_proxy=socks5://127.0.0.1:7070
+```
