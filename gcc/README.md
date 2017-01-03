@@ -1,3 +1,46 @@
+# 编译选项
+
+## 常规选项
+
+1、没有任何选项
+`gcc   helloworld.c`
+结果会在与helloworld.c相同的目录下产生一个a.out的可执行文件。
+
+2、-o选项
+指定输出文件名：`gcc -o helloworld helloworld.c`
+-o意思是Output即需要指定输出的可执行文件的名称。这里的名称为helloworld。
+
+3、-c选项
+只编译，不汇编连接：`gcc -c helloworld.c`
+-c意思就是Compile，产生一个叫helloworld.o的目标文件
+
+4、-S选项
+产生汇编源文件：`gcc -S helloworld.c`
+-S意思就是aSsemble，产生一个叫helloworld.s的汇编源文件
+
+5、-E选项
+预处理C源文件：`gcc -E helloworld.c`
+输出到标准输出。可以对它进行重定向：
+gcc -E helloworld.c > helloworld.txt
+
+## 优化选项
+
+1) -O选项
+基本优化：`gcc -O helloworld.c`
+-O 意思就是Optimize，产生一个经过优化的叫作a.out的可执行文件。也可以同时使用-o选项，以指定输出文件名。
+如：`gcc -O -o test helloworld.c`即会产生一个叫test的经过优化的可执行文件。
+
+2) -O2选项
+最大优化：`gcc -O2 helloworld.c`产生一个经过最大优化的叫作a.out的可执行文件。
+
+## 调试选项
+
+1) -g选项
+产生供gdb调试用的可执行文件：`gcc -g helloworld.c` 产生一个叫作a.out的可执行文件，大小明显比只用-o选项编译汇编连接后的文件大。
+
+2) -pg选项
+产生供gprof剖析用的可执行文件：`gcc -pg helloworld.c` 产生一个叫作a.out的执行文件，大小明显比用-g选项后产生的文件还大。
+
 # __attribute__
 
 ## alias
@@ -11,7 +54,7 @@ int __fun()
   printf("in %s\n",__FUNCTION__);
   return 0;
 }
-  
+
 int fun() __attribute__((alias("__fun")));
 int main()
 {
