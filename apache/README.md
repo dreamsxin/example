@@ -14,7 +14,7 @@ sudo a2enmod ratelimit
 ```shell
 <Directory /var/www/html/>
     SetOutputFilter RATE_LIMIT
-    SetEnv rate-limit 400 
+    SetEnv rate-limit 400
 </Directory>
 ```
 
@@ -44,6 +44,50 @@ pm.max_children = 200
 pm.start_servers = 100
 pm.min_spare_servers = 30
 pm.max_spare_servers = 200
+```
+
+或者
+
+```conf
+<VirtualHost *:81 *:80>
+        ServerAdmin webmaster@localhost
+        ServerName app7
+        DocumentRoot /var/www/html/app7/public
+        <Proxy "unix:/run/php/php7.1-fpm.sock|fcgi://php-fpm">
+            # we must declare a parameter in here (doesn't matter which) or it'll not register the proxy ahead of time
+            ProxySet disablereuse=off
+        </Proxy>
+
+        # Redirect to the proxy
+        <FilesMatch \.php$>
+            SetHandler proxy:fcgi://php-fpm
+        </FilesMatch>
+        <Directory /var/www/html/app7/public/>
+                Options Indexes FollowSymLinks
+                AllowOverride all
+                Order deny,allow
+                Allow from all
+        </Directory>
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+
+<VirtualHost *:81 *:80>
+        ServerAdmin webmaster@localhost
+        ServerName app
+        DocumentRoot /var/www/html/app/public
+        <FilesMatch \.php$>
+                SetHandler "proxy:fcgi://127.0.0.1:9000"
+        </FilesMatch>
+        <Directory /var/www/html/app/public/>
+                Options Indexes FollowSymLinks
+                AllowOverride all
+                Order deny,allow
+                Allow from all
+        </Directory>
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
 ```
 
 # 记录请求数据到日志
@@ -79,6 +123,7 @@ Organization Name (eg, company) [Internet Widgits Pty Ltd]:MYLEFT
 Organizational Unit Name (eg, section) []:MYLEFT
 Common Name (e.g. server FQDN or YOUR name) []:*.myleft.com
 ```
+
 修改配置文件
 ```conf
 <VirtualHost _default_:443>
@@ -137,7 +182,7 @@ sudo a2ensite default-ssl
 	ProxyPassReverse /  http://mobile1.eotu.com:81/
 	ErrorLog ${APACHE_LOG_DIR}/eotu-error.log
 	CustomLog ${APACHE_LOG_DIR}/eotu-access.log combined
-	
+
 	SSLEngine on
 
         SSLCertificateFile /etc/apache2/ssl/apache.crt
