@@ -55,16 +55,21 @@ user_query = SELECT maildir, 89 AS uid, 89 AS gid FROM mailbox WHERE username = 
 
 ## 权限问题
 
-查看用户 uid 和 gid 是否一致
+查看目录用户 uid 和 gid 是否一致
 ```shell
 grep "postfix" /etc/passwd
+```
+
+不一致，修改目录所属用户和用户组：
+```shell
+chown -R postfix:postfix /var/vmail
 ```
 
 ```error
 2017-01-18 19:17:23 imap(dreamsxin@qq.com): Error: user dreamsxin@qq.com: Initialization failed: Initializing mail storage from mail_location setting failed: mkdir(/var/vmail/qq.com/dreamsxin@qq.com) failed: Permission denied (euid=89(postfix) egid=89(postfix) missing +w perm: /var/vmail/qq.com, euid is not dir owner)
 ```
 
-解决
+如果仍然报同样错误，检查 SELinux 模式：
 ```shell
 # 方法1：设置 SELinux 成为 permissive 模式
 setenforce 0
@@ -76,4 +81,16 @@ chcon -R -t mail_spool_t /var/vmail
 # 允许 postfix 写入邮件池
 getsebool-a |grep postfix # 查看所有选项 sestatus -b
 setsebool -P allow_postfix_local_write_mail_spool on
+```
+
+# 测试 IMAP
+
+```shell
+telnet 127.0.0.1
+Trying 127.0.0.1...
+Connected to 127.0.0.1.
+Escape character is '^]'.
+* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR LOGIN-REFERRALS ID ENABLE IDLE AUTH=PLAIN AUTH=LOGIN] Dovecot ready.
+1 login dreamsxin 123
+1 OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR LOGIN-REFERRALS ID ENABLE IDLE SORT SORT=DISPLAY THREAD=REFERENCES THREAD=REFS MULTIAPPEND UNSELECT CHILDREN NAMESPACE UIDPLUS LIST-EXTENDED I18NLEVEL=1 CONDSTORE QRESYNC ESEARCH ESORT SEARCHRES WITHIN CONTEXT=SEARCH LIST-STATUS] Logged in
 ```
