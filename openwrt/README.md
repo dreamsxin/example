@@ -1,4 +1,6 @@
-openwrt目录结构，其中第一行是原始目录，第二行是编译过程中生成的目录。各目录的作用是：
+# openwrt 目录结构
+
+各目录的作用是：
 
 - tools - 编译时需要一些工具， tools里包含了获取和编译这些工具的命令。里面是一些Makefile，有的可能还有patch。每个Makefile里都有一句 $(eval $(call HostBuild))，表示编译这个工具是为了在主机上使用的。
 - toolchain - 包含一些命令去获取kernel headers, C library, bin-utils, compiler, debugger
@@ -14,6 +16,7 @@ openwrt目录结构，其中第一行是原始目录，第二行是编译过程�
 
 - bin - 编译完成之后，firmware和各ipk会放到此目录下。
 
+## feeds.conf.default
 
 # 下载
 
@@ -35,12 +38,12 @@ cd openwrt
 ./scripts/feeds update -a
 ./scripts/feeds install -a
 
-# 配置编译选项
+# 配置编译选项，配置需要的库和程序，以及 OPKG 的下载地址
 make menuconfig
 
 # 同配置Linux内核类似，几乎每一个设置都有三个选项:y / m / n，分别代表如下含义：
 # * `` (按下`y`)这个包会被包含进固件镜像
-# * `` (按下`m`)这个包会在生成刷新OpenWrt的镜像文件以后被编译，但是不会被包含进镜像文件 
+# * `` (按下`m`)这个包会在生成刷新OpenWrt的镜像文件以后被编译，但是不会被包含进镜像文件
 # * `` (按下`n`)这个包不会被编译
 
 # 先编译要用到的工具和库， 编译单个软件，进入编译选项选择要编译的软件后，如果没有make需执行以下：
@@ -151,7 +154,7 @@ reboot
 # 升级固件
 
 ```shell
-sysupgrade -v openwrt-xxx-sysupgrade.bin 
+sysupgrade -v openwrt-xxx-sysupgrade.bin
 ```
 
 效果等于reboot。
@@ -181,7 +184,7 @@ extension=pgsql.so
 extension=session.so
 
 short_open_tag = On
-;doc_root = "/www" 
+;doc_root = "/www"
 date.timezone = Asia/Shanghai
 ```
 
