@@ -57,7 +57,12 @@ openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out s
 
 现在配置/etc/mosquitto/mosquitto.conf，确保8883端口的设置如下：
 
-`listener 8883cafile /etc/mosquitto/tls/ca.crtcertfile /etc/mosquitto/tls/server.crtkeyfile /etc/mosquitto/tls/server.key`
+```conf
+listener 8883
+cafile /etc/mosquitto/tls/ca.crt
+certfile /etc/mosquitto/tls/server.crt
+keyfile /etc/mosquitto/tls/server.key
+```
 
 重启Mosquitto服务就可以用以下命令订阅和发布消息了，当然所有消息都由TLS加密，可以无忧无虑地传递私密信息啦：
 
@@ -151,7 +156,13 @@ openssl x509 -req -in client.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out c
 
 现在配置/etc/mosquitto/mosquitto.conf，确保8883端口的设置如下：
 
-`listener 8883cafile /etc/mosquitto/tls/ca.crtcertfile /etc/mosquitto/tls/server.crtkeyfile /etc/mosquitto/tls/server.keyrequire_certificate true`
+```conf
+listener 8883
+cafile /etc/mosquitto/tls/ca.crt
+certfile /etc/mosquitto/tls/server.crt
+keyfile /etc/mosquitto/tls/server.key
+require_certificate true
+```
 
 重启Mosquitto服务就可以用以下命令订阅和发布消息了，当然所有消息都由TLS加密，可以无忧无虑地传递私密信息啦：
 
