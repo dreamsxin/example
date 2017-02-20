@@ -34,7 +34,7 @@ function calc($money) {
 
 $start = getMillisecond();
 var_dump(calc(10000));
-echo (getMillisecond() - $start).PHP_EOL;
+echo '耗时：'.(getMillisecond() - $start).PHP_EOL;
 
 // Dreamsxin 的递归方法
 function calc2($money, $capsules, $empty) {
@@ -54,5 +54,5 @@ $capsules = 0;
 $empty = 0;
 $start = getMillisecond();
 var_dump(calc2($money, $capsules, $empty));
-echo getMillisecond() - $start;
+echo '耗时：'.(getMillisecond() - $start).PHP_EOL;
 ```
