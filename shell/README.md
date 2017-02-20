@@ -176,3 +176,18 @@ chmod a-wx,a+r   file		// 同上例
 chmod -R u+r directory		// 递归地给directory目录下所有文件和子目录的属主分配读的权限
 chmod 4755			// 设置用ID，给属主分配读、写和执行权限，给组和其他用户分配读、执行的权限。
 ```
+
+## 简体中文转繁体
+
+使用 `cconv` 转换
+
+```shell
+#!/bin/bash
+find . -type f -name "*.html"|while read line;do
+echo $line
+cconv -f utf-8 -t utf8-tw $line -o ${line}.zh_TW
+mv $line ${line}.zh_CN
+mv ${line}.zh_TW $line
+done
+find . -type f -name "*.zh_CN" -exec rm -f {} \;
+```
