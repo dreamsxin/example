@@ -1,4 +1,18 @@
-# PHP-FPM 配置
+# PHP-FPM
+
+## 用信号控制：
+
+master进程可以理解以下信号
+
+- INT, TERM 立刻终止
+- QUIT 平滑终止
+- USR1 重新打开日志文件
+- USR2 平滑重载所有worker进程并重新载入配置和二进制模块
+
+```shell
+ps aux|grep php-fpm
+kill -USR2 主进程号
+```
 
 ## 开启慢请求日志
 
