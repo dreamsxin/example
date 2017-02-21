@@ -78,3 +78,86 @@ server {
     }
 }
 ```
+
+## 启动脚本
+
+`/etc/init.d/php7-fpm`
+
+```shell
+#!/bin/bash
+
+php_command=/usr/local/php7/sbin/php-fpm
+php_config=/usr/local/php7/etc/php-fpm.conf
+php_pid=/usr/local/php7/var/run/php-fpm.pid
+RETVAL=0
+prog="php-fpm"
+
+#start function
+php_fpm_start() {
+    /usr/local/php7/sbin/php-fpm
+}
+
+start(){
+    if [ -e $php_pid  ]
+    then
+    echo "php-fpm already start..."
+    exit 1
+    fi
+    php_fpm_start
+}
+
+stop(){
+    if [ -e $php_pid ]
+    then
+    parent_pid=`cat $php_pid`
+    all_pid=`ps -ef | grep php-fpm | awk '{if('$parent_pid' == $3){print $2}}'`
+    for pid in $all_pid
+    do
+            kill $pid
+        done
+        kill $parent_pid
+    fi
+    exit 1
+}
+
+restart(){
+    stop
+    start
+}
+
+# See how we were called.
+case "$1" in
+start)
+        start
+        ;;
+stop)
+        stop
+        ;;
+restart)
+        stop
+        start
+        ;;
+status)
+        status $prog
+        RETVAL=$?
+        ;;
+*)
+        echo $"Usage: $prog {start|stop|restart|status}"
+        exit 1
+esac
+exit $RETVAL
+```
+
+```shell
+sudo apt-get install chkconfig
+sudo ln -s /usr/lib/insserv/insserv /sbin/
+
+##  添加执行权限  
+chmod a+x /etc/init.d/php7-fpm
+
+##  加入服务
+chkconfig --add php7-fpm
+
+##   开机自启  
+chkconfig php7-fpm on
+```
