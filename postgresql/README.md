@@ -18,7 +18,7 @@ deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main
 执行
 ```shell
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-sudo apt-get update 
+sudo apt-get update
 apt-get install postgresql-9.5
 ```
 
@@ -32,13 +32,22 @@ apt-get install postgresql-9.5
 ```shell
 psql -U postgres
 # or
-sudo -u postgres psql 
+sudo -u postgres psql
 \password postgres
 ```
 
 # 远程连接修改pg_hba.conf
 ```conf
-host    all             all             0.0.0.0/0               md5
+local   all         postgres                          trust
+# TYPE  DATABASE    USER        CIDR-ADDRESS          METHOD
+
+# "local" is for Unix domain socket connections only
+local   all         all                               ident
+# IPv4 local connections:
+host    all         all         127.0.0.1/32          md5
+host    all         all         0.0.0.0/0             md5
+# IPv6 local connections:
+host    all         all         ::1/128               md5
 ```
 
 # 监听地址修改postgresql.conf
@@ -116,7 +125,7 @@ sudo service postgresql stop
 ```shell
 cd /var/lib/postgresql/9.4/
 rm main -R
-tar xvf main.tar 
+tar xvf main.tar
 ```
 
 ## 编写 recovery.conf
@@ -154,12 +163,12 @@ sudo -u postgres pgagent -l2  hostaddr=localhost dbname=ads user=postgres
 ```shell
 #!/bin/bash
 set -e
- 
+
 #
 # Starts / stops the pgagent daemon
 #
 # /etc/init.d/pgagent
- 
+
 ### BEGIN INIT INFO
 # Provides:         pgagent
 # Required-Start:   $local_fs $remote_fs $network $time postgresql
@@ -170,7 +179,7 @@ set -e
 # Default-Stop:     0 1 6
 # Short-Description:    pgagent Postgresql Job Service
 ### END INIT INFO
- 
+
 # For SELinux we need to use 'runuser' not 'su'
 if [ -x /sbin/runuser ]
 then
@@ -178,28 +187,28 @@ then
 else
     SU=su
 fi
- 
+
 DBNAME=${DBNAME-postgres}
 DBUSER=${DBUSER-postgres}
 DBHOST=${DBHOST-localhost}
 DBPORT=${DBPORT-5432}
 LOGFILE=${LOGFILE-/var/log/pgagent.log}
 pidfile="/var/run/pgagent.pid"
- 
+
 RETVAL=0
 NAME="pgagent"
 PROG="/usr/bin/pgagent"
- 
+
 # Override defaults from /etc/default/pgagent file,if file is present:
 [ -f /etc/default/pgagent ] && . /etc/default/pgagent
- 
+
 echo_success() {
     echo "Success."
 }
 echo_failure() {
     echo "Failure."
 }
- 
+
 start() {
     # Make sure that pgagent is not already running:
     if [ -e "${pidfile}" ]
@@ -207,15 +216,15 @@ start() {
         echo "${NAME} is already running"
         exit 0
     fi
- 
+
     echo "Starting ${NAME} service... "
- 
+
     if [ ! -e "${LOGFILE}" ]; then
         touch ${LOGFILE}
         chown root:pgagent ${LOGFILE}
-        chmod g+rw ${LOGFILE} 
+        chmod g+rw ${LOGFILE}
     fi
- 
+
     $SU - pgagent -c "$PROG -s $LOGFILE hostaddr=$DBHOST dbname=$DBNAME user=$DBUSER"
     RETVAL=$?
     if [ $RETVAL -eq 0 ]
@@ -228,10 +237,10 @@ start() {
         return -1
     fi
 }
- 
+
 stop(){
     echo $"Stopping ${NAME} service... "
- 
+
     if [ ! -e "$pidfile" ]; then
         echo "${NAME} is not running."
         exit 0
@@ -243,7 +252,7 @@ stop(){
         return 0
     fi
 }
- 
+
 status() {
     if [ ! -f "${pidfile}" ]; then
         echo "${NAME} is not running."
@@ -251,7 +260,7 @@ status() {
         echo "${NAME} is running."
     fi
 }
- 
+
 #
 case "$1" in
     start)
@@ -270,7 +279,7 @@ case "$1" in
     *)
         echo $"Usage: $0 {start|stop|restart|reload|status}"
 esac
- 
+
 exit $?
 ```
 

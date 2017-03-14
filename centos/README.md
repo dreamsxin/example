@@ -94,3 +94,11 @@ rpm -Uvh https://mirror.webtatic.com/yum/el6/latest.rpm
 yum install httpd
 yum install php71w php71w-pdo php71w-devel
 ```
+
+## postgresql 配置
+
+```shell
+service postgresql-9.5 initdb
+```
+
+`/var/lib/pgsql/9.5/data/pg_hba.conf`
