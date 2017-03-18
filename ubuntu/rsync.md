@@ -40,10 +40,10 @@ src=/tmp/
 des=web
 # user是备份服务器建立密码文件里的认证用户
 user=www-data
-/usr/local/inotify/bin/inotifywait -mrq --timefmt '%d/%m/%y %H:%M' --format '%T %w%f%e' -e modify,delete,create,attrib $src | while read files 
+/usr/local/inotify/bin/inotifywait -mrq --timefmt '%d/%m/%y %H:%M' --format '%T %w%f%e' -e modify,delete,create,attrib $src | while read files
 do
 /usr/bin/rsync -vzrtopg --delete --progress --password-file=/usr/local/rsync/rsync.passwd $src $user@$host::$des
-echo "${files} was rsynced" >>/tmp/rsync.log 2>&1 
+echo "${files} was rsynced" >>/tmp/rsync.log 2>&1
 done
 ```
 
@@ -80,6 +80,51 @@ chmod 600 /etc/rsyncd.pass
 cp /usr/share/doc/rsync/examples/rsyncd.conf /etc
 vi /etc/rsyncd.conf
 ```
+默认配置
+```conf
+# sample rsyncd.conf configuration file
+
+# GLOBAL OPTIONS
+
+#motd file=/etc/motd
+#log file=/var/log/rsyncd
+# for pid file, do not use /var/run/rsync.pid if
+# you are going to run rsync out of the init.d script.
+# pid file=/var/run/rsyncd.pid
+#syslog facility=daemon
+#socket options=
+
+# MODULE OPTIONS
+
+[www]
+
+        comment = wifi files
+        path = /var/www/html/files
+        use chroot = yes
+#       max connections=10
+        lock file = /var/lock/rsyncd
+# the default for read only is yes...
+        read only = yes
+        list = yes
+        uid = nobody
+        gid = nogroup
+#       exclude =
+#       exclude from =
+#       include =
+#       include from =
+#       auth users =
+#       secrets file = /etc/rsyncd.secrets
+        strict modes = yes
+#       hosts allow =
+#       hosts deny =
+        ignore errors = no
+        ignore nonreadable = yes
+        transfer logging = no
+#       log format = %t: host %h (%a) %o %f (%l bytes). Total %b bytes.
+        timeout = 600
+        refuse options = checksum dry-run
+        dont compress = *.gz *.tgz *.zip *.z *.rpm *.deb *.iso *.bz2 *.tbz
+```
 
 ```conf
 uid = root
@@ -97,10 +142,10 @@ ignore errors
 read only = no
 write only = no
 hosts allow = 192.168.1.101
-hosts deny = * 
+hosts deny = *
 list = false
-uid = root 
-gid = root 
+uid = root
+gid = root
 auth users = www-data
 secrets file = /usr/local/rsync/rsync.passwd
 ```
@@ -109,6 +154,12 @@ secrets file = /usr/local/rsync/rsync.passwd
 
 ```shell
 rsync --daemon
+```
+
+### 客户端测试
+
+```shell
+rsync -vzrtopg --delete --password-file=/etc/rsync.pwd  www@192.168.1.108::www ./twofiles/
 ```
 
 同步多台服务器
