@@ -24,3 +24,10 @@ vi -b filepath
 ```shell
 :%!xxd -r
 ```
+
+## 去掉最后的行终止符(line terminator)
+
+```shell
+:set noendofline binary
+:w
+```
