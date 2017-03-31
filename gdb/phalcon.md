@@ -102,8 +102,39 @@ p (char*)(handler_name.value.str->val)
 - until 行号:	可用于跳出循环，加快了调试速度。
 
 在 php 官方源码根目录中，存在`gdb`脚本文件 `.gdbinit`，我可以在`gdb`启动后引入
+
 ```shell
 source .gdbinit
 ```
 
 `gdb`在启动的时候，会在当前目录下查找 ".gdbinit" 文件，所以也可以把文件拷贝到当前目录。
+
+里面定义的快捷的命令有：
+
+- zbacktrace
+- print_ht
+- print_htptr
+- print_htstr
+- print_ft
+- print_inh
+- printzn
+- printzops
+- lookup_root
+- zmemcheck
+
+## 调试 core
+
+```shell
+gdb php core
+
+# 查看堆栈
+gdb> bt
+# 跳到指定的 frame
+gdb> f 1
+# 打印当前 state
+gdb> p execute_data->function_state.function->common->function_name
+gdb> p execute_data->function_state.function->op_array->filename
+gdb> p execute_data->function_state.function->op_array->line_start
+# 或者
+gdb> zbacktrace
+gdb> print execute_data.This
