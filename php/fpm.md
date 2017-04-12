@@ -161,3 +161,24 @@ chkconfig --add php7-fpm
 ##   开机自启  
 chkconfig php7-fpm on
 ```
+
+## 开启 php-fpm 生成 core dumps
+
+切换到 root 用户修改：
+
+```shell
+su -
+echo '/tmp/core-%e.%p' > /proc/sys/kernel/core_pattern
+echo 0 > /proc/sys/kernel/core_uses_pid
+ulimit -c unlimited
+```
+
+设置 `/etc/php-fpm.d/www.conf`
+
+```conf
+rlimit_core = unlimited
+```
+
+```shell
+gdb /path/to/php-fpm core.dump
+```
