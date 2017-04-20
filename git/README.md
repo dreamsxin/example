@@ -233,10 +233,17 @@ git reset HEAD
 
 `--soft` 只会改变 `HEAD` 也就是说，还保留暂存区信息。
 
-＃ 代理设置
+## 代理设置
 
 ```shell
 git config --global http.proxy http://host:port
 ssh -qTfnN -D 7070 username@host -p port
 export all_proxy=socks5://127.0.0.1:7070
+```
+
+## CVS 导入
+
+```shell
+sudo apt-get intsall git-cvs
+git cvsimport -o origin -v -d :pserver:anonymous@cvs.schmorp.de/schmorpforge libeio
 ```
