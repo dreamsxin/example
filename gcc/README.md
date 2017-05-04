@@ -120,3 +120,16 @@ int main()
 ```shell
 gcc program.c -Wl,-wrap,atoi -o program
 ```
+
+## 查看库依赖
+
+Linux：
+
+- ldd
+- readelf -d a.out | grep NEED
+- objdump -x a.out | grep NEEDED
+
+Mac：
+
+- otool -L
+- greadelf libxxx.so | grep NEED
