@@ -1,14 +1,17 @@
-# PPA 安装
+# 使用 PPA 安装
 
 ```shell
 sudo apt-get install python-software-properties
+# 添加 PHP 软件源
 sudo add-apt-repository ppa:ondrej/php
+# 更新软件源信息
+sudo apt-get update
+# 卸载老版本 PHP
 sudo apt-get purge php5-fpm
 sudo apt-get install php7.1-cli php7.1-dev php7.1-dev php7.1-curl php7.1-pgsql php7.1-mcrypt
 ```
 
-# Ubuntu 编译 PHP7
-----------------
+# 使用源码编译安装 PHP7
 
 ```shell
 # sudo apt-get install libxml2-dev
@@ -96,8 +99,14 @@ yum update
 ## 安装扩展
 
 ```shell
+phpize
+./configure
+make && sudo make install
+
+# 如果是源码编译安装的，带上安装路径
 /usr/local/php/bin/phpize
 ./configure CFLAGS="-g3 -O0 -std=gnu90 -Wall -Werror -Wno-error=uninitialized" --with-php-config=/usr/local/php/bin/php-config
+make && sudo make install
 ```
 
 ## apache
