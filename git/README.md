@@ -233,6 +233,17 @@ git reset HEAD
 
 `--soft` 只会改变 `HEAD` 也就是说，还保留暂存区信息。
 
+## 删除分支
+
+```shell
+# 删除本地
+git branch -D branch-name
+
+# 删除远程
+git branch -r -d origin/branch-name
+git push origin :branch-name
+```
+
 ## 代理设置
 
 ```shell
