@@ -22,7 +22,7 @@ import "math"
 
 ```go
 import (
-    "fmt"
+	"fmt"
 	"math"
 )
 ```
@@ -33,13 +33,13 @@ import (
 package main
 
 import (
-    "fmt"
+	"fmt"
 	"time"
-    "runtime"
+	"runtime"
 )
 
 func main() {
-    fmt.Println("Hellow World!", runtime.Version(), ", The time is", time.Now())
+	fmt.Println("Hellow World!", runtime.Version(), ", The time is", time.Now())
 }
 ```
 
@@ -227,9 +227,9 @@ import (
 )
 
 var (
-	ToBe   bool       = false
-	MaxInt uint64     = 1<<64 - 1
-	z      complex128 = cmplx.Sqrt(-5 + 12i)
+	ToBe   bool	   = false
+	MaxInt uint64	 = 1<<64 - 1
+	z	  complex128 = cmplx.Sqrt(-5 + 12i)
 )
 
 func main() {
@@ -466,12 +466,12 @@ import "fmt"
 func main() {
 	i, j := 42, 2701
 
-	p := &i         // point to i
+	p := &i		 // point to i
 	fmt.Println(*p) // read i through the pointer
-	*p = 21         // set i through the pointer
+	*p = 21		 // set i through the pointer
 	fmt.Println(i)  // see the new value of i
 
-	p = &j         // point to j
+	p = &j		 // point to j
 	*p = *p / 37   // divide j through the pointer
 	fmt.Println(j) // see the new value of j
 }
@@ -523,7 +523,7 @@ type Vertex struct {
 var (
 	v1 = Vertex{1, 2}  // 类型为 Vertex
 	v2 = Vertex{X: 1}  // Y:0 被省略
-	v3 = Vertex{}      // X:0 和 Y:0
+	v3 = Vertex{}	  // X:0 和 Y:0
 	p  = &Vertex{1, 2} // 类型为 *Vertex
 )
 
@@ -760,7 +760,7 @@ func (p *S) Put(v int) { p.i = v }
 ```go
 type Foo int // 为 int 定义别名 Foo
 func (self Foo) Emit() {
-    fmt.Printf("%v", self)
+	fmt.Printf("%v", self)
 }
 ```
 
@@ -849,7 +849,7 @@ func (v *Vertex) Abs() float64 {
 
 ```go
 type Stringer interface {
-    String() string
+	String() string
 }
 ```
 
@@ -884,7 +884,7 @@ Go 程序使用 error 值来表示错误状态。
 
 ```go
 type error interface {
-    Error() string
+	Error() string
 }
 ```
 
@@ -893,7 +893,7 @@ type error interface {
 ```go
 i, err := strconv.Atoi("42")
 if err != nil {
-    fmt.Printf("couldn't convert number: %v\n", err)
+	fmt.Printf("couldn't convert number: %v\n", err)
 }
 fmt.Println("Converted integer:", i)
 ```
@@ -970,7 +970,7 @@ func main() {
 package http
 
 type Handler interface {
-    ServeHTTP(w ResponseWriter, r *Request)
+	ServeHTTP(w ResponseWriter, r *Request)
 }
 ```
 
@@ -1173,7 +1173,7 @@ func fibonacci(c, quit chan int) {
 			fmt.Println("quit")
 			return
 		default:
-			fmt.Println("    .")
+			fmt.Println("	.")
 			time.Sleep(50 * time.Millisecond)
 		}
 	}
