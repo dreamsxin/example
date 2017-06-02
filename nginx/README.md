@@ -17,6 +17,22 @@ sudo service php5-fpm restart
 sudo service php5-fpm status
 ```
 
+## 检测配置文件
+
+```shell
+nginx -t  
+nginx -t -c my-nginx.conf  
+```
+
+## 平滑重启
+
+```shell
+kill -HUP Nginx主进程号  
+Killall -s HUP nginx
+```
+
+当 nginx 接收到 HUP 信号时，它会尝试先解析配置文件，如果成功，就应用新的配置文件(例如，重新打开日志文件或监听的套接字)。之后，nginx 运行新的工作进程并从容关闭旧的工作进程。通知工作进程关闭监听套接字，但是继续为当前连接的客户提供服务。所有的客户端的服务完成后，旧的工作进程被关闭。如果新的配置文件应用失败，nginx 将继续使用旧的配置文件进行工作。
+
 ## 修改nginx配置
 ```conf
 server {

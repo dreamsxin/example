@@ -1,3 +1,51 @@
+# 快捷键
+
+## 打开终端
+
+可以使用快捷键 `ctrl + alt + t` 打开一个新终端。
+也可以按下 alt 然后输入 terminal
+
+## 打开应用搜索菜单
+
+按下 `supper` 键
+
+## 最小化所有窗口
+
+按下 `supper + ctrl + d` 键
+
+## 打开新窗口
+
+在 Nautilus 打开新的 Tab，浏览器中打开新的页面窗口。
+
+`ctrl + t`
+
+## 关闭当前窗口
+
+在 Nautilus 关闭当前 Tab，浏览器中关闭当前页面窗口。
+
+`ctrl + w`
+
+## 返回 Home 目录
+
+按下 `alt + home` 键
+
+# 安装中文拼音
+
+```shell
+sudo apt-get install ibus-sunpinyin
+```
+
+## 重启 ibus
+
+```shell
+killall ibus-daemon
+ibus-daemon -d
+# or
+ibus-daemon -d -x -r
+```
+
+## 设置快捷键 和 添加输入法
+
 # use gcc 5.x on ubuntu 14.04 
 
 ```shell

@@ -1,5 +1,5 @@
 ext
 .temp
 *.log
-
+*.lock
 *.pid
