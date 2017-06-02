@@ -1337,6 +1337,25 @@ fn no_dangle() -> String {
 
 这样就可以没有任何错误的运行了。所有权被移动出去，所以没有值被释放掉。
 
+Rust 中的每一个引用都有其生命周期，也就是引用保持有效的作用域。大部分时候生命周期是隐含并可以推断的，正如大部分时候类型也是可以推断的一样。类似于当因为有多种可能类型的时候必须注明类型，也会出现引用的生命周期以多种不同方式相关联的情况，所以 Rust 需要我们使用泛型生命周期参数来注明他们的关系，这样就能确保运行时实际使用的引用绝对是有效的。
+
+编译器的这一部分叫做借用检查器（borrow checker），它比较作用域来确保所有的借用都是有效的：
+
+```rust
+{
+    let r;         // -------+-- 'a
+                   //        |
+    {              //        |
+        let x = 5; // -+-----+-- 'b
+        r = &x;    //  |     |
+    }              // -+     |
+                   //        |
+    println!("r: {}", r); // |
+                   //        |
+                   // -------+
+}
+```
+
 ## Slices
 
 另一个没有所有权的数据类型是 slice。slice 允许你引用集合中一段连续的元素序列，而不用引用整个集合。
@@ -1451,3 +1470,150 @@ let slice = &a[1..3];
 
 所有权、借用和 slice 这些概念是 Rust 何以在编译时保障内存安全的关键所在。Rust 像其他系统编程语言那样给予你对内存使用的控制，但拥有数据所有者在离开作用域后自动清除其数据的功能意味着你无须额外编写和调试相关的控制代码。
 
+## 结构体（struct）
+
+struct，是 structure 的缩写，是一个允许我们命名并将多个相关值包装进一个有意义的组合的自定义类型。
+为了定义结构体，通过struct关键字并为整个结构体提供一个名字。结构体的名字需要描述它所组合的数据的意义。
+接着，在大括号中，定义每一部分数据的名字，他们被称作字段（field），并定义字段类型。例如，下面代码展示了一个储存用户账号信息的结构体：
+
+```rust
+struct User {
+    username: String,
+    email: String,
+    sign_in_count: u64,
+    active: bool,
+}
+```
+
+一旦定义了结构体后为了使用它，通过为每个字段指定具体值来创建这个结构体的实例：
+
+```rust
+let user1 = User {
+    email: String::from("someone@example.com"),
+    username: String::from("someusername123"),
+    active: true,
+    sign_in_count: 1,
+};
+```
+
+为了从结构体中获取某个值，可以使用点号。如果我们只想要用户的邮箱地址，可以用 `user1.email`。
+
+### 结构体数据的所有权
+
+在 User 结构体的定义中，我们使用了自身拥有所有权的String类型而不是&str字符串 slice 类型。这是一个有意而为之的选择，因为我们想要这个结构体拥有它所有的数据，为此只要整个结构体是有效的话其数据也应该是有效的。
+
+可以使结构体储存被其他对象拥有的数据的引用，不过这么做的话需要用上生命周期（lifetimes），这是第十章会讨论的一个 Rust 的功能。生命周期确保结构体引用的数据有效性跟结构体本身保持一致。
+
+如果你尝试在结构体中储存一个引用而不指定生命周期，编译时将会报错 `error[E0106]: missing lifetime specifier`，比如这样：
+
+```rust
+struct User {
+    username: &str,
+    email: &str,
+    sign_in_count: u64,
+    active: bool,
+}
+
+fn main() {
+    let user1 = User {
+        email: "someone@example.com",
+        username: "someusername123",
+        active: true,
+        sign_in_count: 1,
+    };
+}
+```
+
+我可以加上生命周期说明符：
+
+```rust
+struct User<'a> {
+    username: &'a str,
+    email: &'a str,
+    sign_in_count: u64,
+    active: bool,
+}
+
+fn main() {
+    let user1 = User {
+        email: "someone@example.com",
+        username: "someusername123",
+        active: true,
+        sign_in_count: 1,
+    };
+}
+```
+
+### 通过衍生 trait 增加实用功能
+
+编译下面的代码，会出现带有如下核心信息的错误：
+
+`error[E0277]: the trait bound `Rectangle: std::fmt::Display` is not satisfied`
+
+```rust
+struct Rectangle {
+    length: u32,
+    width: u32,
+}
+
+fn main() {
+    let rect1 = Rectangle { length: 50, width: 30 };
+
+    println!("rect1 is {}", rect1);
+}
+```
+
+`println!` `宏能处理很多类型的格式，不过由于 `{}` 使用称为 `Display` 的格式：直接提供给终端用户查看的输出。
+目前为止见过的基本类型都默认实现了 `Display`，所以它就是向用户展示1或其他任何基本类型的唯一方式。
+对于结构体，应该用来输出的格式是不明确的，因为这有更多显示的可能性：是否需要逗号？需要打印出结构体的{}吗？所有字段都应该显示吗？
+因为这种不确定性，Rust 不尝试猜测我们的意图所以结构体并没有提供一个 Display 的实现。
+
+我可以使用 `{:?}` 告诉 `println!` `我们想要使用叫做Debug的输出格式。Debug 是一个 trait，它允许我们在调试代码时以一种对开发者有帮助的方式打印出结构体。
+不过我们必须为结构体显式选择这个功能，在结构体定义之前加上#[derive(Debug)]注解。
+
+```rust
+#[derive(Debug)]
+struct Rectangle {
+    length: u32,
+    width: u32,
+}
+
+fn main() {
+    let rect1 = Rectangle { length: 50, width: 30 };
+
+    println!("rect1 is {:?}", rect1);
+}
+```
+
+如果想要输出再好看和易读一点，这对更大的结构体会有帮助，可以将`println!``的字符串中的`{:?}`替换为`{:#?}`。
+
+### 定义方法
+
+让我们将获取一个 `Rectangle` 实例作为参数的 `area` 函数改写成一个定义于 `Rectangle` 结构体上的 `area` 方法：
+
+```rust
+#[derive(Debug)]
+struct Rectangle {
+    length: u32,
+    width: u32,
+}
+
+impl Rectangle {
+    fn area(&self) -> u32 {
+        self.length * self.width
+    }
+}
+
+fn main() {
+    let rect1 = Rectangle { length: 50, width: 30 };
+
+    println!(
+        "The area of the rectangle is {} square pixels.",
+        rect1.area()
+    );
+}
+```
+
+为了使函数定义于Rectangle的上下文中，我们开始了一个impl块（impl是 implementation 的缩写）。接着将函数移动到impl大括号中，并将签名中的第一个（在这里也是唯一一个）参数和函数体中其他地方的对应参数改成self。然后在main中将我们调用area方法并传递rect1作为参数的地方，改成使用方法语法在Rectangle实例上调用area方法。方法语法获取一个实例并加上一个点号后跟方法名、括号以及任何参数。
+
+这里选择&self跟在函数版本中使用&Rectangle出于同样的理由：我们并不想获取所有权，只希望能够读取结构体中的数据，而不是写入。
