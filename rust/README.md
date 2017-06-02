@@ -387,6 +387,147 @@ let y = "I can also be bound to text!"; // `y` is now of a different type
 const MAX_POINTS: u32 = 100_000;
 ```
 
+## 数据类型
+
+在 Rust 中，任何值都属于一种明确的类型（type），声明它被指定了何种数据，以便明确其处理方式。我们将分两部分探讨一些内建类型：标量（scalar）和复合（compound）。
+
+### 标量（scalar）
+
+标量类型代表一个单独的值。Rust 有四种基本的标量类型：整型、浮点型、布尔类型和字符类型。
+
+#### 数字类型
+
+Rust有一些分类的大量数字类型：有符号和无符号，定长和变长，浮点和整型。
+
+* 整型
+
+整数是一个没有小数部分的数字。
+
+- i 代表有符号整数，有符号数以二进制补码形式（two’s complement representation）存储。
+- u 代表无符号整数。
+
+可能的整数大小有 8、16、32 和 64 位。
+
+每一个有符号的变体可以储存包含从 -(2n - 1) 到 2n - 1 - 1 在内的数字，这里 n 是变体使用的位数。所以 i8 可以储存从 -(27) 到 27 - 1 在内的数字，也就是从 -128 到 127。无符号的变体可以储存从 0 到 2n - 1 的数字，所以 u8 可以储存从 0 到 28 - 1 的数字，也就是从 0 到 255。
+
+* 浮点型
+
+有两个主要的浮点数类型，f32 和 f64，它们对应 IEEE-754 单精度和双精度浮点数。分别占 32 位和 64 位比特。默认类型是 f64，因为它与 f32 速度差不多，然而精度更高。
+在 32 位系统上也能够使用 f64，不过比使用 f32 要慢。
+
+```rust
+fn main() {
+    let x = 2.0; // f64
+
+    let y: f32 = 3.0; // f32
+}
+```
+
+* 可变大小类型
+
+Rust 也提供了依赖底层机器指针大小的类型。这些类型拥有“size”分类，并有有符号和无符号变体。它有两个类型：isize和usize。
+
+* 布尔型
+
+有两个可能的值：true和false。Rust 中的布尔类型使用bool表示。例如：
+
+```rust
+fn main() {
+    let t = true;
+
+    let f: bool = false; // with explicit type annotation
+}
+```
+
+* 字符类型
+
+char类型代表一个单独的 Unicode 字符的值。你可以用单引号（'）创建 `char`，不像其它语言，这意味着Rust的char并不是 1 个字节，而是 4 个。
+
+```rust
+let x = 'x';
+let two_hearts = '💕';
+```
+
+* 字符串类型
+
+Rust 的 str 类型是最原始的字符串类型。作为一个不定长类型，它本身并不是非常有用，不过当它用在引用后是就有用了，例如`&str`。
+可以认为 `&str` 是一个字符串片段（string slice）。
+
+```rust
+let hello = "Hello, world!";
+
+// with an explicit type annotation
+let hello: &'static str = "Hello, world!";
+```
+
+#### 复合类型
+
+复合类型可以将多个其他类型的值组合成一个类型。Rust 有两个原生的复合类型：元组（tuple）和数组（array）。
+
+* 数组
+
+一个定长相同类型的元素列表。数组默认是不可变的。
+可以用下标（subscript notation）来访问特定的元素，下标从0开始。
+
+```rust
+let a = [1, 2, 3]; // a: [i32; 3]
+let mut m = [1, 2, 3]; // m: [i32; 3]
+
+println!("a has {} elements", a.len());
+
+let names = ["Graydon", "Brian", "Niko"]; // names: [&str; 3]
+
+println!("The second name is: {}", names[1]);
+```
+
+数组的类型是`[T; N]`，N是一个编译时常量，代表数组的长度。
+
+* 切片（Slices）
+
+一个切片（slice）是一个数组的引用（或者“视图”）。它有利于安全，有效的访问数组的一部分而不用进行拷贝。比如，你可能只想要引用读入到内存的文件中的一行。原理上，片段并不是直接创建的，而是引用一个已经存在的变量。片段有预定义的长度，可以是可变也可以是不可变的。
+
+在底层，slice 代表一个指向数据开始的指针和一个长度。
+
+你可以用一个&和[]的组合从多种数据类型创建一个切片。
+
+```rust
+let a = [0, 1, 2, 3, 4];
+let complete = &a[..]; // A slice containing all of the elements in `a`.
+let middle = &a[1..4]; // A slice of `a`: only the elements `1`, `2`, and `3`.
+let str_slice: &[&str] = &["one", "two", "three"];
+```
+
+* 元组（Tuples）
+
+元组是一个将多个其他类型的值组合进一个复合类型的主要方式，是固定大小的有序列表。
+为了从元组中获取单个的值，可以使用模式匹配（pattern matching）来解构（destructure ）元组，也可以使用点号`.`后跟值的索引来直接访问他们，不像数组索引使用`[]`。
+
+```rust
+fn main() {
+    let tup: (i32, f64, u8) = (500, 6.4, 1);
+    let (x, y, z) = tup;
+    println!("The value of y is: {}", y);
+
+    let five_hundred = x.0;
+    let six_point_four = x.1;
+    let one = x.2;
+}
+```
+
+你可以把一个元组赋值给另一个，如果它们包含相同的类型和数量。当元组有相同的长度时它们有相同的数量。
+```rust
+let mut x = (1, 2); // x: (i32, i32)
+let y = (2, 3); // y: (i32, i32)
+
+x = y;
+```
+
+你可以一个逗号来消除一个单元素元组和一个括号中的值的歧义：
+```rust
+(0,); // single-element tuple
+(0); // zero in parentheses
+```
+
 ## 函数
 
 fn 表示“这是一个函数”，后面跟着名字，一对括号，括号里是参数，最后是一对大括号代表函数体。
