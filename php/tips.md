@@ -121,6 +121,8 @@ MediaType，即是Internet Media Type，互联网媒体类型；也叫做MIME类
 
 - show master/slave status;
 
+* 11. 请写出 Linux 下编译安装 PHP 扩展（假设要编译安装扩展为mbstring，PHP源码在目录/home/my/php-src/）的过程 和 相关shell命令？
+
 ## 扩展知识
 
 * 1.是否实现过一个框架或者库以供别人使用么？如果有，请谈一谈构建框架或者库时候的经验；如果没有，请设想如果设计一个框架，并指出大概需要如何做、需要注意一些什么方面，来使别人容易地使用您的框架。
