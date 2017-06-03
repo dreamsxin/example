@@ -3144,3 +3144,40 @@ fn it_adds_two() {
 
 并不需要将 tests/integration_test.rs 中的任何代码标注为#[cfg(test)]。Cargo 对tests文件夹特殊处理并只会在运行cargo test时编译这个目录中的文件。
 tests 目录中的子目录不会被作为单独的 crate 编译或作为一部分出现在测试输出中。
+
+## 构建一个小巧的 grep
+
+Rust 的运行速度、安全性、“单二进制文件”输出和跨平台支持使其成为创建命令行程序的绝佳选择，所以我们的项目将创建一个我们自己版本的经典命令行工具：grep。grep 是“Globally search a Regular Expression and Print.”的首字母缩写。grep最简单的使用场景是使用如下步骤在特定文件中搜索指定字符串：
+
+- 获取一个文件和一个字符串作为参数。
+- 读取文件
+- 寻找文件中包含字符串参数的行
+- 打印出这些行
+
+```shell
+cargo new --bin greprs
+cd greprs
+```
+
+### 接受命令行参数
+
+第一个任务是让greprs能够接受两个命令行参数：文件名和要搜索的字符串。
+为了能够获取传递给程序的命令行参数的值，我们需要调用一个 Rust 标准库提供的函数：`std::env::args`。
+这个函数返回一个传递给程序的命令行参数的迭代器（iterator）。
+
+- 迭代器生成一系列的值。
+- 在迭代器上调用collect方法可以将其生成的元素转换为一个 vector。
+
+读取任何传递给greprs的命令行参数并将其收集到一个 vector 中：
+```rust
+use std::env;
+
+fn main() {
+	// collect 可以被用来创建很多类型的集合，这里显式注明的args类型来指定我们需要一个字符串 vector。
+    let args: Vec<String> = env::args().collect();
+    println!("{:?}", args);
+}
+```
+
+> 注意：std::env::args在其任何参数包含无效 Unicode 字符时会 panic。如果你需要接受包含无效 Unicode 字符的参数，使用std::env::args_os代替。这个函数返回OsString值而不是String值。OsString 值每个平台都不一样而且比String值处理起来更复杂。
+
