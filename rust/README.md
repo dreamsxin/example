@@ -2558,3 +2558,589 @@ note: an implementation of `std::cmp::PartialOrd` might be missing for `T`
 ```
 
 标准库中定义的 `std::cmp::PartialOrd trait` 可以实现类型的排序功能。
+
+```shell
+use std::cmp::PartialOrd;
+
+fn largest<T: PartialOrd + Copy>(list: &[T]) -> T {
+    let mut largest = list[0];
+
+    for &item in list.iter() {
+        if item > largest {
+            largest = item;
+        }
+    }
+
+    largest
+}
+
+fn main() {
+    let numbers = vec![34, 50, 25, 100, 65];
+
+    let result = largest(&numbers);
+    println!("The largest number is {}", result);
+
+    let chars = vec!['y', 'm', 'a', 'q'];
+
+    let result = largest(&chars);
+    println!("The largest char is {}", result);
+}
+```
+
+# 结构体定义中的泛型
+
+同样也可以使用<>语法来定义拥有一个或多个泛型参数类型字段的结构体。
+```rust
+struct Point<T> {
+    x: T,
+    y: T,
+}
+
+fn main() {
+    let integer = Point { x: 5, y: 10 };
+    let float = Point { x: 1.0, y: 4.0 };
+}
+```
+
+如果想要一个x和y可以有不同类型且仍然是泛型的Point结构体，我们可以使用多个泛型类型参数。
+
+```rust
+struct Point<T, U> {
+    x: T,
+    y: U,
+}
+
+fn main() {
+    let both_integer = Point { x: 5, y: 10 };
+    let both_float = Point { x: 1.0, y: 4.0 };
+    let integer_and_float = Point { x: 5, y: 4.0 };
+}
+```
+
+### 枚举定义中的泛型数据类型
+
+类似于结构体，枚举也可以在其成员中存放泛型数据类型。
+
+```rust
+enum Option<T> {
+    Some(T),
+    None,
+}
+```
+换句话说Option<T>是一个拥有泛型T的枚举。它有两个成员：Some，它存放了一个类型T的值，和不存在任何值的None。
+
+枚举也可以拥有多个泛型类型。使用过的Result枚举定义就是一个这样的例子：
+
+```rust
+enum Result<T, E> {
+    Ok(T),
+    Err(E),
+}
+```
+
+### 为带有泛型数据的枚举实现方法
+
+在Point<T>上定义了一个叫做x的方法来返回字段x中数据的引用：
+```rust
+struct Point<T> {
+    x: T,
+    y: T,
+}
+
+impl<T> Point<T> {
+    fn x(&self) -> &T {
+        &self.x
+    }
+}
+
+fn main() {
+    let p = Point { x: 5, y: 10 };
+
+    println!("p.x = {}", p.x());
+}
+```
+
+注意必须在impl后面声明T，这样就可以在Point<T>上实现的方法中使用它了。
+结构体定义中的泛型类型参数并不总是与结构体方法签名中使用的泛型是同一类型。
+
+```rust
+struct Point<T, U> {
+    x: T,
+    y: U,
+}
+
+impl<T, U> Point<T, U> {
+    fn mixup<V, W>(self, other: Point<V, W>) -> Point<T, W> {
+        Point {
+            x: self.x,
+            y: other.y,
+        }
+    }
+}
+
+fn main() {
+    let p1 = Point { x: 5, y: 10.4 };
+    let p2 = Point { x: "Hello", y: 'c'};
+
+    let p3 = p1.mixup(p2);
+
+    println!("p3.x = {}, p3.y = {}", p3.x, p3.y);
+}
+```
+
+注意泛型参数T和U声明于impl之后，因为他们于结构体定义相对应。而泛型参数V和W声明于fn mixup之后，因为他们只是相对于方法本身的。
+
+### 泛型代码的性能
+
+在阅读本部分的内容的同时你可能会好奇使用泛型类型参数是否会有运行时消耗。好消息是：Rust 实现泛型泛型的方式意味着你的代码使用泛型类型参数相比指定具体类型并没有任何速度上的损失。
+
+Rust 通过在编译时进行泛型代码的单态化（monomorphization）来保证效率。单态化是一个将泛型代码转变为实际放入的具体类型的特定代码的过程。
+
+编译器生成的单态化版本的代码看起来像这样，并包含将泛型Option替换为编译器创建的具体定义后的用例代码：
+
+```rust
+enum Option_i32 {
+    Some(i32),
+    None,
+}
+
+enum Option_f64 {
+    Some(f64),
+    None,
+}
+
+fn main() {
+    let integer = Option_i32::Some(5);
+    let float = Option_f64::Some(5.0);
+}
+```
+
+## trait：定义共享的行为
+
+trait 允许我们进行另一种抽象：他们让我们可以抽象类型所通用的行为。trait 告诉 Rust 编译器某个特定类型拥有可能与其他类型共享的功能。
+
+> 注意：trait 类似于其他语言中的常被称为接口（interfaces）的功能，虽然有一些不同。
+
+### 定义 trait
+
+一个类型的行为由其可供调用的方法构成。如果可以对不同类型调用相同的方法的话，这些类型就可以共享相同的行为了。
+trait 定义是一种将方法签名组合起来的方法，目的是定义一个实现某些目的所必需的行为的集合。
+
+下面的代码展示了一个表现这个概念的Summarizable trait 的定义：
+
+```rust
+pub trait Summarizable {
+    fn summary(&self) -> String;
+}
+```
+
+使用trait关键字来定义一个 trait，后面是 trait 的名字，在这个例子中是Summarizable。在大括号中声明描述实现这个 trait 的类型所需要的行为的方法签名，在这个例子中是是fn summary(&self) -> String。在方法签名后跟分号而不是在大括号中提供其实现。接着每一个实现这个 trait 的类型都需要提供其自定义行为的方法体，编译器也会确保任何实现Summarizable trait 的类型都拥有与这个签名的定义完全一致的summary方法。
+
+trait 体中可以有多个方法，一行一个方法签名且都以分号结尾。
+
+### 为类型实现 trait
+
+现在我们定义了Summarizable trait，接着就可以在多媒体聚合库中需要拥有这个行为的类型上实现它了。
+
+```rust
+pub struct NewsArticle {
+    pub headline: String,
+    pub location: String,
+    pub author: String,
+    pub content: String,
+}
+
+impl Summarizable for NewsArticle {
+    fn summary(&self) -> String {
+        format!("{}, by {} ({})", self.headline, self.author, self.location)
+    }
+}
+
+pub struct Tweet {
+    pub username: String,
+    pub content: String,
+    pub reply: bool,
+    pub retweet: bool,
+}
+
+impl Summarizable for Tweet {
+    fn summary(&self) -> String {
+        format!("{}: {}", self.username, self.content)
+    }
+}
+```
+
+与为类型实现方法区别在于impl关键字之后，我们提供需要实现 trait 的名称，接着是for和需要实现 trait 的类型的名称。
+
+```rust
+let tweet = Tweet {
+    username: String::from("horse_ebooks"),
+    content: String::from("of course, as you probably already know, people"),
+    reply: false,
+    retweet: false,
+};
+
+println!("1 new tweet: {}", tweet.summary());
+```
+
+trait 实现的一个需要注意的限制是：只能在 trait 或对应类型位于我们 crate 本地的时候为其实现 trait。
+没有这条规则的话，两个 crate 可以分别对相同类型是实现相同的 trait，因而这两个实现会相互冲突：Rust 将无从得知应该使用哪一个。
+因为 Rust 强制执行 orphan rule，其他人编写的代码不会破坏你代码，反之亦是如此。
+
+### 默认实现
+
+有时直接在 trait 中的实现某些或全部默认的行为，而不是在每个类型的实现定义的行为。
+为Summarize trait 的summary方法指定一个默认的字符串值：
+```rust
+    fn summary(&self) -> String {
+        String::from("(Read more...)")
+    }
+}
+```
+
+现在想要对 `NewsArticle` 实例使用这个默认实现，而不是定义一个自己的实现，则可以指定一个空的impl块：
+
+```rust
+impl Summarizable for NewsArticle {}
+```
+重载一个默认实现的语法与实现没有默认实现的 trait 方法时完全一样的。
+
+> 注意在重载过的实现中调用默认实现是不可能的。
+
+### trait bounds
+
+可以对泛型类型参数使用 trait。
+
+我们可以定义一个函数notify来调用summary方法，它拥有一个泛型类型T的参数item。
+为了能够在item上调用summary而不出现错误，我们可以在T上使用 trait bounds 来指定item必须是实现了Summarizable trait 的类型：
+
+```rust
+pub fn notify<T: Summarizable>(item: T) {
+    println!("Breaking news! {}", item.summary());
+}
+```
+可以通过+来为泛型指定多个 `trait bounds`。如果我们需要能够在函数中使用T类型的显示格式的同时也能使用summary方法，则可以使用 `trait bounds T: Summarizable + Display`。这意味着T可以是任何实现了`Summarizable`和`Display`的类型。
+
+对于拥有多个泛型类型参数的函数，每一个泛型都可以有其自己的 trait bounds，这样写：
+
+```rust,ignore
+fn some_function<T: Display + Clone, U: Clone + Debug>(t: T, u: U) -> i32 {
+```
+我们也可以使用where从句：
+```rust,ignore
+fn some_function<T, U>(t: T, u: U) -> i32
+    where T: Display + Clone,
+          U: Clone + Debug
+{
+```
+
+## 测试
+
+当使用 Cargo 新建一个库项目时，它会自动为我们生成一个测试模块和一个测试函数。这有助于我们开始编写测试，因为这样每次开始新项目时不必去查找测试函数的具体结构和语法了。同时可以额外增加任意多的测试函数以及测试模块！
+
+让我们创建一个新的库项目adder：
+
+```shell
+cargo new adder
+cd adder
+```
+adder 库中`src/lib.rs`的内容应该看起来像这样：
+
+```rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn it_works() {
+    }
+}
+```
+注意fn行之前的`#[test]`：这个属性表明这是一个测试函数，这样测试执行者就知道将其作为测试处理。也可以在tests模块中拥有非测试的函数来帮助我们建立通用场景或进行常见操作，所以需要使用`#[test]`属性标明哪些函数是测试。
+
+`cargo test`命令会运行项目中所有的测试。
+
+```text
+$ cargo test
+   Compiling adder v0.1.0 (file:///projects/adder)
+    Finished debug [unoptimized + debuginfo] target(s) in 0.22 secs
+     Running target/debug/deps/adder-ce99bcc2479f4607
+
+running 1 test
+test tests::it_works ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured
+
+   Doc-tests adder
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured
+```
+
+Cargo 编译并运行了测试。在`Compiling`、`Finished`和`Running`这几行之后，可以看到`running 1 test`这一行。
+下一行显示了生成的测试函数的名称，它是`it_works`，以及测试的运行结果，ok。
+接着可以看到全体测试运行结果的总结：`test result: ok`.意味着所有测试都通过了。
+`1 passed; 0 failed`表示通过或失败的测试数量。
+
+给it_works函数起个不同的名字，比如exploration，像这样：
+
+```rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn exploration() {
+    }
+}
+```
+并再次运行cargo test。现在输出中将出现`exploration`而不是`it_works`。
+让我们增加另一个测试，不过这一次是一个会失败的测试！当测试函数中出现 panic 时测试就失败了。
+```rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn exploration() {
+    }
+
+    #[test]
+    fn another() {
+        panic!("Make this test fail");
+    }
+}
+```
+
+### 使用assert!宏来检查结果
+
+`assert!`宏由标准库提供，在希望确保测试中一些条件为true时非常有用。需要向`assert!`宏提供一个计算为布尔值的参数。如果值是`true`，`assert!`什么也不做同时测试会通过。如果值为`false`，`assert!`调用`panic!`宏，这会导致测试失败。这是一个帮助我们检查代码是否以期望的方式运行的宏。
+
+```rust
+#[derive(Debug)]
+pub struct Rectangle {
+    length: u32,
+    width: u32,
+}
+
+impl Rectangle {
+    pub fn can_hold(&self, other: &Rectangle) -> bool {
+        self.length > other.length && self.width > other.width
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn larger_can_hold_smaller() {
+        let larger = Rectangle { length: 8, width: 7 };
+        let smaller = Rectangle { length: 5, width: 1 };
+
+        assert!(larger.can_hold(&smaller));
+    }
+
+    #[test]
+    fn smaller_can_hold_larger() {
+        let larger = Rectangle { length: 8, width: 7 };
+        let smaller = Rectangle { length: 5, width: 1 };
+
+        assert!(!smaller.can_hold(&larger));
+    }
+}
+```
+
+### 使用assert_eq!和assert_ne!宏来测试相等
+
+```rust
+pub fn add_two(a: i32) -> i32 {
+    a + 2
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_adds_two() {
+        assert_eq!(4, add_two(2));
+    }
+}
+```
+
+### 自定义错误信息
+
+也可以向assert!、assert_eq!和assert_ne!宏传递一个可选的参数来增加用于打印的自定义错误信息。
+
+```rust
+#[test]
+fn greeting_contains_name() {
+    let result = greeting("Carol");
+    assert!(
+        result.contains("Carol"),
+        "Greeting did not contain name, value was `{}`", result
+    );
+}
+```
+
+### 使用should_panic检查 panic
+
+```rust
+struct Guess {
+    value: u32,
+}
+
+impl Guess {
+    pub fn new(value: u32) -> Guess {
+        if value < 1 || value > 100 {
+            panic!("Guess value must be between 1 and 100, got {}.", value);
+        }
+
+        Guess {
+            value: value,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[should_panic]
+    fn greater_than_100() {
+        Guess::new(200);
+    }
+}
+```
+为了使should_panic测试更精确，可以给should_panic属性增加一个可选的expected参数。测试工具会确保错误信息中包含其提供的文本。
+
+```rust
+struct Guess {
+    value: u32,
+}
+
+impl Guess {
+    pub fn new(value: u32) -> Guess {
+        if value < 1 {
+            panic!("Guess value must be greater than or equal to 1, got {}.",
+                   value);
+        } else if value > 100 {
+            panic!("Guess value must be less than or equal to 100, got {}.",
+                   value);
+        }
+
+        Guess {
+            value: value,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[should_panic(expected = "Guess value must be less than or equal to 100")]
+    fn greater_than_100() {
+        Guess::new(200);
+    }
+}
+```
+
+## 运行测试
+
+`cargo test`在测试模式下编译代码并运行生成的测试二进制文件。这里有一些选项可以用来改变cargo test的默认行为。
+例如，cargo test生成的二进制文件的默认行为是并行的运行所有测试，并捕获测试运行过程中产生的输出避免他们被显示出来使得阅读测试结果相关的内容变得更容易。
+可以指定命令行参数来改变这些默认行为。
+
+运行`cargo test --help`会告诉你`cargo test`的相关参数。
+运行`cargo test -- --help`则会告诉你位于分隔符--之后的相关参数。
+
+### 并行或连续的运行测试
+
+当运行多个测试时，他们默认使用线程来并行的运行。因为测试是在同时运行的，你应该小心测试不能相互依赖或任何共享状态，包括类似于当前工作目录或者环境变量这样的共享环境。
+
+* 控制使用线程的数量
+
+如果你不希望测试并行运行，或者想要更加精确的控制使用线程的数量，可以传递`--test-threads`参数和希望使用线程的数量给测试二进制文件。例如：
+
+```shell
+cargo test -- --test-threads=1
+```
+* 显示测试输出
+
+如果你希望也能看到通过的测试中打印的值，捕获输出的行为可以通过`--nocapture`参数来禁用：
+
+```shell
+cargo test -- --nocapture
+```
+
+* 通过名称来运行测试的子集
+
+可以向cargo test传递希望运行的测试的（部分）名称作为参数来选择运行哪些测试。
+
+```rust
+pub fn add_two(a: i32) -> i32 {
+    a + 2
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn add_two_and_two() {
+        assert_eq!(4, add_two(2));
+    }
+
+    #[test]
+    fn add_three_and_two() {
+        assert_eq!(5, add_two(3));
+    }
+
+    #[test]
+    fn one_hundred() {
+        assert_eq!(102, add_two(100));
+    }
+}
+```
+
+只测试 `one_hundred`：
+```shell
+cargo test one_hundred
+```
+
+过滤运行多个测试，会运行所有前缀包含add的测试：
+```shell
+cargo test add
+```
+
+* 忽略某些测试，除非指定
+
+这里 `expensive_test` 测试设置了忽略：
+```rust
+#[test]
+fn it_works() {
+    assert!(true);
+}
+
+#[test]
+#[ignore]
+fn expensive_test() {
+    // code that takes an hour to run
+}
+```
+
+### 集成测试
+
+为了编写集成测试，需要在项目根目录创建一个 tests 目录，与 src 同级。Cargo 知道如何去寻找这个目录中的集成测试文件。接着可以随意在这个文件夹中创建任意多的测试文件，Cargo 会将每一个文件当作单独的 crate 来编译。
+
+创建一个 tests 目录，新建一个文件 tests/integration_test.rs：
+```rust
+extern crate adder;
+
+#[test]
+fn it_adds_two() {
+    assert_eq!(4, adder::add_two(2));
+}
+```
+
+并不需要将 tests/integration_test.rs 中的任何代码标注为#[cfg(test)]。Cargo 对tests文件夹特殊处理并只会在运行cargo test时编译这个目录中的文件。
+tests 目录中的子目录不会被作为单独的 crate 编译或作为一部分出现在测试输出中。
