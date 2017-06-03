@@ -1616,4 +1616,248 @@ fn main() {
 
 为了使函数定义于Rectangle的上下文中，我们开始了一个impl块（impl是 implementation 的缩写）。接着将函数移动到impl大括号中，并将签名中的第一个（在这里也是唯一一个）参数和函数体中其他地方的对应参数改成self。然后在main中将我们调用area方法并传递rect1作为参数的地方，改成使用方法语法在Rectangle实例上调用area方法。方法语法获取一个实例并加上一个点号后跟方法名、括号以及任何参数。
 
-这里选择&self跟在函数版本中使用&Rectangle出于同样的理由：我们并不想获取所有权，只希望能够读取结构体中的数据，而不是写入。
+这里选择 `&self` 跟在函数版本中使用 `&Rectangle` 出于同样的理由：我们并不想获取所有权，只希望能够读取结构体中的数据，而不是写入。
+
+Rust 并没有一个与`->`等效的运算符；相反，Rust 有一个叫自动引用和解引用（automatic referencing and dereferencing）的功能。
+方法调用是 Rust 中少数几个拥有这种行为的地方。
+
+在给出接收者和方法名的前提下，Rust 可以明确的计算出方法是仅仅读取（所以需要&self），做出修改（所以是&mut self）或者是获取所有权（所以是self）。
+Rust 这种使得借用对方法接收者来说是隐式的做法是其所有权系统程序员友好性实现的一大部分。
+
+### 带有更多参数的方法
+
+方法可以在self后增加多个参数，而且这些参数就像函数中的参数一样工作。
+
+```rust
+impl Rectangle {
+    fn area(&self) -> u32 {
+        self.length * self.width
+    }
+
+    fn can_hold(&self, other: &Rectangle) -> bool {
+        self.length > other.length && self.width > other.width
+    }
+}
+
+fn main() {
+    let rect1 = Rectangle { length: 50, width: 30 };
+    let rect2 = Rectangle { length: 40, width: 10 };
+    let rect3 = Rectangle { length: 45, width: 60 };
+
+    println!("Can rect1 hold rect2? {}", rect1.can_hold(&rect2));
+    println!("Can rect1 hold rect3? {}", rect1.can_hold(&rect3));
+}
+```
+
+### 关联函数
+
+impl块的另一个好用的功能是：允许在impl块中定义不以self作为参数的函数。这被称为关联函数（associated functions），因为他们与结构体相关联。
+即便如此他们也是函数而不是方法，因为他们并不作用于一个结构体的实例。你已经使用过一个关联函数了：String::from。
+
+我们可以提供一个关联函数，它接受一个维度参数并且用来作为长和宽，这样可以更轻松的创建一个正方形Rectangle而不必指定两次同样的值：
+
+```rust
+impl Rectangle {
+    fn square(size: u32) -> Rectangle {
+        Rectangle { length: size, width: size }
+    }
+}
+```
+
+使用结构体名和::语法来调用这个关联函数：比如 `let sq = Rectangle::square(3);` 这个方法位于结构体的命名空间中。
+
+## 枚举和模式匹配
+
+枚举，也被称作 enums。枚举允许你通过列举可能的值来定义一个类型。
+Rust 的枚举与像F#、OCaml 和 Haskell这样的函数式编程语言中的代数数据类型（algebraic data types）最为相似。
+
+可以通过在代码中定义一个IpAddrKind枚举来表现这个概念并列出可能的 IP 地址类型，V4和V6。这被称为枚举的成员（variants）：
+
+```rust
+enum IpAddrKind {
+    V4,
+    V6,
+}
+```
+
+可以像这样创建IpAddrKind两个不同成员的实例：
+
+```rust
+let four = IpAddrKind::V4;
+let six = IpAddrKind::V6;
+```
+
+我们先用结构体储存实际 IP 地址数据：
+```rust
+enum IpAddrKind {
+    V4,
+    V6,
+}
+
+struct IpAddr {
+    kind: IpAddrKind,
+    address: String,
+}
+
+let home = IpAddr {
+    kind: IpAddrKind::V4,
+    address: String::from("127.0.0.1"),
+};
+
+let loopback = IpAddr {
+    kind: IpAddrKind::V6,
+    address: String::from("::1"),
+};
+```
+
+我们可以使用一种更简洁的方式来表达相同的概念，仅仅使用枚举并将数据直接放进每一个枚举成员而不是将枚举作为结构体的一部分。
+IpAddr枚举的新定义表明了V4和V6成员都关联了String值：
+
+```rust
+enum IpAddr {
+    V4(String),
+    V6(String),
+}
+
+let home = IpAddr::V4(String::from("127.0.0.1"));
+
+let loopback = IpAddr::V6(String::from("::1"));
+```
+
+我们直接将数据附加到枚举的每个成员上，这样就不需要一个额外的结构体了。
+使用枚举而不是结构体还有另外一个优势：每个成员可以处理不同类型和数量的数据。
+
+```rust
+enum IpAddr {
+    V4(u8, u8, u8, u8),
+    V6(String),
+}
+
+let home = IpAddr::V4(127, 0, 0, 1);
+
+let loopback = IpAddr::V6(String::from("::1"));
+```
+
+标准库里的定义：
+```rust
+struct Ipv4Addr {
+    // details elided
+}
+
+struct Ipv6Addr {
+    // details elided
+}
+
+enum IpAddr {
+    V4(Ipv4Addr),
+    V6(Ipv6Addr),
+}
+```
+
+### Option枚举和其相对空值的优势
+
+Rust 并没有空值，不过它确实拥有一个可以编码存在或不存在概念的枚举。
+这个枚举是Option<T>，而且它定义于标准库中，如下:
+
+```rust
+enum Option<T> {
+    Some(T),
+    None,
+}
+```
+
+空值（Null ）是一个值，它代表没有值。在有空值的语言中，变量总是这两种状态之一：空值和非空值。
+
+空值的问题在于当你尝试像一个非空值那样使用一个空值，会出现某种形式的错误。因为空和非空的属性是无处不在的，非常容易出现这类错误。
+
+然而，空值尝试表达的概念仍然是有意义的：空值是一个因为某种原因目前无效或缺失的值。
+
+Option<T>是如此有用以至于它甚至被包含在了 prelude 之中：不需要显式导入它。另外，它的成员也是如此：可以不需要Option::前缀来直接使用Some和None。
+即便如此Option<T>也仍是常规的枚举，Some(T)和None仍是Option<T>的成员。
+
+## match控制流运算符
+
+它允许我们将一个值与一系列的模式相比较并根据匹配的模式执行代码。模式可由字面值、变量、通配符和许多其他内容构成。
+match的力量来源于模式的表现力以及编译器检查，它确保了所有可能的情况都得到处理（必须匹配所有可能的值）。
+
+把match表达式想象成某种硬币分类器：硬币滑入有着不同大小孔洞的轨道，每一个硬币都会掉入符合它大小的孔洞。同样地，值也会检查match的每一个模式，并且在遇到第一个“符合”的模式时，值会进入相关联的代码块并在执行中被使用。
+
+我们写一个函数：
+
+```rust
+enum Coin {
+    Penny,
+    Nickel,
+    Dime,
+    Quarter,
+}
+
+fn value_in_cents(coin: Coin) -> i32 {
+    match coin {
+        Coin::Penny => 1,
+        Coin::Nickel => 5,
+        Coin::Dime => 10,
+        Coin::Quarter => 25,
+    }
+}
+
+fn main() {
+    println!("Penny is {:?}", value_in_cents(Coin::Penny)); // Prints "1".
+    println!("Nickel is {:?}", value_in_cents(Coin::Nickel)); // Prints "5".
+}
+```
+
+match的一个分支有两个部分：一个模式和一些代码。
+第一个分支的模式是值 `Coin::Penny` 而之后的=>运算符将模式和将要运行的代码分开。
+这里的代码就仅仅是值 1。每一个分支之间使用逗号分隔。
+
+当match表达式执行时，它将结果值按顺序与每一个分支的模式相比较，如果模式匹配了这个值，这个模式相关联的代码将被执行。
+
+如果想要在分支中运行多行代码，可以使用大括号。
+
+```rust
+fn value_in_cents(coin: Coin) -> i32 {
+    match coin {
+        Coin::Penny => {
+            println!("Lucky penny!");
+            1
+        },
+        Coin::Nickel => 5,
+        Coin::Dime => 10,
+        Coin::Quarter => 25,
+    }
+}
+```
+
+* 使用绑定的值
+
+```rust
+enum UsState {
+    Alabama,
+    Alaska,
+    // ... etc
+}
+
+enum Coin {
+    Penny,
+    Nickel,
+    Dime,
+    Quarter(UsState),
+}
+
+fn value_in_cents(coin: Coin) -> i32 {
+    match coin {
+        Coin::Penny => 1,
+        Coin::Nickel => 5,
+        Coin::Dime => 10,
+        Coin::Quarter(state) => {
+            println!("State quarter from {:?}!", state);
+            25
+        },
+    }
+}
+
+fn main() {
+    println!("Quarter is {:?}", value_in_cents(Coin::Quarter(UsState::Alaska))); // Prints "25".
+}
+```
