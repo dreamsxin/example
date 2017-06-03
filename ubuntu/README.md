@@ -133,3 +133,18 @@ cron.*                          /var/log/cron.log
 ```shell
 sudo service rsyslog restart
 ```
+
+## Rhythmbox 乱码
+
+编辑 `~/.profile`
+
+```shell
+export GST_ID3_TAG_ENCODING=GBK:UTF-8:GB18030
+export GST_ID3V2_TAG_ENCODING=GBK:UTF-8:GB18030
+```
+
+保存导入
+
+```shell
+source ~/.profile
+```
