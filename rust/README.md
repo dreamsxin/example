@@ -1778,7 +1778,7 @@ Option<T>是如此有用以至于它甚至被包含在了 prelude 之中：不�
 ## match控制流运算符
 
 它允许我们将一个值与一系列的模式相比较并根据匹配的模式执行代码。模式可由字面值、变量、通配符和许多其他内容构成。
-match的力量来源于模式的表现力以及编译器检查，它确保了所有可能的情况都得到处理（必须匹配所有可能的值）。
+match的力量来源于模式的表现力以及编译器检查，它确保了所有可能的情况都得到处理（必须匹配所有可能的值，可以使用通配符 `_`）。
 
 把match表达式想象成某种硬币分类器：硬币滑入有着不同大小孔洞的轨道，每一个硬币都会掉入符合它大小的孔洞。同样地，值也会检查match的每一个模式，并且在遇到第一个“符合”的模式时，值会进入相关联的代码块并在执行中被使用。
 
@@ -1861,3 +1861,229 @@ fn main() {
     println!("Quarter is {:?}", value_in_cents(Coin::Quarter(UsState::Alaska))); // Prints "25".
 }
 ```
+
+* 匹配 Option<T>
+
+比如我们想要编写一个函数，它获取一个Option<i32>并且如果其中有一个值，将其加一。如果其中没有值，函数应该返回None值并不尝试执行任何操作。
+
+```rust
+fn plus_one(x: Option<i32>) -> Option<i32> {
+    match x {
+        None => None,
+        Some(i) => Some(i + 1),
+    }
+}
+
+let five = Some(5);
+let six = plus_one(five);
+let none = plus_one(None);
+```
+Rust 知道我们没有覆盖所有可能的情况甚至知道那些模式被忘记了！Rust 中的匹配是穷尽的（*exhaustive）：必须穷举到最后的可能性来使代码有效。特别的在这个Option<T>的例子中，Rust 防止我们忘记明确的处理None的情况，这使我们免于假设拥有一个实际上为空的值，这造成了之前提到过的价值亿万的错误。
+
+* 通配符 `_`
+
+Rust 也提供了一个模式用于不想列举出所有可能值的场景。
+
+u8可以拥有 0 到 255 的有效的值，如果我们只关心 1、3、5 和 7 这几个值：
+
+```rust
+let some_u8_value = 0u8;
+match some_u8_value {
+    1 => println!("one"),
+    3 => println!("three"),
+    5 => println!("five"),
+    7 => println!("seven"),
+    _ => (),
+}
+```
+
+match在只关心一个情况的场景中可能就有点啰嗦了。为此 Rust 提供了 `if let`。
+
+### if let简单控制流
+
+我们想要对`Some(3)`匹配进行操作不过不想处理任何其他Some<u8>值或None值。为了满足match表达式（穷尽性）的要求，必须在处理完这唯一的成员后加上_ => ()，这样也要增加很多样板代码。
+不过我们可以使用if let这种更短的方式编写：
+
+```rust
+if let Some(3) = some_u8_value {
+    println!("three");
+}
+```
+
+## 模块
+
+在你刚开始编写 Rust 程序时，代码可能仅仅位于main函数里。随着代码数量的增长，最终你会将功能移动到其他函数中，为了复用也为了更好的组织。通过将代码分隔成更小的块，每一个块代码自身就更易于理解。不过当你发现自己有太多的函数了该怎么办呢？Rust 有一个模块系统来处理编写可复用代码同时保持代码组织度的问题。
+
+模块（module）是一个包含函数或类型定义的命名空间，你可以选择这些定义是能（公有）还是不能（私有）在其模块外可见。这是一个模块如何工作的概括：
+
+- 使用mod关键字声明模块
+- 默认所有内容都是私有的（包括模块自身）。可以使用pub关键字将其变成公有并在其命名空间外可见。
+- use关键字允许引入模块、或模块中的定义到作用域中以便于引用他们。
+
+### mod和文件系统
+
+#### 创建一个项目
+
+这个项目叫做communicator。Cargo 默认会创建一个库（crate） 除非指定其他项目类型（加--bin参数则项目将会是一个执行程序）：
+
+```shell
+cargo new communicator
+cd communicator
+```
+
+Cargo 生成了 `src/lib.rs` 而不是 `src/main.rs`。在 `src/lib.rs` 中我们会看到：
+```rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn it_works() {
+    }
+}
+```
+
+#### 模块定义
+
+Rust 中所有模块的定义以关键字 mod 开始。对于communicator网络库，首先要定义一个叫做network的模块，它包含一个叫做connect的函数定义。
+在 src/lib.rs 文件的开头在测试代码的上面增加这些代码：
+```rust
+mod network { // 模块的名字 network
+    fn connect() { // connect
+    }
+}
+```
+也可以在 src/lib.rs 文件中同时存在多个模块。例如，再拥有一个client模块，它也有一个叫做connect的函数：
+```rust
+mod network {
+    fn connect() {
+    }
+}
+
+mod client {
+    fn connect() {
+    }
+}
+```
+也可以在 src/main.rs 中使用子模块：
+```rust
+mod network {
+    fn connect() {
+    }
+
+    mod client {
+        fn connect() {
+        }
+    }
+}
+```
+现在我们有了 `network::connect和network::client::connect` 函数。
+
+#### 将模块移动到其他文件
+
+我们可以利用 Rust 的模块系统连同多个文件一起分解 Rust 项目，这样就不是所有的内容都落到 src/lib.rs 中了。作为例子，我们将下面代码分解：
+
+```rust
+mod client {
+    fn connect() {
+    }
+}
+
+mod network {
+    fn connect() {
+    }
+
+    mod server {
+        fn connect() {
+        }
+    }
+}
+```
+
+让我们开始把client模块提取到另一个文件中。首先，将 src/lib.rs 中的client模块代码替换为如下：
+
+```rust
+mod client;
+
+mod network {
+    fn connect() {
+    }
+
+    mod server {
+        fn connect() {
+        }
+    }
+}
+```
+
+这里我们仍然定义了client模块，不过去掉了大括号和client模块中的定义并替换为一个分号，这使得 Rust 知道去其他地方寻找模块中定义的代码。
+
+在 src/ 目录创建一个 `client.rs` 文件，接着打开它并输入如下内容，它是上一步client模块中被去掉的connect函数：
+```rust
+fn connect() {
+}
+```
+
+注意这个文件中并不需要一个mod声明。
+
+这时我们可以使用 `cargo build` 编译项目。
+
+使用相同的方法将 network 模块提取到它自己的文件中。
+
+如果想将 network 中的 server 再提取出来，那么我们的目录结构如下：
+
+```text
+├── src
+│   ├── client.rs
+│   ├── lib.rs
+│   └── network
+│       ├── mod.rs
+│       └── server.rs
+```
+
+`network.rs` 改成了 `mod.rs`。
+
+### 模块文件系统的规则
+
+与文件系统相关的模块规则总结如下：
+
+- 如果一个叫做foo的模块没有子模块，应该将foo的声明放入叫做 foo.rs 的文件中。
+- 如果一个叫做foo的模块有子模块，应该将foo的声明放入叫做 foo/mod.rs 的文件中。
+
+## 使用pub控制可见性
+
+Rust 所有代码的默认状态是私有的：除了自己之外别人不允许使用这些代码。如果不在自己的项目中使用一个私有函数，因为程序自身是唯一允许使用这个函数的代码，Rust 会警告说函数未被使用。
+
+我们在原有的项目创建 `src/main.rs`：
+```rust
+extern crate communicator;
+
+fn main() {
+    communicator::client::connect();
+}
+```
+
+使用`extern crate`指令将`communicator`库 crate 引入到作用域，因为事实上我们的包包含两个 crate。Cargo 认为 src/main.rs 是一个二进制 crate 的根文件，与现存的以 src/lib.rs 为根文件的库 crate 相区分。
+Rust 中的独立编译单位是crate：rustc每次编译一个crate，生成一个库或者可执行文件。
+当编译单个`.rs`文件时，文件自身充当 crate。编译时可以通过开关 --lib 来创建共享库，或者没有用--lib开关，若文件中包含fn main函数，则生成可执行文件。
+
+### 标记函数为公有
+
+为了告诉 Rust 某项为公有，在想要标记为公有的项的声明开头加上pub关键字。修改 `src/lib.rs` 使client模块公有：
+
+```rust
+pub mod client;
+mod network;
+```
+
+让我们修改 `src/client.rs` 将 `client::connect`也设为公有：
+
+```rust
+pub fn connect() {
+}
+```
+
+* 私有性规则
+
+总的来说，有如下项的可见性规则：
+
+- 如果一个项是公有的，它能被任何父模块访问
+- 如果一个项是私有的，它只能被当前模块或其子模块访问
