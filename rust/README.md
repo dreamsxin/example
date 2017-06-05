@@ -3181,3 +3181,84 @@ fn main() {
 
 > 注意：std::env::args在其任何参数包含无效 Unicode 字符时会 panic。如果你需要接受包含无效 Unicode 字符的参数，使用std::env::args_os代替。这个函数返回OsString值而不是String值。OsString 值每个平台都不一样而且比String值处理起来更复杂。
 
+### 将参数值保存进变量
+
+```rust
+use std::env;
+
+fn main() {
+    let args: Vec<String> = env::args().collect();
+
+    let query = &args[1];
+    let filename = &args[2];
+
+    println!("Searching for {}", query);
+    println!("In file {}", filename);
+}
+```
+
+程序的名称占据了 vector 的第一个值args[0]，所以我们从索引1开始。第一个参数greprs是需要搜索的字符串，所以将其将第一个参数的引用存放在变量query中。第二个参数将是文件名，所以将第二个参数的引用放入变量filename中。
+
+### 读取文件
+
+我们读取文件 `poem.txt`，需要std::fs::File来处理文件，而std::io::prelude::*则包含许多对于 I/O 包括文件 I/O 有帮助的 trait。类似于 Rust 有一个通用的 prelude 来自动引入特定内容，std::io也有其自己的 prelude 来引入处理 I/O 时所需的通用内容。不同于默认的 prelude，必须显式use位于std::io中的 prelude ：
+```rust
+use std::env;
+use std::fs::File;
+use std::io::prelude::*;
+
+fn main() {
+    let args: Vec<String> = env::args().collect();
+
+    let query = &args[1];
+    let filename = &args[2];
+
+    println!("Searching for {}", query);
+    println!("In file {}", filename);
+
+    let mut f = File::open(filename).expect("file not found");
+
+    let mut contents = String::new();
+    f.read_to_string(&mut contents).expect("something went wrong reading the file");
+
+    println!("With text:\n{}", contents);
+}
+```
+
+运行 `cargo run the poem.txt` 将看到文件的内容。
+
+### 二进制项目的关注分离
+
+过程有如下步骤：
+
+1. 将程序拆分成 main.rs 和 lib.rs 并将程序的逻辑放入 lib.rs 中。
+2. 当命令行解析逻辑比较小时，可以保留在 main.rs 中。
+3. 当命令行解析开始变得复杂时，也同样将其从 main.rs 提取到 lib.rs中。
+4. 经过这些过程之后保留在main函数中的责任是：
+	* 使用参数值调用命令行解析逻辑
+	* 设置任何其他的配置
+	* 调用 lib.rs 中的run函数
+	* 如果run返回错误，则处理这个错误
+
+这个模式的一切就是为了关注分离：main.rs 处理程序运行，而 lib.rs 处理所有的真正的任务逻辑。因为不能直接测试main函数，这个结构通过将所有的程序逻辑移动到 lib.rs 的函数中使得我们可以测试他们。仅仅保留在 main.rs 中的代码将足够小以便阅读就可以验证其正确性。
+
+### 提取参数解析器
+
+定义新函数`parse_config`：
+
+```rust
+fn main() {
+    let args: Vec<String> = env::args().collect();
+
+    let (query, filename) = parse_config(&args);
+
+    // ...snip...
+}
+
+fn parse_config(args: &[String]) -> (&str, &str) {
+    let query = &args[1];
+    let filename = &args[2];
+
+    (query, filename)
+}
+```
