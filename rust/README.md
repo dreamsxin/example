@@ -4318,3 +4318,375 @@ for i in 12..buffer.len() {
 为了计算prediction的值，这些代码遍历了coefficients中的 12 个值，使用zip方法将系数与buffer的前 12 个值组合在一起。接着将每一对值相乘，再将所有结果相加，然后将总和右移qlp_shift位。
 
 遍历coefficients的值完全用不到循环：Rust 知道这里会迭代 12 次，所以它“展开”了循环。所有的系数都被储存在了寄存器中（这意味着访问他们非常快）。也没有数组访问边界检查。这是极端有效率的。
+
+## 智能指针
+
+指针是一个常见的编程概念，它代表一个指向储存其他数据的位置。之前学习了 Rust 的引用；他们是一类很平常的指针，以`&`符号为标志并借用了他们所指向的值。
+智能指针（Smart pointers）是一类数据结构，他们的表现类似指针，但是也拥有额外的元数据和能力，比如说引用计数。智能指针模式起源于 C++。
+在 Rust 中，普通引用和智能指针的一个额外的区别是引用是一类只借用数据的指针；相反大部分情况，智能指针拥有他们指向的数据。
+
+`String`和`Vec<T>`都是智能指针。他们拥有一些数据并允许你修改他们，并带有元数据（比如他们的容量）和额外的功能或保证（String的数据总是有效的 UTF-8 编码）。智能指针区别于常规结构体的特性在于他们实现了`Deref`和`Drop trait`，而本章会讨论这些 trait 以及为什么对于智能指针来说他们很重要。
+
+很多库都有自己的智能指针而你也可以编写属于你自己的。这里将会讲到的是来自标准库中最常用的一些：
+
+- Box<T>，用于在堆上分配值
+- Rc<T>，一个引用计数类型，其数据可以有多个所有者
+- RefCell<T>，其本身并不是智能指针，不过它管理智能指针Ref和RefMut的访问，在运行时而不是在编译时执行借用规则。
+
+同时我们还将涉及：
+
+- 内部可变性（interior mutability）模式，当一个不可变类型暴露出改变其内部值的 API，这时借用规则适用于运行时而不是编译时。
+- 引用循环，它如何会泄露内存，以及如何避免他们
+
+### Box<T>
+
+最简单直接的智能指针是 box，它的类型是Box<T>。 box 允许你将一个值放在堆上：
+```rust
+fn main() {
+    let b = Box::new(5);
+    println!("b = {}", b);
+}
+```
+一个 box 的实用场景是当你希望确保类型有一个已知大小的时候。
+```rust
+enum List {
+    Cons(i32, List),
+    Nil,
+}
+```
+它是一个用于 cons list 的枚举定义，cons list 是一个来源于 Lisp 编程语言及其方言的数据结构。在 Lisp 中，cons函数（"construct function"的缩写）利用两个参数来构造一个新的列表，他们通常是一个单独的值和另一个列表。cons 函数的概念涉及到更通用的函数式编程术语；“将 x 与 y 连接”通常意味着构建一个新的容器而将 x 的元素放在新容器的开头，其后则是容器 y 的元素。
+
+cons list 在 Rust 中并不常见；通常Vec<T>是一个更好的选择。实现这个数据结构是Box<T>实用性的一个好的例子。让我们看看为什么！
+
+使用 cons list 来储存列表1, 2, 3将看起来像这样：
+```rust
+use List::{Cons, Nil};
+
+fn main() {
+    let list = Cons(1, Cons(2, Cons(3, Nil)));
+}
+```
+
+如果尝试编译上面的代码，会得到错误：`error[E0072]: recursive type `List` has infinite size`。因为List的一个成员被定义为递归的：它存放了另一个相同类型的值。这意味着 Rust 无法计算为了存放List值到底需要多少空间。
+
+因为Box<T>是一个指针，我们总是知道它需要多少空间：
+```rust
+enum List {
+    Cons(i32, Box<List>),
+    Nil,
+}
+
+use List::{Cons, Nil};
+
+fn main() {
+    let list = Cons(1,
+        Box::new(Cons(2,
+            Box::new(Cons(3,
+                Box::new(Nil))))));
+}
+```
+这就是 box 主要应用场景：打破无限循环的数据结构以便编译器可以知道其大小。
+
+### Deref Trait 允许通过引用访问数据
+
+第一个智能指针相关的重要 trait 是`Deref`，它允许我们重载*，解引用运算符（不同于乘法运算符和全局引用运算符）。
+
+这是一个使用i32值引用的例子：
+```rust
+let mut x = 5;
+{
+    let y = &mut x;
+
+    *y += 1
+}
+
+assert_eq!(6, x);
+```
+我们使用`*y`来访问可变引用y所指向的数据，而不是可变引用本身。接着可以修改它的数据，在这里对其加一。
+当解引用一个智能指针时，我们只想要数据，而不需要元数据。我们希望能在使用常规引用的地方也能使用智能指针。为此，可以通过实现`Deref trait`来重载`*`运算符的行为。
+
+一个定义为储存 mp3 数据和元数据的结构体通过Deref trait 来重载*的例子：
+```rust
+use std::ops::Deref;
+
+struct Mp3 {
+    audio: Vec<u8>,
+    artist: Option<String>,
+    title: Option<String>,
+}
+
+impl Deref for Mp3 {
+    type Target = Vec<u8>;
+
+    fn deref(&self) -> &Vec<u8> {
+        &self.audio
+    }
+}
+
+fn main() {
+    let my_favorite_song = Mp3 {
+        // we would read the actual audio data from an mp3 file
+        audio: vec![1, 2, 3],
+        artist: Some(String::from("Nirvana")),
+        title: Some(String::from("Smells Like Teen Spirit")),
+    };
+
+    assert_eq!(vec![1, 2, 3], *my_favorite_song);
+}
+```
+
+我们希望能够方便的访问音频数据而不是元数据，所以需要实现`Deref trait`来返回音频数据。
+所以为了得到一个*可以解引用的&引用，编译器将`*my_favorite_song`展开为：
+`*(my_favorite_song.deref())`。
+
+### 函数和方法的隐式解引用强制多态
+
+Rust 倾向于偏爱明确而不是隐晦，不过一个情况下这并不成立，就是函数和方法的参数的解引用强制多态（deref coercions）。
+
+```rust
+fn compress_mp3(audio: &[u8]) -> Vec<u8> {
+    // the actual implementation would go here
+}
+
+let result = compress_mp3(&my_favorite_song);
+```
+
+如果 Rust 没有解引用强制多态，为了使用my_favorite_song中的音频数据调用此函数，必须写成：
+
+```rust
+compress_mp3(my_favorite_song.audio.as_slice())
+```
+
+也就是说，必须明确表用需要`my_favorite_song`中的audio字段而且我们希望有一个 slice 来引用这整个`Vec<u8>`。
+
+### Drop Trait 运行清理代码
+
+对于智能指针模式来说另一个重要的 trait 是Drop。Drop运行我们在值要离开作用域时执行一些代码。智能指针在被丢弃时会执行一些重要的清理工作，比如释放内存或减少引用计数。更一般的来讲，数据类型可以管理多于内存的资源，比如文件或网络连接，而使用Drop在代码处理完他们之后释放这些资源。我们在智能指针上下文中讨论Drop是因为其功能几乎总是用于实现智能指针。
+
+```rust
+struct CustomSmartPointer {
+    data: String,
+}
+
+impl Drop for CustomSmartPointer {
+    fn drop(&mut self) {
+        println!("Dropping CustomSmartPointer!");
+    }
+}
+
+fn main() {
+    let c = CustomSmartPointer { data: String::from("some data") };
+    println!("CustomSmartPointer created.");
+    println!("Wait for it...");
+}
+```
+
+我们也可以使用`std::mem::drop`函数提前丢弃它，它位于 prelude 中所以可以直接调用drop：
+```rust
+fn main() {
+    let c = CustomSmartPointer { data: String::from("some data") };
+    println!("CustomSmartPointer created.");
+    drop(c);
+    println!("Wait for it...");
+}
+```
+std::mem::drop 的定义是：
+```rust
+pub mod std {
+    pub mod mem {
+        pub fn drop<T>(x: T) { }
+    }
+}
+```
+这个函数对于T是泛型的，所以可以传递任何值。这个函数的函数体并没有任何实际内容，所以它也不会利用其参数。这个空函数的作用在于drop获取其参数的所有权，它意味着在这个函数结尾x离开作用域时x会被丢弃。
+
+### Rc<T> 引用计数智能指针
+
+大部分情况下所有权是非常明确的：可以准确的知道哪个变量拥有某个值。然而并不总是如此；有时确实可能需要多个所有者。为此，Rust 有一个叫做Rc<T>的类型。它的名字是引用计数（reference counting）的缩写。引用计数意味着它记录一个值引用的数量来知晓这个值是否仍在被使用。如果这个值有零个引用，就知道可以在没有有效引用的前提下清理这个值。
+
+注意Rc<T>只能用于单线程场景。
+
+Rc<T>被实现为用于单线程场景，这时不需要为拥有线程安全的引用计数而付出性能代价。
+
+因为 Rc<T> 没有标记为 Send，Rust 的类型系统和 trait bound 会确保我们不会错误的把一个 Rc<T> 值不安全的在线程间传递。
+
+> Mutex<T>是Sync的，正如上一部分所讲的它可以被用来在多线程中共享访问。
+
+### 使用`Rc<T>`分享数据
+
+让我们回到 cons list 例子，例子中尝试使用Box<T>定义的List。
+下面的代码并不能工作：
+ ```rust
+ enum List {
+    Cons(i32, Box<List>),
+    Nil,
+}
+
+use List::{Cons, Nil};
+
+fn main() {
+    let a = Cons(5,
+        Box::new(Cons(10,
+            Box::new(Nil))));
+    let b = Cons(3, Box::new(a));
+    let c = Cons(4, Box::new(a));
+}
+```
+
+Cons 成员拥有其储存的数据，所以当创建b列表时将`a`的所有权移动到了`b`。接着当再次尝使用`a`创建`c`时，这不被允许因为`a`的所有权已经被移动。
+相反可以改变Cons的定义来存放一个引用，不过接着必须指定生命周期参数，而且在构造列表时，也必须使列表中的每一个元素都至少与列表本身存在的一样久。否则借用检查器甚至都不会允许我们编译代码。
+
+可以将List的定义从Box<T>改为Rc<T>：
+```rust
+enum List {
+    Cons(i32, Rc<List>),
+    Nil,
+}
+
+use List::{Cons, Nil};
+use std::rc::Rc;
+
+fn main() {
+    let a = Rc::new(Cons(5, Rc::new(Cons(10, Rc::new(Nil)))));
+    let b = Cons(3, a.clone());
+    let c = Cons(4, a.clone());
+}
+```
+
+注意必须为Rc增加use语句因为它不在 prelude 中。在main中创建了存放 5 和 10 的列表并将其存放在一个叫做a的新的Rc中。接着当创建b和c时，我们对a调用了clone方法。
+
+#### 克隆Rc<T>会增加引用计数
+
+之前我们见过clone方法，当时使用它来创建某些数据的完整拷贝。但是对于Rc<T>来说，它并不创建一个完整的拷贝。Rc<T>存放了引用计数，也就是说，一个存在多少个克隆的计数器。
+
+打印出关联函数Rc::strong_count的结果。
+
+```rust
+fn main() {
+    let a = Rc::new(Cons(5, Rc::new(Cons(10, Rc::new(Nil)))));
+    println!("rc = {}", Rc::strong_count(&a));
+    let b = Cons(3, a.clone());
+    println!("rc after creating b = {}", Rc::strong_count(&a));
+    {
+        let c = Cons(4, a.clone());
+        println!("rc after creating c = {}", Rc::strong_count(&a));
+    }
+    println!("rc after c goes out of scope = {}", Rc::strong_count(&a));
+}
+```
+
+这会打印出：
+```text
+rc = 1
+rc after creating b = 2
+rc after creating c = 3
+rc after c goes out of scope = 2
+```
+
+我们说Rc<T>只允许程序的多个部分读取Rc<T>中T的不可变引用。
+
+### RefCell<T>和内部可变性模式
+
+内部可变性（Interior mutability）是 Rust 中的一个设计模式，它允许你即使在有不可变引用时改变数据，这通常是借用规则所不允许。内部可变性模式涉及到在数据结构中使用unsafe代码来模糊 Rust 通常的可变性和借用规则。
+
+内部可变性模式用于当你可以确保代码在运行时也会遵守借用规则，哪怕编译器也不能保证的情况。引入的unsafe代码将被封装进安全的 API 中，而外部类型仍然是不可变的。
+
+* RefCell<T>拥有内部可变性
+
+不同于Rc<T>，RefCell<T>代表其数据的唯一的所有权。
+
+回忆一下借用规则：
+
+1. 在任意给定时间，只能拥有如下中的一个：
+	* 一个可变引用。
+	* 任意属性的不可变引用。
+2. 引用必须总是有效的。
+
+对于引用和Box<T>，借用规则的不可变性作用于编译时。对于RefCell<T>，这些不可变性作用于运行时。对于引用，如果违反这些规则，会得到一个编译错误。而对于RefCell<T>，违反这些规则会panic!。
+
+Rust 编译器执行的静态分析天生是保守的。RefCell<T>正是用于当你知道代码遵守借用规则，而编译器不能理解的时候。
+类似于Rc<T>，RefCell<T>只能用于单线程场景。
+
+对于引用，可以使用&和&mut语法来分别创建不可变和可变的引用。不过对于RefCell<T>，我们使用borrow和borrow_mut方法，它是RefCell<T>拥有的安全 API 的一部分。borrow返回Ref类型的智能指针，而borrow_mut返回RefMut类型的智能指针。这两个类型实现了Deref所以可以被当作常规引用处理。Ref和RefMut动态的借用所有权，而他们的Drop实现也动态的释放借用。
+
+使用RefCell<T>来使函数不可变的和可变的借用它的参数。注意data变量使用let data而不是let mut data来声明为不可变的，而a_fn_that_mutably_borrows则允许可变的借用数据并修改它：
+```rust
+use std::cell::RefCell;
+
+fn a_fn_that_immutably_borrows(a: &i32) {
+    println!("a is {}", a);
+}
+
+fn a_fn_that_mutably_borrows(b: &mut i32) {
+    *b += 1;
+}
+
+fn demo(r: &RefCell<i32>) {
+    a_fn_that_immutably_borrows(&r.borrow());
+    a_fn_that_mutably_borrows(&mut r.borrow_mut());
+    a_fn_that_immutably_borrows(&r.borrow());
+}
+
+fn main() {
+    let data = RefCell::new(5);
+    demo(&data);
+}
+```
+
+在main函数中，我们新声明了一个包含值 5 的RefCell<T>，并储存在变量data中，声明时并没有使用mut关键字。接着使用data的一个不可变引用来调用demo函数：对于main函数而言data是不可变的！
+
+#### RefCell<T>在运行时检查借用规则
+
+尝试使用常规引用在同一作用域中创建两个可变引用的代码无法编译：
+```rust
+let mut s = String::from("hello");
+
+let r1 = &mut s;
+let r2 = &mut s;
+```
+
+与此相反，使用RefCell<T>并在同一作用域调用两次borrow_mut的代码是可以编译的，不过它会在运行时 panic。如下代码：
+```rust
+use std::cell::RefCell;
+
+fn main() {
+    let s = RefCell::new(String::from("hello"));
+
+    let r1 = s.borrow_mut();
+    let r2 = s.borrow_mut();
+}
+```
+
+这个运行时BorrowMutError类似于编译错误：它表明我们已经可变得借用过一次s了，所以不允许再次借用它。我们并没有绕过借用规则，只是选择让 Rust 在运行时而不是编译时执行他们。
+
+考虑到RefCell<T>是不可变的，但是拥有内部可变性，可以将Rc<T>与RefCell<T>结合来创造一个既有引用计数又可变的类型。
+
+```rust
+#[derive(Debug)]
+enum List {
+    Cons(Rc<RefCell<i32>>, Rc<List>),
+    Nil,
+}
+
+use List::{Cons, Nil};
+use std::rc::Rc;
+use std::cell::RefCell;
+
+fn main() {
+    let value = Rc::new(RefCell::new(5));
+
+    let a = Cons(value.clone(), Rc::new(Nil));
+    let shared_list = Rc::new(a);
+
+    let b = Cons(Rc::new(RefCell::new(6)), shared_list.clone());
+    let c = Cons(Rc::new(RefCell::new(10)), shared_list.clone());
+
+    *value.borrow_mut() += 10;
+
+    println!("shared_list after = {:?}", shared_list);
+    println!("b after = {:?}", b);
+    println!("c after = {:?}", c);
+}
+```
+
+RefCell<T>并不是标准库中唯一提供内部可变性的类型。Cell<T>有点类似，不过不同于RefCell<T>那样提供内部值的引用，其值被拷贝进和拷贝出Cell<T>。Mutex<T>提供线程间安全的内部可变性。
