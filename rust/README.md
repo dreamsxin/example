@@ -4690,3 +4690,271 @@ fn main() {
 ```
 
 RefCell<T>并不是标准库中唯一提供内部可变性的类型。Cell<T>有点类似，不过不同于RefCell<T>那样提供内部值的引用，其值被拷贝进和拷贝出Cell<T>。Mutex<T>提供线程间安全的内部可变性。
+
+### 引用循环和内存泄漏是安全的
+
+在使用Rc<T>和RefCell<T>时，有可能创建循环引用，这时各个项相互引用并形成环。这是不好的因为每一项的引用计数将永远也到不了 0，其值也永远也不会被丢弃。
+
+```rust
+use List::{Cons, Nil};
+use std::rc::Rc;
+use std::cell::RefCell;
+
+#[derive(Debug)]
+enum List {
+    Cons(i32, RefCell<Rc<List>>),
+    Nil,
+}
+
+impl List {
+    fn tail(&self) -> Option<&RefCell<Rc<List>>> {
+        match *self {
+            Cons(_, ref item) => Some(item),
+            Nil => None,
+        }
+    }
+}
+
+fn main() {
+
+    let a = Rc::new(Cons(5, RefCell::new(Rc::new(Nil))));
+
+    println!("a initial rc count = {}", Rc::strong_count(&a));
+    println!("a next item = {:?}", a.tail());
+
+    let b = Rc::new(Cons(10, RefCell::new(a.clone())));
+
+    println!("a rc count after b creation = {}", Rc::strong_count(&a));
+    println!("b initial rc count = {}", Rc::strong_count(&b));
+    println!("b next item = {:?}", b.tail());
+
+    if let Some(ref link) = a.tail() {
+        *link.borrow_mut() = b.clone();
+    }
+
+    println!("b rc count after changing a = {}", Rc::strong_count(&b));
+    println!("a rc count after changing a = {}", Rc::strong_count(&a));
+
+    // Uncomment the next line to see that we have a cycle; it will
+    // overflow the stack
+    // println!("a next item = {:?}", a.tail());
+}
+```
+
+使用tail方法来获取a中RefCell的引用，并将其放入变量link中。接着对RefCell使用borrow_mut方法将其中的值从存放Nil值的Rc改为b中的Rc。
+
+#### 避免引用循环：将Rc<T>变为Weak<T>
+
+# 无畏并发（fearless concurrency）
+
+确保内存安全并不是 Rust 的唯一目标：更好的处理并发和并行编程一直是 Rust 的另一个主要目标。 并发编程（concurrent programming）代表程序的不同部分相互独立的执行，而并行编程代表程序不同部分同时执行，这两个概念在计算机拥有更多处理器可供程序利用时变得更加重要。由于历史的原因，在此类上下文中编程一直是困难且容易出错的：Rust 希望能改变这一点。
+
+## 使用线程同时运行代码
+
+在今天使用的大部分操作系统中，当程序执行时，操作系统运行代码的上下文称为进程（process）。操作系统可以运行很多进程，而操作系统也管理这些进程使得多个程序可以在电脑上同时运行。
+
+我们可以将每个进程运行一个程序的概念再往下抽象一层：程序也可以在其上下文中同时运行独立的部分。这个功能叫做线程（thread）。
+
+编程语言提供的线程有时被称作轻量级（lightweight）或绿色（green）线程。这些语言将一系列绿色线程放入不同数量的操作系统线程中执行。因为这个原因，语言调用操作系统 API 创建线程的模型有时被称为 1:1，一个 OS 线程对应一个语言线程。绿色线程模型被称为 M:N 模型，M个绿色线程对应N个 OS 线程，这里M和N不必相同。
+
+绿色线程模型功能要求更大的运行时来管理这些线程。为此，Rust 标准库只提供了 1:1 线程模型实现。因为 Rust 是这么一个底层语言，所以有相应的 crate 实现了 M:N 线程模型，如果你宁愿牺牲性能来换取例如更好的线程运行控制和更低的上下文切换成本。
+
+### 使用spawn创建新线程
+
+大部分时候不能保证新建线程执行完毕，甚至不能实际保证新建线程会被执行！可以通过保存thread::spawn的返回值来解决这个问题，这是一个JoinHandle。
+
+```rust
+use std::thread;
+
+fn main() {
+    thread::spawn(|| {
+        for i in 1..10 {
+            println!("hi number {} from the spawned thread!", i);
+        }
+    });
+
+    for i in 1..5 {
+        println!("hi number {} from the main thread!", i);
+    }
+	handle.join();
+}
+```
+
+### 线程和move闭包
+
+当在闭包环境中获取某些值时，Rust 会尝试推断如何获取它。println!只需要v的一个引用，所以闭包尝试借用v。但是这有一个问题：我们并不知道新建线程会运行多久，所以无法知道v是否一直时有效的。
+
+```rust
+use std::thread;
+
+fn main() {
+    let v = vec![1, 2, 3];
+
+    let handle = thread::spawn(|| {
+        println!("Here's a vector: {:?}", v);
+    });
+
+    drop(v); // oh no!
+
+    handle.join();
+}
+```
+
+通过在闭包之前增加move关键字，我们强制闭包获取它使用的值的所有权，而不是引用借用。
+
+```rust
+use std::thread;
+
+fn main() {
+    let v = vec![1, 2, 3];
+
+    let handle = thread::spawn(move || {
+        println!("Here's a vector: {:?}", v);
+    });
+
+    handle.join();
+}
+```
+如果在闭包上增加了move，就将v移动到了闭包的环境中，我们将不能对其调用drop了。
+
+### 使用消息传递在线程间传送数据
+
+最近人气正在上升的一个并发方式是消息传递（message passing），这里线程或 actor 通过发送包含数据的消息来沟通。这个思想来源于Effective Go 口号：
+
+> 不要共享内存来通讯；而是要通讯来共享内存。
+
+参考文档：http://golang.org/doc/effective_go.html
+
+实现这个目标的主要工具是通道（channel）。通道有两部分组成，一个发送者（transmitter）和一个接收者（receiver）。代码的一部分可以调用发送者和想要发送的数据，而另一部分代码可以在接收的那一端收取消息。
+
+下面创建一个通道：
+
+```rust
+use std::sync::mpsc;
+
+fn main() {
+    let (tx, rx) = mpsc::channel();
+}
+```
+
+`mpsc::channel`函数创建一个新的通道。mpsc是多个生产者，单个消费者（multiple producer, single consumer）的缩写。简而言之，可以有多个产生值的发送端，但只能有一个消费这些值的接收端。现在我们以一个单独的生产者开始，不过一旦例子可以工作了就会增加多个生产者。
+
+`mpsc::channel`返回一个元组：第一个元素是发送端，而第二个元素是接收端。由于历史原因，很多人使用tx和rx作为发送者和接收者的缩写，所以这就是我们将用来绑定这两端变量的名字。这里使用了一个 let 语句和模式来解构了元组。
+
+让我们将发送端移动到一个新建线程中并发送一个字符串：
+
+```rust
+use std::thread;
+use std::sync::mpsc;
+
+fn main() {
+    let (tx, rx) = mpsc::channel();
+
+    thread::spawn(move || {
+        let val = String::from("hi");
+        tx.send(val).unwrap(); // 忽略错误
+    });
+}
+```
+
+正如上一部分那样使用thread::spawn来创建一个新线程。并使用一个move闭包来将tx移动进闭包这样新建线程就是其所有者。
+
+通道的发送端有一个send方法用来获取需要放入通道的值。send方法返回一个Result<T, E>类型，因为如果接收端被丢弃了，将没有发送值的目标，所以发送操作会出错。
+
+让我们在主线程中从通道的接收端获取值：
+```rust
+use std::thread;
+use std::sync::mpsc;
+
+fn main() {
+    let (tx, rx) = mpsc::channel();
+
+    thread::spawn(move || {
+        let val = String::from("hi");
+        tx.send(val).unwrap();
+    });
+
+    let received = rx.recv().unwrap();
+    println!("Got: {}", received);
+}
+```
+
+通道的接收端有两个有用的方法：`recv`和`try_recv`。这里，我们使用了recv，它是 receive 的缩写。
+这个方法会阻塞执行直到从通道中接收一个值。
+一旦发送了一个值，recv会在一个`Result<T, E>`中返回它。
+当通道发送端关闭，`recv`会返回一个错误。
+`try_recv`不会阻塞；相反它立刻返回一个`Result<T, E>`。
+
+一旦将值发送到另一个线程后，那个线程可能会在我们在此使用它之前就修改或者丢弃它。
+send获取其参数的所有权并移动这个值归接收者所有。这个意味着不可能意外的在发送后再次使用这个值；所有权系统检查一切是否合乎规则。
+
+### 发送多个值并观察接收者的等待
+
+```rust
+use std::thread;
+use std::sync::mpsc;
+use std::time::Duration;
+
+fn main() {
+    let (tx, rx) = mpsc::channel();
+
+    thread::spawn(move || {
+        let vals = vec![
+            String::from("hi"),
+            String::from("from"),
+            String::from("the"),
+            String::from("thread"),
+        ];
+
+        for val in vals {
+            tx.send(val).unwrap();
+            thread::sleep(Duration::new(1, 0));
+        }
+    });
+
+    for received in rx {
+        println!("Got: {}", received);
+    }
+}
+```
+
+这一次，在新建线程中有一个字符串 vector 希望发送到主线程。我们遍历他们，单独的发送每一个字符串并通过一个Duration值调用thread::sleep函数来暂停一秒。
+
+在主线程中，不再显式的调用recv函数：而是将rx当作一个迭代器。对于每一个接收到的值，我们将其打印出来。当通道被关闭时，迭代器也将结束。
+
+### 通过克隆发送者来创建多个生产者
+
+创建都向同一接收者发送值的多个线程。这可以通过克隆通道的发送端在来做到。
+```rust
+// ...snip...
+let (tx, rx) = mpsc::channel();
+
+let tx1 = tx.clone();
+thread::spawn(move || {
+    let vals = vec![
+        String::from("hi"),
+        String::from("from"),
+        String::from("the"),
+        String::from("thread"),
+    ];
+
+    for val in vals {
+        tx1.send(val).unwrap();
+        thread::sleep(Duration::new(1, 0));
+    }
+});
+
+thread::spawn(move || {
+    let vals = vec![
+        String::from("more"),
+        String::from("messages"),
+        String::from("for"),
+        String::from("you"),
+    ];
+
+    for val in vals {
+        tx.send(val).unwrap();
+        thread::sleep(Duration::new(1, 0));
+    }
+});
+```
