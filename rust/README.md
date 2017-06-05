@@ -334,7 +334,7 @@ $ cargo new --bin adder
 $ cd adder
 ```
 
-修改二进制包的 Cargo.toml 来告诉 Cargo 包adder是一个工作空间。在 Cargo.toml 文件末尾增加如下：
+修改二进制包的 Cargo.toml 来告诉 Cargo 包`adder`是一个工作空间。在 Cargo.toml 文件末尾增加如下：
 ```toml
 [workspace]
 ```
@@ -363,6 +363,73 @@ $ cargo new add-one
 └── src
     └── main.rs
 ```
+
+在 add-one/src/lib.rs 中增加add_one函数的实现：
+
+```rust
+pub fn add_one(x: i32) -> i32 {
+    x + 1
+}
+```
+打开adder的 src/main.rs 并增加一行extern crate将新的add-one库引入作用域，并修改main函数来使用add_one函数：
+```rust
+extern crate add_one;
+
+fn main() {
+    let num = 10;
+    println!("Hello, world! {} plus one is {}!", num, add_one::add_one(num));
+}
+```
+假如我们想要在add-one crate 中使用rand crate。一如既往在 add-one/Cargo.toml 的增加这个 crate：
+
+```toml
+[dependencies]
+
+rand = "0.3.14"
+```
+
+为 crate 中的add_one::add_one函数增加一个测试：
+
+```rust
+pub fn add_one(x: i32) -> i32 {
+    x + 1
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        assert_eq!(3, add_one(2));
+    }
+}
+```
+
+运行测试，需要指定包：
+```shell
+cargo test -p add-one
+```
+
+如果选择将工作空间发布到 crates.io，其中的每一个包都需要单独发布。
+
+### 安装包 cargo install
+
+只有有二进制目标文件的包能够安装，而且所有二进制文件都被安装到 Rust 安装根目录的 bin 文件夹中。如果你使用 rustup.rs 安装的 Rust 且没有自定义任何配置，这将是$HOME/.cargo/bin。将这个目录添加到$PATH环境变量中就能够运行通过cargo install安装的程序了。
+
+```text
+$ cargo install ripgrep
+Updating registry `https://github.com/rust-lang/crates.io-index`
+ Downloading ripgrep v0.3.2
+ ...snip...
+   Compiling ripgrep v0.3.2
+    Finished release [optimized + debuginfo] target(s) in 97.91 secs
+  Installing ~/.cargo/bin/rg
+```
+
+### 自定义 Cargo 扩展命令
+
+如果$PATH中有类似cargo-something的二进制文件，就可以通过cargo something来像 Cargo 子命令一样运行它。像这样的自定义命令也可以运行cargo --list来展示出来，通过cargo install向 Cargo 安装扩展并可以如内建 Cargo 工具那样运行他们是很方便的！
 
 ## 使用 Cargo 创建猜数字游戏
 
@@ -4251,4 +4318,3 @@ for i in 12..buffer.len() {
 为了计算prediction的值，这些代码遍历了coefficients中的 12 个值，使用zip方法将系数与buffer的前 12 个值组合在一起。接着将每一对值相乘，再将所有结果相加，然后将总和右移qlp_shift位。
 
 遍历coefficients的值完全用不到循环：Rust 知道这里会迭代 12 次，所以它“展开”了循环。所有的系数都被储存在了寄存器中（这意味着访问他们非常快）。也没有数组访问边界检查。这是极端有效率的。
-
