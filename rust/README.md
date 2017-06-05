@@ -3250,6 +3250,7 @@ fn main() {
 fn main() {
     let args: Vec<String> = env::args().collect();
 
+	// 将整个 vector 传递给parse_config函数
     let (query, filename) = parse_config(&args);
 
     // ...snip...
@@ -3260,5 +3261,267 @@ fn parse_config(args: &[String]) -> (&str, &str) {
     let filename = &args[2];
 
     (query, filename)
+}
+```
+
+### 组合配置值
+
+定义新的结构体Config，它有字段query和filename。我们也改变了parse_config函数来返回一个Config结构体的实例，并更新main来使用结构体字段而不是单独的变量：
+
+```rust
+
+
+struct Config {
+    query: String,
+    filename: String,
+}
+
+fn parse_config(args: &[String]) -> Config {
+	// ain中的args变量是参数值的所有者并只允许parse_config函数借用他们，所以用了 clone，我们也可以使用 match 直接从 std::env::Args 提取值
+    let query = args[1].clone();
+    let filename = args[2].clone();
+
+    Config {
+        query: query,
+        filename: filename,
+    }
+}
+```
+
+### 创建一个Config构造函数
+
+现在`parse_config`函数的目的是创建一个Config实例，我们可以将parse_config从一个普通函数变为一个叫做new的与结构体关联的函数。做出这个改变使得代码更符合习惯：可以像标准库中的String调用String::new来创建一个该类型的实例那样，将parse_config变为一个与Config关联的new函数。
+
+```rust
+struct Config {
+    query: String,
+    filename: String,
+}
+
+impl Config {
+    fn new(args: &[String]) -> Config {
+        let query = args[1].clone();
+        let filename = args[2].clone();
+
+        Config {
+            query: query,
+            filename: filename,
+        }
+    }
+}
+```
+
+### 修复错误处理
+
+现在我们开始修复错误处理。回忆一下之前提到过如果args vector 包含少于 3 个项并尝试访问 vector 中索引 1 或 索引 2 的值会造成程序 panic：
+
+```text
+   Compiling greprs v0.1.0 (file:///home/develop/workspace/example/rust/code/greprs)
+    Finished dev [unoptimized + debuginfo] target(s) in 2.28 secs
+     Running `target/debug/greprs`
+thread 'main' panicked at 'index out of bounds: the len is 1 but the index is 1', /checkout/src/libcollections/vec.rs:1422
+note: Run with `RUST_BACKTRACE=1` for a backtrace.
+```
+
+改进下错误提示：
+```rust
+fn new(args: &[String]) -> Config {
+    if args.len() < 3 {
+        panic!("not enough arguments");
+    }
+
+	let query = args[1].clone();
+	let filename = args[2].clone();
+
+	Config {
+		query: query,
+		filename: filename,
+	}
+}
+```
+
+但是 `panic!` 的调用更适合程序问题而不是使用问题，我们可以返回一个可以表明成功或错误的Result：
+
+```rust
+impl Config {
+    fn new(args: &[String]) -> Result<Config, &'static str> {
+        if args.len() < 3 {
+            return Err("not enough arguments");
+        }
+
+        let query = args[1].clone();
+        let filename = args[2].clone();
+
+        Ok(Config {
+            query: query,
+            filename: filename,
+        })
+    }
+}
+```
+
+现在new函数返回一个Result，在成功时带有一个Config实例而在出现错误时带有一个`&'static str`。
+
+### 处理返回的错误信息
+
+从标准库中导入 `process`。process::exit会立即停止程序并将传递给它的数字作为返回状态码。
+使用`unwrap_or_else`可以进行一些自定义的非 `panic!` 的错误处理。
+当`Result`是`Ok`时，这个方法的行为类似于`unwrap`：它返回Ok内部封装的值。
+当`Result`是`Err`时，它调用一个闭包（closure），也就是一个我们定义的作为参数传递给unwrap_or_else的匿名函数。
+
+```rust
+use std::process;
+
+fn main() {
+    let args: Vec<String> = env::args().collect();
+
+    let config = Config::new(&args).unwrap_or_else(|err| {
+        println!("Problem parsing arguments: {}", err);
+        process::exit(1);
+    });
+
+    // ...snip...
+```
+
+### 提取`run`函数
+
+现在我们完成了配置解析的重构：让我们转向程序的逻辑。
+
+```rust
+fn main() {
+    // ...snip...
+
+    println!("Searching for {}", config.query);
+    println!("In file {}", config.filename);
+
+    run(config);
+}
+
+fn run(config: Config) {
+    let mut f = File::open(config.filename).expect("file not found");
+
+    let mut contents = String::new();
+    f.read_to_string(&mut contents).expect("something went wrong reading the file");
+
+    println!("With text:\n{}", contents);
+}
+
+// ...snip...
+```
+
+现在run函数包含了main中从读取文件开始的剩余的所有逻辑。run函数获取一个Config实例作为参数。
+
+### 从run函数中返回错误
+
+返回实现了`Error trait`的类型，不过无需指定具体将会返回的值的类型。这提供了在不同的错误场景可能有不同类型的错误返回值的灵活性。
+我们使用`if let`来检查`run`是否返回一个`Err`值，因为run在成功时返回()，而我们只关心发现一个错误，所以并不需要`unwrap_or_else`来返回未封装的值，因为它只会是`()`。
+```rust
+use std::error::Error;
+
+// ...snip...
+
+fn main() {
+    // ...snip...
+
+    println!("Searching for {}", config.query);
+    println!("In file {}", config.filename);
+
+    if let Err(e) = run(config) {
+        println!("Application error: {}", e);
+
+        process::exit(1);
+    }
+}
+
+fn run(config: Config) -> Result<(), Box<Error>> {
+    let mut f = File::open(config.filename)?;
+
+    let mut contents = String::new();
+    f.read_to_string(&mut contents)?;
+
+    println!("With text:\n{}", contents);
+
+    Ok(())
+}
+```
+
+### 将代码拆分到库 crate
+
+让我们将如下代码片段从 src/main.rs 移动到新文件 src/lib.rs 中：
+
+- run函数定义
+- 相关的use语句
+- Config的定义
+- Config::new函数定义
+
+文件`src/lib.rs`内容如下：
+```
+use std::error::Error;
+use std::fs::File;
+use std::io::prelude::*;
+
+pub struct Config {
+    pub query: String,
+    pub filename: String,
+}
+
+impl Config {
+    pub fn new(args: &[String]) -> Result<Config, &'static str> {
+        if args.len() < 3 {
+            return Err("not enough arguments");
+        }
+
+        let query = args[1].clone();
+        let filename = args[2].clone();
+
+        Ok(Config {
+            query: query,
+            filename: filename,
+        })
+    }
+}
+
+pub fn run(config: Config) -> Result<(), Box<Error>>{
+    let mut f = File::open(config.filename)?;
+
+    let mut contents = String::new();
+    f.read_to_string(&mut contents)?;
+
+    println!("With text:\n{}", contents);
+
+    Ok(())
+}
+```
+
+这里使用了公有的pub：在Config、其字段和其new方法，以及run函数上。现在我们有了一个拥有可以测试的公有 API 的库 crate 了。
+
+### 从二进制 crate 中调用库 crate
+
+现在需要在 src/main.rs 中使用extern crate greprs将移动到 src/lib.rs 的代码引入二进制 crate 的作用域。接着我们将增加一个use greprs::Config行将Config类型引入作用域，并使用库 crate 的名称作为run函数的前缀：
+
+```rust
+extern crate greprs;
+
+use std::env;
+use std::process;
+
+use greprs::Config;
+
+fn main() {
+    let args: Vec<String> = env::args().collect();
+
+    let config = Config::new(&args).unwrap_or_else(|err| {
+        println!("Problem parsing arguments: {}", err);
+        process::exit(1);
+    });
+
+    println!("Searching for {}", config.query);
+    println!("In file {}", config.filename);
+
+    if let Err(e) = greprs::run(config) {
+        println!("Application error: {}", e);
+
+        process::exit(1);
+    }
 }
 ```
