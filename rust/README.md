@@ -165,6 +165,205 @@ Cargo 为我们创建了两个文件和一个目录：一个Cargo.toml和一个�
 cargo clean
 ```
 
+### 发布配置
+
+Cargo 支持四种配置：
+
+* `dev`: used for `cargo build`
+* `release` used for `cargo build --release`
+* `test` used for `cargo test`
+* `doc` used for `cargo doc`
+
+可以通过自定义Cargo.toml文件中的[profile.*]部分来调整这些配置的编译器参数。例如，这里是dev和release配置的默认参数：
+
+```toml
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+opt-level = 3
+```
+
+`opt-level` 设置控制 Rust 会进行何种程度的优化。这个配置的值从 0 到 3。越高的优化级别需要更多的时间。
+
+更多查看文档 http://doc.crates.io/
+
+### 将 crate 发布到 Crates.io
+
+我们创建了一个库art，其包含一个kinds模块，模块中包含枚举Color和包含函数mix的模块utils：
+```rust
+//! # Art
+//!
+//! A library for modeling artistic concepts.
+
+pub mod kinds {
+    /// The primary colors according to the RYB color model.
+    pub enum PrimaryColor {
+        Red,
+        Yellow,
+        Blue,
+    }
+
+    /// The secondary colors according to the RYB color model.
+    pub enum SecondaryColor {
+        Orange,
+        Green,
+        Purple,
+    }
+}
+
+pub mod utils {
+    use kinds::*;
+
+    /// Combines two primary colors in equal amounts to create
+    /// a secondary color.
+    pub fn mix(c1: PrimaryColor, c2: PrimaryColor) -> SecondaryColor {
+        // ...snip...
+#         SecondaryColor::Green
+    }
+}
+```
+
+为了使用这个库，另一个 crate 中使用了use语句：
+
+```rust
+extern crate art;
+
+use art::kinds::PrimaryColor;
+use art::utils::mix;
+
+fn main() {
+    let red = PrimaryColor::Red;
+    let yellow = PrimaryColor::Yellow;
+    mix(red, yellow);
+}
+```
+
+* 使用pub use来导出合适的公有 API
+
+增加`pub use`语句来将这些类型重新导出到顶级结构：
+```rust,ignore
+//! # Art
+//!
+//! A library for modeling artistic concepts.
+
+pub use kinds::PrimaryColor;
+pub use kinds::SecondaryColor;
+pub use utils::mix;
+
+pub mod kinds {
+    // ...snip...
+```
+
+重导出的项将会被连接和排列在 crate API 文档的头版。
+这样用户就可以如下使用：
+```rust
+extern crate art;
+
+use art::PrimaryColor;
+use art::mix;
+
+fn main() {
+    // ...snip...
+}
+```
+
+使用 GitHub 账号登陆 https://crates.io/，查看`Account Settings`页面并使用其中指定的 API key 运行cargo login命令，这看起来像这样：
+
+```shell
+cargo login abcdefghijklmnopqrstuvwxyz012345
+```
+这个命令会通知 Cargo 你的 API token 并将其储存在本地的 ~/.cargo/config 文件中。
+
+crate 必须有一个位移的名称。虽然在本地开发 crate 时，可以使用任何你喜欢的名字，不过crates.io上的 crate 名称遵守先到先得的原则分配。一旦一个 crate 名被使用，就不能被另一个 crate 所使用，所以请确认你喜欢的名字在网站上是可用的。
+
+发布命令：
+```shell
+cargo publish
+```
+在包的 Cargo.toml 文件中包含更多的信息。其中一些字段是可选的，不过描述和 license 是发布所必须的，因为这样人们才能知道 crate 是干什么的已经在什么样的条款下可以使用他们。
+
+所以一个准备好发布的项目的 Cargo.toml 文件看起来像这样：
+```toml
+[package]
+name = "guessing_game"
+version = "0.1.0"
+authors = ["Your Name <you@example.com>"]
+description = "A fun game where you guess what number the computer has chosen."
+license = "MIT/Apache-2.0"
+
+[dependencies]
+```
+
+当你修改了 crate 并准备好发布新版本时，改变 Cargo.toml 中version所指定的值。
+
+* 使用cargo yank从 Crates.io 删除版本
+
+```shell
+cargo yank --vers 1.0.1
+cargo yank --vers 1.0.1 --undo
+```
+
+### 依赖 dependencies
+
+
+使用 Cargo 工具的最大优势就在于，能够对该项目进行方便、统一和灵活的管理。常用的依赖描述有以下几种：
+
+- 基于 rust 官方仓库 crates.io，通过版本说明来描述。
+- 基于项目源码的 git 仓库地址，通过 URL 来描述。
+- 基于本地项目的绝对路径或相对路径来描述。
+
+```toml
+[dependencies]
+rand = "0.3"
+time = "0.1.35"
+log = { version = "0.3" }
+regex = { git = "https://github.com/rust-lang-nursery/regex" }
+trust = { path = "cratex/trust" }
+```
+
+### 工作空间（workspaces）
+
+Cargo 提供了一个叫工作空间（workspaces）的功能，它可以帮助我们管理多个相关的并行开发的包。
+
+让我们为这个二进制项目创建一个新 crate 作为开始：
+
+```text
+$ cargo new --bin adder
+     Created binary (application) `adder` project
+$ cd adder
+```
+
+修改二进制包的 Cargo.toml 来告诉 Cargo 包adder是一个工作空间。在 Cargo.toml 文件末尾增加如下：
+```toml
+[workspace]
+```
+
+工作空间支持配置惯例：只要遵循这些惯例就无需再增加任何配置了。这个惯例是任何作为子目录依赖的 crate 将是工作空间的一部分。
+让我们像这样在 Cargo.toml 中增加一个adder crate 的路径依赖：
+```toml
+[dependencies]
+add-one = { path = "add-one" }
+```
+如果增加依赖但没有指定path，这将是一个基于 rust 官方仓库 crates.io 依赖。
+
+接下来，在adder目录中生成add-one crate：
+
+```text
+$ cargo new add-one
+     Created library `add-one` project
+```
+现在`adder`目录应该有如下目录和文件：
+```text
+├── Cargo.toml
+├── add-one
+│   ├── Cargo.toml
+│   └── src
+│       └── lib.rs
+└── src
+    └── main.rs
+```
+
 ## 使用 Cargo 创建猜数字游戏
 
 ```shell
@@ -3525,3 +3724,531 @@ fn main() {
     }
 }
 ```
+
+### 测试库的功能
+
+我们将遵循测试驱动开发（Test Driven Development, TTD）的模式。这是一个软件开发技术，它遵循如下步骤：
+
+- 编写一个会失败的测试，并运行它以确保其因为你期望的原因失败。
+- 编写或修改刚好足够的代码来使得新的测试通过。
+- 重构刚刚增加或修改的代码，并确保测试仍然能通过。
+- 重复上述步骤！
+
+去掉 `src/lib.rs` 和 `src/main.rs` 中的`println!`语句，因为不再真的需要他们了。
+在 lib.rs 增加一个test模块和一个测试函数。测试函数指定了我们希望search函数拥有的行为：它会获取一个需要查询的字符串和用来查询的文本。
+
+```rust
+fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+     vec![]
+}
+
+// ...snip...
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn one_result() {
+        let query = "duct";
+        let contents = "\
+Rust:
+safe, fast, productive.
+Pick three.";
+
+        assert_eq!(
+            vec!["safe, fast, productive."],
+            search(query, contents)
+        );
+    }
+}
+```
+
+这里选择使用 "duct" 作为这个测试中需要搜索的字符串。用来搜索的文本有三行，其中只有一行包含 "duct"。我们断言search函数的返回值只包含期望的那一行。
+在search的签名中显式定义一个显式生命周期'a并用于contents参数和返回值。
+我们告诉 Rust 函数search返回的数据将与search函数中的参数contents的数据存在的一样久。
+
+现在我们尝试运行`cargo test`将会是我们期望的失败结果。
+
+### 编写 search 让测试通过
+
+目前测试之所以会失败是因为我们总是返回一个空的 vector。为了修复并实现search，我们的程序需要遵循如下步骤：
+
+1. 遍历每一行文本。
+2. 查看这一行是否包含要搜索的字符串。
+	* 如果有，将这一行加入返回列表中。
+	* 如果没有，什么也不做。
+3. 返回匹配到的列表
+
+让我们一步一步的来，从遍历每行开始。
+
+* 使用lines方法遍历每一行
+
+```rust
+fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+    for line in contents.lines() {
+        // do something with line
+    }
+}
+```
+
+* 用`contains`查询字符串搜索每一行
+
+```rust
+fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+    for line in contents.lines() {
+        if line.contains(query) {
+            // do something with line
+        }
+    }
+}
+```
+
+* 存储匹配的行
+
+```rust
+fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+    let mut results = Vec::new();
+
+    for line in contents.lines() {
+        if line.contains(query) {
+            results.push(line);
+        }
+    }
+
+    results
+}
+```
+
+我们可以利用迭代器改进下代码：
+
+```rust
+fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+    contents.lines()
+        .filter(|line| line.contains(query))
+        .collect()
+}
+```
+
+这里使用了filter适配器来只保留line.contains(query)为真的那些行。接着使用collect将他们放入另一个 vector 中。这就简单多了！
+
+### 在run函数中使用search函数
+
+```rust
+pub fn run(config: Config) -> Result<(), Box<Error>> {
+    let mut f = File::open(config.filename)?;
+
+    let mut contents = String::new();
+    f.read_to_string(&mut contents)?;
+
+    for line in search(&config.query, &contents) {
+        println!("{}", line);
+    }
+
+    Ok(())
+}
+```
+
+### 大小写不敏感`search`函数
+
+将老的测试`one_result`改名为`case_sensitive`，编写新的测试`case_insensitive`：
+
+```rust
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn case_sensitive() {
+        let query = "duct";
+        let contents = "\
+Rust:
+safe, fast, productive.
+Pick three.
+Duct tape.";
+
+        assert_eq!(
+            vec!["safe, fast, productive."],
+            search(query, contents)
+        );
+    }
+
+    #[test]
+    fn case_insensitive() {
+        let query = "rUsT";
+        let contents = "\
+Rust:
+safe, fast, productive.
+Pick three.
+Trust me.";
+
+        assert_eq!(
+            vec!["Rust:", "Trust me."],
+            search_case_insensitive(query, contents)
+        );
+    }
+}
+```
+
+### 实现`search_case_insensitive`函数
+
+它会将query变量和每一line都变为小写，这样不管输入参数是大写还是小写，在检查该行是否包含查询字符串时都会是小写。
+
+```rust
+fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+	// 将query字符串转换为小写，并将其储存（覆盖）到同名的变量中。
+    let query = query.to_lowercase();
+    let mut results = Vec::new();
+
+    for line in contents.lines() {
+		// 因为 query 现在是一个String，当我们将query作为一个参数传递给contains方法时，需要增加一个 & 因为contains的签名被定义为获取一个字符串 slice。
+        if line.to_lowercase().contains(&query) {
+            results.push(line);
+        }
+    }
+
+    results
+}
+```
+
+现在，让我们在run函数中调用真正的新`search_case_insensitive`函数。首先，我们将在 Config 结构体中增加一个配置项来切换大小写是否敏感。
+
+```rust
+pub struct Config {
+    pub query: String,
+    pub filename: String,
+    pub case_sensitive: bool,
+}
+```
+
+`run`函数检查`case_sensitive`字段的值并使用它来决定是否调用`search`函数或`search_case_insensitive`函数：
+
+```rust
+pub fn run(config: Config) -> Result<(), Box<Error>>{
+    let mut f = File::open(config.filename)?;
+
+    let mut contents = String::new();
+    f.read_to_string(&mut contents)?;
+
+    let results = if config.case_sensitive {
+        search(&config.query, &contents)
+    } else {
+        search_case_insensitive(&config.query, &contents)
+    };
+
+    for line in results {
+        println!("{}", line);
+    }
+
+    Ok(())
+}
+```
+
+### 检测`CASE_INSENSITIVE`环境变量
+
+处理环境变量的函数位于标准库的`env`模块中，所以我们需要在 `src/lib.rs` 的开头增加一个`use std::env;`行将这个模块引入作用域中。
+
+```rust
+use std::env;
+
+// ...snip...
+
+impl Config {
+    pub fn new(args: &[String]) -> Result<Config, &'static str> {
+        if args.len() < 3 {
+            return Err("not enough arguments");
+        }
+
+        let query = args[1].clone();
+        let filename = args[2].clone();
+
+        let case_sensitive = env::var("CASE_INSENSITIVE").is_err();
+
+        Ok(Config {
+            query: query,
+            filename: filename,
+            case_sensitive: case_sensitive,
+        })
+    }
+}
+```
+
+### 输出到`stderr`而不是`stdout`
+
+我们准备将标准输出重定向到一个文件中，而不包括错误信息，这时就需要将错误信息输出到标准错误`stderr`。
+
+```rust
+extern crate greprs;
+
+use std::env;
+use std::process;
+use std::io::prelude::*;
+
+use greprs::Config;
+
+fn main() {
+    let args: Vec<String> = env::args().collect();
+    let mut stderr = std::io::stderr();
+
+    let config = Config::new(&args).unwrap_or_else(|err| {
+        writeln!(
+            &mut stderr,
+            "Problem parsing arguments: {}",
+            err
+        ).expect("Could not write to stderr");
+        process::exit(1);
+    });
+
+    if let Err(e) = greprs::run(config) {
+        writeln!(
+            &mut stderr,
+            "Application error: {}",
+            e
+        ).expect("Could not write to stderr");
+
+        process::exit(1);
+    }
+}
+```
+
+Rust 并没有类似println!这样的方便写入标准错误的函数。相反，我们使用writeln!宏，它有点像println!，不过它获取一个额外的参数。第一个参数是希望写入内容的位置。可以通过std::io::stderr函数获取一个标准错误的句柄。我们将一个stderr的可变引用传递给writeln!；它需要是可变的因为这样才能写入信息！第二个和第三个参数就像println!的第一个和第二参数：一个格式化字符串和任何需要插入的变量。
+
+## Rust 中的函数式语言功能 —— 迭代器和闭包
+
+
+- 闭包（Closures），一个可以储存在变量里的类似函数的结构
+- 迭代器（Iterators），一种处理元素序列的方式。。
+- 如何使用这些功能来改进上一章的项目
+- 这些功能的性能。**剧透高能：**他们的速度超乎想象！
+
+这并不是一个 Rust 受函数式风格影响的完整功能列表：还有模式匹配、枚举和很多其他功能。
+
+### 闭包
+
+Rust 提供了定义闭包的能力，它类似于函数。让我们先不从技术上的定义开始，而是看看闭包语句结构，然后再返回他们的定义。
+
+```rust
+fn main() {
+	// 赋值给变量 add_one 的小的闭包定义
+    let add_one = |x| x + 1;
+	// 调用闭包
+    let five = add_one(4);
+
+    assert_eq!(5, five);
+}
+```
+
+这是一个很小的闭包，它只包含一个表达式。
+一个稍微复杂一点的闭包：
+
+```rust
+Filename: src/main.rs
+
+fn main() {
+    let calculate = |a, b| {
+        let mut result = a * 2;
+
+        result += b;
+
+        result
+    };
+
+    assert_eq!(7, calculate(2, 3)); // 2 * 2 + 3 == 7
+    assert_eq!(13, calculate(4, 5)); // 4 * 2 + 5 == 13
+}
+```
+
+你会注意到一些闭包不同于fn关键字定义的函数的地方。
+第一个不同是并不需要声明闭包的参数和返回值的类型。
+也可以选择加上类型注解：
+
+```rust
+fn main() {
+    let add_one = |x: i32| -> i32 { x + 1 };
+
+    assert_eq!(2, add_one(1));
+}
+```
+
+不过闭包的定义会推断每一个参数和返回值的类型。例如，如果用`i8`调用没有类型注解的闭包，接着用`i32`调用同一闭包则会得到一个错误：
+
+```rust
+let add_one = |x| x + 1;
+
+let five = add_one(4i8);
+assert_eq!(5i8, five);
+
+let three = add_one(2i32);
+```
+
+### 闭包可以引用其环境
+
+函数只能使用其作用域内的变量，或者要么是const的要么是被声明为参数的。闭包则可以做的更多：闭包允许使用包含他们的作用域的变量。
+
+```rust
+fn main() {
+    let x = 4;
+
+    let equal_to_x = |z| z == x;
+
+    let y = 4;
+
+    assert!(equal_to_x(y));
+}
+```
+
+即便x并不是equal_to_x的一个参数，equal_to_x闭包也被允许使用它，因为变量x定义于同样定义equal_to_x的作用域中。
+
+获取他们环境中值的闭包主要用于开始新线程的场景。我们也可以定义以闭包作为参数的函数，通过使用Fn trait。这里是一个函数call_with_one的例子，它的签名有一个闭包参数：
+```rust
+fn call_with_one<F>(some_closure: F) -> i32
+    where F: Fn(i32) -> i32 {
+
+    some_closure(1)
+}
+
+let answer = call_with_one(|x| x + 2);
+
+assert_eq!(3, answer);
+```
+
+### 迭代器
+
+之前我们讲过 trait 类似于其他语言中的常被称为接口（interfaces）的功能。
+迭代器是 Rust 中的一个模式，它允许你对一个项的序列进行某些处理。
+
+```rust
+let v1 = vec![1, 2, 3];
+
+let v2: Vec<i32> = v1.iter()	// `vector` 的`iter`方法从 vector 创建一个迭代器（iterator）
+	.map(|x| x + 1)				// 迭代器上的map方法调用允许我们处理每一个元素
+	.collect();					// collect 方法消费了迭代器并将其元素存放到一个新的数据结构中
+
+assert_eq!(v2, [2, 3, 4]);
+```
+
+map是最基本的与比较交互的方法之一，因为依次处理每一个元素是非常有用的！
+
+像map这样的迭代器方法有时被称为迭代器适配器（iterator adaptors），因为他们获取一个迭代器并产生一个新的迭代器。也就是说，map在之前迭代器的基础上通过调用传递给它的闭包来创建了一个新的值序列的迭代器。
+
+概括一下，这行代码进行了如下工作：
+
+- 从 vector 中创建了一个迭代器。
+- 使用map适配器和一个闭包参数对每一个元素加一。
+- 使用collect适配器来消费迭代器并生成了一个新的 vector。
+
+* 迭代器是惰性的
+
+我们说map适配（adapts）了一个迭代器，而collect消费（consumes）了一个迭代器。这是有意为之的。
+单独的迭代器并不会做任何工作；他们是惰性的。
+他们需要一些其他方法来触发迭代器链的计算。我们称之为消费适配器（consuming adaptors），而`collect`就是其中之一。
+
+那么如何知道迭代器方法是否消费了迭代器呢？还有哪些适配器是可用的呢？为此，让我们看看Iterator trait。
+其定义看起来像这样：
+
+```rust
+trait Iterator {
+    type Item;
+
+    fn next(&mut self) -> Option<Self::Item>;
+}
+```
+
+这里有一些还未讲到的新语法：`type Item`和`Self::Item`定义了这个 trait 的关联类型（associated type），要求你也定义一个 Item 类型，而这个 Item 类型用作next方法的返回值。换句话说，Item 类型将是迭代器返回的元素的类型。
+
+### 实现迭代器 Counter
+
+首先，需要创建一个结构体来存放迭代器的当前状态，它有一个u32的字段count。我们也定义了一个new方法，当然这并不是必须的：
+
+```rust
+struct Counter {
+    count: u32,
+}
+
+impl Counter {
+    fn new() -> Counter {
+        Counter { count: 0 }
+    }
+}
+```
+
+因为我们希望 Counter 能从一数到五，所以它总是从零开始。
+通过定义 `next` 方法来为 `Counter` 类型实现 `Iterator trait`。
+
+```rust
+impl Iterator for Counter {
+    // Our iterator will produce u32s
+    type Item = u32;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        // increment our count. This is why we started at zero.
+        self.count += 1;
+
+        // check to see if we've finished counting or not.
+        if self.count < 6 {
+            Some(self.count)
+        } else {
+            None
+        }
+    }
+}
+```
+
+我们希望迭代器的工作方式是对当前状态加一（这就是为什么将count初始化为零，这样迭代器首先就会返回一）。如果count仍然小于六，将返回当前状态，不过如果count大于等于六，迭代器将返回None。
+
+next方法是迭代器的主要接口，它返回一个Option。如果它是Some(value)，相当于可以迭代器中获取另一个值。如果它是None，迭代器就结束了。在next方法中可以进行任何迭代器需要的计算。
+
+### 各种Iterator适配器
+
+Counter如何才能得到像map和collect这样的方法呢？
+
+当讲到Iterator的定义时，我们故意省略一个小的细节。Iterator 定义了一系列默认实现，他们会调用next方法。
+因为next是唯一一个Iterator trait 没有默认实现的方法，一旦实现之后，Iterator的所有其他的适配器就都可用了。这些适配器可不少！
+
+处于某种原因我们希望获取一个Counter实例产生的值，与另一个Counter实例忽略第一个值之后的值相组合，将每组数相乘，并只保留能被三整除的相乘结果，最后将所有保留的结果相加，我们可以这么做：
+
+```rust
+let sum: u32 = Counter::new().zip(Counter::new().skip(1))
+                             .map(|(a, b)| a * b)
+                             .filter(|x| x % 3 == 0)
+                             .sum();
+assert_eq!(18, sum);
+```
+
+* 迭代器性能
+
+迭代器是 Rust 的零成本抽象（zero-cost abstractions）之一，它意味着抽象并不会强加运行时开销，它与本贾尼·斯特劳斯特卢普，C++ 的设计和实现者所定义的零开销（zero-overhead）如出一辙：
+
+> In general, C++ implementations obey the zero-overhead principle: What you
+> don’t use, you don’t pay for. And further: What you do use, you couldn’t hand
+> code any better.
+>
+> - Bjarne Stroustrup "Foundations of C++"
+
+作为另一个例子，这里有一些来自于音频解码器的代码。
+这些代码使用迭代器链来对作用域中的三个变量进行了某种数学计算：
+- 一个叫buffer的数据 slice
+- 一个有12个元素的数组coefficients
+- 一个代表移位位数的qlp_shift。
+
+来展示 Rust 如何将高级概念转换为底层代码：
+
+```rust
+let buffer: &mut [i32];
+let coefficients: [i64; 12];
+let qlp_shift: i16;
+
+for i in 12..buffer.len() {
+    let prediction = coefficients.iter()
+                                 .zip(&buffer[i - 12..i])
+                                 .map(|(&c, &s)| c * s as i64)
+                                 .sum::<i64>() >> qlp_shift;
+    let delta = buffer[i];
+    buffer[i] = prediction as i32 + delta;
+}
+```
+
+为了计算prediction的值，这些代码遍历了coefficients中的 12 个值，使用zip方法将系数与buffer的前 12 个值组合在一起。接着将每一对值相乘，再将所有结果相加，然后将总和右移qlp_shift位。
+
+遍历coefficients的值完全用不到循环：Rust 知道这里会迭代 12 次，所以它“展开”了循环。所有的系数都被储存在了寄存器中（这意味着访问他们非常快）。也没有数组访问边界检查。这是极端有效率的。
+
