@@ -1855,6 +1855,188 @@ fn main() {
 
 如果想要输出再好看和易读一点，这对更大的结构体会有帮助，可以将`println!``的字符串中的`{:?}`替换为`{:#?}`。
 
+### 过程宏（和自定义导出）
+
+在上面你看到 Rust 提供了一个叫做“导出（derive）”的机制来轻松的实现 trait，他的工作机制：
+```rust
+#[derive(Debug)]
+struct Point {
+    x: i32,
+    y: i32,
+}
+```
+上面代码，类似生成下面的代码：
+```rust
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+use std::fmt;
+
+impl fmt::Debug for Point {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Point {{ x: {}, y: {} }}", self.x, self.y)
+    }
+}
+```
+
+Rust 包含很多可以导出的 trait，不过也允许定义你自己的 trait。我们可以通过一个叫做“过程宏”的 Rust 功能来实现这个效果。最终，过程宏将会允许 Rust 所有类型的高级元编程。
+
+### 实现自己的过程宏
+
+我们引入了两个新的 crate：syn和quote。用 syn 解析我们定义的hello_world代码，（使用quote）构建hello_world的实现，接着把它传递回给 Rust 编译器。
+
+创建项目
+```shell
+cargo new --bin hello-world
+```
+
+然后编写调用代码：
+```rust
+#[derive(HelloWorld)]
+struct Pancakes;
+
+fn main() {
+    Pancakes::hello_world();
+}
+```
+继续并从用户的角度编写我们的宏。在src/main.rs中：
+```rust
+#[macro_use]
+extern crate hello_world_derive;
+
+trait HelloWorld {
+    fn hello_world();
+}
+
+#[derive(HelloWorld)]
+struct FrenchToast;
+
+#[derive(HelloWorld)]
+struct Waffles;
+
+fn main() {
+    FrenchToast::hello_world();
+    Waffles::hello_world();
+}
+```
+
+接下来来编写我们的过程宏：
+
+让我们在`hello-world`项目中新建一个叫做`hello-world-derive`的 crate。
+```shell
+cargo new hello-world-derive
+```
+
+我们需要在hello-world-derive crate 的cargo.toml中添加syn和quote的依赖。
+
+```toml
+[dependencies]
+syn = "0.10.5"
+quote = "0.3.10"
+```
+
+为了确保 `hello-world` 能够找到这个新创建的 `hello-world-derive` 我们把它加入到项目 toml 文件中：
+```toml
+[dependencies]
+hello-world-derive = { path = "hello-world-derive" }
+```
+
+编写 lib.rs：
+```rust
+extern crate proc_macro;
+extern crate syn;
+#[macro_use]
+extern crate quote;
+
+use proc_macro::TokenStream;
+
+#[proc_macro_derive(HelloWorld)]
+pub fn hello_world(input: TokenStream) -> TokenStream {
+    // Construct a string representation of the type definition
+    let s = input.to_string();
+
+    // Parse the string representation
+    let ast = syn::parse_derive_input(&s).unwrap();
+
+    // Build the impl
+    let gen = impl_hello_world(&ast);
+
+    // Return the generated impl
+    gen.parse().unwrap()
+}
+
+fn impl_hello_world(ast: &syn::MacroInput) -> quote::Tokens {
+    let name = &ast.ident;
+    quote! {
+        impl HelloWorld for #name {
+            fn hello_world() {
+                println!("Hello, World! My name is {}", stringify!(#name));
+            }
+        }
+    }
+}
+```
+
+我们可以通过ast.ident获取类型的信息。quote!宏允许我们编写想要返回的 Rust 代码并把它转换为Tokens。quote!让我们可以使用一些炫酷的模板机制；简单的使用#name，quote!就会把它替换为叫做name的变量。你甚至可以类似常规宏那样进行一些重复。
+
+更多查看文档：https://docs.rs/quote/0.3.15/quote/
+
+看来我们需要把hello-world-derive crate 声明为proc-macro类型。怎么做呢？像这样：
+
+```toml
+[lib]
+proc-macro = true
+```
+
+### 自定义属性（Custom Attributes）
+
+用户可能想要重载hello_world()方法打印出的名字的值。
+
+这可以通过自定义 attribute 来实现：
+
+```rust
+#[derive(HelloWorld)]
+#[HelloWorldName = "the best Pancakes"]
+struct Pancakes;
+
+fn main() {
+    Pancakes::hello_world();
+}
+```
+
+在hello-world-derive crate 中对proc_macro_derive attribute 增加attributes来实现：
+
+```rust
+#[proc_macro_derive(HelloWorld, attributes(HelloWorldName))]
+pub fn hello_world(input: TokenStream) -> TokenStream
+```
+
+### 过程宏限制类型
+
+假设我们并不希望在我们的自定义导出方法中接受枚举作为输入。
+这个条件可以通过syn轻松的进行检查，在过程宏中报告错误的传统做法是 panic：
+```rust
+fn impl_hello_world(ast: &syn::MacroInput) -> quote::Tokens {
+    let name = &ast.ident;
+    // Check if derive(HelloWorld) was specified for a struct
+    if let syn::Body::Struct(_) = ast.body {
+        // Yes, this is a struct
+        quote! {
+            impl HelloWorld for #name {
+                fn hello_world() {
+                    println!("Hello, World! My name is {}", stringify!(#name));
+                }
+            }
+        }
+    } else {
+        //Nope. This is an Enum. We cannot handle these!
+       panic!("#[derive(HelloWorld)] is only defined for structs, not for enums!");
+    }
+}
+```
+
 ### 定义方法
 
 让我们将获取一个 `Rectangle` 实例作为参数的 `area` 函数改写成一个定义于 `Rectangle` 结构体上的 `area` 方法：
@@ -4925,6 +5107,7 @@ fn main() {
 ### 通过克隆发送者来创建多个生产者
 
 创建都向同一接收者发送值的多个线程。这可以通过克隆通道的发送端在来做到。
+
 ```rust
 // ...snip...
 let (tx, rx) = mpsc::channel();
@@ -4957,4 +5140,158 @@ thread::spawn(move || {
         thread::sleep(Duration::new(1, 0));
     }
 });
+```
+
+这一次，在创建新线程之前，我们对通道的发送端调用了clone方法。这会给我们一个可以传递给第一个新建线程的发送端句柄。我们会将原始的通道发送端传递给第二个新建线程，这样每个线程将向通道的接收端发送不同的消息。
+
+## 共享状态并发
+
+虽然消息传递是一个很好的处理并发的方式，但并不是唯一的一个。再次考虑一下它的口号：
+
+> 不要共享内存来通讯；而是要通讯来共享内存。
+
+那么“共享内存来通讯”是怎样的呢？共享内存并发有点像多所有权：多个线程可以同时访问相同的内存位置。
+
+### 互斥器一次只允许一个线程访问数据
+
+互斥器（mutex）是一种用于共享内存的并发原语。它是“mutual exclusion”的缩写，也就是说，任意时间，它只允许一个线程访问某些数据。互斥器以难以使用著称，因为你不得不记住：
+
+1. 在使用数据之前尝试获取锁。
+2. 处理完被互斥器所保护的数据之后，必须解锁数据，这样其他线程才能够获取锁。
+
+正确的管理互斥器异常复杂，这也是许多人之所以热衷于通道的原因。然而，在 Rust 中，得益于类型系统和所有权，我们不会在锁和解锁上出错。
+
+* Mutex<T>的 API
+
+```rust
+use std::sync::Mutex;
+
+fn main() {
+	// 使用关联函数 new 来创建
+    let m = Mutex::new(5);
+
+    {
+		// 使用lock方法获取锁
+        let mut num = m.lock().unwrap();
+        *num = 6;
+    }
+
+    println!("m = {:?}", m);
+}
+```
+
+如果另一个线程拥有锁，并且那个线程 `panic` 了，则这个调用会失败，我们暂时使用 `unwrap()` 进行错误处理。
+`Mutex<i32>` 并不是一个i32，所以必须获取锁才能使用这个i32值。我们是不会忘记这么做的，因为类型系统不允许。
+一旦获取了锁，就可以将返回值（在这里是num）作为一个数据的可变引用使用了。
+`lock` 调用返回一个叫做`MutexGuard`的智能指针，它实现了Deref来指向其内部数据。
+另外`MutexGuard`有一个用来释放锁的`Drop`实现。这样就不会忘记释放锁了，这在MutexGuard离开作用域时会自动发生。
+
+### 在线程间共享 `Mutex<T>`
+
+我们将启动十个线程，并在各个线程中对同一个计数器值加一，这样计数器将从 0 变为 10：
+
+```rust
+use std::sync::Mutex;
+use std::thread;
+
+fn main() {
+	// 创建了一个 counter 变量来存放内含 i32 的 Mutex<T>
+    let counter = Mutex::new(0);
+    let mut handles = vec![];
+
+	// 使用 range 创建了 10 个线程
+    for _ in 0..10 {
+        let handle = thread::spawn(|| {
+            let mut num = counter.lock().unwrap();
+
+            *num += 1;
+        });
+        handles.push(handle);
+    }
+
+	// 调用 join 方法来确保所有线程都会结束
+    for handle in handles {
+        handle.join().unwrap();
+    }
+
+    println!("Result: {}", *counter.lock().unwrap());
+}
+```
+
+Rust 无法知道这些线程会运行多久，而在每一个线程尝试借用 `counter` 时它是否仍然有效。
+所以这里要使用 `move` 来给予每个线程其所有权：
+
+```rust,ignore
+thread::spawn(move || {
+```
+
+但是 counter 被移动进了 handle 所代表线程的闭包中。因此我们无法在第二个线程中对其调用 lock，所以 Rust 会告诉我们不能将 counter 的所有权移动到多个线程中。
+所以这里我们就需要引入类似智能指针 `Rc<T>` 来创建引用计数的值，以便拥有多所有权。但是 Rc<T> 只能在单线程环境中使用。
+
+### 多线程和多所有权
+
+* 原子引用计数 `Arc<T>`
+
+字母“a”代表原子性（atomic），所以这是一个原子引用计数（atomically reference counted）类型。
+原子性类型工作起来类似原始类型，不过可以安全的在线程间共享。
+
+`Arc<T>`和`Rc<T>`除了Arc<T>内部的原子性之外没有区别，其 API 也相同：
+
+```rust
+use std::sync::{Mutex, Arc};
+use std::thread;
+
+fn main() {
+    let counter = Arc::new(Mutex::new(0));
+    let mut handles = vec![];
+
+    for _ in 0..10 {
+        let counter = counter.clone();
+        let handle = thread::spawn(move || {
+            let mut num = counter.lock().unwrap();
+
+            *num += 1;
+        });
+        handles.push(handle);
+    }
+
+    for handle in handles {
+        handle.join().unwrap();
+    }
+
+    println!("Result: {}", *counter.lock().unwrap());
+}
+```
+
+## 使用Sync和Send trait 的可扩展并发
+
+Rust 的并发模型中一个有趣的方面是：语言本身对并发知之甚少。我们之前讨论的几乎所有内容，都属于标准库，而不是语言本身的内容。
+由于不需要语言提供并发相关的基础设施，并发方案不受标准库或语言所限：我们可以编写自己的或使用别人编写的。
+
+属于语言本身的有两个 `trait`，都位于`std::marker`： `Sync`和`Send`。
+
+### `Send` 用于表明所有权可能被传送给其他线程
+
+`send` 标记 `trait` 表明类型的所有权可能被在线程间传递。
+因为 `Rc<T>` 没有标记为 `Send`，`Rust` 的类型系统和 `trait bound` 会确保我们不会错误的把一个 `Rc<T>` 值不安全的在线程间传递。
+
+任何完全由 Send 的类型组成的类型也会自动被标记为 Send：几乎所有基本类型都是 Send 的，大部分标准库类型是 Send 的，除`了Rc<T>`，以及裸指针（raw pointer）。
+
+### `Sync` 表明多线程访问是安全的
+
+Sync 标记 trait 表明一个类型可以安全的在多个线程中拥有其值的引用。
+换一种方式来说，对于任意类型 `T`，如果`&T`（T的引用）是Send的话T就是Sync的，这样其引用就可以安全的发送到另一个线程。
+类似于 Send 的情况，基本类型是 Sync 的，完全由 Sync 的类型组成的类型也是 Sync 的。
+
+# 不使用标准库开发 Rust
+
+有些系统不支持：线程，网络，堆分配等功能。为了 Rust 也能在这些系统上工作。为此，我们可以通过一个属性来告诉 Rust 我们不想使用标准库：`#![no_std]`。
+
+在 crate 的根文件上加入：
+```toml
+#![no_std]
+
+fn plus_one(x: i32) -> i32 {
+    x + 1
+}
 ```
