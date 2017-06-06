@@ -4941,6 +4941,8 @@ fn main() {
 
 绿色线程模型功能要求更大的运行时来管理这些线程。为此，Rust 标准库只提供了 1:1 线程模型实现。因为 Rust 是这么一个底层语言，所以有相应的 crate 实现了 M:N 线程模型，如果你宁愿牺牲性能来换取例如更好的线程运行控制和更低的上下文切换成本。
 
+系统线程实现请看：https://github.com/rust-lang/rust/blob/master/src/libstd/sys/unix/thread.rs
+
 ### 使用spawn创建新线程
 
 大部分时候不能保证新建线程执行完毕，甚至不能实际保证新建线程会被执行！可以通过保存thread::spawn的返回值来解决这个问题，这是一个JoinHandle。
@@ -4959,6 +4961,22 @@ fn main() {
         println!("hi number {} from the main thread!", i);
     }
 	handle.join();
+}
+```
+
+接下来我们使用第二种方式创建线程，它比第一种方式稍微复杂一点，因为功能强大一点，可以在创建之前设置线程的名称和堆栈大小，参见下面的代码：
+```rust
+use std::thread;
+
+fn main() {
+    // 创建一个线程，线程名称为 thread1, 堆栈大小为4k
+    let new_thread_result = thread::Builder::new()
+                            .name("thread1".to_string())
+                            .stack_size(4*1024*1024).spawn(move || {
+        println!("I am thread1.");
+    });
+    // 等待新创建的线程执行完成
+    new_thread_result.unwrap().join().unwrap();
 }
 ```
 
@@ -5293,5 +5311,700 @@ Sync 标记 trait 表明一个类型可以安全的在多个线程中拥有其�
 
 fn plus_one(x: i32) -> i32 {
     x + 1
+}
+```
+
+## 使用外部函数接口
+
+Rust 无需运行时（ runtime ）的优势使得 Rust 与其他语言的相互调用变得简单而高效。
+
+由于 Rust 致力于成为系统级编程语言，因而它并没有像其他语言一样的运行时环境（ runtime ），这也给其他语言与之结合提供了便利。
+
+### 链接
+
+extern 块中的 link 属性提供给 rustc 基本构建块，告诉它如何链接到本地库。有两种可接受的 link 编写形式：
+
+- #[link(name = "foo")]
+- #[link(name = "foo", kind = "bar")]
+
+在这两种情况下，foo 是它要连接到本地库的名称，而在第二种情况中 bar 是编译期连接到本地库的类型。目前有三个已知的本地库类型：
+
+- 动态 - #[link(name = "readline")]
+- 静态 - #[link(name = "my_build_dependency", kind = "static")]
+- 框架 - #[link(name = "CoreFoundation", kind = "framework")]
+
+注意，框架类型仅仅对 OSX 目标平台可用。
+
+从连接的角度来看，Rust 编译器创建两种构件：部分(rlib/staticlib)和最终(dylib/binary)。本地动态库和框架属于最终构件范围，而静态库不属于。
+
+本指南将使用 snappy 压缩/解压库作为引言来介绍编写绑定外部代码。Rust 目前无法直接调用 c++ 库，但是 snappy 包括 C 的接口(头文件 snappy-c.h)。
+
+```rust
+extern crate libc;
+use libc::size_t;
+
+\#[link(name = "snappy")]
+extern {
+    fn snappy_max_compressed_length(source_length: size_t) -> size_t;
+}
+
+fn main() {
+    let x = unsafe { snappy_max_compressed_length(100) };
+    println!("max compressed length of a 100 byte buffer: {}", x);
+}
+```
+
+extern 语句块中包含的是外部库中函数签名列表，在这个例子中调用的是平台的 C ABI。#[link(...)] 属性用于指示链接器对 snappy 库进行连接，从而保证库中的符号能够被解析。
+
+外部函数被假定为不安全的，所以当调用他们时，需要利用 unsafe{ } 进行封装，进而告诉编译器被调用的函数中包含的代码是安全的。C 库经常暴露不是线程安全的接口给外部调用，而且几乎任何携带指针参数的函数对于所有的输入都不是有效的，因为这些指可能悬空，并且未经处理的指针可能指向 Rust 内存安全模型之外的区域。
+
+当声明外部函数的参数类型时，Rust 编译器不会检查声明是正确的，所以正确地指定它是在运行时能够正确的绑定的一部分。
+
+extern 块可以扩展到覆盖整个 snappy API:
+```rust
+extern crate libc;
+use libc::{c_int, size_t};
+
+\#[link(name = "snappy")]
+extern {
+    fn snappy_compress(input: *const u8, input_length: size_t, compressed: *mut u8, compressed_length: *mut size_t) -> c_int;
+    fn snappy_uncompress(compressed: *const u8, compressed_length: size_t, uncompressed: *mut u8, uncompressed_length: *mut size_t) -> c_int;
+    fn snappy_max_compressed_length(source_length: size_t) -> size_t;
+    fn snappy_uncompressed_length(compressed: *const u8, compressed_length: size_t, result: *mut size_t) -> c_int;
+    fn snappy_validate_compressed_buffer(compressed: *const u8, compressed_length: size_t) -> c_int;
+}
+```
+
+### 创建一个安全接口
+
+原始 C API 需要经过封装之后提供内存安全性，并且才可以使用更高级的概念类似向量。库可以选择只暴露安全、高级接口而隐藏不安全的内部细节。
+
+```rust
+pub fn validate_compressed_buffer(src: &[u8]) -> bool {
+    unsafe {
+        snappy_validate_compressed_buffer(src.as_ptr(), src.len() as size_t) == 0
+    }
+}
+```
+上述 validate_compressed_buffer 封装器使用了不安全的语句块，但它保证对于所有的输入在离开那个 unsafe 函数签名的时候是安全的。
+通过指定最大所需容量用来分配向量空间，接着用该向量来保存输出：
+```rust
+pub fn compress(src: &[u8]) -> Vec<u8> {
+    unsafe {
+        let srclen = src.len() as size_t;
+        let psrc = src.as_ptr();
+
+        let mut dstlen = snappy_max_compressed_length(srclen);
+        let mut dst = Vec::with_capacity(dstlen as usize);
+        let pdst = dst.as_mut_ptr();
+
+        snappy_compress(psrc, srclen, pdst, &mut dstlen);
+        dst.set_len(dstlen as usize);
+        dst
+    }
+}
+
+pub fn uncompress(src: &[u8]) -> Option<Vec<u8>> {
+    unsafe {
+        let srclen = src.len() as size_t;
+        let psrc = src.as_ptr();
+
+        let mut dstlen: size_t = 0;
+        snappy_uncompressed_length(psrc, srclen, &mut dstlen);
+
+        let mut dst = Vec::with_capacity(dstlen as usize);
+        let pdst = dst.as_mut_ptr();
+
+        if snappy_uncompress(psrc, srclen, pdst, &mut dstlen) == 0 {
+            dst.set_len(dstlen as usize);
+            Some(dst)
+        } else {
+            None // SNAPPY_INVALID_INPUT
+        }
+    }
+}
+```
+
+* 析构函数
+
+外部库经常更换被调用代码资源的所有权。当这种情况发生时，我们必须使用 Rust 提供的析构函数来提供安全保证的释放这些资源。
+
+### Rust 函数调用 C 代码进行回调
+
+可以通过 Rust 中定义的传递函数与外部库进行通信。当调用 C 代码时，要求回调函数必须使用 extern 标记。
+
+Rust 代码：
+```rust
+extern fn callback(a: i32) {
+    println!("I'm called from C with value {0}", a);
+}
+
+\#[link(name = "extlib")]
+extern {
+   fn register_callback(cb: extern fn(i32)) -> i32;
+   fn trigger_callback();
+}
+
+fn main() {
+    unsafe {
+        register_callback(callback);
+        trigger_callback(); // Triggers the callback
+    }
+}
+```
+
+C 代码：
+```c
+typedef void (*rust_callback)(int32_t);
+rust_callback cb;
+
+int32_t register_callback(rust_callback callback) {
+    cb = callback;
+    return 1;
+}
+
+void trigger_callback() {
+  cb(7); // Will call callback(7) in Rust
+}
+```
+
+### 针对 Rust 对象的回调
+
+前面的例子显示了如何在 C 代码中如何回调一个全局函数。然而通常这个回调是针对于 Rust 中某个特定的对象。这个对象可能相应的由 C 对象封装之后的对象。
+
+这个可以通过利用传递一个不安全的指针给 C 库来实现。接着 C 库能够在通知中包含 Rust 对象的指针。此时，允许不安全的访问 Rust 索引对象。
+```rust
+\#[repr(C)]
+struct RustObject {
+    a: i32,
+    // other members
+}
+
+extern "C" fn callback(target: *mut RustObject, a: i32) {
+    println!("I'm called from C with value {0}", a);
+    unsafe {
+        // Update the value in RustObject with the value received from the callback
+        (*target).a = a;
+    }
+}
+
+\#[link(name = "extlib")]
+extern {
+   fn register_callback(target: *mut RustObject, cb: extern fn(*mut RustObject, i32)) -> i32;
+   fn trigger_callback();
+}
+
+fn main() {
+    // Create the object that will be referenced in the callback
+    let mut rust_object = Box::new(RustObject { a: 5 });
+
+    unsafe {
+        register_callback(&mut *rust_object, callback);
+        trigger_callback();
+    }
+}
+```
+
+C 代码：
+```c
+typedef void (*rust_callback)(void*, int32_t);
+void* cb_target;
+rust_callback cb;
+
+int32_t register_callback(void* callback_target, rust_callback callback) {
+    cb_target = callback_target;
+    cb = callback;
+    return 1;
+}
+
+void trigger_callback() {
+  cb(cb_target, 7); // Will call callback(&rustObject, 7) in Rust
+}
+```
+
+### 异步回调
+
+当外部库生成自己的线程，并调用回调时情况就变得更加的复杂。在这些情况下，在回调函数内使用 Rust 中的数据结构是特别不安全的，而且必须使用适当的同步机制。除了经典的同步机制，例如互斥，Rust 中提供了一种可行的方式是使用管道(std::comm)，它会将数据从调用回调的 C 线程中转发到 Rust 中的线程。
+
+文档：https://doc.rust-lang.org/0.11.0/std/comm/
+
+### 访问外部全局变量
+
+外部 API 经常导出全局变量，这样可以做一些类似于跟踪全局状态的事情。为了访问这些变量，你在 extern 语句块中声明他们时要使用关键字 static：
+```rust
+extern crate libc;
+
+\#[link(name = "readline")]
+extern {
+    static rl_readline_version: libc::c_int;
+}
+
+fn main() {
+    println!("You have readline version {} installed.",
+             rl_readline_version as i32);
+}
+```
+或者，您可能需要使用外部接口来改变全局状态。为了做到这一点，在声明他们时使用 mut，这样就可以修改他们了。
+```rust
+extern crate libc;
+
+use std::ffi::CString;
+use std::ptr;
+
+\#[link(name = "readline")]
+extern {
+    static mut rl_prompt: *const libc::c_char;
+}
+
+fn main() {
+    let prompt = CString::new("[my-awesome-shell] $").unwrap();
+    unsafe {
+        rl_prompt = prompt.as_ptr();
+
+        println!("{:?}", rl_prompt);
+
+        rl_prompt = ptr::null();
+    }
+}
+```
+### 外部调用约定
+
+大多数外部代码暴露了 C ABI，并且 Rust 默认情况下调用外部函数时使用的是 C 平台调用约束。一些外部函数，尤其是 Windows API，使用的是其他调用约定。Rust 提供了一种方法来告诉编译器它使用的是哪个约定：
+```rust
+extern crate libc;
+
+\#[cfg(all(target_os = "win32", target_arch = "x86"))]
+\#[link(name = "kernel32")]
+\#[allow(non_snake_case)]
+extern "stdcall" {
+    fn SetEnvironmentVariableA(n: *const u8, v: *const u8) -> libc::c_int;
+}
+```
+下面的适用于整个 extern 块。Rust 中支持的ABI 约束列表如下：
+
+- stdcall
+- aapcs
+- cdecl
+- fastcall
+- Rust
+- rust-intrinsic
+- system
+- C
+- win64
+
+上面列表中的大部分 abis 是不需要解释的，但 system 这个 abi 可能看起来有点奇怪。这个约束的意思是选择与任何与目标库合适的 ABI 进行交互。例如，在 win32 x86 体系结构中，这意味着 abi 将会选择 stdcall。然而在 x86_64 中，windows 使用 C 调用协定，因此将会使用 C 的标准。也就是说，在前面的例子中，我们可以在 extern 中使用 “system”{...} 来定义 所有 windows 系统中的块，而不仅仅是 x86 的。
+与外部代码的交互
+
+* `#[repr(C)]`
+
+只要 `#[repr(C)]` 这个属性应用在代码中，Rust 保证的 struct 的结构与平台的表示形式是兼容的。`#[repr(C、包装)]` 可以用来布局 sturct 的成员没而不需要有填充元素。`#[repr(C)]` 也适用于枚举类型。
+
+### 可空指针优化
+
+某些类型的定义不为空。这包括引用类型(&T、&mut T)，boxes(Box<T>)，和函数指针(extern "abi" fn())。当与 C 交互时，经常使用的指针可能为空。
+`Option<extern "C" fn(c_int) -> c_int>` 展示了一个表示空函数指针是如何使用 C ABI。
+
+### C 语言中调用 Rust 代码
+
+你可能想要在 C 中调用 Rust 代码，并且编译。这也好似相当容易，但是需要几件事：
+```rust
+\#[no_mangle]
+pub extern fn hello_rust() -> *const u8 {
+    "Hello, world!\0".as_ptr()
+}
+```
+`extern` 让这个函数符合 C 调用函数的约束，就如上面说的“外部函数调用约束”。no_mangle 属性关闭了 Rust 的名称纠正，因此这里是很容易的进行连接的。
+
+ ### 使用 Rust FFI
+ 
+ Hashcash 是用来验证计算机计算能力的一种算法，被用于比特币挖矿以及部分反垃圾邮件的系统中，算法简明而有效。此算法作者的实现用的是 C 语言，下面就通过 Rust 的外部函数接口（ Foreign Function Interface ）来调用他实现的 Hashcash C 库接口，以快速实现 Hashcash 算法的 Rust 版本。
+ 
+1. 下载 Hashcash
+
+```shell
+git clone https://github.com/jbboehr/hashcash.git
+```
+
+2. 编译安装
+
+```shell
+sudo apt-get install autoconf automake libtool
+autoreconf -i
+./configure
+sudo make install
+```
+
+3. 验证安装
+
+我们可以通过运行下面这个简单的测试程序来验证 Hashcash C 库是否可用。
+
+编写 test.c 文件：
+```c
+#include <stdio.h>
+#include <hashcash.h>
+int main() {
+	const char *version = hashcash_version();
+	printf("hashcash version: %s\n", version);
+	return 0;
+}
+```
+然后执行如下命令编译运行：
+```shell
+gcc -o test test.c -lhashcash
+./test
+```
+如果看到如下输出就说明 Hashcash C 库是可以正常使用的了。
+```text
+hashcash version: 1.22
+```
+
+4. 使用 rust 查看 Hashcash 版本号
+
+```rust
+#![feature(libc)] // 文档注释
+
+extern crate libc;
+use std::str;
+use std::ffi::CStr;
+use libc::c_char;
+
+#[link(name = "hashcash")]
+extern {
+	fn hashcash_version() -> *const c_char;
+}
+
+fn main() {
+	let version: &CStr = unsafe {
+		let c_buf: *const c_char = hashcash_version();
+		CStr::from_ptr(c_buf)
+	};
+	println!("hashcash version: {}", str::from_utf8(version.to_bytes()).unwrap());
+}
+```
+
+5. 产生 stamp
+
+Hashcash 算法的核心是一串叫做 stamp 的字符串，如下所示：
+```text
+1:20:150811:my_test::Kw6sW7wzgMGBNzSV:00000000001E3c
+```
+
+stamp 总共有7个域，相互之间像 IPv6 地址一样用冒号隔开。7个域的作用分别如下：
+
+- 版本号 现在都是1
+- 比特数 这个 stamp 保证其 SHA 后能有几比特前导0
+- 日期 产生 stamp 的时间
+- 资源 stamp 所承载的信息
+- 扩展 暂时保留
+- 随机串 依据 a-zA-Z0-9+/= 这些字符随机生成的字符串
+- 计数器 产生 stamp 总共尝试了多少次
+
+Hashcash 是一种验证计算能力的算法，那么如何验证产生一个 stamp 的计算机的计算能力如何呢？只需要看比特数和日期这两个域即可。日期大概可以猜到是为了保证 stamp 的时效性，比特数是验证的关键，可以通过如下指令进行验证：
+
+```shell
+echo -n 1:20:150811:my_test::Kw6sW7wzgMGBNzSV:00000000001E3c | shasum
+```
+输出
+```text
+00000af7f14703c7b9168aaa468fc7cb3dfcd6bd
+```
+可以看到 shasum 输出的字符串前面有5个0，即20比特0，与比特数域所示一致，故该 stamp 有效。
+
+一个 stamp 进行 shasum 后出现前导几个数字都为0是一个极小概率的事件，而且随着0的个数的增加概率也随之降低， Hashcash 便是通过这样的方法验证计算能力的。下面就使用 Rust 编写一段程序来验证一下计算机的计算能力，代码如下：
+```rust
+#![feature(libc)]
+extern crate libc;
+use std::str;
+use std::ptr;
+use std::ffi::{CStr, CString};
+use libc::{c_int, c_long, c_char, c_void, size_t};
+#[link(name = "hashcash")]
+extern {
+    fn hashcash_simple_mint(resource: *const c_char,
+        bits: size_t,
+        anon_period: c_long,
+        ext: *mut c_char,
+        compress: c_int) -> *mut c_char;
+    fn hashcash_free(ptr: *mut c_void);
+}
+fn main() {
+    let (resource, bits) = (CString::new("my_test").unwrap(), 28);
+    let stamp: &CStr = unsafe {
+        let c_buf: *mut c_char = hashcash_simple_mint(resource.as_ptr(), bits, 0, ptr::null_mut(), 0);
+        CStr::from_ptr(c_buf)
+    };
+    println!("hashcash stamp: {}", str::from_utf8(stamp.to_bytes()).unwrap());
+    unsafe {
+        hashcash_free(stamp.as_ptr() as *mut c_void);
+    };
+}
+```
+编译运行：
+```text
+$ rustc test.rs 
+time ./test
+hashcash stamp: 1:28:150811:my_test::ZIkGrcoTk59SGw23:000000000JunhG
+real    0m46.534s
+user    0m46.289s
+sys     0m0.122s
+```
+从上面可以看到我的电脑整整花了46秒的时间才找到符合要求的 stamp ，有兴趣你也可以试下哦！
+
+### C 回调 Rust 函数
+
+上面的例子只是简单地使用 Rust 调用 C 的接口，其实反过来也一样简单，下面是完成同样功能的一段代码，不过它实现了一个函数以供 Hashcash C 库回调。
+
+```c
+#![feature(libc)]
+extern crate libc;
+extern crate time;
+use std::str;
+use std::ptr;
+use std::ffi::{CStr, CString};
+use libc::{c_int, c_long, c_ulong, c_char, c_double, c_void, size_t};
+use time::now_utc;
+#[link(name = "hashcash")]
+extern {
+    fn hashcash_free(ptr: *mut c_void);
+    fn hashcash_mint(now_time: c_ulong,
+        time_width: c_int, 
+        resource: *const c_char,
+        bits: size_t,
+        anon_period: c_long,
+        stamp: *const *mut c_char,
+        anon_random: *mut c_long,
+        tries_taken: *mut c_double,
+        ext: *mut c_char,
+        compress: c_int,
+        cb: extern fn(percent: c_int,
+            largest: c_int,
+            target: c_int,
+            count: c_double,
+            expected: c_double,
+            user: *const c_void) -> c_int,
+        user_arg: *const c_void) -> c_int;
+}
+extern "C" fn callback(_percent: c_int, _largest: c_int,
+            _target: c_int, count: c_double,
+            _expected: c_double, _user: *const c_void) -> c_int {
+    println!("mint count: {}", count);
+    return 1;
+}
+fn main() {
+    let (resource, bits) = (CString::new("my_test").unwrap(), 28);
+    let now_time = now_utc().to_timespec().sec as u64;
+    let stamp2: &CStr = unsafe {
+        let c_buf: *mut c_char = ptr::null_mut();
+        let user_arg: *const c_void = ptr::null();
+        hashcash_mint(now_time, 6, resource.as_ptr(), bits, 0, &c_buf as *const *mut c_char, ptr::null_mut(), ptr::null_mut(), ptr::null_mut(), 0, callback, user_arg);
+        CStr::from_ptr(c_buf)
+    };
+    println!("hashcash stamp: {}", str::from_utf8(stamp2.to_bytes()).unwrap());
+    unsafe {
+        hashcash_free(stamp2.as_ptr() as *mut c_void);
+    };
+}
+```
+
+## Rust 生成 C 语言库
+
+Rust 不会自动生活 C 语言的头文件，需由使用者自行创建，或是使用 rusty-cheddar 生成。
+
+### 从 Rust 导出常量
+
+```rust
+#[no_mangle]
+pub static VAR: i32 = 42;
+```
+修改 Cargo.toml：
+```toml
+[lib]
+name = "const"
+crate_type = ["dylib"]
+```
+在本例中，我们是编译为动态库，若要编译为静态库，`dylib` 改为 `staticlib` 即可。
+
+然后编译构建：
+
+```shell
+cargo build --release
+```
+
+最后在 C 中使用：
+
+```c
+#include <stdio.h>
+
+extern const int VAR;
+
+int main() {
+    int x = VAR;
+    printf("%d\n", x);
+}
+```
+
+使用 gcc 编译：
+```shell
+gcc -o const main.c -Ltarget/release -lconst
+```
+
+### 从 Rust 导出函数
+
+```rust
+use std::ffi::{CStr, CString};
+use std::os::raw::c_char;
+
+#[no_mangle]
+pub extern "C" fn double_int(x: i32) -> i32 {
+    x * 2
+}
+
+#[no_mangle]
+pub extern "C" fn double_float(x: f64) -> f64 {
+    x * 2.0
+}
+
+#[no_mangle]
+pub extern "C" fn double_str(x: *const c_char) -> *const c_char {
+    let string = unsafe { CStr::from_ptr(x).to_str().unwrap() };
+    let output = format!("{}{}", string, string);
+    CString::new(output).unwrap().into_raw()
+}
+
+#[no_mangle]
+pub extern "C" fn str_free(x: *mut c_char) {
+    if x.is_null() {
+        return
+    }
+
+    unsafe { Box::from_raw(x); }
+}
+```
+`extern "C"` 告诉 Rust 该函数要导出给 C。`#[no_mangle]` 避免 Rust 在编译时修改函数名称。
+我们可以创建 C 头文件：
+```c
+
+
+#ifndef __DOUBLER_H__
+#define __DOUBLER_H__
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+  int double_int(int);
+  double double_float(double);
+  char* double_str(char*);
+  void str_free(char*);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif  // __DOUBLER_H__
+```
+
+C 调用代码：
+```c
+#include <stdio.h>
+#include "doubler.h"
+
+int main() {
+    printf("%d\n", double_int(2));
+    printf("%lf\n", double_float(1.3));
+    char* str = double_str("Hi");
+    printf("%s\n", str);
+    str_free(str);
+
+    return 0;
+}
+```
+
+### 从 Rust 导出复杂数据
+
+```rust
+#[repr(C)]
+pub struct Matrix {
+    m: Vec<Vec<f64>>,
+}
+
+#[no_mangle]
+pub extern "C" fn matrix_new(nrow: usize, ncol: usize) -> *mut Matrix {
+    let mut m = Vec::new();
+    for _ in 0..(nrow) {
+        let mut n = Vec::new();
+
+        for _ in 0..(ncol) {
+            n.push(0.0);
+        }
+
+        m.push(n);
+    }
+
+    Box::into_raw(Box::new(Matrix { m: m }))
+}
+
+#[no_mangle]
+pub extern "C" fn matrix_get(matrix: *const Matrix, row: usize, col: usize)
+                                -> f64 {
+    unsafe {
+        (*matrix).m[row][col]
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn matrix_set(matrix: *mut Matrix,
+                             row: usize, col: usize, value: f64) {
+    unsafe {
+        (*matrix).m[row][col] = value;
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn matrix_free(matrix: *mut Matrix) {
+    if matrix.is_null() {
+        return
+    }
+
+    unsafe { Box::from_raw(matrix); }
+}
+```
+
+C 头文件：
+```c
+#ifndef __MATRIX_H__
+#define __MATRIX_H__
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+  void* matrix_new(size_t, size_t);
+  double matrix_get(void*, size_t, size_t);
+  void matrix_set(void*, size_t, size_t, double);
+  void matrix_free(void*);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif  // __MATRIX_H__
+```
+C 源码：
+```c
+#include <stdio.h>
+#include "matrix.h"
+
+int main() {
+    void* m = matrix_new(3, 3);
+
+    printf("(1, 1) = %lf\n", matrix_get(m, 1, 1));
+
+    matrix_set(m, 1, 1, 99);
+    printf("(1, 1) = %lf\n", matrix_get(m, 1, 1));
+
+    matrix_free(m);
+
+    return 0;
 }
 ```
