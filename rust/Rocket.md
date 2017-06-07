@@ -277,10 +277,20 @@ fn new_user(user: JSON<User>) -> T { ... }
 
 ### Dynamic Paths
 
-可以使用大括号`{}`来声明路径片段为动态的，例如：
+可以使用尖括号`<>`来声明路径片段为动态的，例如：
 ```rust
 #[get("/hello/<name>")]
 fn hello(name: &str) -> String {
     format!("Hello, {}!", name)
 }
 ```
+绑定到根目录：
+```rust
+fn main() {
+    rocket::ignite()
+		.mount("/", routes![hello])
+		.launch();
+}
+```
+
+访问 `http://localhost:8000/hello/John`
