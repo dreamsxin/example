@@ -294,3 +294,48 @@ fn main() {
 ```
 
 访问 `http://localhost:8000/hello/John`
+
+我们可以实现多个动态路径片段，以及通过 `FromParam trait` 任意类型：
+```rust
+#[get("/hello/<name>/<age>/<cool>")]
+fn hello(name: &str, age: u8, cool: bool) -> String {
+    if cool {
+      format!("You're a cool {} year old, {}!", age, name)
+    } else {
+      format!("{}, we need to talk about your coolness.", name)
+    }
+}
+```
+
+访问 `http://localhost:8000/hello/John/18/true`
+
+如果请求地址不对，将会返回404错误。我们可以捕获错误，并定制错误信息。
+
+```rust
+#[error(401)]
+fn unauthorized(req: &Request) -> String { }
+
+#[error(404)]
+fn not_found(req: &Request) -> String { }
+
+fn main() {
+	rocket::ignite().catch(errors![unauthorized, not_found])
+}
+```
+
+完整例子可以查看 https://github.com/SergioBenitez/Rocket/tree/v0.2.8/examples/errors/src
+
+### Dynamic Segments
+
+前面用到了 `FromParam` 它匹配单个片段，现在讲的 `FromSegments` 区别就是它将使用`<param..>`匹配多个片段。
+
+```rust
+use std::path::{Path, PathBuf};
+
+use rocket::response::NamedFile;
+
+#[get("/page/<file..>")]
+fn files(file: PathBuf) -> Option<NamedFile> {
+    NamedFile::open(Path::new("static/").join(file)).ok()
+}
+```
