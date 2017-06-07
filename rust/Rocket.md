@@ -340,7 +340,7 @@ fn files(file: PathBuf) -> Option<NamedFile> {
 }
 ```
 
-### 请求保护 Request Guards
+### 请求守卫 Request Guards
 
 有时候我们需要获取Headers 或 Cookies信息，只要传入对应 ` FromRequest` trait 的参数即可：
 
@@ -766,4 +766,33 @@ fn main() {
 
 ## 测试
 
-https://github.com/SergioBenitez/Rocket/blob/v0.2.8/examples/testing/src/main.rs
+创建实例：
+```rust
+let rocket = rocket::ignite().mount("/", routes![super::hello]);
+```
+
+创建请求：
+```rust
+let mut req = MockRequest::new(Method::Get, "/");
+```
+
+发送请求：
+```rust
+let mut response = req.dispatch_with(&rocket);
+```
+
+验证结果：
+```rust
+assert_eq!(response.status(), Status::Ok);
+
+let body_str = response.body().and_then(|b| b.into_string());
+assert_eq!(body_str, Some("Hello, world!".to_string()));
+```
+
+完整源码： https://github.com/SergioBenitez/Rocket/blob/v0.2.8/examples/testing/src/main.rs
+
+## 连接数据库
+
+使用第三方库：
+- ORM https://github.com/diesel-rs/diesel
+- PostgreSQL https://github.com/sfackler/rust-postgres
