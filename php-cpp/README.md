@@ -324,3 +324,65 @@ void Namespace::constants(const std::function<void(const std::string &ns, Consta
     });
 }
 ```
+
+* Php::ExtensionImpl
+
+```cpp
+/**
+ *  Constructor
+ *  @param  data        Pointer to the extension object created by the extension programmer
+ *  @param  name        Name of the extension
+ *  @param  version     Version number
+ *  @param  apiversion  API version number
+ */
+ExtensionImpl::ExtensionImpl(Extension *data, const char *name, const char *version, int apiversion) :
+    ExtensionBase(data)
+{
+    // keep extension pointer based on the name
+    name2extension[name] = this;
+
+    // assign all members (apart from the globals)
+    _entry.size = sizeof(zend_module_entry);                       // size of the data
+    _entry.zend_api = ZEND_MODULE_API_NO;                          // api number
+    _entry.zend_debug = ZEND_DEBUG;                                // debug mode enabled?
+    _entry.zts = USING_ZTS;                                        // is thread safety enabled?
+    _entry.ini_entry = NULL;                                       // the php.ini record, will be filled by Zend engine
+    _entry.deps = NULL;                                            // dependencies on other modules
+    _entry.name = name;                                            // extension name
+    _entry.functions = NULL;                                       // functions supported by this module (none for now)
+    _entry.module_startup_func = &ExtensionImpl::processStartup;   // startup function for the whole extension
+    _entry.module_shutdown_func = &ExtensionImpl::processShutdown; // shutdown function for the whole extension
+    _entry.request_startup_func = &ExtensionImpl::processRequest;  // startup function per request
+    _entry.request_shutdown_func = &ExtensionImpl::processIdle;    // shutdown function per request
+    _entry.info_func = NULL;                                       // information for retrieving info
+    _entry.version = version;                                      // version string
+    _entry.globals_size = 0;                                       // size of the global variables
+    _entry.globals_ctor = NULL;                                    // constructor for global variables
+    _entry.globals_dtor = NULL;                                    // destructor for global variables
+    _entry.post_deactivate_func = NULL;                            // unknown function
+    _entry.module_started = 0;                                     // module is not yet started
+    _entry.type = 0;                                               // temporary or persistent module, will be filled by Zend engine
+    _entry.handle = NULL;                                          // dlopen() handle, will be filled by Zend engine
+    _entry.module_number = 0;                                      // module number will be filled in by Zend engine
+    _entry.build_id = (char *)ZEND_MODULE_BUILD_ID;                // check if extension and zend engine are compatible
+
+    // things that only need to be initialized
+#ifdef ZTS
+    _entry.globals_id_ptr = NULL;
+#else
+    _entry.globals_ptr = NULL;
+#endif
+
+    // everything is ok if the api versions match
+    if (apiversion == PHPCPP_API_VERSION) return;
+
+    // mismatch between api versions, the extension is invalid, we use a
+    // different startup function to report to the user
+    _entry.module_startup_func = &ExtensionImpl::processMismatch;
+
+    // the other callback functions are no longer necessary
+    _entry.module_shutdown_func = nullptr;
+    _entry.request_startup_func = nullptr;
+    _entry.request_shutdown_func = nullptr;
+}
+```
