@@ -159,6 +159,15 @@ extern "C" {
 ## 类型
 
 ```cpp
+enum class ClassType {
+    Regular     =   0x00,
+    Abstract    =   0x20,
+    Final       =   0x04,
+    Interface   =   0x40,
+};
+```
+
+```cpp
 enum class Type : unsigned char {
     Undefined       =   0,  // Variable is not set
     Null            =   1,  // Null will allow any type
