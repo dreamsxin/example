@@ -1,5 +1,13 @@
 ## 面试
 
+- Cookie 的优缺点（限制或弊端）？
+- 浏览器本地存储，html5中的Web Storage包括了两种存储方式：sessionStorage和localStorage。
+- 介绍一下CSS的盒子模型
+- 浮动原理和清除浮动
+- 事件的代理/委托
+- 闭包原理及应用
+- JSONP原理
+
 ### 第一部分：Object Prototypes (对象原型)
 
 刚开始很简单。我会让侯选人去定义一个方法，传入一个string类型的参数，然后将string的每个字符间加个空格返回，例如：

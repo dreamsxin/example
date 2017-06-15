@@ -14,6 +14,7 @@
 - Binder、Android Mashup设计的理解
 
 ## Android 使用经验
+
 - 如果后台的Activity由于某原因被系统回收了，如何在被系统回收之前保存当前状态？
 - 如何将一个Activity设置成窗口的样式。
 - 如何退出Activity？如何安全退出已调用多个Activity的Application？
