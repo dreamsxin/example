@@ -1,74 +1,61 @@
-example
-=======
+团队管理
+========
 
-各种代码实例
+## 团队管理
+
+* 统一思想（目标一致、认知一致：需求分析、任务分解、预估难点与变数）
+* 统一方法（比如统一遵循测试驱动开发，代码注释、日志格式、任务跟踪、开发流程、测试流程、发布流程）
+* 统一工具（开发环境、IDE）
+* 统一代码管理模式（版本、分支）
+* 统一软件架构（从整体到局部）
+
+### Git 使用
+
+1. GitHub flow
+
+GitHub flow 只使用两类分支：master、develop，并依托于 GitHub 的 pull request 功能。
+在 GitHub flow 中，master 分支中包含稳定的代码。该分支已经或即将被部署到生产环境。
+master 分支的作用是提供一个稳定可靠的代码基础。任何开发人员都不允许把未测试或未审查的代码直接提交到 master 分支。
+
+对代码的任何修改，包括 bug 修复、hotfix、新功能开发等都在单独的分支中进行。
+不管是一行代码的小改动，还是需要几个星期开发的新功能，都采用同样的方式来管理。
+当需要进行修改时，从 master 分支创建一个新的分支。新分支的名称应该简单清晰地描述该分支的作用。所有相关的代码修改都在新分支中进行。
+开发人员可以自由地提交代码和 push 到远程仓库。
+
+2. git-flow 
+
+git-flow 围绕的核心概念是版本发布（release）。因此 git-flow 适用于有较长版本发布周期的项目。
+有很大数量的项目的发布周期是几个星期甚至几个月。较长的发布周期可能是由于非技术相关的因素造成的，比如人员限制、管理层决策和市场营销策略等。
+
+git-flow 流程中包含 5 类分支，分别是 master、develop、新功能分支（feature）、发布分支（release）和 紧急 bug 的修复（hotfix）。
+这些分支的作用和生命周期各不相同。master 分支中包含的是可以部署到生产环境中的代码，这一点和 GitHub flow 是相同的。develop 分支中包含的是下个版本需要发布的内容。从某种意义上来说，develop 是一个进行代码集成的分支。当 develop 分支集成了足够的新功能和 bug 修复代码之后，通过一个发布流程来完成新版本的发布。发布完成之后，develop分支的代码会被合并到 master 分支中。
+
+其余三类分支的描述如表 1所示。这三类分支只在需要时从 develop 或 master 分支创建。在完成之后合并到 develop 或 master 分支。合并完成之后该分支被删除。这几类分支的名称应该遵循一定的命名规范，以方便开发人员识别。
+
+https://github.com/nvie/gitflow
 
 
-双网卡NAT
-```shell
-sudo iptables -F
-sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE #打开NAT
-sudo iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -o eth1 -j SNAT --to-source xxx.xxx.xxx.xxx
-sudo iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -d ! 192.168.1.0/24 -j SNAT --to-source xxx.xxx.xxx.xxx
-sudo iptables -A FORWARD -s 192.168.1.0/24 -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1200
-#sudo ifconfig eth1 mtu 1500
-#sudo ifconfig eth0 mtu 1500
-```
+## 评估代码质量
 
-```shell
-./configure --prefix=/usr --with-apxs2=/usr/bin/apxs2 --with-config-file-path=/etc/php5/apache2 \
-	--with-config-file-scan-dir=/etc/php5/apache2/conf.d --build=x86_64-linux-gnu \
-	--host=x86_64-linux-gnu --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man \
-	--disable-debug --with-regex=php --disable-rpath --disable-static --with-pic --with-layout=GNU \
-	--with-pear=/usr/share/php --without-gdbm --with-iconv --enable-exif --enable-ftp --with-gettext \
-	--enable-mbstring --with-pcre-regex=/usr --enable-shmop --enable-sockets --enable-wddx \
-	--with-libxml-dir=/usr --with-zlib --enable-zip --without-mm --with-curl=shared,/usr \
-	--with-zlib-dir=/usr --with-gd=shared,/usr --enable-gd-native-ttf --with-jpeg-dir=shared,/usr \
-	--with-png-dir=shared,/usr --enable-intl=shared --without-t1lib --with-libdir=/lib/x86_64-linux-gnu \
-	--enable-maintainer-zts --enable-pdo --with-pdo-mysql --with-pdo-pgsql --with-pdo-sqlite --with-pgsql \
-	--disable-dom --disable-simplexml --disable-xml --without-pear
-```
-```shell
-./configure --prefix=/usr --with-apxs2=/usr/bin/apxs2 --with-config-file-path=/etc/php5/apache2 --with-config-file-scan-dir=/etc/php5/apache2/conf.d --build=x86_64-linux-gnu --host=x86_64-linux-gnu --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man --disable-debug --with-regex=php --disable-rpath --disable-static --with-pic --with-layout=GNU --with-pear=/usr/share/php --without-gdbm --with-iconv --enable-exif --enable-ftp --with-gettext --enable-mbstring --with-pcre-regex=/usr --enable-shmop --enable-sockets --with-libxml-dir=/usr --with-zlib --enable-zip --without-mm --with-curl=shared,/usr --with-zlib-dir=/usr --enable-gd-native-ttf --with-jpeg-dir=shared,/usr --with-png-dir=shared,/usr --enable-intl=shared --without-t1lib --with-libdir=/lib/x86_64-linux-gnu --enable-maintainer-zts --enable-pdo --with-pdo-mysql --with-pdo-pgsql --with-pdo-sqlite --with-pgsql --disable-dom --disable-xml --without-pear --disable-simplexml
-```
+### 什么是重构？
 
-# Ubuntu
+重构就是改进已经改进的代码的行为。重构是个永不停止的代码编写过程，它的目的是通过结构的改进而提高代码体的可维护性，但却不改变代码的整体行为。
 
-```shell
-apt-get install -y language-pack-en-base
-vi /etc/default/locale
--- LANG="en_US.UTF-8"
--- LANGUAGE="en_US:en"
--- LC_ALL="en_US.UTF-8"
-sudo locale-gen
-# locale-gen zh_CN.UTF-8
-sudo dpkg-reconfigure locales
-apt-get install software-properties-common
-add-apt-repository ppa:ondrej/php5
-```
+### 主动和被动重构
 
-在Linux中通过locale来设置程序运行的不同语言环境，locale由ANSI C提供支持。locale的命名规则为<语言>_<地区>.<字符集编码>，如zh_CN.UTF-8，zh代表中文，CN代表大陆地区，UTF-8表示字符集。在locale环境中，有一组变量，代表国际化环境中的不同设置：
+可以用代码度量很容易地找出可能难以维护的代码。一旦客观地判断出代码中有问题，那么就可以用方便的重构模式改进它。
 
-1.    LC_COLLATE
-定义该环境的排序和比较规则
+### 提取方法模式
 
-2.    LC_CTYPE
-用于字符分类和字符串处理，控制所有字符的处理方式，包括字符编码，字符是单字节还是多字节，如何打印等。是最重要的一个环境变量。
+提取方法（Extract Method） 模式。在这个模式中，方法的一个逻辑部分被移除，并被赋予自己的方法定义。
+提取方法模式提供了两个关键好处：
 
-3.    LC_MONETARY
-货币格式
+- 原来的方法现在更短了，因此也更容易理解。
+- 移走并放在自己方法中的逻辑体现在更容易测试。
 
-4.    LC_NUMERIC
-非货币的数字显示格式
+### 降低圈复杂度（Cyclomatic complexity）
 
-5.    LC_TIME
-时间和日期格式
+如果一段源码中不包含控制流语句（条件或决策点），那么这段代码的圈复杂度为1，因为这段代码中只会有一条路径；如果一段代码中仅包含一个if语句，且if语句仅有一个条件，那么这段代码的圈复杂度为2；包含两个嵌套的if语句，或是一个if语句有两个条件的代码块的圈复杂度为3。
 
-6.    LC_MESSAGES
-提示信息的语言。另外还有一个LANGUAGE参数，它与LC_MESSAGES相似，但如果该参数一旦设置，则LC_MESSAGES参数就会失效。LANGUAGE参数可同时设置多种语言信息，如LANGUANE="zh_CN.GB18030:zh_CN.GB2312:zh_CN"。
-
-7.    LANG
-LC_*的默认值，是最低级别的设置，如果LC_*没有设置，则使用该值。类似于 LC_ALL。
-
-8.    LC_ALL
-它是一个宏，如果该值设置了，则该值会覆盖所有LC_*的设置值。注意，LANG的值不受该宏影响。
+Java 使用 PMD 进行代码分析，获得圈复杂度。
+PHP 使用 PHPMD 进行代码分析，获得圈复杂度。
