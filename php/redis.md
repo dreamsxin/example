@@ -1,5 +1,10 @@
 # redis 持久连接
 
+可以指定 `persistent_id`
+
+- `Redis::pconnect(string host, int port [, double timeout, string persistent_id])`
+- `Redis::getPersistentID()`
+
 `library.c`
 
 ```c
