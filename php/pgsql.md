@@ -1,4 +1,4 @@
-# 长连接
+# pgsql 长连接
 
 `EG(regular_list)`存储着所有的只用在当前请求的{资源}。
 `EG(persistent_list)`存储着所有的持久{资源}。
