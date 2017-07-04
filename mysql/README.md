@@ -63,6 +63,20 @@ basedir  = /usr
 mysql -u debian-sys-maint -p
 ```
 
-```shell
+```sql
 update user set password=PASSWORD("123456") where user='root';
+```
+
+## MATCH AGAINST
+
+```SQL
+SELECT pages.*,
+       MATCH (head, body) AGAINST ('some words') AS relevance,
+       MATCH (head) AGAINST ('some words') AS title_relevance
+FROM pages
+WHERE MATCH (head, body) AGAINST ('some words')
+ORDER BY title_relevance DESC, relevance DESC
+
+-- alternatively:
+ORDER BY title_relevance + relevance DESC
 ```

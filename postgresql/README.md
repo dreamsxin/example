@@ -373,4 +373,10 @@ ALTER TABLE table_name ALTER column_name {SET|DROP} NOT NULL;
 
 # 给列添加default
 ALTER TABLE table_name ALTER column_name SET DEFAULT expression;
+
+# 删除约束
+ALTER TABLE table_name DROP CONSTRAINT projects_code_unique;
+
+# 创建约束
+ALTER TABLE table_name ADD CONSTRAINT projects_code_unique UNIQUE(channel_code,project_code);
 ```
