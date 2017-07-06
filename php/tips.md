@@ -51,6 +51,10 @@
 
 - ReflectionClass
 - DirectoryIterator
+- SplFixedArray
+- SplDoublyLinkedList
+- SplFileInfo
+- SplFileObject
 
 ## 魔术方法
 
