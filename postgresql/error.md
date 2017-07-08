@@ -75,3 +75,34 @@ delete from pg_statistic where ctid ='(50,3)';
 2. 将问题记录拷贝出，并判断正确状态的数据行。
 3. 将正确的记录拷贝会表里。
 4. 对数据库重建索引。
+
+
+# invalid page in block x of relation base/x1/x2
+
+依照數字可以找出database跟object
+```sql
+select oid,* from pg_database where oid::varchar='x1';
+select oid,* from pg_class where oid::varchar='x1';
+```
+
+整個DB reindex:
+```shell
+reindexdb -U postgres -a
+```
+單一table Reindex:
+```shell
+psql -U postgres -c "reindex table customers"
+```
+
+
+ps.若是reindex時還是有大量的error，則在postgresql.conf裏最後一行加上zero_damaged_pages = on。
+
+```sql
+SET zero_damaged_pages = on;
+VACUUM FULL table;
+REINDEX TABLE table;
+```
+
+```shell
+dd if=/dev/zero of=/xx/postgres/data/base/x1/x2 bs=8192 seek=1 count=1 conv=notrunc
+```
