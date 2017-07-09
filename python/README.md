@@ -362,3 +362,15 @@ def yetanotherfunc():
 ## 小结
 
 本教程并未涵盖Python语言的全部内容(甚至连一小部分都称不上)。Python有非常多的库以及很多的功能特点需要学习，所以要想学好Python你必须在此教程之外通过其它方式，例如阅读Dive into Python。我希望这个教程能给你一个很好的入门指导。如果你觉得本文还有什么地方值得改进或添加，或是你希望能够了解Python的哪方面内容，请留言。
+
+## 库的搜索路径
+
+```python
+import sys
+sys.path.append('/home/myleft/python')
+```
+
+或者在dist-packages（即/usr/lib/python2.7/dist-packages）添加一个路径文件，如`myPath.pth`，必须以`.pth`为后缀，内容如下：
+```text
+/home/myleft/python
+```
