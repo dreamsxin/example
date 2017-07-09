@@ -51,6 +51,7 @@ with open("./allElectronicInformationGainOri.dot", 'w') as f:
 oneRowX = dummyX[0, :]
 print("oneRowX:" + str(oneRowX))
 
+#新的信息预测
 newRowX = oneRowX
 
 newRowX[0] = 1
