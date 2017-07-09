@@ -20,6 +20,7 @@ for row in reader:
     rowDict = {}
     for i in range(1, len(row) - 1):
         rowDict[headers[i]] = row[i]
+#    print("rowDict:" + str(rowDict))
     featureList.append(rowDict)
 
 print(featureList)
