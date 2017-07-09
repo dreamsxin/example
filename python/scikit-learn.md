@@ -27,7 +27,7 @@ sudo bash Anaconda2-4.4.0-Linux-x86_64.sh
 
 *安装 
 ```shell
-sudo apt-get install python-sklearn
+sudo apt-get install python-sklearn graphviz
 # or
 # python < 3.0 需要安装 sudo easy_install pip
 pip install -U scikit-learn
