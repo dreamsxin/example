@@ -1,7 +1,11 @@
 condition = 1
-while condition < 5:
-    print condition
+while condition < 10:
     condition += 1
+    if condition == 3:
+        continue
+    elif condition == 5:
+        break
+    print condition
 
 
 example_list = ["abc",2,3,4,5]
