@@ -31,5 +31,6 @@ print 'name:', cal.name
 print 'price:', cal.price
 print 'hight:', cal.hight
 
-cal = Calculator('New calculator')
+ca2 = Calculator('New calculator')
 print 'name:', cal.name
+print 'Calculator name:', Calculator.name
