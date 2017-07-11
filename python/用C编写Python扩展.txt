@@ -1,0 +1,78 @@
+# 用C/C++编写Python扩展
+
+`PyExt.c`
+```c
+#include <python.h>
+
+//1.定义功能函数
+int add( int a, int b )
+{
+	return a + b;
+}
+
+//2.定义包装函数
+static PyObject* _add(PyObject *self, PyObject *args)
+{
+	//把输入的Python对象转换为C/C++能识别的数据
+
+	int arg1, arg2;
+	if( !PyArg_ParseTuple(args, "ii", &arg1, &arg2) )
+		return NULL;
+
+	//调用C/C++函数，得到结果
+
+	int result = add(arg1, arg2);
+	//把得到的结果包装成Python对象，并返回
+
+	return (PyObject*)Py_BuildValue( "i", result );
+}
+
+//3.为模块添加PyMethodDef方法数组
+static PyMethodDef func_methods[] = {
+	{ "add", _add, METH_VARARGS },
+	{ NULL, NULL }
+};
+
+//4.增加模块初始化函数InitModule
+PyMODINIT_FUNC initPyExt (void)
+{
+	Py_InitModule("PyExt", func_methods);
+}
+```
+
+```python
+#!/usr/bin/env python
+from distutils.core import setup, Extension
+    MOD = 'PyExt'
+    setup(name=MOD, ext_modules=[Extension(MOD, sources=['PyExt.c'])])
+```
+
+```shell
+python setup.py build
+```
+
+```python
+#!/usr/bin/python
+from ctypes import *
+import os 
+#需要使用绝对路径
+extest = cdll.LoadLibrary(os.getcwd() + '/Extest.so') 
+print extest.fac(4)
+```
+
+```shell
+python setup.py install
+```
+## 使用方法:
+
+1. 编译源文件为 PyExt.pyd
+2. 使用 `sys.path.append("你的模块路径")` 添加模块搜索路径
+3. test.py:
+
+```python
+import sys
+sys.path.append(r"你的模块路径")
+
+import PyExt
+print( PyExt.add(100, 200) )
+```
