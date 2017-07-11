@@ -1,6 +1,6 @@
-# numpy & pandas
+# numpy
 
-数据分析工具
+数据分析工具，矩阵
 
 ```shell
 sudo apt-get install python-numpy python-pandas
@@ -35,3 +35,7 @@ Numpy的数组类型为 ndarray， ndarray 的重要属性包括:
 
 通過 ndarray 的 astype 方法進行強制類型轉換，浮點數轉換為整數時小數部分會被捨棄
 
+
+# pandas
+
+类似字典，能对行和列重命名
