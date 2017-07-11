@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/KNN.iml" filepath="$PROJECT_DIR$/.idea/KNN.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../SVM/.idea/SVM.iml" filepath="$PROJECT_DIR$/../SVM/.idea/SVM.iml" />
     </modules>
   </component>
 </project>
