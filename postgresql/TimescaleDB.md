@@ -2,9 +2,63 @@
 ## 安装
 
 ```shell
+# Add our PPA
+sudo add-apt-repository ppa:timescale/timescaledb-ppa
+sudo apt-get update
+# To install
+sudo apt install timescaledb
+```
+
+`postgresql.conf`
+
+```conf
+shared_preload_libraries = 'timescaledb'
+```
+
+```shell
+# Restart PostgreSQL instance
+sudo service postgresql restart
+
+# Add a superuser postgres:
+createuser postgres -s
+```
+
+```sql
+CREATE database tutorial;
+\c tutorial
 CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
 select setup_timescaledb();
 ```
+
+```sql
+CREATE TABLE new_table (LIKE old_table INCLUDING DEFAULTS INCLUDING CONSTRAINTS INCLUDING INDEXES);
+CREATE TABLE new_table (LIKE old_table INCLUDING DEFAULTS INCLUDING CONSTRAINTS EXCLUDING INDEXES);
+
+-- Assuming 'time' is the time column for the dataset
+SELECT create_hypertable('new_table', 'time');
+
+-- Insert everything from old_table
+INSERT INTO new_table SELECT * FROM old_table;
+
+CREATE INDEX on new_table (column_name, <options>)
+```
+
+```shell
+pg_dump --schema-only -f old_db.bak old_db
+psql -d new_db < old_db.bak
+psql -d new_db
+```
+
+```sql
+SELECT create_hypertable('foo', 'time');
+```
+
+```shell
+# The following ensures 'foo' outputs to a comma-separated .csv file
+psql -d old_db -c "\COPY (SELECT * FROM foo) TO old_db.csv DELIMITER ',' CSV"
+psql -d new_db -c "\COPY foo FROM old_db.csv CSV"
+```
+
 
 ## 例子
 
