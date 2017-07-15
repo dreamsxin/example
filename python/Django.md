@@ -340,3 +340,92 @@ Django 对各种数据库提供了很好的支持，包括：PostgreSQL、MySQL�
 ```shell
 sudo pip install mysqlclient
 ```
+
+### 配置数据库
+
+默认使用的是 `sqlite3`，通过修改 `settings.py` 文件中的 `DATABASES` 配置项，改为使用 Mysql：
+```shell
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',  # 或者使用 mysql.connector.django
+        'NAME': 'test',
+        'USER': 'test',
+        'PASSWORD': 'test123',
+        'HOST':'localhost',
+        'PORT':'3306',
+    }
+}
+```
+
+## 定义模型
+
+* 创建 APP
+
+Django规定，如果要使用模型，必须要创建一个app。我们使用以下命令创建一个 `TestModel` 的 app:
+```shell
+django-admin startapp TestModel
+```
+接下来在settings.py中找到INSTALLED_APPS这一项，如下：
+```text
+INSTALLED_APPS = (
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'TestModel',               # 添加此项
+)
+```
+
+目录结构如下：
+```text
+.
+├── db.sqlite3
+├── HelloWorld
+│   ├── __init__.py
+│   ├── __init__.pyc
+│   ├── settings.py
+│   ├── settings.pyc
+│   ├── urls.py
+│   ├── urls.pyc
+│   ├── view.py
+│   ├── view.pyc
+│   ├── wsgi.py
+│   └── wsgi.pyc
+├── manage.py
+├── templates
+│   ├── base.html
+│   └── index.html
+└── TestModel
+    ├── admin.py
+    ├── __init__.py
+    ├── migrations
+    │   └── __init__.py
+    ├── models.py
+    ├── tests.py
+    └── views.py
+
+4 directories, 20 files
+```
+
+修改 TestModel/models.py 文件，代码如下：
+```python
+# models.py
+from django.db import models
+ 
+class Test(models.Model):
+    name = models.CharField(max_length=20)
+```
+
+以上的类名代表了数据库表名，且继承了models.Model，类里面的字段代表数据表中的字段(name)，数据类型则由CharField（相当于varchar）、DateField（相当于datetime）， max_length 参数限定长度。
+
+* 根据模型创建数据库结构
+
+在命令行中运行：
+
+```shell
+python manage.py migrate			# 如果更改了数据库，需要重新执行，创建默认表结构
+python manage.py makemigrations TestModel	# 让 Django 知道我们在我们的模型有一些变更
+python manage.py migrate TestModel		# 创建表结构
+```

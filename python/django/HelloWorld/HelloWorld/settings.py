@@ -1,3 +1,4 @@
+# coding:utf-8
 """
 Django settings for HelloWorld project.
 
@@ -37,6 +38,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'TestModel',	# 添加此项
 )
 
 MIDDLEWARE_CLASSES = (
