@@ -1,3 +1,13 @@
+
+我们可以使用`virtualenv`建立一个虚拟环境：
+```shell
+sudo apt install virtualenv
+virtualenv env
+# 在虚拟环境中安装依赖
+pip install django
+pip install djangorestframework
+```
+
 # 安装
 
 ```shell
@@ -984,3 +994,446 @@ uwsgi --ini /etc/uwsgi9090.ini &
 /usr/local/nginx/sbin/nginx
 
 在浏览器输入：http://127.0.0.1，你就可以看到 django 的 "It work" 了。 
+
+# 使用 Rest
+
+```shell
+sudo apt-get install python-djangorestframework
+```
+
+## 创建项目
+
+```shell
+django-admin startproject rest
+```
+
+## 创建应用
+
+```shell
+django-admin startapp quickstart
+```
+
+## 创建表结构
+
+```shell
+python manage.py migrate
+```
+
+## 管理员
+
+```shell
+python manage.py createsuperuser
+```
+
+## 序列化
+
+首先我们创建一个文件`rest/quickstart/serializers.py`来编写序列化相关的代码：
+
+```python
+from django.contrib.auth.models import User, Group
+from rest_framework import serializers
+
+class UserSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = User
+        fields = ('url', 'username', 'email', 'groups')
+
+
+class GroupSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Group
+        fields = ('url', 'name')
+```
+注意在上面的代码中我们使用了HyperlinkedModelSerializer来建立超链接关系，你也可以使用主键或其他关系，但hyperlinking是一个好的RESTful设计。
+
+## Views
+
+现在让我们来编写视图文件`rest/quickstart/views.py`：
+```python
+from django.contrib.auth.models import User, Group
+from rest_framework import viewsets
+from quickstart.serializers import UserSerializer, GroupSerializer
+
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    查看、编辑用户的界面
+    """
+    queryset = User.objects.all().order_by('-date_joined')
+    serializer_class = UserSerializer
+
+
+class GroupViewSet(viewsets.ModelViewSet):
+    """
+    查看、编辑组的界面
+    """
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+```
+我们把许多常见的操作都封装在了类ViewSets中，这样就不用编写重复代码了。当然你可以按照自己的需求编写view，但使用ViewSets可以保持view代码的简洁以及逻辑的清晰。
+
+## URLs
+
+接下来编写rest/urls.py：
+```python
+from django.conf.urls import url, include
+from rest_framework import routers
+from quickstart import views
+
+router = routers.DefaultRouter()
+router.register(r'users', views.UserViewSet)
+router.register(r'groups', views.GroupViewSet)
+
+# 使用URL路由来管理我们的API
+# 另外添加登录相关的URL
+urlpatterns = [
+    url(r'^', include(router.urls)),
+    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+]
+```
+因为我们使用了ViewSets，所以我们可以通过使用Router类来自动生成URL配置信息。
+
+重申一次，如果需要更自主的配置URL，可以使用常规的类视图以及显式编写URL配置。
+
+最后我们添加了默认的登录、登出视图在浏览API时候使用，这是一个可选项，但如果你想在浏览API时使用认证功能这是非常有用的。
+
+## Settings
+
+我们还需要进行一些全局设置。我们想启用分页功能以及只有管理员能访问，编辑`tutorial/settings.py`：
+
+```python
+INSTALLED_APPS = (
+	# ...
+    'rest_framework',
+)
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAdminUser',),
+    'PAGE_SIZE': 10
+}
+```
+至此，我们完成了全部工作。
+
+## 测试
+
+```shell
+curl -H 'Accept: application/json; indent=4' -u admin:admin http://127.0.0.1:8000/users/
+```
+
+## 序列化
+
+## 创建新的app：
+```shell
+python manage.py startapp snippets
+```
+
+加入 `settings.py`：
+```python
+INSTALLED_APPS = (
+    ...
+    'snippets.apps.SnippetsConfig',
+)
+```
+
+## 创建Model
+
+首先我们创建一个Snippet模型来存储代码片段。注意：写注释是一个好编程习惯，不过为了专注于代码本身，我们在下面省略了注释。编辑snippets/models.py：
+```python
+from django.db import models
+from pygments.lexers import get_all_lexers
+from pygments.styles import get_all_styles
+
+LEXERS = [item for item in get_all_lexers() if item[1]]
+LANGUAGE_CHOICES = sorted([(item[1][0], item[0]) for item in LEXERS])
+STYLE_CHOICES = sorted((item, item) for item in get_all_styles())
+
+
+class Snippet(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
+    title = models.CharField(max_length=100, blank=True, default='')
+    code = models.TextField()
+    linenos = models.BooleanField(default=False)
+    language = models.CharField(choices=LANGUAGE_CHOICES, default='python', max_length=100)
+    style = models.CharField(choices=STYLE_CHOICES, default='friendly', max_length=100)
+
+    class Meta:
+        ordering = ('created',)
+```
+接下来在数据库中建表：
+```shell
+python manage.py makemigrations snippets
+python manage.py migrate
+```
+## 创建Serializer类
+
+第一步我们需要为API提供一个序列化以及反序列化的方法，用来把snippet对象转化成json数据格式，创建serializers和创建Django表单类似。我们在snippets目录创建一个serializers.py：
+```python
+from rest_framework import serializers
+from snippets.models import Snippet, LANGUAGE_CHOICES, STYLE_CHOICES
+
+
+class SnippetSerializer(serializers.Serializer):
+    pk = serializers.IntegerField(read_only=True)
+    title = serializers.CharField(required=False, allow_blank=True, max_length=100)
+    code = serializers.CharField(style={'base_template': 'textarea.html'})
+    linenos = serializers.BooleanField(required=False)
+    language = serializers.ChoiceField(choices=LANGUAGE_CHOICES, default='python')
+    style = serializers.ChoiceField(choices=STYLE_CHOICES, default='friendly')
+
+    def create(self, validated_data):
+        """
+        如果数据合法就创建并返回一个snippet实例
+        """
+        return Snippet.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        """
+        如果数据合法就更新并返回一个存在的snippet实例
+        """
+        instance.title = validated_data.get('title', instance.title)
+        instance.code = validated_data.get('code', instance.code)
+        instance.linenos = validated_data.get('linenos', instance.linenos)
+        instance.language = validated_data.get('language', instance.language)
+        instance.style = validated_data.get('style', instance.style)
+        instance.save()
+        return instance
+```
+在第一部分我们定义了序列化/反序列化的字段，creat()和update()方法则定义了当我们调用serializer.save()时如何来创建或修改一个实例。
+
+serializer类和Django的Form类很像，并且包含了相似的属性标识，比如required、 max_length和default。
+
+这些标识也能控制序列化后的字段如何展示，比如渲染成HTML。上面的{'base_template': 'textarea.html'}和在Django的Form中设定widget=widgets.Textarea是等效的。 这一点在控制API在浏览器中如何展示是非常有用的，我们后面的教程中会看到。
+
+我们也可以使用ModelSerializer类来节省时间，后续也会介绍，这里我们先显式的定义serializer。
+
+## 使用serializer
+
+继续之前我们先来熟悉一下我们的serializer类，打开Django shell:
+```shell
+python manage.py shell
+```
+引入相关的代码后创建2个snippet实例：
+```python
+from snippets.models import Snippet
+from snippets.serializers import SnippetSerializer
+from rest_framework.renderers import JSONRenderer
+from rest_framework.parsers import JSONParser
+
+snippet = Snippet(code='foo = "bar"\n')
+snippet.save()
+
+snippet = Snippet(code='print "hello, world"\n')
+snippet.save()
+```
+现在我们有了可以操作的实例了，让我们来序列化一个实例：
+```text
+serializer = SnippetSerializer(snippet)
+serializer.data
+# {'pk': 2, 'title': u'', 'code': u'print "hello, world"\n', 'linenos': False, 'language': u'python', 'style': u'friendly'}
+```
+这里我们把snippet转换成了Python基本数据类型，接下来我们把其转换成json数据：
+```python
+content = JSONRenderer().render(serializer.data)
+content
+# '{"pk": 2, "title": "", "code": "print \\"hello, world\\"\\n", "linenos": false, "language": "python", "style": "friendly"}'
+```
+反序列化也类似，我们先把一个stream转换成python基本数据类型：
+```python
+from django.utils.six import BytesIO
+
+stream = BytesIO(content)
+data = JSONParser().parse(stream)
+```
+然后将其转换为实例：
+```text
+serializer = SnippetSerializer(data=data)
+serializer.is_valid()
+# True
+serializer.validated_data
+# OrderedDict([('title', ''), ('code', 'print "hello, world"\n'), ('linenos', False), ('language', 'python'), ('style', 'friendly')])
+serializer.save()
+# <Snippet: Snippet object>
+```
+可以看出这和Django的Form多么相似，当我们使用serializer编写view时这一特效会更明显。
+
+我们也可以序列化实例的集合，仅需要设置serializer的参数many=True即可：
+```text
+serializer = SnippetSerializer(Snippet.objects.all(), many=True)
+serializer.data
+# [OrderedDict([('pk', 1), ('title', u''), ('code', u'foo = "bar"\n'), ('linenos', False), ('language', 'python'), ('style', 'friendly')]), OrderedDict([('pk', 2), ('title', u''), ('code', u'print "hello, world"\n'), ('linenos', False), ('language', 'python'), ('style', 'friendly')]), OrderedDict([('pk', 3), ('title', u''), ('code', u'print "hello, world"'), ('linenos', False), ('language', 'python'), ('style', 'friendly')])]
+```
+使用ModelSerializers
+
+我们的SnippetSerializer类和Snippet模型有太多重复的代码，如果让代码更简洁就更好了。
+
+Django提供了Form类和ModelForm类，同样的，REST framework提供了Serializer类和ModelSerializer。
+
+让我们使用ModelSerializer来重构代码，编辑snippets/serializers.py：
+```python
+class SnippetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Snippet
+        fields = ('id', 'title', 'code', 'linenos', 'language', 'style')
+```
+我们可以通过打印输出来检查serializer包含哪些字段，打开Django shell并输入一下代码：
+```python
+from snippets.serializers import SnippetSerializer
+serializer = SnippetSerializer()
+print(repr(serializer))
+# SnippetSerializer():
+#    id = IntegerField(label='ID', read_only=True)
+#    title = CharField(allow_blank=True, max_length=100, required=False)
+#    code = CharField(style={'base_template': 'textarea.html'})
+#    linenos = BooleanField(required=False)
+#    language = ChoiceField(choices=[('Clipper', 'FoxPro'), ('Cucumber', 'Gherkin'), ('RobotFramework', 'RobotFramework'), ('abap', 'ABAP'), ('ada', 'Ada')...
+#    style = ChoiceField(choices=[('autumn', 'autumn'), ('borland', 'borland'), ('bw', 'bw'), ('colorful', 'colorful')...
+```
+请记住ModelSerializer并没有使用任何黑科技，它仅仅是一个创建serializer类的简单方法：
+
+- 自动检测字段
+- 简单的定义了create()和update()方法。
+
+## 使用Serializer编写常规的Django视图
+
+现在我们来使用Serializer类来编写API视图，这里我们不使用任何REST framewrok的其他特性，仅使用Django的常规方法编写视图。
+
+首先我们创建一个HttpResponse的子类来返回json类型数据。
+
+编辑snippets/views.py：
+```python
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.renderers import JSONRenderer
+from rest_framework.parsers import JSONParser
+from snippets.models import Snippet
+from snippets.serializers import SnippetSerializer
+
+class JSONResponse(HttpResponse):
+    """
+    用于返回JSON数据.
+    """
+    def __init__(self, data, **kwargs):
+        content = JSONRenderer().render(data)
+        kwargs['content_type'] = 'application/json'
+        super(JSONResponse, self).__init__(content, **kwargs)
+```
+我们API的根目录是一个list view, 用于展示所有存在的snippet, 或建立新的snippet:
+```python
+@csrf_exempt
+def snippet_list(request):
+    """
+    展示所以snippets,或创建新的snippet.
+    """
+    if request.method == 'GET':
+        snippets = Snippet.objects.all()
+        serializer = SnippetSerializer(snippets, many=True)
+        return JSONResponse(serializer.data)
+
+    elif request.method == 'POST':
+        data = JSONParser().parse(request)
+        serializer = SnippetSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return JSONResponse(serializer.data, status=201)
+        return JSONResponse(serializer.errors, status=400)
+```
+注意，这里我们为了能简单的在客户端进行POST操作而使用了csrf_exempt，正常情况下你不应该这么做，REST framework提供了更安全的做法。
+
+我们也需要一个页面用来展示、修改或删除某个具体的snippet：
+```python
+@csrf_exempt
+def snippet_detail(request, pk):
+    """
+    修改或删除一个snippet.
+    """
+    try:
+        snippet = Snippet.objects.get(pk=pk)
+    except Snippet.DoesNotExist:
+        return HttpResponse(status=404)
+
+    if request.method == 'GET':
+        serializer = SnippetSerializer(snippet)
+        return JSONResponse(serializer.data)
+
+    elif request.method == 'PUT':
+        data = JSONParser().parse(request)
+        serializer = SnippetSerializer(snippet, data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return JSONResponse(serializer.data)
+        return JSONResponse(serializer.errors, status=400)
+
+    elif request.method == 'DELETE':
+        snippet.delete()
+        return HttpResponse(status=204)
+```
+接下来修改snippets/urls.py：
+```python
+from django.conf.urls import url
+from snippets import views
+
+urlpatterns = [
+    url(r'^snippets/$', views.snippet_list),
+    url(r'^snippets/(?P<pk>[0-9]+)/$', views.snippet_detail),
+]
+```
+这里我们有许多细节没有处理，比如畸形的JSON数据、不支持的HTTP请求方法，这里我们都暂时返回500错误。
+测试API
+
+现在我们可以启动我们的服务器了。
+
+首先使用quit()退出shell,然后启动服务：
+```text
+python manage.py runserver
+
+Validating models...
+
+0 errors found
+Django version 1.8.3, using settings 'tutorial.settings'
+Development server is running at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+```
+打开另一个终端，我们可以使用curl或httpie来进行测试。httpie是一个用python编写的易用的http客户端，首先来安装httpie:
+```shell
+pip install httpie
+```
+最终，我们得到了一个snippets列表：
+```text
+http http://127.0.0.1:8000/snippets/
+
+HTTP/1.1 200 OK
+...
+[
+  {
+    "id": 1,
+    "title": "",
+    "code": "foo = \"bar\"\n",
+    "linenos": false,
+    "language": "python",
+    "style": "friendly"
+  },
+  {
+    "id": 2,
+    "title": "",
+    "code": "print \"hello, world\"\n",
+    "linenos": false,
+    "language": "python",
+    "style": "friendly"
+  }
+]
+```
+或者通过ID来获取某个特定的snippets：
+```text
+http http://127.0.0.1:8000/snippets/2/
+
+HTTP/1.1 200 OK
+...
+{
+  "id": 2,
+  "title": "",
+  "code": "print \"hello, world\"\n",
+  "linenos": false,
+  "language": "python",
+  "style": "friendly"
+}
+```
+同样的，你可以使用浏览器访问那些URL。
