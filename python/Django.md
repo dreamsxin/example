@@ -117,6 +117,8 @@ def hello(request):
     return HttpResponse("Hello world")
 ```
 
+这里使用 `django.http.HttpResponse` 来输出 "Hello World！"。
+
 接着，绑定 URL 与视图函数。打开 `urls.py` 文件，删除原来代码：
 
 ```python
@@ -130,3 +132,56 @@ urlpatterns = [
 ```
 
 完成后，启动 Django 开发服务器，并在浏览器访问打开浏览器并访问，可以看到内容变成了 `Hello world`。
+我们也可以修改 url 匹配项为 `r'^hello$'`。
+
+* url 函数
+
+url 函数可以接收四个参数，分别是两个必选参数：regex、view 和两个可选参数 kwargs 和 name：
+
+- regex: 正则表达式，与之匹配的 URL 会执行对应的第二个参数 view。
+- view: 用于执行与正则表达式匹配的 URL 请求。
+- kwargs: 视图使用的字典类型的参数。
+- name: 用来反向获取 URL。
+
+
+> 注意：项目中如果代码有改动，服务器会自动监测代码的改动并自动重新载入，所以如果你已经启动了服务器则不需手动重启
+
+# 模版
+
+在 HelloWorld 目录底下创建 templates 目录并建立 `hello.html` 文件：
+```html
+<h1>{{ hello }}</h1>
+```
+模板中变量使用了双括号。
+
+在 `settings.py` 中修改视图目录为 `templates` 目录：
+
+```python
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        # 'DIRS': [BASE_DIR+"/templates"],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+```
+
+现在修改 `view.py`，增加一个新的对象，用于向模板提交数据：
+```python
+from django.shortcuts import render
+ 
+def hello(request):
+    context = {}
+    context['hello'] = 'Hello World!'
+    return render(request, 'hello.html', context)
+```
+这里使用 `render` 来替代之前使用的 `HttpResponse`。使用了一个字典 context 作为参数，其中元素的键值 "hello" 对应了模板中的变量 "{{ hello }}"。
