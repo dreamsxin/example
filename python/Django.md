@@ -105,3 +105,28 @@ Running migrations:
 ```shell
 python manage.py runserver 0.0.0.0:8000
 ```
+
+# 视图和 URL 配置
+
+在先前创建的 HelloWorld 目录下的 HelloWorld 目录新建一个 `view.py` 文件：
+
+```python
+from django.http import HttpResponse
+ 
+def hello(request):
+    return HttpResponse("Hello world")
+```
+
+接着，绑定 URL 与视图函数。打开 `urls.py` 文件，删除原来代码：
+
+```python
+from django.conf.urls import url
+ 
+from . import view
+ 
+urlpatterns = [
+    url(r'^$', view.hello),
+]
+```
+
+完成后，启动 Django 开发服务器，并在浏览器访问打开浏览器并访问，可以看到内容变成了 `Hello world`。
