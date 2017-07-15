@@ -182,6 +182,161 @@ from django.shortcuts import render
 def hello(request):
     context = {}
     context['hello'] = 'Hello World!'
-    return render(request, 'hello.html', context)
+    return render(request, 'index.html', context)
 ```
 这里使用 `render` 来替代之前使用的 `HttpResponse`。使用了一个字典 context 作为参数，其中元素的键值 "hello" 对应了模板中的变量 "{{ hello }}"。
+
+## 模版标签语法
+
+* if/else
+
+if/else 支持嵌套，基本语法格式如下：
+
+```text
+{% if condition1 %}
+   ... display 1
+{% elif condition2 %}
+   ... display 2
+{% else %}
+   ... display 3
+{% endif %}
+```
+
+根据条件判断是否输出。
+
+`{% if %}` 标签接受 `and`、`or`、`not` 关键字来对多个变量做判断 ，例如：
+
+```text
+{% if athlete_list and coach_list %}
+     athletes 和 coaches 变量都是可用的。
+{% endif %}
+```
+
+* for
+
+支持嵌套。
+
+`{% for %}` 允许我们在一个序列上迭代。
+
+与 Python的 for 语句的情形类似，循环语法是 `for X in Y` 。
+
+每一次循环中，模板系统会渲染在 `{% for %}` 和 `{% endfor %}` 之间的所有内容：
+```text
+{% for athlete in athlete_list %}
+    <h1>{{ athlete.name }}</h1>
+    <ul>
+    {% for sport in athlete.sports_played %}
+        <li>{{ sport }}</li>
+    {% endfor %}
+    </ul>
+{% endfor %}
+```
+
+给标签增加一个 `reversed` 使得该列表被反向迭代：
+```text
+{% for athlete in athlete_list reversed %}
+...
+{% endfor %}
+```
+
+* ifequal/ifnotequal
+
+`{% ifequal %}` 标签比较两个值，当他们相等时，显示在 `{% ifequal %}` 和 `{% endifequal %}` 之中所有的值，比较两个模板变量 user 和 currentuser :
+
+```text
+{% ifequal user currentuser %}
+    <h1>Welcome!</h1>
+{% endifequal %}
+```
+
+和 `{% if %}` 类似， `{% ifequal %}` 支持可选的 `{% else%}` 标签：
+
+```text
+{% ifequal section 'sitenews' %}
+    <h1>Site News</h1>
+{% else %}
+    <h1>No News Here</h1>
+{% endifequal %}
+```
+
+* {# #} 注释标签
+
+```text
+{# 这是一个注释 #}
+```
+
+* 过滤器
+
+模板过滤器可以在变量被显示前修改它，过滤器使用管道字符，过滤管道可以被套接，如下所示：
+```text
+{{ name|lower }}
+{{ my_list|first|upper }}
+```
+
+过滤器的参数跟随冒号之后并且总是以双引号包含。 例如：
+```text
+{{ bio|truncatewords:"30" }}
+```
+这个将显示变量 bio 的前30个词。
+
+其他过滤器：
+
+- addslashes	添加反斜杠到任何反斜杠、单引号或者双引号前面。
+- date			按指定的格式字符串参数格式化 date 或者 datetime 对象，实例：`{{ pub_date|date:"F j, Y" }}`
+- length		返回变量的长度。
+
+* include 标签
+
+`{% include %}` 标签允许在模板中包含其它的模板的内容。
+
+下面这个例子都包含了 nav.html 模板：
+```text
+{% include "nav.html" %}
+```
+
+* 模板继承
+
+模板可以用继承的方式来实现复用。
+
+接下来我们先创建之前项目的 templates 目录中添加 base.html 文件，代码如下：
+```html
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title></title>
+</head>
+<body>
+    <h1>Hello World!</h1>
+    <p>我是Base</p>
+    {% block mainbody %}
+       <p>original</p>
+    {% endblock %}
+</body>
+</html>
+```
+
+以上代码中，名为 `mainbody` 的 `block` 标签是可以被继承者们替换掉的部分。
+
+所有的 {% block %} 标签告诉模板引擎，子模板可以重载这些部分。
+
+`index.html` 中继承 `base.html`，并替换特定 `block`，`hello.html` 修改后的代码如下：
+```text
+{% extends "base.html" %}
+ 
+<h1>{{ hello }}</h1>
+{% block mainbody %}
+<p>继承了 base.html 文件</p>
+{% endblock %}
+```
+
+第一行代码说明 index.html 继承了 base.html 文件。可以看到，这里相同名字的 block 标签用以替换 `base.html` 的相应 block。
+
+## 模型
+
+Django 对各种数据库提供了很好的支持，包括：PostgreSQL、MySQL、SQLite、Oracle。 
+如果你没安装 mysql 驱动，可以执行以下命令安装：
+
+```shell
+sudo pip install mysqlclient
+```
