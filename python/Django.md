@@ -544,3 +544,443 @@ def testdb(request):
     
     return HttpResponse("<p>删除成功</p>")
 ```
+
+## 表单
+
+* GET 方法
+
+我们在之前的项目中创建一个 search.py 文件，用于接收用户的请求：
+```python
+# -*- coding: utf-8 -*-
+ 
+from django.http import HttpResponse
+from django.shortcuts import render_to_response
+ 
+# 表单
+def search_form(request):
+    return render_to_response('search_form.html')
+ 
+# 接收请求数据
+def search(request):  
+    request.encoding='utf-8'
+    if 'q' in request.GET:
+        message = '你搜索的内容为: ' + request.GET['q']
+    else:
+        message = '你提交了空表单'
+    return HttpResponse(message)
+```
+在模板目录 templates 中添加 search_form.html 表单：
+```html
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title></title>
+</head>
+<body>
+    <form action="/search" method="get">
+        <input type="text" name="q">
+        <input type="submit" value="搜索">
+    </form>
+</body>
+</html>
+```
+
+urls.py 规则修改为如下形式：
+```python
+from django.conf.urls import url
+from . import view,testdb,search
+ 
+urlpatterns = [
+    url(r'^hello$', view.hello),
+    url(r'^testdb$', testdb.testdb),
+    url(r'^search-form$', search.search_form),
+    url(r'^search$', search.search),
+]
+```
+
+* POST 方法
+
+我们在tmplate 创建 post.html：
+```html
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>菜鸟教程(runoob.com)</title>
+</head>
+<body>
+    <form action="/search-post" method="post">
+        {% csrf_token %}
+        <input type="text" name="q">
+        <input type="submit" value="Submit">
+    </form>
+ 
+    <p>{{ rlt }}</p>
+</body>
+</html>
+```
+在模板的末尾，我们增加一个 `rlt` 记号，为表格处理结果预留显示位置。
+表格后面还有一个`{% csrf_token %}`的标签。csrf 全称是 Cross Site Request Forgery。这是Django提供的防止伪装提交请求的功能（会自动填充数据）。POST 方法提交的表格，必须有此标签。
+
+在HelloWorld目录下新建 `search2.py` 文件并使用 search_post 函数来处理 POST 请求：
+```python
+# -*- coding: utf-8 -*-
+from django.shortcuts import render
+from django.views.decorators import csrf
+ 
+# 接收POST请求数据
+def search_post(request):
+    ctx ={}
+    if request.POST:
+        ctx['rlt'] = request.POST['q']
+    return render(request, "post.html", ctx)
+```
+
+urls.py 规则修改为如下形式：
+```python
+from django.conf.urls import url
+from . import view,testdb,search,search2
+ 
+urlpatterns = [
+    url(r'^hello$', view.hello),
+    url(r'^testdb$', testdb.testdb),
+    url(r'^search-form$', search.search_form),
+    url(r'^search$', search.search),
+    url(r'^search-post$', search2.search_post),
+]
+```
+
+## Request 对象
+
+每个 view 函数的第一个参数是一个 HttpRequest 对象，就像下面这个 hello() 函数:
+```python
+from django.http import HttpResponse
+
+def hello(request):
+    return HttpResponse("Hello world")
+```
+HttpRequest对象包含当前请求URL的一些信息：
+- path
+- GET
+- POST
+- COOKIES
+- REQUEST
+- FILES
+- META
+- user
+- session
+- raw_post_data
+
+## QueryDict对象
+
+在HttpRequest对象中, GET和POST属性是django.http.QueryDict类的实例。
+QueryDict类似字典的自定义类，用来处理单键对应多值的情况。 
+
+```text
+>>> q = QueryDict('a=1')
+
+>>> q = q.copy() # to make it mutable
+
+>>> q.update({'a': '2'})
+
+>>> q.getlist('a')
+
+ ['1', '2']
+
+>>> q['a'] # returns the last
+
+['2']
+
+>>> q = QueryDict('a=1&a=2&a=3')
+
+>>> q.items()
+
+[('a', '3')]
+
+>>> q = QueryDict('a=1&a=2&a=3')
+
+>>> q.lists()
+
+[('a', ['1', '2', '3'])]
+```
+
+## Django Admin 管理工具
+
+Django 提供了基于 web 的管理工具。
+
+Django 自动管理工具是 django.contrib 的一部分。你可以在项目的 settings.py 中的 INSTALLED_APPS 看到它：
+```python
+INSTALLED_APPS = (
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+)
+```
+django.contrib是一套庞大的功能集，它是Django基本代码的组成部分。
+
+## 激活管理工具
+
+通常我们在生成项目时会在 urls.py 中自动设置好，我们只需去掉注释即可。
+
+配置项如下所示：
+```python
+# urls.py
+from django.conf.urls import url
+from django.contrib import admin
+ 
+urlpatterns = [
+    url(r'^admin/', admin.site.urls),
+]
+```
+当这一切都配置好后，Django 管理工具就可以运行了。 
+
+## 创建管理用户
+
+```shell
+python manage.py createsuperuser
+```
+```text
+Username (leave blank to use 'root'): admin
+Email address: admin@runoob.com
+Password:
+Password (again):
+Superuser created successfully.
+```
+
+## 注册模型
+
+为了让 admin 界面管理某个数据模型，我们需要先注册该数据模型到 admin。比如，我们之前在 TestModel 中已经创建了模型 Test 。修改 `TestModel/admin.py`:
+```python
+from django.contrib import admin
+from TestModel.models import Test
+ 
+# Register your models here.
+admin.site.register(Test)
+```
+
+## 复杂模型
+
+在 TestModel/models.py 中增加一个更复杂的数据模型：
+
+```python
+class Contact(models.Model):
+    name   = models.CharField(max_length=200)
+    age    = models.IntegerField(default=0)
+    email  = models.EmailField()
+    def __unicode__(self):
+        return self.name
+ 
+class Tag(models.Model):
+    contact = models.ForeignKey(Contact)
+    name    = models.CharField(max_length=50)
+    def __unicode__(self):
+        return self.name
+```
+
+创建表结构：
+```shell
+python manage.py makemigrations TestModel  # 让 Django 知道我们在我们的模型有一些变更
+python manage.py migrate TestModel   # 创建表结构
+```
+
+## 自定义表单
+
+我们可以自定义管理页面，来取代默认的页面。比如上面的 "add" 页面。我们想只显示 name 和 email 部分。修改 TestModel/admin.py:
+```python
+from django.contrib import admin
+from TestModel.models import Test,Contact,Tag
+ 
+# Register your models here.
+class ContactAdmin(admin.ModelAdmin):
+    fields = ('name', 'email')
+ 
+admin.site.register(Contact, ContactAdmin)
+admin.site.register([Test, Tag])
+```
+以上代码定义了一个 ContactAdmin 类，用以说明管理页面的显示格式。
+
+里面的 fields 属性定义了要显示的字段。
+
+由于该类对应的是 Contact 数据模型，我们在注册的时候，需要将它们一起注册。
+
+我们还可以将输入栏分块，每个栏也可以定义自己的格式。修改 TestModel/admin.py为：
+```python
+from django.contrib import admin
+from TestModel.models import Test,Contact,Tag
+ 
+# Register your models here.
+class ContactAdmin(admin.ModelAdmin):
+    fieldsets = (
+        ['Main',{
+            'fields':('name','email'),
+        }],
+        ['Advance',{
+            'classes': ('collapse',), # CSS
+            'fields': ('age',),
+        }]
+    )
+ 
+admin.site.register(Contact, ContactAdmin)
+admin.site.register([Test, Tag])
+```
+上面的栏目分为了 Main 和 Advance 两部分。classes 说明它所在的部分的 CSS 格式。
+
+## 内联(Inline)显示
+
+上面的 Contact 是 Tag 的外部键，所以有外部参考的关系。
+
+而在默认的页面显示中，将两者分离开来，无法体现出两者的从属关系。我们可以使用内联显示，让 Tag 附加在 Contact 的编辑页面上显示。
+
+修改TestModel/admin.py：
+```python
+from django.contrib import admin
+from TestModel.models import Test,Contact,Tag
+ 
+# Register your models here.
+class TagInline(admin.TabularInline):
+    model = Tag
+ 
+class ContactAdmin(admin.ModelAdmin):
+    inlines = [TagInline]  # Inline
+    fieldsets = (
+        ['Main',{
+            'fields':('name','email'),
+        }],
+        ['Advance',{
+            'classes': ('collapse',),
+            'fields': ('age',),
+        }]
+ 
+    )
+ 
+admin.site.register(Contact, ContactAdmin)
+admin.site.register([Test])
+```
+
+比如在列表中显示更多的栏目，只需要在 ContactAdmin 中增加 list_display 属性:
+```python
+from django.contrib import admin
+from TestModel.models import Test,Contact,Tag
+ 
+# Register your models here.
+class TagInline(admin.TabularInline):
+    model = Tag
+ 
+class ContactAdmin(admin.ModelAdmin):
+    list_display = ('name','age', 'email') # list
+    inlines = [TagInline]  # Inline
+    fieldsets = (
+        ['Main',{
+            'fields':('name','email'),
+        }],
+        ['Advance',{
+            'classes': ('collapse',),
+            'fields': ('age',),
+        }]
+ 
+    )
+ 
+admin.site.register(Contact, ContactAdmin)
+admin.site.register([Test])
+```
+
+搜索功能在管理大量记录时非常有，我们可以使用 search_fields 为该列表页增加搜索栏：
+```python
+from django.contrib import admin
+from TestModel.models import Test,Contact,Tag
+ 
+# Register your models here.
+class TagInline(admin.TabularInline):
+    model = Tag
+ 
+class ContactAdmin(admin.ModelAdmin):
+    list_display = ('name','age', 'email') # list
+    search_fields = ('name',)
+    inlines = [TagInline]  # Inline
+    fieldsets = (
+        ['Main',{
+            'fields':('name','email'),
+        }],
+        ['Advance',{
+            'classes': ('collapse',),
+            'fields': ('age',),
+        }]
+ 
+    )
+ 
+admin.site.register(Contact, ContactAdmin)
+admin.site.register([Test])
+```
+
+## 安装 uwsgi
+
+uwsgi:https://pypi.python.org/pypi/uWSGI
+
+uwsgi 参数详解：http://uwsgi-docs.readthedocs.org/en/latest/Options.html
+```shell
+pip install uwsgi
+uwsgi --version    # 查看 uwsgi 版本
+```
+测试 uwsgi 是否正常：
+
+新建 test.py 文件，内容如下：
+```python
+def application(env, start_response):
+	start_response('200 OK', [('Content-Type','text/html')])
+	return "Hello World"
+```
+然后在终端运行：
+```shell
+uwsgi --http :8001 --wsgi-file test.py
+```
+在浏览器内输入：http://127.0.0.1:8001，查看是否有"Hello World"输出，若没有输出，请检查你的安装过程。
+
+## uwsgi 配置
+
+uwsgi支持ini、xml等多种配置方式，本文以 ini 为例， 在/ect/目录下新建uwsgi9090.ini，添加如下配置：
+```ini
+[uwsgi]
+socket = 127.0.0.1:9090
+master = true         //主进程
+vhost = true          //多站模式
+no-site = true        //多站模式时不设置入口模块和文件
+workers = 2           //子进程数
+reload-mercy = 10     
+vacuum = true         //退出、重启时清理文件
+max-requests = 1000   
+limit-as = 512
+buffer-size = 30000
+pidfile = /var/run/uwsgi9090.pid    //pid文件，用于下面的脚本启动、停止该进程
+daemonize = /website/uwsgi9090.log
+```
+
+## Nginx 配置
+
+找到nginx的安装目录（如：/usr/local/nginx/），打开conf/nginx.conf文件，修改server配置：
+```conf
+server {
+        listen       80;
+        server_name  localhost;
+        
+        location / {            
+            include  uwsgi_params;
+            uwsgi_pass  127.0.0.1:9090;              //必须和uwsgi中的设置一致
+            uwsgi_param UWSGI_SCRIPT demosite.wsgi;  //入口文件，即wsgi.py相对于项目根目录的位置，“.”相当于一层目录
+            uwsgi_param UWSGI_CHDIR /demosite;       //项目根目录
+            index  index.html index.htm;
+            client_max_body_size 35m;
+        }
+    }
+```
+你可以阅读 Nginx 安装配置 了解更多内容。
+
+设置完成后，在终端运行：
+
+uwsgi --ini /etc/uwsgi9090.ini &
+/usr/local/nginx/sbin/nginx
+
+在浏览器输入：http://127.0.0.1，你就可以看到 django 的 "It work" 了。 
