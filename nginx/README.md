@@ -285,6 +285,8 @@ apt-get install nginx
 apt-get install nginx-extras
 # 查看模块
 nginx -V
+# grep 过滤模块
+2>&1 nginx -V | tr ' '  '\n'|grep rtmp
 ```
 
 或者使用官方源
