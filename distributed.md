@@ -10,3 +10,8 @@
 ## Beanstalkd 分布式消息队列
 ## nanomsg
 ## Darner
+
+## Apache Storm 流式处理框架
+## Apache Spark
+## Apache Hadoop
+## Apache Hive
