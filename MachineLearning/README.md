@@ -25,3 +25,9 @@
 - 交叉验证
 - 效果评估
 
+http://deeplearning.net/software_links/
+
+http://yann.lecun.com/exdb/mnist/
+
+https://github.com/cazala/mnist
+
