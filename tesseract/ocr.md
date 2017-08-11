@@ -13,4 +13,5 @@ sudo apt-get install tesseract-ocr-chi-sim
 ```shell
 tesseract test.png out -l eng
 tesseract test.png out -l chi_sim
+tesseract timg.jpeg stdout -l chi_sim
 ```
