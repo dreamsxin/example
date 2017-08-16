@@ -1,5 +1,7 @@
 # 安裝服務端
 
+Ubuntu:
+
 ```shell
 sudo apt-get install python-gevent python-pip
 sudo pip install shadowsocks
@@ -7,6 +9,18 @@ sudo apt-get install python-m2crypto
 sudo apt-get install shadowsocks
 ```
 
+CentOS:
+
+```shell
+yum install python-setuptools
+yum install -y python-pip
+wget  https://github.com/shadowsocks/shadowsocks/archive/2.9.1.tar.gz
+tar zxvf 2.9.1.tar.gz 
+cd shadowsocks-2.9.1/
+python setup.py install
+```
+
+创建文件
 `/etc/shadowsocks.json`:
 ```json
 {
@@ -19,7 +33,7 @@ sudo apt-get install shadowsocks
 }
 ```
 
-`rc.local`
+`/etc/rc.local`
 ```shell
 nohup ssserver -c /etc/shadowsocks.json  > /log/shadowsocks.log &
 ```
