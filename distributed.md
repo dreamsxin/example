@@ -17,8 +17,12 @@
 
 ## Apache Storm 流式处理框架
 ## Apache Spark
+
 ## Apache Hadoop
 ## Apache Hive
+## Apache HBase
+
+## Apache Flume
 
 ## Zabbix 开源分布式监控解决方案
 
