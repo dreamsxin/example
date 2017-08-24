@@ -89,10 +89,16 @@
 
 ## 基本功
 
-* 1.按由低到高的顺序，写出OSI七层模型。
-* 2.DNS轮询属于OSI模型中的哪一层。
-* 3.简述 array_map 和 array_reduce 的作用。
-* 4.尽可能多的写出 PHP CLI的命令参数。
+网际层协议：IP协议、ICMP协议、ARP协议、RARP协议。
+传输层协议：TCP协议、UDP协议。
+应用层协议：FTP、Telnet、SMTP、HTTP、RIP、NFS、DNS。
+
+* 按由低到高的顺序，写出OSI七层模型。
+* DNS轮询属于OSI模型中的哪一层。
+* 简述 array_map 和 array_reduce 的作用。
+* 尽可能多的写出 PHP CLI的命令参数。
+* Interface 互相之间是否能够继承。
+* Session 销毁之后是否会重新生成新的会话 ID。
 
 - php --help
 - php --ini
