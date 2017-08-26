@@ -23,12 +23,12 @@ sudo make install
 ## 安装 JZMQ
 
 ```
-     git clone https://github.com/nathanmarz/jzmq.git
-     cd jzmq
-     ./autogen.sh
-     ./configure
-     make
-     sudo make install
+git clone https://github.com/nathanmarz/jzmq.git
+cd jzmq
+./autogen.sh
+./configure
+make
+sudo make install
 ```  
 
 ## 下载 Storm 稳定版解压

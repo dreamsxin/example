@@ -104,34 +104,38 @@
 - php --ini
 - php -m
 
-* 5.HTTP 协议中，content-type 作用是什么？
+## 实战经验
+
+* 订单ID生成，如何保证唯一
+
+* HTTP 协议中，content-type 作用是什么？
 
 MediaType，即是Internet Media Type，互联网媒体类型；也叫做MIME类型，在Http协议消息头中，使用Content-Type来表示具体请求中的媒体类型信息。
 
-* 6.请写出 ajax 实现跨域的两种回调方式？
+* 请写出 ajax 实现跨域的两种回调方式？
 
 - 以 jsonp 的数据类型进行请求时，JQ会动态在页面中添加script标签，将请求内容放置到src中。
 - 服务器端在返回资源的时候，指定这个资源能被哪些域所访问。
 - 代理中转
 
-* 7.Pcntl、Phalcon两种扩展你用过哪一个，并简述其作用。
+* Pcntl、Phalcon两种扩展你用过哪一个，并简述其作用。
 
 - Pcntl PHP的进程控制支持实现了Unix方式的进程创建，程序执行，信号处理以及进程的中断。
 
-* 8.phpize命令的作用是什么？
+* phpize命令的作用是什么？
 
 根据系统信息生成对应的 configure 文件
 
-* 9.PHP 并发编程中，常用于防止进程成为僵尸进程的函数是？
+* PHP 并发编程中，常用于防止进程成为僵尸进程的函数是？
 
 - 父进程通过 `pcntl_wait` 和 `pcntl_waitpid` 等函数等待子进程结束
 - pcntl_signal(SIGCHLD, function(){pcntl_wait($status)});
 
-* 10. Mysql查看主从库状态的命令是什么？
+* Mysql查看主从库状态的命令是什么？
 
 - show master/slave status;
 
-* 11. 请写出 Linux 下编译安装 PHP 扩展（假设要编译安装扩展为mbstring，PHP源码在目录/home/my/php-src/）的过程 和 相关shell命令？
+* 请写出 Linux 下编译安装 PHP 扩展（假设要编译安装扩展为mbstring，PHP源码在目录/home/my/php-src/）的过程 和 相关shell命令？
 
 ## 扩展知识
 
