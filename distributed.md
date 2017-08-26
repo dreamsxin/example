@@ -15,6 +15,9 @@
 ## nanomsg
 ## Darner
 
+## Druid
+## PipelineDB
+
 ## Apache Storm 流式处理框架
 ## Apache Spark
 
