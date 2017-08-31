@@ -108,6 +108,10 @@
 
 * 订单ID生成，如何保证唯一
 
+* 改了系统时间，是否会影响 Redis 过期时间
+
+* 改了主机系统时间，是否会影响 Docker 时间
+
 * HTTP 协议中，content-type 作用是什么？
 
 MediaType，即是Internet Media Type，互联网媒体类型；也叫做MIME类型，在Http协议消息头中，使用Content-Type来表示具体请求中的媒体类型信息。
