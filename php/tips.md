@@ -99,6 +99,7 @@
 * 尽可能多的写出 PHP CLI的命令参数。
 * Interface 互相之间是否能够继承。
 * Session 销毁之后是否会重新生成新的会话 ID。
+* foreach 中使用引用需要注意什么。
 
 - php --help
 - php --ini
