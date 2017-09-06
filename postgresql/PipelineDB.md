@@ -1,11 +1,17 @@
 # PipelineDB
 
+下载地址 https://www.pipelinedb.com/download
+
 ## 安装
 
 See http://docs.pipelinedb.com/installation.html
 
 
 ```shell
+useradd pipeline
+password pipeline
+
+
 # 下载安装包之后安装
 sudo rpm -ivh --prefix=/path/to/pipelinedb pipelinedb-<version>.rpm
 sudo dpkg -i pipelinedb-<version>.deb
@@ -18,15 +24,23 @@ docker run -v /dev/shm:/dev/shm pipelinedb/pipelinedb
 ## 初始化数据库
 
 ```shell
-pipeline-init -D <data directory>
+mkdir data
+chown pipeline:pipeline data
+sudo -u pipeline pipeline-init -D data
+```
+
+## 修改配置
+
+```shell
+vi data/pipelinedb.conf
 ```
 
 ## 运行数据库
 
 ```shell
-pipeline-ctl -D <data directory> -l pipelinedb.log start
+sudo -u pipeline pipeline-ctl -D data -l pipelinedb.log start
 # 运行在前台
-pipelinedb -D <data directory>
+sudo -u pipeline pipelinedb -D data
 ```
 
 ## Debug 模式下运行
@@ -45,11 +59,18 @@ pipeline-ctl -D <data directory> stop
 ## 连接到数据库
 
 ```shell
+# sudo pipeline -p 5434 [dbname [username]]
 pipeline pipeline
-psql -p 5432 -h localhost pipeline
 
+psql -p 5432 -h localhost pipeline
 # 激活 continuous query
 psql -h localhost -p 5432 -d pipeline -c "ACTIVATE"
+```
+
+## 查看 Continuous Views
+
+```sql
+SELECT * FROM pipeline_views();
 ```
 
 ## 例子
@@ -57,7 +78,7 @@ psql -h localhost -p 5432 -d pipeline -c "ACTIVATE"
 本例是关于 Wikipedia页面访问数据的统计。每一条访问记录，包括以下字段，以英文逗号分割。
 `hour,project,title,view_count,size`
 
-### 创建数据表
+### 创建数据表 Stream
 
 ```shell
 psql -h localhost -p 5432 -d pipeline -c "CREATE STREAM wiki_stream (hour timestamp, project text, title text, view_count bigint, size bigint);"
@@ -81,7 +102,7 @@ FROM wiki_stream
 GROUP BY hour, project;"
 ```
 
-### 创建Stream
+### 插入 Stream
 
 我们通过curl工具，获取wiki的数据集，并压缩数据，作为一个Stream写入到stdin。因为数据集比较大，当我们执行了几秒钟之后，可以使用ctrl+c中断curl操作。
 ```shell
