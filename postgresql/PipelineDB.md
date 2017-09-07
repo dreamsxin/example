@@ -121,6 +121,15 @@ CREATE CONTINUOUS VIEW uniques_hourly AS
 FROM output_of('uniques_1m') GROUP BY ts;
 ```
 
+## 备份与恢复
+
+```shell
+pipeline-dump -t <CV name> -t <CV name>_mrel # <-- Note the "_mrel" suffix
+
+pipeline-dump > backup.sql
+pipeline -f backup.sql
+```
+
 ## 例子
 
 本例是关于 Wikipedia页面访问数据的统计。每一条访问记录，包括以下字段，以英文逗号分割。
