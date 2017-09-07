@@ -69,8 +69,56 @@ psql -h localhost -p 5432 -d pipeline -c "ACTIVATE"
 
 ## 查看 Continuous Views
 
+> Continuous view 自带属性 arrival_timestamp 表示数据接受时间
+
 ```sql
 SELECT * FROM pipeline_views();
+```
+
+查看最近一分钟数据：
+```sql
+CREATE CONTINUOUS VIEW recent_users WITH (sw = '1 minute') AS
+   SELECT user_id::integer FROM stream;
+
+# 等价于
+CREATE CONTINUOUS VIEW recent_users AS
+   SELECT user_id::integer FROM stream WHERE (arrival_timestamp > clock_timestamp() - interval '1 minute');
+```
+
+* 子级 Continuous view
+
+```sql
+CREATE CONTINUOUS VIEW sw0 WITH (sw = '1 hour') AS SELECT COUNT(*) FROM event_stream;
+CREATE VIEW sw1 WITH (sw = '5 minutes') AS SELECT * FROM sw0;
+CREATE VIEW sw2 WITH (sw = '10 minutes') AS SELECT * FROM sw0;
+```
+
+* 多级处理
+
+- old	旧值，上一次的值
+- new	新值，本次值
+- delta 新旧之间的差异值
+
+```sql
+CREATE STREAM stream (x integer, y integer);
+
+CREATE CONTINUOUS VIEW v_sum AS SELECT sum(x) FROM stream;
+
+CREATE CONTINUOUS VIEW v_deltas AS SELECT abs((new).sum - (old).sum) AS delta
+  FROM output_of('v_sum')
+  WHERE abs((new).sum - (old).sum) > 10;
+
+CREATE CONTINUOUS VIEW v AS SELECT COUNT(*) FROM stream;
+
+CREATE CONTINUOUS VIEW v_real_deltas AS SELECT (delta).sum FROM output_of('v');
+
+CREATE CONTINUOUS VIEW uniques_1m AS
+  SELECT minute(arrival_timestamp) AS ts, COUNT(DISTINCT user_id) AS uniques
+FROM s GROUP BY ts;
+
+CREATE CONTINUOUS VIEW uniques_hourly AS
+  SELECT hour((new).ts) AS ts, combine((delta).uniques) AS uniques
+FROM output_of('uniques_1m') GROUP BY ts;
 ```
 
 ## 例子
@@ -80,13 +128,15 @@ SELECT * FROM pipeline_views();
 
 ### 创建数据表 Stream
 
+http://docs.pipelinedb.com/streams.html
+
 ```shell
 psql -h localhost -p 5432 -d pipeline -c "CREATE STREAM wiki_stream (hour timestamp, project text, title text, view_count bigint, size bigint);"
 ```
 
-### 创建 continuous view
+### 创建 Continuous view
 
-首先，我们创建一个continuous view，使用psql工具。从sql里，我们能够看到统计方法和访问记录的对应关系。
+首先，我们创建一个 Continuous view，使用psql工具。从sql里，我们能够看到统计方法和访问记录的对应关系。
 ```shell
 psql -h localhost -p 5432 -d pipeline -c "
 CREATE CONTINUOUS VIEW wiki_stats AS
@@ -116,6 +166,7 @@ curl -sL http://pipelinedb.com/data/wiki-pagecounts | gunzip | \
 ```shell
 psql -h localhost -p 5432 -d pipeline -c "SELECT * FROM wiki_stats ORDER BY total_views DESC";
 ```
+
 
 ## PipelineDB 和 kafka的集成
 
@@ -206,3 +257,4 @@ a,b,c
 psql -h localhost -p 5432 -d pipeline -c "SELECT * FROM msg_result";
 ```
 ps: 当我们连接到PipelineDB，我们可以使用PostgreSQL的命令，来查看有那些数据库对象生成。例如通过 \d 可以查看到，当我们创建CONTINUOUS VIEW的时候，额外创建了msg_result_mrel、msg_result_seq和msg_result_osrel，实际的数据就存储在msg_result_mrel中。
+
