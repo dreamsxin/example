@@ -102,3 +102,11 @@ service postgresql-9.5 initdb
 ```
 
 `/var/lib/pgsql/9.5/data/pg_hba.conf`
+
+
+## 关闭 selinux
+
+```shell
+sed -i "s#SELINUX=enforcing#SELINUX=disabled#g" /etc/selinux/config  #重启生效
+setenforce 0   #临时关闭
+```
