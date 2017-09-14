@@ -74,7 +74,7 @@ select * from pg_stat_replication;
 
 ## postgres的从配置
 
-从是10.45.243.27这台机器
+从是`10.45.243.27`这台机器
 
 编写 recovery.conf
 
@@ -108,3 +108,202 @@ hot_standby_feedback = on		# 如果有错误的数据复制，是否向主进行
 sudo ufw allow from 10.45.241.141
 sudo service postgresql restart
 ```
+
+# 在Ubuntu 16.04上为PostgreSQL 9.6设置主从复制
+
+https://www.howtoforge.com/tutorial/how-to-set-up-master-slave-replication-for-postgresql-96-on-ubuntu-1604/
+
+## 先决条件
+
+1. MASTER
+– 允许读取和写入
+– IP：10.0.15.10
+
+2. SLAVE
+– 只读根特权
+– IP：10.0.15.11
+
+## 添加源
+
+将postgreSQL 9.6存储库添加到sources.list.d目录（https://www.postgresql.org/download/linux/ubuntu/）。
+
+```shell
+echo "deb http://apt.postgresql.org/pub/repos/apt/ xenial-pgdg main" | tee /etc/apt/sources.list.d/postgresql.list
+```
+
+并将PostgreSQL签名密钥导入系统。
+```shell
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+sudo apt-get update 
+```
+
+## 安装
+
+```shell
+apt-get install -y postgresql-9.6 postgresql-contrib-9.6
+# 自启动
+systemctl enable postgresql
+```
+
+## 修改密码
+
+```shell
+sudo -upostgres psql
+```
+
+执行 sql：
+```sql
+\password postgres
+```
+
+## 查看连接信息
+
+执行 sql：
+```sql
+\conninfo
+```
+
+## 配置 UFW 防火墙
+
+假如没有安装 UFW 防火墙可以忽略这一步。
+
+```shell
+ufw allow ssh
+ufw allow postgresql
+```
+
+在MASTER和SLAVE服务器上运行上诉步骤。 
+
+## 配置 MASTER 服务器
+
+主服务器的IP地址为`10.0.15.10`，并且postgres服务将以该IP为默认端口运行。 主服务器将具有对数据库的READ和WRITE权限，并对从服务器执行流复制。
+
+编辑 `/etc/postgresql/9.6/main/postgresql.conf`文件，修改`listen_addresses`：
+
+```conf
+listen_addresses = 'localhost,10.0.15.10'
+```
+
+取消注释`wal_level`行，并将值更改为`hot_standby`。
+```conf
+wal_level = hot_standby
+```
+
+对于同步级别，我们将使用本地同步。 取消注释和更改值行如下。
+```conf
+synchronous_commit = local
+```
+
+启用归档模式并将`archive_command`选项更改为命令`cp %p /var/lib/postgresql/9.6/main/archive/%f`。
+```conf
+archive_mode = on
+archive_command = 'cp %p /var/lib/postgresql/9.6/main/archive/%f'
+```
+
+对于“复制”设置，在本教程中，我们仅使用2个服务器，主服务器和从服务器，取消注释`wal_sender`行，并将值更改为`2`，`wal_keep_segments`值为`10`。
+```conf
+max_wal_senders = 2
+wal_keep_segments = 10
+```
+
+对于应用程序名称，取消注释`synchronous_standby_names`行并将值更改为名称`pgslave001`。
+```conf
+synchronous_standby_names = 'pgslave001'
+```
+
+保存文件并退出编辑器。
+
+在`postgresql.conf`文件中，归档模式已启用，因此我们需要为归档创建一个新目录。 更改权限并将所有者更改为`postgres`用户。
+
+```shell
+mkdir -p /var/lib/postgresql/9.6/main/archive/
+chmod 700 /var/lib/postgresql/9.6/main/archive/
+chown -R postgres:postgres /var/lib/postgresql/9.6/main/archive/
+```
+
+### 身份验证配置
+
+`pg_hba.conf`：
+```conf
+# Localhost
+host    replication     replica          127.0.0.1/32            md5
+
+# PostgreSQL Master IP address
+host    replication     replica          10.0.15.10/32            md5
+
+# PostgreSQL SLave IP address
+host    replication     replica          10.0.15.11/32            md5
+```
+
+### 创建用户
+
+```sql
+CREATE USER replica REPLICATION LOGIN ENCRYPTED PASSWORD 'aqwe123@';
+```
+
+现在，在下面查看具有`\du`查询的新用户，您将看到具有复制权限的副本用户。 
+
+### 显示用户
+
+```sql
+\du
+```
+
+## 配置 SLAVE 服务器
+
+停止服务
+
+```shell
+systemctl stop postgresql
+```
+
+编辑 `/etc/postgresql/9.6/main/postgresql.conf`文件：
+
+```conf
+listen_addresses = 'localhost,10.0.15.11'
+
+wal_level = hot_standby
+
+synchronous_commit = local
+
+max_wal_senders = 2
+wal_keep_segments = 10
+
+hot_standby = on
+```
+
+## 从 MASTER 复制数据到 SLAVE
+
+登录 SLAVE 服务器：
+```shell
+su - postgres
+cd /var/lib/postgresql/9.6/
+mkdir main/
+chmod 700 main/
+pg_basebackup -h 10.0.15.10 -U replica -D /var/lib/postgresql/9.6/main -P --xlog
+```
+
+创建`/var/lib/postgresql/9.6/main/recovery.conf`
+
+```conf
+standby_mode = 'on'
+primary_conninfo = 'host=10.0.15.10 port=5432 user=replica password=aqwe123@ application_name=pgslave001'
+restore_command = 'cp /var/lib/postgresql/9.6/main/archive/%f %p'
+trigger_file = '/tmp/postgresql.trigger.5432'
+```
+
+最后重启：
+```shell
+systemctl start postgresql
+netstat -plntu
+```
+
+## 查看状态
+
+登录 MASTER 服务器
+```shell
+psql -c "select application_name, state, sync_priority, sync_state from pg_stat_replication;"
+psql -x -c "select * from pg_stat_replication;"
+```
+
+## 安装 pgbouncer

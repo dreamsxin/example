@@ -11,8 +11,8 @@
 InfluxDB 是 Go 写的，不依赖任何其他包或库，很干净。安装很容易：
 
 ```shell
-wget https://s3.amazonaws.com/influxdb/influxdb_latest_amd64.deb
-sudo dpkg -i influxdb_latest_amd64.deb
+wget https://dl.influxdata.com/influxdb/releases/influxdb_1.3.5_amd64.deb
+sudo dpkg -i influxdb_1.3.5_amd64.deb
 ```
 
 ## 启动 InfluxDB：

@@ -17,6 +17,12 @@ SSLEngine on
 SSLCertificateFile /etc/pki/tls/server.crt    //证书
 SSLCertificateKeyFile /etc/pki/tls/server.key  //私钥
 
+<Directory "/var/www/https">
+	Options Indexes FollowSymLinks
+	AllowOverride All
+    Order allow,deny
+    Allow from all
+</Directory>
 </VirtualHost>
 ```
 
