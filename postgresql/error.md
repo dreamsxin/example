@@ -106,3 +106,11 @@ REINDEX TABLE table;
 ```shell
 dd if=/dev/zero of=/xx/postgres/data/base/x1/x2 bs=8192 seek=1 count=1 conv=notrunc
 ```
+
+# SQLSTATE[XX001]: Data corrupted: 7 ERROR: could not read block 0 in file "base/16385/16881": read only 0 of 8192 bytes
+
+```sql
+select relname,relkind  from pg_class where pg_relation_filepath(oid)='base/16385/16881';
+```
+
+发现是索引的类型错误，删除索引重建。
