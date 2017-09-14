@@ -389,3 +389,10 @@ ALTER TABLE table_name DROP CONSTRAINT projects_code_unique;
 # 创建约束
 ALTER TABLE table_name ADD CONSTRAINT projects_code_unique UNIQUE(channel_code,project_code);
 ```
+
+## 慢查询
+
+```sql
+CREATE EXTENSION pg_stat_statements;
+SELECT  query, calls, total_time, (total_time/calls) as average ,rows, 100.0 * shared_blks_hit /nullif(shared_blks_hit + shared_blks_read, 0) AS hit_percent FROM  pg_stat_statements ORDER BY average DESC LIMIT 10;
+```
