@@ -495,3 +495,53 @@ server {
 ```conf
 error_page 405 =200 $uri;
 ```
+
+# Too many open files
+
+```shell
+ulimit -a
+lsof -n|awk '{print$2}'|sort|uniq -c |sort -nr|more 
+```
+
+其中第一列是打开的文件句柄数量，第二列是进程号。
+
+```shell
+ps -aef|grep 进程号
+```
+
+查看当前系统打开的文件数量
+
+```shell
+lsof | wc -l  
+watch "lsof | wc -l"
+```
+
+查看某一进程的打开文件数量
+
+```shell
+lsof -p pid | wc -l
+lsof -p 1234 | wc -l
+```
+
+```shell
+ulimit -SHn 40960
+```
+
+修改 `/etc/security/limits.conf`
+
+```conf
+* hard nofile 40960
+* soft nofile 40960
+```
+
+`nginx.conf` 添加
+```conf
+worker_rlimit_nofile 30000;
+```
+
+# Resource temporarily unavailable
+
+` /etc/php/7.1/fpm/pool.d/www.conf` 修改：
+```conf
+listen.backlog = 1024
+```
