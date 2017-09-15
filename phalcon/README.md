@@ -257,3 +257,41 @@ max_connections = 100
 		));
 	}, true);
 ```
+
+## 读写分离
+
+```php
+	$di->set('modelsManager', function(){
+		$manager = new Phalcon\Mvc\Model\Manager();
+		$manager->setDefaultReadConnectionService('readdb');
+		$manager->setDefaultWriteConnectionService('writedb');
+		return $manager;
+	}, TRUE);
+```
+
+## 分表与元数据缓存
+
+```php
+class Robots extends Phalcon\Mvc\Model {
+
+	public function getSource() {
+		return 'robots';
+	}
+
+	public function getMetadataCachekey() {
+		return 'robots';
+	}
+}
+
+class Robots2 extends Phalcon\Mvc\Model {
+
+	public function getSource() {
+		return 'robots_2';
+	}
+
+	public function getMetadataCachekey() {
+		return 'robots';
+	}
+}
+``
+
