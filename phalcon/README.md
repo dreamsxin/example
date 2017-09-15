@@ -239,3 +239,21 @@ max_connections = 100
 ```
 
 配置文件 `/etc/postgresql/9.5/main/pg_hba.conf`
+
+## 持久连接
+
+```php
+	$di->set('db', function () use ($config) {
+		return new \Phalcon\Db\Adapter\Pdo\Postgresql(array(
+			'host' => $config->database->host,
+			'username' => $config->database->username,
+			'password' => $config->database->password,
+			'dbname' => $config->database->dbname,
+			'port' => $config->database->port,
+			'options' => array(
+				PDO::ATTR_STRINGIFY_FETCHES => false,
+				PDO::ATTR_PERSISTENT => true
+			)
+		));
+	}, true);
+```
