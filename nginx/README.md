@@ -163,6 +163,7 @@ server {
 		allow all;
 		# deny all;
 	}
+	# POST 请求静态文件
 	error_page 405 =200 $uri;
 }
 ```
