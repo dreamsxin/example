@@ -25,11 +25,15 @@
 ## Apache Hive
 ## Apache HBase
 
+## Disco - Massive data, Minimal code
+
 ## Apache Flume
 
 ## Zabbix 开源分布式监控解决方案
 
 ## ElasticSearch 分布式全文搜索引擎
+
+## GFS、HDFS、Lustre 、Ceph 、GridFS 、mogileFS、TFS、FastDFS
 
 # 一致性算法 Paxos & raft & zab
 
