@@ -206,10 +206,11 @@ max_wal_senders = 2
 wal_keep_segments = 10
 ```
 
-对于应用程序名称，取消注释`synchronous_standby_names`行并将值更改为名称`pgslave001`。
+指定同步复制的 Standby 的名称，取消注释`synchronous_standby_names`行并将值更改为名称`pgslave001`。
 ```conf
-synchronous_standby_names = 'pgslave001'
+synchronous_standby_names = 'pgslave001,pgslave002'
 ```
+ 注：此处设置的'pgslave001,pgslave002'就是在 Standby 数据库中配置连接参数“application_name”。
 
 保存文件并退出编辑器。
 
