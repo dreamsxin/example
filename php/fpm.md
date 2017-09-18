@@ -1,5 +1,36 @@
 # PHP-FPM
 
+## 优化
+
+查询单个 `php-fpm` 进程占用的内存：
+
+```shell
+pmap $(pgrep php-fpm | head -1)
+```
+
+通过命令查看服务器上一共开了多少的 php-cgi 进程
+```shell
+ps -fe |grep "php-fpm"|grep "pool"|wc -l
+```
+
+查看已经有多少个php-cgi进程用来处理tcp请求
+```shell
+netstat -anp|grep "php-fpm"|grep "tcp"|grep "pool"|wc -l
+```
+
+## php-fpm的配置公式
+
+`pm.start_servers = min_spare_servers + (max_spare_servers - min_spare_servers) / 2`
+
+## `pm.max_children` 的计算方法
+
+本机内存除以单个 `php-fpm` 进程占用的内存得到的数字为最大的限定值。
+
+- pm.max_children	静态方式下开启的php-fpm进程数量
+- pm.start_servers	动态方式下的起始php-fpm进程数量
+- pm.min_spare_servers	动态方式下的最小php-fpm进程数量
+- pm.max_spare_servers	动态方式下的最大php-fpm进程数量
+
 ## 用信号控制：
 
 master进程可以理解以下信号
