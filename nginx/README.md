@@ -181,12 +181,57 @@ request_terminate_timeout = 900
 #ip limit
 limit_conn_zone $binary_remote_addr zone=perip:10m;
 limit_conn_zone $server_name zone=perserver:10m;
+
+#以用户二进制IP地址，定义三个漏桶，滴落速率1-3req/sec，桶空间1m，1M能保持大约16000个(IP)状态
+limit_req_zone $binary_remote_addr zone=qps1:1m  rate=1r/s;
+limit_req_zone $binary_remote_addr zone=qps2:1m  rate=2r/s;
+limit_req_zone $binary_remote_addr zone=qps3:1m  rate=3r/s;
 ```
 2、在需要限制并发数和下载带宽的网站配置server{}里加上如下代码：
 ```ini
-limit_conn perip 2; //限制并发连接数
-limit_conn perserver 20; // 限制同一server并发连接数
-limit_rate 100k; // 限制下载速度
+# 限制并发连接数
+limit_conn perip 2;
+# 限制同一server并发连接数
+limit_conn perserver ;
+# 限制下载速度
+limit_rate 100k;
+
+ 
+#速率qps=1，峰值burst=5，延迟请求
+#严格按照漏桶速率qps=1处理每秒请求
+#在峰值burst=5以内的并发请求，会被挂起，延迟处理
+#超出请求数限制则直接返回503
+#客户端只要控制并发在峰值[burst]内，就不会触发limit_req_error_log
+# 例1：发起一个并发请求=6，拒绝1个，处理1个，进入延迟队列4个：
+#time  request  refuse  sucess  delay
+#00:01    6    1    1      4
+#00:02    0    0    1      3
+#00:03    0    0    1      2
+#00:04    0    0    1      1
+#00:05    0    0    1      0
+location /delay {
+    limit_req  zone=qps1 burst=5;
+}
+ 
+#速率qps=1，峰值burst=5，不延迟请求
+#加了nodelay之后，漏桶控制一段时长内的平均qps = 漏桶速率，允许瞬时的峰值qps > 漏桶qps
+#所以峰值时的最高qps=(brust+qps-1)=5
+#请求不会被delay，要么处理，要么直接返回503
+#客户端需要控制qps每秒请求数，才不会触发limit_req_error_log
+# 例2：每隔5秒发起一次达到峰值的并发请求，由于时间段内平均qps=1 所以仍然符合漏桶速率：
+#time  request   refuse  sucess
+#00:01     5     0     5
+#00:05     5     0     5
+#00:10     5     0     5
+# 例3：连续每秒发起并发请求=5，由于时间段内平均qps>>1，超出的请求被拒绝：
+#time  request   refuse   sucess
+#00:01     5     0      5
+#00:02     5     4      1
+#00:03     5     4      1
+ 
+location /nodelay {
+    limit_req  zone=qps1 burst=5 nodelay;
+}
 ```
 
 ## 限请求频率
