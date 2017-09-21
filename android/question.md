@@ -48,45 +48,32 @@ Preference，File， DataBase这三种方式分别对应的目录是/data/data/P
 * 使用SharedPreferences存储数据
 
 首先说明SharedPreferences存储方式，它是 Android提供的用来存储一些简单配置信息的一种机制，例如：登录用户的用户名与密码。其采用了Map数据结构来存储数据，以键值的方式存储，可以简单的读取与写入，具体实例如下：
-
+```java
 void ReadSharedPreferences(){
-
-String strName,strPassword;
-
-SharedPreferences   user = getSharedPreferences(“user_info”,0);
-
-strName = user.getString(“NAME”,””);
-
-strPassword = user getString(“PASSWORD”,””);
-
+	String strName,strPassword;
+	SharedPreferences user = getSharedPreferences("user_info",0);
+	strName = user.getString("NAME","");
+	strPassword = user getString("PASSWORD","");
 }
 
 void WriteSharedPreferences(String strName,String strPassword){
-
-SharedPreferences   user = getSharedPreferences(“user_info”,0);
-
-uer.edit();
-
-user.putString(“NAME”, strName);
-
-user.putString(“PASSWORD” ,strPassword);
-
-user.commit();
-
+	SharedPreferences user = getSharedPreferences("user_info",0);
+	uer.edit();
+	user.putString("NAME", strName);
+	user.putString("PASSWORD" ,strPassword);
+	user.commit();
 }
-
+```
 数据读取与写入的方法都非常简单，只是在写入的时候有些区别：先调用edit()使其处于编辑状态，然后才能修改数据，最后使用commit()提交修改的数据。实际上SharedPreferences是采用了XML格式将数据存储到设备中，在DDMS中的File Explorer中的/data/data/<package name>/shares_prefs下。使用SharedPreferences是有些限制的：只能在同一个包内使用，不能在不同的包之间使用。
 
 * 文件存储数据
 
 文件存储方式是一种较常用的方法，在Android中读取/写入文件的方法，与 Java中实现I/O的程序是完全一样的，提供了openFileInput()和openFileOutput()方法来读取设备上的文件。具体实例如下:
-
-String fn = “moandroid.log”;
-
+```java
+String fn = "moandroid.log";
 FileInputStream fis = openFileInput(fn);
-
 FileOutputStream fos = openFileOutput(fn,Context.MODE_PRIVATE);
-
+```
 * 网络存储数据
 
 网络存储方式，需要与Android 网络数据包打交道，关于Android 网络数据包的详细说明，请阅读Android SDK引用了Java SDK的哪些package？。
@@ -118,8 +105,9 @@ Uri代表了要操作的数据，Uri主要包含了两部分信息：1.需要操
 要操作xml文件中contact节点下的name节点，可以构建这样的路径：/contact/name
 
 如果要把一个字符串转换成Uri，可以使用Uri类中的parse()方法，如下：
-
+```java
 Uri uri = Uri.parse("content://com.changcheng.provider.contactprovider/contact")
+```
 
 3、UriMatcher、ContentUrist和ContentResolver简介
 
@@ -128,28 +116,23 @@ Uri uri = Uri.parse("content://com.changcheng.provider.contactprovider/contact")
 UriMatcher：用于匹配Uri，它的用法如下：
 
 1.首先把你需要匹配Uri路径全部给注册上，如下：
-
+```java
 //常量UriMatcher.NO_MATCH表示不匹配任何路径的返回码(-1)。
-
 UriMatcher uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 
 //如果match()方法匹配content://com.changcheng.sqlite.provider.contactprovider /contact路径，返回匹配码为1
-
-uriMatcher.addURI(“com.changcheng.sqlite.provider.contactprovider”, “contact”, 1);//添加需要匹配uri，如果匹配就会返回匹配码
+uriMatcher.addURI("com.changcheng.sqlite.provider.contactprovider", "contact", 1);//添加需要匹配uri，如果匹配就会返回匹配码
 
 //如果match()方法匹配 content://com.changcheng.sqlite.provider.contactprovider/contact/230路径，返回匹配码为2
+uriMatcher.addURI("com.changcheng.sqlite.provider.contactprovider", "contact/#", 2);//#号为通配符
+```
 
-uriMatcher.addURI(“com.changcheng.sqlite.provider.contactprovider”, “contact/#”, 2);//#号为通配符
+2.注册完需要匹配的Uri后，就可以使用uriMatcher.match(uri)方法对输入的Uri进行匹配，如果匹配就返回匹配码，匹配码是调用 addURI()方法传入的第三个参数，假设匹配 `content://com.changcheng.sqlite.provider.contactprovider/contact`路径，返回的匹配码为1。
 
-2.注册完需要匹配的Uri后，就可以使用uriMatcher.match(uri)方法对输入的Uri进行匹配，如果匹配就返回匹配码，匹配码是调用 addURI()方法传入的第三个参数，假设匹配 content://com.changcheng.sqlite.provider.contactprovider/contact路径，返回的匹配码为1。
-
-ContentUris：用于获取Uri路径后面的ID部分，它有两个比较实用的方法：
-
-withAppendedId(uri, id)用于为路径加上ID部分
-
-parseId(uri)方法用于从路径中获取ID部分
-
-ContentResolver：当外部应用需要对ContentProvider中的数据进行添加、删除、修改和查询操作时，可以使用 ContentResolver 类来完成，要获取ContentResolver 对象，可以使用Activity提供的getContentResolver()方法。 ContentResolver使用insert、delete、update、query方法，来操作数据。
+- ContentUris：用于获取Uri路径后面的ID部分，它有两个比较实用的方法：
+- withAppendedId(uri, id)用于为路径加上ID部分
+- parseId(uri)方法用于从路径中获取ID部分
+- ContentResolver：当外部应用需要对ContentProvider中的数据进行添加、删除、修改和查询操作时，可以使用 ContentResolver 类来完成，要获取ContentResolver 对象，可以使用Activity提供的getContentResolver()方法。 ContentResolver使用insert、delete、update、query方法，来操作数据。
 
 ## activity的启动模式有哪些？是什么含义？
 
@@ -164,39 +147,39 @@ ContentResolver：当外部应用需要对ContentProvider中的数据进行添�
 
 1. 如何决定所属task
 
-“standard”和”singleTop”的activity的目标task，和收到的Intent的发送者在同一个task内，除非intent包括参数FLAG_ACTIVITY_NEW_TASK。
+"standard"和"singleTop"的activity的目标task，和收到的Intent的发送者在同一个task内，除非intent包括参数FLAG_ACTIVITY_NEW_TASK。
 
 如果提供了FLAG_ACTIVITY_NEW_TASK参数，会启动到别的task里。
 
-“singleTask”和”singleInstance”总是把activity作为一个task的根元素，他们不会被启动到一个其他task里。
+"singleTask"和"singleInstance"总是把activity作为一个task的根元素，他们不会被启动到一个其他task里。
 
 2. 是否允许多个实例
 
-“standard”和”singleTop”可以被实例化多次，并且存在于不同的task中，且一个task可以包括一个activity的多个实例；
+"standard"和"singleTop"可以被实例化多次，并且存在于不同的task中，且一个task可以包括一个activity的多个实例；
 
-“singleTask”和”singleInstance”则限制只生成一个实例，并且是task的根元素。 singleTop要求如果创建intent的时候栈顶已经有要创建的Activity的实例，则将intent发送给该实例，而不发送给新的实例。
+"singleTask"和"singleInstance"则限制只生成一个实例，并且是task的根元素。 singleTop要求如果创建intent的时候栈顶已经有要创建的Activity的实例，则将intent发送给该实例，而不发送给新的实例。
 
 3. 是否允许其它activity存在于本task内
 
-“singleInstance”独占一个task，其它activity不能存在那个task里；如果它启动了一个新的activity，不管新的activity的launch mode 如何，新的activity都将会到别的task里运行（如同加了FLAG_ACTIVITY_NEW_TASK参数）。
+"singleInstance"独占一个task，其它activity不能存在那个task里；如果它启动了一个新的activity，不管新的activity的launch mode 如何，新的activity都将会到别的task里运行（如同加了FLAG_ACTIVITY_NEW_TASK参数）。
 
 而另外三种模式，则可以和其它activity共存。
 
 4. 是否每次都生成新实例
 
-“standard”对于没一个启动Intent都会生成一个activity的新实例；
+"standard"对于没一个启动Intent都会生成一个activity的新实例；
 
-“singleTop”的activity如果在task的栈顶的话，则不生成新的该activity的实例，直接使用栈顶的实例，否则，生成该activity的实例。
+"singleTop"的activity如果在task的栈顶的话，则不生成新的该activity的实例，直接使用栈顶的实例，否则，生成该activity的实例。
 
-比如现在task栈元素为A-B-C-D（D在栈顶），这时候给D发一个启动intent，如果D是 “standard”的，则生成D的一个新实例，栈变为A－B－C－D－D。
+比如现在task栈元素为A-B-C-D（D在栈顶），这时候给D发一个启动intent，如果D是 "standard"的，则生成D的一个新实例，栈变为A－B－C－D－D。
 
 如果D是singleTop的话，则不会生产D的新实例，栈状态仍为A-B-C-D
 
-如果这时候给B发Intent的话，不管B的launchmode是”standard” 还是 “singleTop” ，都会生成B的新实例，栈状态变为A-B-C-D-B。
+如果这时候给B发Intent的话，不管B的launchmode是"standard" 还是 "singleTop" ，都会生成B的新实例，栈状态变为A-B-C-D-B。
 
-“singleInstance”是其所在栈的唯一activity，它会每次都被重用。
+"singleInstance"是其所在栈的唯一activity，它会每次都被重用。
 
-“singleTask”如果在栈顶，则接受intent，否则，该intent会被丢弃，但是该task仍会回到前台。
+"singleTask"如果在栈顶，则接受intent，否则，该intent会被丢弃，但是该task仍会回到前台。
 
 当已经存在的activity实例处理新的intent时候，会调用onNewIntent()方法 如果收到intent生成一个activity实例，那么用户可以通过back键回到上一个状态；如果是已经存在的一个activity来处理这个intent的话，用户不能通过按back键返回到这之前的状态。
 
@@ -213,7 +196,7 @@ ContentResolver：当外部应用需要对ContentProvider中的数据进行添�
 
   如果设置，这个Activity会成为历史stack中一个新Task的开始。一个Task（从启动它的Activity到下一个Task中的 Activity）定义了用户可以迁移的Activity原子组。Task可以移动到前台和后台；在某个特定Task中的所有Activity总是保持相同的次序。
 
-  这个标志一般用于呈现“启动”类型的行为：它们提供用户一系列可以单独完成的事情，与启动它们的Activity完全无关。
+  这个标志一般用于呈现"启动"类型的行为：它们提供用户一系列可以单独完成的事情，与启动它们的Activity完全无关。
 
 使用这个标志，如果正在启动的Activity的Task已经在运行的话，那么，新的Activity将不会启动；代替的，当前Task会简单的移入前台。参考FLAG_ACTIVITY_MULTIPLE_TASK标志，可以禁用这一行为。
 
@@ -225,7 +208,7 @@ ContentResolver：当外部应用需要对ContentProvider中的数据进行添�
 
   例如，假设一个Task中包含这些Activity：A，B，C，D。如果D调用了startActivity()，并且包含一个指向Activity B的Intent，那么，C和D都将结束，然后B接收到这个Intent，因此，目前stack的状况是：A，B。
 
-  上例中正在运行的Activity B既可以在onNewIntent()中接收到这个新的Intent，也可以把自己关闭然后重新启动来接收这个Intent。如果它的启动模式声明为 “multiple”(默认值)，并且你没有在这个Intent中设置FLAG_ACTIVITY_SINGLE_TOP标志，那么它将关闭然后重新创建；对于其它的启动模式，或者在这个Intent中设置FLAG_ACTIVITY_SINGLE_TOP标志，都将把这个Intent投递到当前这个实例的onNewIntent()中。
+  上例中正在运行的Activity B既可以在onNewIntent()中接收到这个新的Intent，也可以把自己关闭然后重新启动来接收这个Intent。如果它的启动模式声明为 "multiple"(默认值)，并且你没有在这个Intent中设置FLAG_ACTIVITY_SINGLE_TOP标志，那么它将关闭然后重新创建；对于其它的启动模式，或者在这个Intent中设置FLAG_ACTIVITY_SINGLE_TOP标志，都将把这个Intent投递到当前这个实例的onNewIntent()中。
 
   这个启动模式还可以与FLAG_ACTIVITY_NEW_TASK结合起来使用：用于启动一个Task中的根Activity，它会把那个Task中任何运行的实例带入前台，然后清除它直到根Activity。这非常有用，例如，当从Notification Manager处启动一个Activity。
 
@@ -317,7 +300,7 @@ public class SMSService extends Service {}
 
 第二步：在AndroidManifest.xml文件中的`<application>`节点里对服务进行配置:`<service android:name=".SMSService" />`
 
-服务不能自己运行，需要通过调用Context.startService()或Context.bindService()方法启动服务。这两个方法都可以启动Service，但是它们的使用场合有所不同。使用startService()方法启用服务，调用者与服务之间没有关连，即使调用者退出了，服务仍然运行。使用bindService()方法启用服务，调用者与服务绑定在了一起，调用者一旦退出，服务也就终止，大有“不求同时生，必须同时死”的特点。
+服务不能自己运行，需要通过调用Context.startService()或Context.bindService()方法启动服务。这两个方法都可以启动Service，但是它们的使用场合有所不同。使用startService()方法启用服务，调用者与服务之间没有关连，即使调用者退出了，服务仍然运行。使用bindService()方法启用服务，调用者与服务绑定在了一起，调用者一旦退出，服务也就终止，大有"不求同时生，必须同时死"的特点。
 
 如果打算采用Context.startService()方法启动服务，在服务未被创建时，系统会先调用服务的onCreate()方法，接着调用onStart()方法。如果调用startService()方法前服务已经被创建，多次调用startService()方法并不会导致多次创建服务，但会导致多次调用onStart()方法。采用startService()方法启动的服务，只能调用Context.stopService()方法结束服务，服务结束时会调用onDestroy()方法。
 
