@@ -154,6 +154,8 @@ valgrind --leak-check=full /usr/local/php/bin/php test.php
 
 
 # 覆盖安装
+
+查看原有 PHP 配置的信息
 ```shell
 php-config
 ```
