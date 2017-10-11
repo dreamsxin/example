@@ -33,7 +33,7 @@
 
 ## ElasticSearch 分布式全文搜索引擎
 
-## GFS、HDFS、Lustre 、Ceph 、GridFS 、mogileFS、TFS、FastDFS
+## GFS、HDFS、Lustre 、Ceph 、GridFS 、MogileFS、TFS、FastDFS、MooseFS、GlusterFS
 
 # 一致性算法 Paxos & raft & zab
 
