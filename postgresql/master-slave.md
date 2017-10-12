@@ -309,3 +309,9 @@ sudo -upostgres psql -x -c "select * from pg_stat_replication;"
 ```
 
 ## 安装 pgbouncer
+
+## 问题查找
+
+```shell
+systemctl status postgresql.service
+```
