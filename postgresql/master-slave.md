@@ -289,7 +289,8 @@ pg_basebackup -h 10.0.15.10 -U replica -D /var/lib/postgresql/9.6/main -P --xlog
 ```conf
 standby_mode = 'on'
 primary_conninfo = 'host=10.0.15.10 port=5432 user=replica password=aqwe123@ application_name=pgslave001'
-restore_command = 'cp /var/lib/postgresql/9.6/main/archive/%f %p'
+# restore_command = 'cp /var/lib/postgresql/9.6/main/archive/%f %p'
+recovery_target_timeline = 'latest'
 trigger_file = '/tmp/postgresql.trigger.5432'
 ```
 
@@ -303,8 +304,8 @@ netstat -plntu
 
 登录 MASTER 服务器
 ```shell
-psql -c "select application_name, state, sync_priority, sync_state from pg_stat_replication;"
-psql -x -c "select * from pg_stat_replication;"
+sudo -upostgres psql -c "select application_name, state, sync_priority, sync_state from pg_stat_replication;"
+sudo -upostgres psql -x -c "select * from pg_stat_replication;"
 ```
 
 ## 安装 pgbouncer
