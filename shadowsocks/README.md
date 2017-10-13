@@ -1,15 +1,17 @@
 # 安裝服務端
 
-Ubuntu:
+* Ubuntu
 
 ```shell
-sudo apt-get install python-gevent python-pip
-sudo pip install shadowsocks
-sudo apt-get install python-m2crypto
+# sudo apt-get install python-gevent python-pip
+# sudo pip install shadowsocks
+# sudo apt-get install python-m2crypto
 sudo apt-get install shadowsocks
 ```
 
-CentOS:
+配置 `/etc/shadowsocks/config.json`
+
+* CentOS
 
 ```shell
 yum install python-setuptools
