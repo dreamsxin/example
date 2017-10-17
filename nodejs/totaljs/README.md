@@ -28,3 +28,4 @@ sudo npm install -g total.js
 
 https://docs.totaljs.com/latest/en.html#api~HttpRouteOptionsFlags
 
+`next` 可用来传递参数给控制器
