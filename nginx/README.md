@@ -591,3 +591,15 @@ worker_rlimit_nofile 30000;
 ```conf
 listen.backlog = 1024
 ```
+
+## 日志
+
+统计 `ip` 个数排序
+```shell
+awk '{cnt[$1]++;}END{for(i in cnt){printf("%s\t%s\n", cnt[i], i);}}' access.log|sort -n
+```
+
+导出特定 `ip` 日志
+```shell
+grep "192.168.1.1" access.log > 192.168.1.1.log
+```
