@@ -7,6 +7,7 @@
 ## Celery 分布式任务队列
 ## NSQ 分布式的实时消息平台
 ## Apache Kafka
+## Disque
 ## RabbitMQ
 ## Apache ActiveMQ
 ## ZeroMQ
