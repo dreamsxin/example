@@ -130,3 +130,5 @@ vrrp_instance VI_1 {
 ```shell
 service keepalived restart
 ```
+
+在 MASTER 上通过 `ip a` 查看虚拟 IP 是否生效。
