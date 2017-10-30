@@ -105,6 +105,45 @@ g++ -dynamic hello.cpp -o hello -lcppcms -lbooster
 
 ## 视图继承
 
+CppCMS 视图实际上是一个类，因此我们可以使用类的方法来实现模版的覆盖。
+这给开发人员提供了一个非常强大的工具来设计 HTML 模板。
+例如，我们创建一个主视图，包括基本的 HTML 和 CSS 样式，并定义了占位符用来加载各种不同类型的内容。然后我们推导出不同视图实际需要渲染的内容。
+当然，派生视图的内容也应该来自内容类的父类。
+
+视图示例的层次结构：
+```text
+         master  
+       /    |   \  
+    news  page  intro  
+```
+
+* 定义内容类 Content
+
+Let's create our `content.h` for the sample hierarchy above.
+让我们根据上面的视图示例层次结构创建内容 `content.h`：
+```cpp
+
+#include <cppcms/view.h>
+#include <string>
+
+namespace content  {
+
+	struct master : public cppcms::base_content {
+		std::string title;
+	};
+
+	struct news : public master {
+		std::list<std::string> news_list;
+	};
+
+	struct page : public master {
+		std::string page_title, page_content;
+	};
+}
+```
+
+* 定义视图
+
 `master.tmpl`
 ```text
 <% c++ #include "content.h" %>
@@ -146,4 +185,80 @@ g++ -dynamic hello.cpp -o hello -lcppcms -lbooster
 <% end template %> 
 <% end view %>
 <% end skin %>
+```
+
+* 定义控制器
+
+```cpp
+#include <cppcms/application.h>
+#include <cppcms/applications_pool.h>
+#include <cppcms/service.h>
+#include <cppcms/http_response.h>
+#include <cppcms/url_dispatcher.h>
+#include <iostream>
+
+#include "content.h"
+
+class myapp  : public cppcms::application {
+public:
+    myapp(cppcms::service &s) :
+       cppcms::application(s)
+    {
+        dispatcher().assign("",&myapp::intro,this);
+        mapper().assign("");
+
+        dispatcher().assign("/news",&myapp::news,this);
+        mapper().assign("news","/news");
+
+        dispatcher().assign("/page",&myapp::page,this);
+        mapper().assign("page","/page");
+
+        mapper().root("/myapp");
+    }
+    void ini(content::master &c)
+    {
+        c.title = "My Web Site";
+    }
+    void intro()
+    {
+        content::master c;
+        ini(c);
+        render("intro",c);
+    }
+    void page()
+    {
+        content::page c;
+        ini(c);
+        c.page_title = "About";
+        c.page_content = "<p>A page about this web site</p>";
+        render("page",c);
+    }
+    void news()
+    {
+        content::news c;
+        ini(c);
+        c.news_list.push_back("This is the latest message!");
+        c.news_list.push_back("This is the next message.");
+        c.news_list.push_back("This is the last message!");
+        render("news",c);
+    }
+};
+
+int main(int argc,char ** argv)
+{
+    try {
+        cppcms::service srv(argc,argv);
+        srv.applications_pool().mount(cppcms::applications_factory<myapp>());
+        srv.run();
+    }
+    catch(std::exception const &e) {
+        std::cerr<<e.what()<<std::endl;
+    }
+}
+```
+
+* 编译
+
+```shell
+cppcms_tmpl_cc master.tmpl page.tmpl news.tmpl intro.tmpl -o my_skin.cpp
 ```
