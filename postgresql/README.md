@@ -336,6 +336,8 @@ psql -h 127.0.0.1 -p 6432 -U postgres ads
 /usr/bin/pg_dump --host 127.0.0.1 --port 5432 --username "postgres" --no-password  --format plain --data-only --inserts --column-inserts --verbose --file "/var/www/db.backup" --table "public.users" --table "public.blogs" --table "public.apps" --table "public.countries" --table "public.phone_apps" --table "public.phones" --table "public.projects"  "ads"
 
 /usr/lib/postgresql/9.5/bin/pg_dump --host 127.0.0.1 --port 5432 --username "postgres" --no-password  --format plain --data-only --inserts --column-inserts --verbose --file "/var/www/db.backup" "blog"
+
+PGPASSWORD="test" && /usr/lib/postgresql/9.5/bin/pg_dump --username "postgres" --format plain --data-only --inserts --column-inserts --verbose --file "db.backup" -h192.168.1.1 -p5434 "test"
 ```
 
 # 恢复 pg_xlog

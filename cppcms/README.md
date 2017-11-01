@@ -104,6 +104,17 @@ c++ -Wl,-rpath=/usr/local/lib hello.cpp -lcppcms -o hello
 
 打开浏览器访问 `http://localhost:8080/hello` 看输出结果
 
+## FastCGI
+
+```json
+{  
+	"service" : {  
+		"api" : "fastcgi",  
+		"socket" : "/tmp/hello-fcgi-socket"   
+	}  
+}
+```
+
 ## 使用 CppDB
 
 `http://cppcms.com/sql/cppdb/`
