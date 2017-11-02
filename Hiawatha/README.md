@@ -171,4 +171,39 @@ VirtualHost {
 StartFile = start.html
 ```
 
-## 使用 CGI 和 FastCGI
+## CGI
+
+通过 `CGIhandler` 定义不同的脚本解析器，根据文件扩展名匹配。
+通过 `CGIextension` 定义可以直接执行的 CGI 程序扩展。
+```text
+VirtualHost {
+    ...
+    ExecuteCGI = yes
+
+	TimeForCGI = 10
+
+    CGIhandler = /usr/bin/php5-cgi:php,php5
+    CGIhandler = /usr/bin/perl:pl
+    CGIhandler = /usr/bin/python:py
+
+	CGIextension = cgi
+}
+```
+
+## FastCGI
+
+```text
+FastCGIserver {
+    FastCGIid = PHP
+    ConnectTo = /var/lib/hiawatha/php-fcgi.sock
+    Extension = php
+}
+
+VirtualHost {
+    ...
+    UseFastCGI = PHP
+    ConnectTo = 10.0.0.100:2005, 10.0.0.101:2005, 10.0.0.102:2005
+    Extension = php
+    SessionTimeout = 15
+}
+```
