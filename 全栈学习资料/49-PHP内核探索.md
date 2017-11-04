@@ -1,0 +1,99 @@
+
+* [TIPI深入理解PHP内核](http://www.php-internals.com/)
+* [风雪之隅PHP源码分析](http://www.laruence.com/php-internal)
+* [《php扩展开发及内核应用》](http://phpbook.sinaapp.com/preface.html)
+* [百度XLQ](http://blog.xiuwz.com/)
+* [God's blog](http://blog.csdn.net/a600423444/article/category/734217)
+* [codinglabs](http://www.codinglabs.org/)
+
+* [PHP内核探索](http://www.nowamagic.net/librarys/veda/detail/1285)
+    * PHP内核探索：从SAPI接口开始
+    * PHP内核探索：一次请求的开始与结束
+    * PHP内核探索：一次请求生命周期
+    * PHP内核探索：单进程SAPI生命周期
+    * PHP内核探索：多进程/线程的SAPI生命周期
+    * PHP内核探索：Zend引擎
+    * PHP内核探索：再次探讨SAPI
+    * PHP内核探索：Apache模块介绍
+    * PHP内核探索：通过mod_php5支持PHP
+    * PHP内核探索：Apache运行与钩子函数
+    * PHP内核探索：嵌入式PHP
+    * PHP内核探索：PHP的FastCGI
+    * PHP内核探索：如何执行PHP脚本
+    * PHP内核探索：PHP脚本的执行细节
+    * PHP内核探索：操作码OpCode
+    * PHP内核探索：PHP里的opcode
+    * PHP内核探索：解释器的执行过程
+    * PHP内核探索：变量概述
+    * PHP内核探索：变量存储与类型
+    * PHP内核探索：PHP中的哈希表
+    * PHP内核探索：理解Zend里的哈希表
+    * PHP内核探索：PHP哈希算法设计
+    * PHP内核探索：翻译一篇HashTables文章
+    * PHP内核探索：哈希碰撞攻击是什么？
+    * PHP内核探索：常量的实现
+    * PHP内核探索：变量的存储
+    * PHP内核探索：变量的类型
+    * PHP内核探索：变量的值操作
+    * PHP内核探索：变量的创建
+    * PHP内核探索：预定义变量
+    * PHP内核探索：变量的检索
+    * PHP内核探索：变量的类型转换
+    * PHP内核探索：弱类型变量的实现
+    * PHP内核探索：静态变量的实现
+    * PHP内核探索：变量类型提示
+    * PHP内核探索：变量的生命周期
+    * PHP内核探索：变量赋值与销毁
+    * PHP内核探索：变量作用域
+    * PHP内核探索：诡异的变量名
+    * PHP内核探索：变量的value和type存储
+    * PHP内核探索：全局变量Global
+    * PHP内核探索：变量类型的转换
+    * PHP内核探索：内存管理开篇
+    * PHP内核探索：Zend内存管理器
+    * PHP内核探索：PHP的内存管理
+    * PHP内核探索：内存的申请与销毁
+    * PHP内核探索：引用计数与写时复制
+    * PHP内核探索：PHP5.3的垃圾回收机制
+    * PHP内核探索：内存管理中的cache
+    * PHP内核探索：写时复制COW机制
+    * PHP内核探索：数组与链表
+    * PHP内核探索：使用哈希表API
+    * PHP内核探索：数组操作
+    * PHP内核探索：数组源码分析
+    * PHP内核探索：函数的分类
+    * PHP内核探索：函数的内部结构
+    * PHP内核探索：函数结构转换
+    * PHP内核探索：定义函数的过程
+    * PHP内核探索：函数的参数
+    * PHP内核探索：zend_parse_parameters函数
+    * PHP内核探索：函数返回值
+    * PHP内核探索：形参return value
+    * PHP内核探索：函数调用与执行
+    * PHP内核探索：引用与函数执行
+    * PHP内核探索：匿名函数及闭包
+    * PHP内核探索：面向对象开篇
+    * PHP内核探索：类的结构和实现
+    * PHP内核探索：类的成员变量
+    * PHP内核探索：类的成员方法
+    * PHP内核探索：类的原型zend_class_entry
+    * PHP内核探索：类的定义
+    * PHP内核探索：访问控制
+    * PHP内核探索：继承，多态与抽象类
+    * PHP内核探索：魔术函数与延迟绑定
+    * PHP内核探索：保留类与特殊类
+    * PHP内核探索：对象
+    * PHP内核探索：创建对象实例
+    * PHP内核探索：对象属性读写
+    * PHP内核探索：命名空间
+    * PHP内核探索：定义接口
+    * PHP内核探索：继承与实现接口
+    * PHP内核探索：资源resource类型
+    * PHP内核探索：Zend虚拟机
+    * PHP内核探索：虚拟机的词法解析
+    * PHP内核探索：虚拟机的语法分析
+    * PHP内核探索：中间代码opcode的执行
+    * PHP内核探索：代码的加密与解密
+    * PHP内核探索：zend_execute的具体执行过程
+    * PHP内核探索：变量的引用与计数规则
+    * PHP内核探索：新垃圾回收机制说明

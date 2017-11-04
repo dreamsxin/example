@@ -1,0 +1,5 @@
+* [如何学好C语言](http://coolshell.cn/articles/4102.html)
+* [configure.in Makefile.am解析](http://socol.iteye.com/blog/518863)
+* [GNU编码标准](http://blog.csdn.net/moxiaolong/article/details/245057)
+* [Windows下用Eclipse搭建C/C++开发环境](http://metaphy.iteye.com/blog/560534)
+* [如何理解指向指针的指针](http://blog.jobbole.com/60647/)
