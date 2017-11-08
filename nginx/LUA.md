@@ -1,3 +1,23 @@
+# Lua
+
+```shell
+  export LUAJIT_LIB=/path/to/luajit/lib
+  export LUAJIT_INC=/path/to/luajit/include/luajit-2.1
+  ./configure --prefix=/opt/nginx \
+       --with-ld-opt="-Wl,-rpath,/path/to/luajit-or-lua/lib" \
+       --add-module=/path/to/ngx_devel_kit \
+       --add-module=/path/to/lua-nginx-module
+  make
+  make install
+```
+
+Ubuntu 16.04：
+```shell
+sudo apt-get install nginx-extras
+```
+
+## lua 使用
+
 如果是一个 *.LUA 的文件， 里面用到了自己写的库， 或者第三方写的库， 但是你不想把它放到 lua 的安装目录里， 则在代码里面可以指定require搜索的路径。
 
 ```lua
@@ -322,5 +342,44 @@ location /1.gif {
 
 	#返回一个1×1的空gif图片
 	empty_gif;
+}
+```
+
+## 记录响应内容（response body）到日志
+
+`nginx.conf`
+```text
+....省略一些配置....
+log_format  main  '$remote_addr | $remote_user | [$time_local] | "$request" | '
+                      '$status | $body_bytes_sent | "$http_referer"  | '
+                      '"$http_user_agent" | "$http_x_forwarded_for" |  "$request_body" | "$resp_body"';
+....省略一些配置....
+```
+
+- $request_body变量由nginx自身提供，用于记录POST请求日志
+- $resp_body变量由我们后面再server中定义，由ngx_lua获取
+
+### 虚拟主机配置
+
+```conf
+http {
+        log_format main '$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $http_x_forwarded_for "$request_time" - source: $http_source_code - project: $http_project_code - phone_id $http_phone_id - request: "$request_body" - response: "$resp_body"';
+        access_log /var/log/nginx/access.log main;
+}
+server {
+        listen       80;
+        server_name  www.ttlsa.com;
+        access_log  /data/logs/nginx/www.ttlsa.com.access.log  main;
+
+        set $resp_body ""; // 这个必须放到最外层，否则日志取不到默认值
+
+        lua_need_request_body on;
+		body_filter_by_lua '
+			local resp_body = string.sub(ngx.arg[1], 1, 1000)
+			ngx.ctx.buffered = (ngx.ctx.buffered or"") .. resp_body
+			if ngx.arg[2] then
+				ngx.var.resp_body = ngx.ctx.buffered
+			end
+		';
 }
 ```

@@ -1,3 +1,155 @@
+# Nginx
+
+## 动态模块
+
+https://www.nginx.com/resources/wiki/extending/converting/
+
+Nginx 以前增加、修改一个第三方模块，需要重新编译源代码，所有的模块都是用静态链接的形式组织起来的。而 Nginx-1.9.11 开始支持动态模块加载 DSO(Dynamic Shared Objects), 可以实现运行时动态加载模块，而不用每次都要重新编译。
+
+从使用的角度上来说，是增加了一个指令 load_modules 指令，来加载编译为 so 形式的动态模块。
+
+该功能的实现还是挺简单的，主要包括如下几个方面:
+
+- 将模块相关的类型定义和操作方法调整到新的文件 ngx_module.h 和 ngx_module.c 中
+- 添加 dlopen 的封装
+- 调整编译脚本
+- 少量 Nginx 核心代码的调整。主要是为 cycle 新增了一个成员modules, 用来取代之前的全局变量 ngx_modules, 并将之前初始化时对于 ngx_modules 的操作封装成几个函数，放在 init_cycle 里调用。
+
+我认为我们需要重点关注的是如下几个:
+
+- 编译脚本有了较大的变化，在以后的模块编程中，尽量要让自己的模块能够静态链接和动态链接。这就需要适应一下新的编译框架。
+- 不光旧的模块需要考虑兼容性，新的模块也要考虑对于旧的 Nginx 版本的兼容性。这包括两个方面，一个是 c 语言层面，要关注动态模块对于 Nginx 框架的调整，例如之前凡是用到全局变量 ngx_modules 的地方，要修改为 cycle->modules，当然正确的做法应该是用宏开关来判断当前 Nginx 版本是否大于 1.9.11 来决定是否调整；另一个是编译脚本，也需要判断版本，从而做出一些开关的选择，重点是对 ngx_module_link 变量的判断。
+
+举个例子，对于 nginx-rtmp 模块，我们要将其修改为既能在 Nginx-1.9.11 及其以后的版本中，同时支持静态链接(–add-module)和动态链接(–add-dynamic-module)，又要让其在老的版本中依然能支持旧的编译框架下的静态链接(–add-module)。
+
+为了达到这个目的，我做了如下测试，首先将 nginx-rtmp 的 congfig 文件修改为：
+
+```conf
+ngx_addon_name="ngx_rtmp_module"  
+RTMP_CORE_MODULES="ngx_rtmp_module                             \  
+                   ngx_rtmp_core_module                        \  
+                   ngx_rtmp_cmd_module                         \  
+                   ngx_rtmp_codec_module                       \  
+                   ngx_rtmp_access_module                      \  
+                   ngx_rtmp_record_module                      \  
+                   ngx_rtmp_live_module                        \  
+                   ngx_rtmp_play_module                        \  
+                   ngx_rtmp_flv_module                         \  
+                   ngx_rtmp_mp4_module                         \  
+                   ngx_rtmp_netcall_module                     \  
+                   ngx_rtmp_relay_module                       \  
+                   ngx_rtmp_exec_module                        \  
+                   ngx_rtmp_auto_push_module                   \  
+                   ngx_rtmp_notify_module                      \  
+                   ngx_rtmp_log_module                         \  
+                   ngx_rtmp_limit_module                       \  
+                   ngx_rtmp_hls_module                         \  
+                   ngx_rtmp_dash_module                        \  
+                   "  
+RTMP_HTTP_MODULES="ngx_rtmp_stat_module                        \  
+                   ngx_rtmp_control_module                     \  
+                  "  
+RTMP_DEPS="$ngx_addon_dir/ngx_rtmp_amf.h               \  
+           $ngx_addon_dir/ngx_rtmp_bandwidth.h         \  
+           $ngx_addon_dir/ngx_rtmp_cmd_module.h        \  
+           $ngx_addon_dir/ngx_rtmp_codec_module.h      \  
+           $ngx_addon_dir/ngx_rtmp_eval.h              \  
+           $ngx_addon_dir/ngx_rtmp.h                   \  
+           $ngx_addon_dir/ngx_rtmp_version.h           \  
+           $ngx_addon_dir/ngx_rtmp_live_module.h       \  
+           $ngx_addon_dir/ngx_rtmp_netcall_module.h    \  
+           $ngx_addon_dir/ngx_rtmp_play_module.h       \  
+           $ngx_addon_dir/ngx_rtmp_record_module.h     \  
+           $ngx_addon_dir/ngx_rtmp_relay_module.h      \  
+           $ngx_addon_dir/ngx_rtmp_streams.h           \  
+           $ngx_addon_dir/ngx_rtmp_bitop.h             \  
+           $ngx_addon_dir/ngx_rtmp_proxy_protocol.h    \  
+           $ngx_addon_dir/hls/ngx_rtmp_mpegts.h        \  
+           $ngx_addon_dir/dash/ngx_rtmp_mp4.h          \  
+           "  
+RTMP_CORE_SRCS="$ngx_addon_dir/ngx_rtmp.c                   \  
+                $ngx_addon_dir/ngx_rtmp_init.c              \  
+                $ngx_addon_dir/ngx_rtmp_handshake.c         \  
+                $ngx_addon_dir/ngx_rtmp_handler.c           \  
+                $ngx_addon_dir/ngx_rtmp_amf.c               \  
+                $ngx_addon_dir/ngx_rtmp_send.c              \  
+                $ngx_addon_dir/ngx_rtmp_shared.c            \  
+                $ngx_addon_dir/ngx_rtmp_eval.c              \  
+                $ngx_addon_dir/ngx_rtmp_receive.c           \  
+                $ngx_addon_dir/ngx_rtmp_core_module.c       \  
+                $ngx_addon_dir/ngx_rtmp_cmd_module.c        \  
+                $ngx_addon_dir/ngx_rtmp_codec_module.c      \  
+                $ngx_addon_dir/ngx_rtmp_access_module.c     \  
+                $ngx_addon_dir/ngx_rtmp_record_module.c     \  
+                $ngx_addon_dir/ngx_rtmp_live_module.c       \  
+                $ngx_addon_dir/ngx_rtmp_play_module.c       \  
+                $ngx_addon_dir/ngx_rtmp_flv_module.c        \  
+                $ngx_addon_dir/ngx_rtmp_mp4_module.c        \  
+                $ngx_addon_dir/ngx_rtmp_netcall_module.c    \  
+                $ngx_addon_dir/ngx_rtmp_relay_module.c      \  
+                $ngx_addon_dir/ngx_rtmp_bandwidth.c         \  
+                $ngx_addon_dir/ngx_rtmp_exec_module.c       \  
+                $ngx_addon_dir/ngx_rtmp_auto_push_module.c  \  
+                $ngx_addon_dir/ngx_rtmp_notify_module.c     \  
+                $ngx_addon_dir/ngx_rtmp_log_module.c        \  
+                $ngx_addon_dir/ngx_rtmp_limit_module.c      \  
+                $ngx_addon_dir/ngx_rtmp_bitop.c             \  
+                $ngx_addon_dir/ngx_rtmp_proxy_protocol.c    \  
+                $ngx_addon_dir/hls/ngx_rtmp_hls_module.c    \  
+                $ngx_addon_dir/dash/ngx_rtmp_dash_module.c  \  
+                $ngx_addon_dir/hls/ngx_rtmp_mpegts.c        \  
+                $ngx_addon_dir/dash/ngx_rtmp_mp4.c          \  
+                "  
+RTMP_HTTP_SRCS="$ngx_addon_dir/ngx_rtmp_stat_module.c       \  
+                $ngx_addon_dir/ngx_rtmp_control_module.c    \  
+                "  
+  
+#nginx version >= 1.9.11  
+if test -n "$ngx_module_link"; then  
+    ngx_module_incs=$ngx_addon_dir  
+    ngx_module_deps=$RTMP_DEPS  
+    if [ $ngx_module_link = DYNAMIC ] ; then  
+        ngx_module_name="$RTMP_CORE_MODULES $RTMP_HTTP_MODULES"  
+        ngx_module_srcs="$RTMP_CORE_SRCS $RTMP_HTTP_SRCS"  
+        . auto/module  
+    elif [ $ngx_module_link = ADDON ] ; then  
+        ngx_module_type=CORE  
+        ngx_module_name=$RTMP_CORE_MODULES  
+        ngx_module_srcs=$RTMP_CORE_SRCS  
+        . auto/module  
+        ngx_module_type=HTTP  
+        ngx_module_name=$RTMP_HTTP_MODULES  
+        ngx_module_srcs=$RTMP_HTTP_SRCS  
+        . auto/module  
+    fi  
+  
+#nginx version < 1.9.11  
+else  
+    CORE_MODULES="$CORE_MODULES  
+                  $RTMP_CORE_MODULES"  
+    HTTP_MODULES="$HTTP_MODULES  
+                  $RTMP_HTTP_MODULES"  
+    NGX_ADDON_DEPS="$NGX_ADDON_DEPS \  
+                    $RTMP_DEPS"  
+    NGX_ADDON_SRCS="$NGX_ADDON_SRCS  
+                    $RTMP_CORE_SRCS  
+                    $RTMP_HTTP_SRCS"
+    CFLAGS="$CFLAGS -I$ngx_addon_dir"  
+fi  
+  
+USE_OPENSSL=YES  
+```
+
+然后调整所有 c 源文件里使用 ngx_modules 的地方，可以添加类似如下的代码片段:
+
+```c
+#if defined(nginx_version) && nginx_version >= 1009011
+    modules = cf->cycle->modules;  
+#else
+    modules = ngx_modules;  
+#endif
+```
+
 # 安装 nginx php5-fpm
 
 ```shell
@@ -20,7 +172,7 @@ sudo service php5-fpm status
 ## 检测配置文件
 
 ```shell
-nginx -t  
+nginx -t
 nginx -t -c my-nginx.conf  
 ```
 
@@ -325,7 +477,7 @@ apt-get update
 apt-get install nginx
 ```
 
-不过这个源将SPDY作为额外模块，因此如果你需要启用SPDY或者执行service nginx start后没有反应则应该执行：
+不过这个源将SPDY作为额外模块，因此如果你需要启用SPDY或者执行`service nginx start`后没有反应则应该执行：
 
 ```shell
 apt-get install nginx-extras
