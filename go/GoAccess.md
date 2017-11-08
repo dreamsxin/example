@@ -27,7 +27,13 @@ sudo apt-get install geoip-database
 
 ## 使用 GoAccess 分析 Nginx 記錄檔
 
-因為不同的網頁伺服器會有不同的記錄檔格式，在使用 GoAccess 之前，我們要將 GoAccess 的解析設定調整成適合自己伺服器的格式。
+```shell
+goaccess -f access.log
+```
+
+会出现日志格式选择。
+
+在使用 GoAccess 之前，我們可以配置 GoAccess 的解析設定調整成適合自己伺服器的格式。
 
 `/etc/goaccess.conf`
 
@@ -53,6 +59,127 @@ log-format %h %^[%d:%t %^] "%r" %s %b "%R" "%u"
 
 設定好記錄檔的格式之後，就可以開始使用 GoAccess 分析資料了。
 
+- Nginx Variable                            GoAccess Variable
+- $remote_addr                              %r
+- $remote_user                              %^ (ignored)
+- $time_local                               %d:%^
+- $upstream_cache_status                    %^ (ignored)
+- $request                                  %r
+- $status                                   %s
+- $body_bytes_sent                          %b
+- $http_referer                             %R
+- $http_user_agent                          %u
+- $request_time                             %D
+
+将 nginx 日志格式转换为 goaccess 格式：
+```shell
+#!/bin/bash
+#
+# Convert from this:
+#   http://nginx.org/en/docs/http/ngx_http_log_module.html
+# To this:
+#   https://goaccess.io/man
+#
+# Conversion table:
+#   $time_local         %d:%t %^
+#   $host               %v
+#   $http_host          %v
+#   $remote_addr        %h
+#   $request_time       %T
+#   $request_method     %m
+#   $request_uri        %U
+#   $server_protocol    %H
+#   $request            %r
+#   $status             %s
+#   $body_bytes_sent    %b
+#   $bytes_sent         %b
+#   $http_referer       %R
+#   $http_user_agent    %u
+#
+# Samples:
+#
+# log_format combined '$remote_addr - $remote_user [$time_local] '
+# '"$request" $status $body_bytes_sent '
+# '"$http_referer" "$http_user_agent"';
+#   ./nginx2goaccess.sh '$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent"'
+#
+# log_format compression '$remote_addr - $remote_user [$time_local] '
+# '"$request" $status $bytes_sent '
+# '"$http_referer" "$http_user_agent" "$gzip_ratio"';
+#   ./nginx2goaccess.sh '$remote_addr - $remote_user [$time_local] "$request" $status $bytes_sent "$http_referer" "$http_user_agent" "$gzip_ratio"'
+#
+# log_format main
+# '$remote_addr\t$time_local\t$host\t$request\t$http_referer\t$http_x_mobile_group\t'
+# 'Local:\t$status\t$body_bytes_sent\t$request_time\t'
+# 'Proxy:\t$upstream_cache_status\t$upstream_status\t$upstream_response_length\t$upstream_response_time\t'
+# 'Agent:\t$http_user_agent\t'
+# 'Fwd:\t$http_x_forwarded_for';
+#   ./nginx2goaccess.sh '$remote_addr\t$time_local\t$host\t$request\t$http_referer\t$http_x_mobile_group\tLocal:\t$status\t$body_bytes_sent\t$request_time\tProxy:\t$upstream_cache_status\t$upstream_status\t$upstream_response_length\t$upstream_response_time\tAgent:\t$http_user_agent\tFwd:\t$http_x_forwarded_for'
+#
+# log_format main
+# '${time_local}\t${remote_addr}\t${host}\t${request_method}\t${request_uri}\t${server_protocol}\t'
+# '${http_referer}\t${http_x_mobile_group}\t'
+# 'Local:\t${status}\t*${connection}\t${body_bytes_sent}\t${request_time}\t'
+# 'Proxy:\t${upstream_status}\t${upstream_cache_status}\t'
+# '${upstream_response_length}\t${upstream_response_time}\t${uri}${log_args}\t'
+# 'Agent:\t${http_user_agent}\t'
+# 'Fwd:\t${http_x_forwarded_for}';
+#   ./nginx2goaccess.sh '${time_local}\t${remote_addr}\t${host}\t${request_method}\t${request_uri}\t${server_protocol}\t${http_referer}\t${http_x_mobile_group}\tLocal:\t${status}\t*${connection}\t${body_bytes_sent}\t${request_time}\tProxy:\t${upstream_status}\t${upstream_cache_status}\t${upstream_response_length}\t${upstream_response_time}\t${uri}${log_args}\tAgent:\t${http_user_agent}\tFwd:\t${http_x_forwarded_for}'
+#
+# Author: Rogério Carvalho Schneider <stockrt@gmail.com>
+
+# Params
+log_format="$1"
+
+# Usage
+if [[ -z "$log_format" ]]; then
+    echo "Usage: $0 '<log_format>'"
+    exit 1
+fi
+
+# Variables map
+conversion_table="time_local,%d:%t_%^
+host,%v
+http_host,%v
+remote_addr,%h
+request_time,%T
+request_method,%m
+request_uri,%U
+server_protocol,%H
+request,%r
+status,%s
+body_bytes_sent,%b
+bytes_sent,%b
+http_referer,%R
+http_user_agent,%u"
+
+# Conversion
+for item in $conversion_table; do
+    nginx_var=${item%%,*}
+    goaccess_var=${item##*,}
+    goaccess_var=${goaccess_var//_/ }
+    log_format=${log_format//\$\{$nginx_var\}/$goaccess_var}
+    log_format=${log_format//\$$nginx_var/$goaccess_var}
+done
+log_format=$(echo "$log_format" | sed 's/${[a-z_]*}/%^/g')
+log_format=$(echo "$log_format" | sed 's/$[a-z_]*/%^/g')
+
+# Config output
+echo "
+- Generated goaccess config:
+
+time-format %T
+date-format %d/%b/%Y
+log_format $log_format
+"
+
+# EOF
+```
+
+执行：
+```shell
+./nginx2goaccess.sh '$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent"'
+```
 ### GoAccess 文字報表
 
 GoAccess 最直接的方式就是使用 -f 參數指定要分析的記錄檔：
