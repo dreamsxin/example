@@ -1,5 +1,30 @@
 
+# 限制请求数和连接数
 
+```conf
+http {
+        limit_conn_zone $binary_remote_addr zone=perip:10m;
+
+        limit_req_zone $binary_remote_addr zone=qps1:1m  rate=1r/s;
+        limit_req_zone $binary_remote_addr zone=qps2:1m  rate=2r/s;
+        limit_req_zone $binary_remote_addr zone=qps3:1m  rate=4r/s;
+}
+```
+
+## 限制带宽
+
+```conf
+server {
+        limit_conn perip 15;
+        # 限制下载速度
+        limit_rate 100k;
+
+        location / {
+                limit_req zone=qps1 burst=2;
+                try_files $uri $uri/ /index.php?$query_string;
+        }
+}
+```
 如何设置能限制某个IP某一时间段的访问次数是一个让人头疼的问题，特别面对恶意的ddos攻击的时候。
 其中 CC 攻击（Challenge Collapsar）是 DDOS（分布式拒绝服务）的一种，也是一种常见的网站攻击方法，攻击者通过代理服务器或者肉鸡向向受害主机不停地发大量数据包，造成对方服务器资源耗尽，一直到宕机崩溃。
 

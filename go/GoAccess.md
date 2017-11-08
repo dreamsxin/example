@@ -31,7 +31,7 @@ sudo apt-get install geoip-database
 goaccess -f access.log
 ```
 
-会出现日志格式选择。
+会出现日志格式选择第三个 `NCSA Combined Log Format`。
 
 在使用 GoAccess 之前，我們可以配置 GoAccess 的解析設定調整成適合自己伺服器的格式。
 

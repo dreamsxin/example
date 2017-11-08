@@ -12,6 +12,14 @@ sudo apt-get purge php5-fpm
 sudo apt-get install php7.1-cli php7.1-dev php7.1-dev php7.1-curl php7.1-pgsql php7.1-mcrypt
 ```
 
+```shell
+# 开启模块
+sudo phpenmod xxx
+
+# 关闭模块
+sudo phpdismod xxx
+```
+
 # 使用源码编译安装 PHP7
 
 ```shell
