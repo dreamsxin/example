@@ -1,5 +1,9 @@
 # Nginx
 
+```shell
+nginx -s reload
+```
+
 ## 动态模块
 
 https://www.nginx.com/resources/wiki/extending/converting/
