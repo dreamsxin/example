@@ -23,99 +23,44 @@ cd $GOPATH/src/github.com/pilosa/pilosa
 make install
 ```
 
-## 使用
+## pilosa 数据结构
 
-* 业务场景
+https://www.pilosa.com/docs/data-model/
 
-Star Trace 是一个跟踪github开源项目的关注情况的业务，有1000条最近有更新并且名称包含go的项目数据，数据字段包括编程语言，标签，项目的关注者。
+pilosa的结构为行列布尔逻辑值BIT矩阵，行和列的含义存储在BoltDB的数据结构中。
 
-* 启server
+![https://github.com/dreamsxin/example/blob/master/go/img/pilosa.jpg](https://github.com/dreamsxin/example/blob/master/go/img/pilosa.jpg?raw=true)
 
-```shell
-pilosa --help
-pilosa server
-```
-
-* 建表，column 是 repository，frame是stargazer和language，构成了业务
+例如一张这样的表
 
 ```shell
-curl localhost:10101/status
-curl localhost:10101/schema
-curl localhost:10101/index/repository \
-     -X POST \
-     -d '{"options": {"columnLabel": "repo_id"}}'
-curl localhost:10101/index/repository/frame/stargazer \
-     -X POST \
-     -d '{"options": {"rowLabel": "stargazer_id", 
-                      "timeQuantum": "YMD",
-                      "inverseEnabled": true}}'
-curl localhost:10101/index/repository/frame/language \
-     -X POST \
-     -d '{"options": {"rowLabel": "language_id",
-                      "inverseEnabled": true}}'
+create table tbl (c1 int, c2 text, c3 numeric, c4 timestamp);
+insert into tbl values (1,'abc',4.0, now());
+insert into tbl values (1,'ab12c',1.0, now());
 ```
 
-* 数据导入
+转换为 pilosa 的结构，首先要对VALUE进行属性化转换，转换过程就是建立 k-v 的过程。属性即K-V。
 
-```shell
-curl -O https://raw.githubusercontent.com/pilosa/getting-started/master/stargazer.csv
-curl -O https://raw.githubusercontent.com/pilosa/getting-started/master/language.csv
-pilosa import -i repository -f stargazer stargazer.csv
-pilosa import -i repository -f language language.csv
+例如，以上数据可以转换为以下属性。
+```text
+c1:1
+c2:abc
+c2:ab12c
+c3:1.0-4.0
+c4:'2017-01-01 00:00:00'-now()
 ```
 
+属性建立后，转换为pilosa存储结构
 
-* 查询操作
-
-查询的结果都是列id，查14号用户关注的repository
-
-```shell
-curl localhost:10101/index/repository/query \
-     -X POST \
-     -d 'Bitmap(frame="stargazer", stargazer_id=14)'
+```text
+1 (c1:1) -> 11  
+2 (c2:abc) -> 10  
+3 (c2:ab12c) -> 01  
+4 (c3:1.0-4.0) -> 11  
+5 (c4:'2017-01-01 00:00:00'-now()) -> 11  
 ```
 
-查编程语言是 5 的repository
-
-```shell
-curl localhost:10101/index/repository/query \
-     -X POST \
-     -d 'TopN(frame="language", n=5)'
-```
-
-查14号用户和19号用户的关注的repository交集
-
-```shell
-curl localhost:10101/index/repository/query \
-     -X POST \
-     -d 'Intersect(Bitmap(frame="stargazer", stargazer_id=14), Bitmap(frame="stargazer", stargazer_id=19))'
-```
-
-查14号用户和19号用户的关注的repository并集
-
-```shell
-curl localhost:10101/index/repository/query \
-     -X POST \
-     -d 'Union(Bitmap(frame="stargazer", stargazer_id=14), Bitmap(frame="stargazer", stargazer_id=19))'
-```
-
-查14号用户和19号用户的共同关注的并且语言是1的repository
-
-```shell
-curl localhost:10101/index/repository/query \
-     -X POST \
-     -d 'Intersect(Bitmap(frame="stargazer", stargazer_id=14), Bitmap(frame="stargazer", stargazer_id=19), Bitmap(frame="language", language_id=1))'
-```
-
-在frame为stargazer里面，加一行关注者为 99999 数据，列上 repository 为 77777 的 cell 为 1
-
-```shell
-curl localhost:10101/index/repository/query \
-     -X POST \
-     -d 'SetBit(frame="stargazer", repo_id=77777, stargazer_id=99999)'
-```
-
-经过基本的使用，我觉得pilosa比传统的关系型数据库更侧重于关系，而通过列式存储的架构，方便了大数据的实时聚合计算，所以pilosa是为了在某些场景替代传统关系型数据库，对于文档数据库mongo和嵌入式数据库没有影响。在一些业务庞大的公司里面应该是可以考虑引入的。
+为了便于使用，pilosa 还将数据结构进行了拆分。
 
 ## 几种数据结构
 
@@ -187,6 +132,99 @@ time quantums在frame上设置支持时间序列，会产生额外的数据冗�
 时间序列数据产生的多个布局，时间单位最小到小时，小时的布局包括年、月、日、时四个布局
 
 ![https://github.com/dreamsxin/example/blob/master/go/img/frame5.png](https://github.com/dreamsxin/example/blob/master/go/img/frame5.png?raw=true)
+
+## 使用
+
+* 业务场景
+
+Star Trace 是一个跟踪github开源项目的关注情况的业务，有1000条最近有更新并且名称包含go的项目数据，数据字段包括编程语言，标签，项目的关注者。
+
+* 启server
+
+```shell
+pilosa --help
+pilosa server
+```
+
+* 建表，column 是 repository，frame是stargazer和language，构成了业务
+
+```shell
+curl localhost:10101/status
+curl localhost:10101/schema
+curl localhost:10101/index/repository \
+     -X POST \
+     -d '{"options": {"columnLabel": "repo_id"}}'
+curl localhost:10101/index/repository/frame/stargazer \
+     -X POST \
+     -d '{"options": {"rowLabel": "stargazer_id", 
+                      "timeQuantum": "YMD",
+                      "inverseEnabled": true}}'
+curl localhost:10101/index/repository/frame/language \
+     -X POST \
+     -d '{"options": {"rowLabel": "language_id",
+                      "inverseEnabled": true}}'
+```
+
+* 数据导入
+
+```shell
+curl -O https://raw.githubusercontent.com/pilosa/getting-started/master/stargazer.csv
+curl -O https://raw.githubusercontent.com/pilosa/getting-started/master/language.csv
+pilosa import -i repository -f stargazer stargazer.csv
+pilosa import -i repository -f language language.csv
+```
+
+* 查询操作
+
+查询的结果都是列id，查14号用户关注的repository
+
+```shell
+curl localhost:10101/index/repository/query \
+     -X POST \
+     -d 'Bitmap(frame="stargazer", stargazer_id=14)'
+```
+
+查编程语言是 5 的repository
+
+```shell
+curl localhost:10101/index/repository/query \
+     -X POST \
+     -d 'TopN(frame="language", n=5)'
+```
+
+查14号用户和19号用户的关注的repository交集
+
+```shell
+curl localhost:10101/index/repository/query \
+     -X POST \
+     -d 'Intersect(Bitmap(frame="stargazer", stargazer_id=14), Bitmap(frame="stargazer", stargazer_id=19))'
+```
+
+查14号用户和19号用户的关注的repository并集
+
+```shell
+curl localhost:10101/index/repository/query \
+     -X POST \
+     -d 'Union(Bitmap(frame="stargazer", stargazer_id=14), Bitmap(frame="stargazer", stargazer_id=19))'
+```
+
+查14号用户和19号用户的共同关注的并且语言是1的repository
+
+```shell
+curl localhost:10101/index/repository/query \
+     -X POST \
+     -d 'Intersect(Bitmap(frame="stargazer", stargazer_id=14), Bitmap(frame="stargazer", stargazer_id=19), Bitmap(frame="language", language_id=1))'
+```
+
+在frame为stargazer里面，加一行关注者为 99999 数据，列上 repository 为 77777 的 cell 为 1
+
+```shell
+curl localhost:10101/index/repository/query \
+     -X POST \
+     -d 'SetBit(frame="stargazer", repo_id=77777, stargazer_id=99999)'
+```
+
+经过基本的使用，我觉得pilosa比传统的关系型数据库更侧重于关系，而通过列式存储的架构，方便了大数据的实时聚合计算，所以pilosa是为了在某些场景替代传统关系型数据库，对于文档数据库mongo和嵌入式数据库没有影响。在一些业务庞大的公司里面应该是可以考虑引入的。
 
 ## Pilosa 查询十亿级出租车搭乘数据案例
 
