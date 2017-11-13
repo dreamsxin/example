@@ -750,9 +750,33 @@ listen.backlog = 1024
 
 ## 日志
 
-统计 `ip` 个数排序
+根据访问IP统计UV
+```shell
+awk '{print $1}'  access.log|sort | uniq -c |wc -l
+```
+
+统计访问URL统计PV
+```shell
+awk '{print $7}' access.log|wc -l
+```
+
+查询访问最频繁的URL
+```shell
+awk '{print $7}' access.log|sort | uniq -c |sort -n -k 1 -r|more
+```
+
+查询访问最频繁的IP
 ```shell
 awk '{cnt[$1]++;}END{for(i in cnt){printf("%s\t%s\n", cnt[i], i);}}' access.log|sort -n
+```
+
+```shell
+awk '{print $1}' access.log|sort | uniq -c |sort -n -k 1 -r|more
+```
+
+根据时间段统计查看日志
+```shell
+cat  access.log| sed -n '/14\/Mar\/2015:21/,/14\/Mar\/2015:22/p'|more
 ```
 
 导出特定 `ip` 日志
