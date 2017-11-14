@@ -34,7 +34,7 @@
 
 ## ElasticSearch 分布式全文搜索引擎
 
-## GFS、HDFS、Lustre 、Ceph 、GridFS 、MogileFS、TFS、FastDFS、MooseFS、GlusterFS
+## GFS、HDFS、Lustre 、Ceph 、GridFS 、MogileFS、TFS、FastDFS、MooseFS、LizardFS、GlusterFS
 
 
 摘自：用大白话聊聊分布式系统 https://waylau.com/talk-about-distributed-system/
