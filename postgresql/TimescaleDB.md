@@ -329,12 +329,7 @@ LIMIT 100;
 ```text
 # Calculate total errors by latest firmware versions  
 # per hour over the last 7 days  
-SELECT date_trunc('hour', time) as hour, firmware,  
-COUNT(error_msg) as errno FROM data  
-WHERE firmware > 50  
-AND time > now() - interval '7 day'  
-GROUP BY hour, firmware  
-ORDER BY hour DESC, errno DESC;  
+SELECT date_trunc('hour', time) as hour, firmware,  COUNT(error_msg) as errno FROM data  WHERE firmware > 50  AND time > now() - interval '7 day' GROUP BY hour, firmware ORDER BY hour DESC, errno DESC;  
 ```
 
 6. 计算巴士的每小时平均速度
@@ -342,21 +337,14 @@ ORDER BY hour DESC, errno DESC;
 ```text
 # Find average bus speed in last hour  
 # for each NYC borough  
-SELECT loc.region, AVG(bus.speed) FROM bus  
-INNER JOIN loc ON (bus.bus_id = loc.bus_id)  
-WHERE loc.city = 'nyc'  
-AND bus.time > now() - interval '1 hour'  
+SELECT loc.region, AVG(bus.speed) FROM bus INNER JOIN loc ON (bus.bus_id = loc.bus_id) WHERE loc.city = 'nyc' AND bus.time > now() - interval '1 hour'  
 GROUP BY loc.region;  
 ```
 
 7. 展示最近12小时，每小时的平均值
 
 ```text
-=#  SELECT date_trunc('hour', time) AS hour, AVG(weight)  
-    FROM logs  
-    WHERE device_type = 'pressure-sensor' AND customer_id = 440  
-      AND time > now() - interval '12 hours'  
-    GROUP BY hour;  
+=#  SELECT date_trunc('hour', time) AS hour, AVG(weight) FROM logs WHERE device_type = 'pressure-sensor' AND customer_id = 440 AND time > now() - interval '12 hours' GROUP BY hour;  
   
  hour               | AVG(weight)  
 --------------------+--------------  
@@ -375,12 +363,7 @@ GROUP BY loc.region;
 8. 监控每分钟过载的设备数量
 
 ```text
-=#  SELECT date_trunc('minute', time) AS minute, COUNT(device_id)  
-    FROM logs  
-    WHERE cpu_level > 0.9 AND free_mem < 1024  
-      AND time > now() - interval '24 hours'  
-    GROUP BY minute  
-    ORDER BY COUNT(device_id) DESC LIMIT 25;  
+=#  SELECT date_trunc('minute', time) AS minute, COUNT(device_id) FROM logs WHERE cpu_level > 0.9 AND free_mem < 1024 AND time > now() - interval '24 hours' GROUP BY minute ORDER BY COUNT(device_id) DESC LIMIT 25;  
   
  minute             | heavy_load_devices  
 --------------------+---------------------  
@@ -398,10 +381,7 @@ GROUP BY loc.region;
 9. 最近7天，按固件版本，输出每个固件版本的报错次数
 
 ```text
-=#  SELECT firmware_version, SUM(error_count) FROM logs  
-    WHERE time > now() - interval '7 days'  
-    GROUP BY firmware_version  
-    ORDER BY SUM(error_count) DESC LIMIT 10;  
+=#  SELECT firmware_version, SUM(error_count) FROM logs WHERE time > now() - interval '7 days' GROUP BY firmware_version ORDER BY SUM(error_count) DESC LIMIT 10;  
   
  firmware_version  | SUM(error_count)  
 -------------------+-------------------  
@@ -421,11 +401,7 @@ GROUP BY loc.region;
 10. 某个范围，每小时，温度高于90度的设备数量。
 
 ```text
-=#  SELECT date_trunc('hour', time) AS hour, COUNT(logs.device_id)  
-    FROM logs  
-    JOIN devices ON logs.device_id = devices.id  
-    WHERE logs.temperature > 90 AND devices.location = 'SITE-1'  
-    GROUP BY hour;  
+=#  SELECT date_trunc('hour', time) AS hour, COUNT(logs.device_id) FROM logs JOIN devices ON logs.device_id = devices.id WHERE logs.temperature > 90 AND devices.location = 'SITE-1' GROUP BY hour;  
   
  hour               | COUNT(logs.device_id)  
 --------------------+------------------------  
