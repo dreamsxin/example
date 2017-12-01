@@ -750,6 +750,31 @@ listen.backlog = 1024
 
 ## 日志
 
+查看当前TCP连接数
+```shell
+netstat -tan | grep "ESTABLISHED" | grep ":80" | wc -l
+```
+
+用 tcpdump 嗅探 80 端口的访问看看哪个IP最高
+```shell
+tcpdump -i eth0 -tnn dst port 80 -c 1000 | awk -F"." '{print $1"."$2"."$3"."$4}' | sort | uniq -c | sort -nr
+```
+
+统计每秒钟的请求数
+```shell
+awk '{print $4}' access.log | sort | uniq -c | sort -nr -k1 | head -n 10
+```
+
+统计每分钟的请求数
+```shell
+awk '{print $4}' access.log |cut -c 14-18|sort|uniq -c|sort -nr|head -n 10
+```
+
+每小时的请求数
+```shell
+awk '{print $4}' access.log |cut -c 14-15|sort|uniq -c|sort -nr|head -n 10
+```
+
 根据访问IP统计UV
 ```shell
 awk '{print $1}'  access.log|sort | uniq -c |wc -l
@@ -774,6 +799,21 @@ awk '{cnt[$1]++;}END{for(i in cnt){printf("%s\t%s\n", cnt[i], i);}}' access.log|
 awk '{print $1}' access.log|sort | uniq -c |sort -n -k 1 -r|more
 ```
 
+查看某一时间段的IP访问量(4-5点)
+```shell
+grep "07/Apr/2017:0[4-5]" access.log | awk '{print $1}' | sort | uniq -c| sort -nr | wc -l
+```
+
+查看访问100次以上的IP
+```shell
+awk '{print $1}' access.log | sort -n |uniq -c |awk '{if($1 >100) print $0}'|sort -rn
+```
+
+查询某个IP的详细访问情况,按访问频率排序
+```shell
+grep '127.0.0.1' access.log |awk '{print $7}'|sort |uniq -c |sort -rn |head -n 100
+```
+
 根据时间段统计查看日志
 ```shell
 cat  access.log| sed -n '/14\/Mar\/2015:21/,/14\/Mar\/2015:22/p'|more
@@ -782,6 +822,11 @@ cat  access.log| sed -n '/14\/Mar\/2015:21/,/14\/Mar\/2015:22/p'|more
 导出特定 `ip` 日志
 ```shell
 grep "192.168.1.1" access.log > 192.168.1.1.log
+```
+
+列出传输时间超过 3 秒的页面（$request_time 在最后一列）
+```shell
+cat access.log|awk '($NF > 3){print $12}'|sort -n|uniq -c|sort -nr|head -10
 ```
 
 统计流量

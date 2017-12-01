@@ -3,6 +3,7 @@
 ## Zookeeper 分布式服务框架
 ## etcd
 ## Consul
+## Doozerd
 ## Gearman 分布式任务处理系统
 ## Celery 分布式任务队列
 ## NSQ 分布式的实时消息平台
