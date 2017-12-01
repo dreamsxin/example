@@ -750,6 +750,11 @@ listen.backlog = 1024
 
 ## 日志
 
+默认日志格式：
+```conf
+log_format combined '$remote_addr - $remote_user [$time_local]  "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_time';
+```
+
 查看当前TCP连接数
 ```shell
 netstat -tan | grep "ESTABLISHED" | grep ":80" | wc -l
