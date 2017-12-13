@@ -8,6 +8,14 @@ http {
         limit_req_zone $binary_remote_addr zone=qps1:1m  rate=1r/s;
         limit_req_zone $binary_remote_addr zone=qps2:1m  rate=2r/s;
         limit_req_zone $binary_remote_addr zone=qps3:1m  rate=4r/s;
+
+		limit_req_zone $server_name zone=perserver:10m rate=10r/s;
+		limit_req_zone $request_uri zone=perrequesturi:10m rate=500r/s;
+		limit_req_zone $uri zone=peruri:10m rate=100r/s;
+		limit_req_zone "$binary_remote_addr$request_uri" zone=req_dev:10m rate=2r/s;
+
+        limit_req_zone global zone=apiqps:1k rate=200/s;
+        limit_req_zone global zone=apiqps2:1k rate=500/s;
 }
 ```
 

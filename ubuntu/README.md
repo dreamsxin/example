@@ -219,3 +219,10 @@ LC_*的默认值，是最低级别的设置，如果LC_*没有设置，则使用
 
 8. LC_ALL
 它是一个宏，如果该值设置了，则该值会覆盖所有LC_*的设置值。注意，LANG的值不受该宏影响。
+
+## 开机启动管理
+
+```shell
+apt-get install sysv-rc-conf
+sysv-rc-conf
+```
