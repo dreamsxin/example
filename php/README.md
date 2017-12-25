@@ -210,3 +210,39 @@ log_errors=On
 # 错误日志存放地址
 error_log=/var/log/php-error.log
 ```
+
+## PHP FPM 多实例
+
+```shell
+cp /etc/init.d/php7.1-fpm /etc/init.d/php7.1-fpm2
+```
+修改为：
+```conf
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          php7.1-fpm2
+# Required-Start:    $remote_fs $network
+# Required-Stop:     $remote_fs $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: starts php7.1-fpm
+# Description:       Starts The PHP FastCGI Process Manager Daemon
+### END INIT INFO
+
+# Author: Ondrej Sury <ondrej@debian.org>
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC="PHP 7.1 FastCGI Process Manager"
+NAME=php-fpm7.1
+CONFFILE=/etc/php/7.1/fpm/php-fpm2.conf
+DAEMON=/usr/sbin/$NAME
+DAEMON_ARGS="--daemonize --fpm-config $CONFFILE"
+CONF_PIDFILE=$(sed -n 's/^pid[ =]*//p' $CONFFILE)
+PIDFILE=${CONF_PIDFILE:-/run/php/php7.1-fpm2.pid}
+TIMEOUT=30
+SCRIPTNAME=/etc/init.d/$NAME
+```
+加入 service：
+```shell
+sudo update-rc.d php7.1-fpm2 defaults
+```
