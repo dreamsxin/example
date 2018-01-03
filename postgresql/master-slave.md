@@ -33,7 +33,7 @@ CREATE ROLE replica login replication encrypted password 'replica'
 
 修改`postgresql.conf`，注意设置下下面几个地方：
 ```conf
-wal_level = hot_standby		# 这个是设置主为wal的主机
+wal_level = replica			# 这个是设置主为 wal 的主机，9.6 之前为 hot_standby
 
 max_wal_senders = 10		# 这个设置了可以最多有几个流复制连接，差不多有几个从，就设置几个
 wal_keep_segments = 20		# 设置流复制保留的最多的xlog数目
