@@ -4,7 +4,7 @@
 cd /var/www
 mkdir ssl
 cd ssl
-sudo openssl genrsa -des3 -out server.key 1024  
+sudo openssl genrsa -des3 -out server.key 1024
 sudo openssl req -new -key server.key -out server.csr
 sudo openssl rsa -in server.key -out server_nopwd.key  
 sudo openssl x509 -req -days 365 -in server.csr -signkey server_nopwd.key -out server.crt  
@@ -22,14 +22,12 @@ For some fields there will be a default value,
 If you enter '.', the field will be left blank.  
 -----  
 Country Name (2 letter code) [AU]:CN　←输入国家代码  
-State or Province Name (full name) [Some-State]:CHONGQING　← 输入省名  
-Locality Name (eg, city) []:CHONGQING　←输入城市名  
-Organization Name (eg, company) [Internet Widgits Pty Ltd]:MIKE　← 输入公司名  
-Organizational Unit Name (eg, section) []:MIKE　← 输入组织单位名  
-Common Name (eg, YOUR name) []:www.mike.me　← 输入主机名  
-Email Address []:easylife206@gmail.com　←输入电子邮箱地址  
-← 回车
-← 回车
+State or Province Name (full name) [Some-State]:　← 输入省名  
+Locality Name (eg, city) []:　←输入城市名  
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:　← 输入公司名  
+Organizational Unit Name (eg, section) []:　← 输入组织单位名  
+Common Name (eg, YOUR name) []:　← 输入主机名（域名） 
+Email Address []:　←输入电子邮箱地址  
 ```
 
 ## 配置
