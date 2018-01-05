@@ -6,6 +6,7 @@
 2. CitusDB			-- OLAP
 3. PipelineDB		-- Streaming big data analysis 
 4. Postgresql-XL	-- Scale out OLTP 
+5. rubyrep、bucardo
 
 # 安装 Postgresql
 
