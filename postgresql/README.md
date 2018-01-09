@@ -406,6 +406,37 @@ ALTER TABLE table_name ADD CONSTRAINT projects_code_unique UNIQUE(channel_code,p
 CREATE EXTENSION pg_stat_statements;
 SELECT query, calls, total_time, (total_time/calls) as average ,rows, 100.0 * shared_blks_hit /nullif(shared_blks_hit + shared_blks_read, 0) AS hit_percent FROM  pg_stat_statements ORDER BY average DESC LIMIT 10;
 ```
+
+## 正在执行 SQL 列表
+
+```sql
+SELECT 
+    procpid, 
+    start, 
+    now() - start AS lap, 
+    current_query 
+FROM 
+    (SELECT 
+        backendid, 
+        pg_stat_get_backend_pid(S.backendid) AS procpid, 
+        pg_stat_get_backend_activity_start(S.backendid) AS start, 
+       pg_stat_get_backend_activity(S.backendid) AS current_query 
+    FROM 
+        (SELECT pg_stat_get_backend_idset() AS backendid) AS S 
+    ) AS S 
+WHERE current_query <> '<IDLE>' 
+ORDER BY lap DESC;
+```
+
+- procpid：进程id
+- start：进程开始时间
+- lap：经过时间
+- current_query：执行中的sql
+
+停止正在执行的sql
+- SELECT pg_cancel_backend(进程id);
+- kill -9 进程id;
+
 ## 优化
 
 ```sql
