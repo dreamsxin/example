@@ -1,3 +1,22 @@
+# 配置开发环境
+
+## 安装 Android studio
+
+```shell
+sudo add-apt-repository ppa:webupd8team/java
+sudo apt-get update
+sudo apt-get install oracle-java8-installer
+sudo apt-get install oracle-java8-set-default
+
+sudo add-apt-repository ppa:paolorotolo/android-studio
+sudo apt-get update
+
+# or
+
+sudo add-apt-repository ppa:maarten-fonville/android-studio
+sudo apt-get update
+```
+
 # Ubuntu 下载 & 编译 Android 源码
 
 ## 安装 openjdk-7-jdk
@@ -28,6 +47,7 @@ sudo ln -s /usr/lib/i386-linux-gnu/mesa/libGL.so.1 /usr/lib/i386-linux-gnu/libGL
 ```
 
 ## 配置Cache
+
 使用如下命令配置cache：
 ```shell
 sudo apt-get install ccache
