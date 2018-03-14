@@ -188,6 +188,50 @@ bitcoin-cli -regtest setgenerate true 101
 bitcoin-cli -regtest generate 101
 ```
 
+查看余额
+```shell
+bitcoin-cli -regtest getbalance
+```
+查看的是默认钱包 `2Mwj9ou3nV8x1QF5Y77gmEdaazqZyLFdAYz`
+
+获取新钱包地址
+```shell
+bitcoin-cli -regtest getnewaddress
+```
+输出：
+>> 2NBw7SpdGnXJH3eFGhYdRb8rgB5TrqpVt62
+
+转 10 比特币给新的地址
+```shell
+bitcoin-cli -regtest sendtoaddress "2NBw7SpdGnXJH3eFGhYdRb8rgB5TrqpVt62" 10.00
+```
+输出：
+>> 77cc99ec31024c8b8f037ee18b75e84c90ca904d1179a27b760f8b9c61971424
+
+此时查看新钱包余额为 0
+```shell
+bitcoin-cli -regtest getbalance "2NBw7SpdGnXJH3eFGhYdRb8rgB5TrqpVt62"
+```
+
+查看交易信息
+```shell
+bitcoin-cli -regtest listunspent
+```
+此时交易信息没有确认，所以使用以下参数列出信息
+```shell
+bitcoin-cli -regtest listunspent 0
+```
+
+生成新的区块
+```shell
+bitcoin-cli -regtest generate 1
+```
+
+查看交易信息
+```shell
+bitcoin-cli -regtest listunspent
+```
+
 ## 交易数据库索引和`txindex`选项
 
 默认情况下，`Bitcoin Core`构建一个仅包含与用户钱包有关的交易的数据库。 如果您想要使用诸如`getrawtransaction`之类的命令访问任何交易，则需要配置`txindex = 1`选项来实现。如果不想一开始设置此选项，后期再想设置为完全索引，则需要使用-reindex选项重新启动bitcoind，并等待它重建索引。
