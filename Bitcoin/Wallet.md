@@ -33,3 +33,10 @@ npm run apply:copay
 npm run prepare:copay
 npm run start:ios
 ```
+
+# Electrum
+
+```shell
+sudo apt-get install python3-setuptools python3-pyqt5 python3-pip
+sudo pip3 install https://download.electrum.org/3.1.1/Electrum-3.1.1.tar.gz
+```

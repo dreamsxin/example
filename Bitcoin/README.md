@@ -680,13 +680,23 @@ curl --user myusername --data-binary '{"jsonrpc": "1.0", "id":"curltest", "metho
 
 如果您在自己的程序中实现JSON-RPC调用，则可以使用通用的HTTP库构建调用，类似于前面的curl示例所示。
 
-## 挖矿
+## 挖矿 Minning
 
 ### CPU挖矿原理
 
-CPU挖矿，即利用RPC接口 setgenerate 控制挖矿。
+新版本使用参数：`-gen` and `-genproclimit`
+
+使用 `bitcoin-cli generate` or `bitcoin-cli  generatetoaddress` `bitcoin-cli getmininginfo`命令。
+
+旧版本使用 `setgenerate` 控制挖矿。
 控制台输入 `setgenerate true 2`，即开始挖矿，后边的数字表示代表的挖矿线程数，当然前提先完成同步数据。
 由于单CPU运算SHA256D算力约为2 MH/S，因此nNonce提供的4字节搜索空间完全够用，即支持4G种取值。
+
+配置文件
+```text
+gen=0
+genproclimit=0
+```
 
 ### GPU挖矿原理
 
