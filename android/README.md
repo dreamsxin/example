@@ -1,3 +1,12 @@
+# 创建运行模拟器
+
+```shell
+./Android/Sdk/tools/bin/sdkmanager  --list
+./Android/Sdk/tools/bin/sdkmanager 'system-images;android-27;google_apis;x86'
+./Android/Sdk/tools/bin/avdmanager create avd --force --name phalcon7 -k 'system-images;android-27;google_apis;x86' -p ~/Android/
+./Android/Sdk/tools/emulator -avd phalcon7
+```
+
 # 配置开发环境
 
 ## 安装 Android studio
