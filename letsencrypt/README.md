@@ -5,9 +5,13 @@ git clone https://github.com/certbot/certbot
 cd certbot
 ./certbot-auto --help all
 ./certbot-auto certonly --standalone --email dreamsxin@qq.com -d myleft.org -d *.myleft.org
+
+# or
+sudo apt-get install letsencrypt
+letsencrypt certonly --standalone --email dreamsxin@qq.com -d myleft.org -d *.myleft.org
 ```
 
-在完成Let's Encrypt证书的生成之后，我们会在"/etc/letsencrypt/live/laozuo.org/"域名目录下有4个文件就是生成的密钥证书文件。
+在完成Let's Encrypt证书的生成之后，我们会在"/etc/letsencrypt/live/myleft.org/"域名目录下有4个文件就是生成的密钥证书文件。
 
 - cert.pem  - Apache服务器端证书
 - chain.pem  - Apache根证书和中继证书
