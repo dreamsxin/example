@@ -1,4 +1,8 @@
-# 创建运行模拟器
+# Android 开发
+
+https://developer.android.com/studio/install.html?hl=zh-cn
+
+## 创建运行模拟器
 
 ```shell
 ./Android/Sdk/tools/bin/sdkmanager  --list
@@ -7,23 +11,102 @@
 ./Android/Sdk/tools/emulator -avd phalcon7
 ```
 
-# 配置开发环境
+## JDK配置
+
+下载地址：http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
+
+卸载OpenJDK
+
+```shell
+sudo apt-get purge openjdk/openjdk*
+sudo apt-get clean/autoclean
+```
+
+解压 JDK
+```shell
+tar –zxvf  jdk-8u131-linux-xxx.tar.gz
+sudo mv ./jdk1.8.0_131 /opt/Java
+```
+
+配置环境变量 `/etc/environment`
+```shell
+export JAVA_HOME=/opt/Java
+export CLASSPATH=.:$JAVA_HOME/lib:$JAVA_HOME/jre/lib
+# 使环境变量立即生效
+source /etc/environment
+```
+
+配置所有用户的环境变量`/etc/profile`
+```shell
+export JAVA_HOME=/opt/Java
+export JRE_HOME=${JAVA_HOME}/jre
+export CLASSPATH=.:JAVA_HOME/lib:JRE_HOME/lib:${CLASSPATH}
+export PATH=$JAVA_HOME/bin:$JRE_HOME/bin:$PATH
+source /etc/profile
+```
+
+也可以配置当前用户环境变量 `~/.bashrc`
+
+使用 `apt` 安装
+```shell
+sudo add-apt-repository ppa:webupd8team/java
+sudo apt-get update
+sudo apt-get install default-jre
+sudo apt-get install default-jdk
+sudo apt-get install oracle-java8-installer
+sudo apt-get install oracle-java8-set-default
+
+sudo update-alternatives --config java
+```
+
+## 安装一些 32 位库
+
+```shell
+sudo apt-get install lib32z1 lib32ncurses5 lib32bz2-1.0 lib32stdc++6
+```
+
+## 安装Android SDK
+
+```shell
+tar -zxvf android-sdk-linux.tgz
+sudo mv android-sdk-linux /opt/android-sdk
+```
+配置环境变量`/etc/profile`
+```shell
+SDK_HOME=/opt/android-sdk
+PATH=$SDK_HOME/tools:$SDK_HOME/platform-tools:$PATH
+```
+
+列出sdk相关的列表并安装
+```shell
+android list sdk --all
+android update sdk -u -a -t  1,2,3,10,20,21,22,23
+```
 
 ## 安装 Android studio
 
 ```shell
-sudo add-apt-repository ppa:webupd8team/java
-sudo apt-get update
-sudo apt-get install oracle-java8-installer
-sudo apt-get install oracle-java8-set-default
-
-sudo add-apt-repository ppa:paolorotolo/android-studio
-sudo apt-get update
-
-# or
-
 sudo add-apt-repository ppa:maarten-fonville/android-studio
 sudo apt-get update
+```
+
+## 安装 Gradle
+
+```shell
+# sudo add-apt-repository ppa:cwchien/gradle
+# sudo apt-get update
+
+sudo apt-get install gradle
+
+# or 
+mkdir /opt/gradle
+unzip -d /opt/gradle gradle-4.6-bin.zip
+```
+
+写入环境变量 `/etc/profile`
+```shell
+export GRADLE_HOME=/opt/gradle/gradle-4.6
+export PATH=$GRADLE_HOME/bin:$PATH
 ```
 
 # Ubuntu 下载 & 编译 Android 源码
@@ -55,7 +138,7 @@ sudo apt-get install libc6-dev libncurses5-dev:i386 x11proto-core-dev libx11-dev
 sudo ln -s /usr/lib/i386-linux-gnu/mesa/libGL.so.1 /usr/lib/i386-linux-gnu/libGL.so
 ```
 
-## 配置Cache
+## 配置 Cache
 
 使用如下命令配置cache：
 ```shell
