@@ -83,11 +83,11 @@ android list sdk --all
 android update sdk -u -a -t  1,2,3,10,20,21,22,23
 ```
 
-## 安装 Android studio
+## 通过 PPA 安装 Android studio
 
 ```shell
 sudo add-apt-repository ppa:maarten-fonville/android-studio
-sudo apt-get update
+sudo apt-get update && sudo apt-get install android-studio
 ```
 
 ## 安装 Gradle
