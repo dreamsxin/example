@@ -205,3 +205,13 @@ Usage:
 
 - d
 d badging
+
+## 获取应用图标
+
+```shell
+#!/bin/sh
+
+GENERATOR="/^application-icon-(\\d+):(.*)/ && print \"unzip -o $1 \$2 && mv \$2 $(basename $1 .apk)-\$1.png\n\""
+aapt d --values badging $1 | perl -n -e"$GENERATOR" | sh
+rm -rf res/
+```
