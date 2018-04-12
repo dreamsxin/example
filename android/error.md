@@ -6,3 +6,8 @@ ko:failed to initialize KVM
 ```
 
 * error: device unauthorized.
+
+
+* Failed to finalize session : INSTALL_FAILED_NO_MATCHING_ABIS: Failed to extract native libraries, res=-113
+
+Genymotion 2.8.1 + Android 4.3 + ARM Translator 1.1 = success.

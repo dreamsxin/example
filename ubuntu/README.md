@@ -226,3 +226,12 @@ LC_*的默认值，是最低级别的设置，如果LC_*没有设置，则使用
 apt-get install sysv-rc-conf
 sysv-rc-conf
 ```
+
+## 安装媒体解码器
+
+```shell
+sudo apt-get install ubuntu-restricted-extras
+```
+
+`ubuntu-restricted-extras` 是一个超级包，安装的内容有：
+flashplugin-nonfree, gstreamer0.10-plugins-ugly, gstreamer0.10-plugins-ugly-multiverse, msttcorefonts, sun-java6-jre, sun-java6-plugin
