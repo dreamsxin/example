@@ -21,4 +21,31 @@ $ ./gradlew war \
 $ cp ./build/libs/JavaBridgeTemplate.war /var/lib/tomcat8/webapps/MyJavaBridge.war
 ```
 
-Tomcat will automatically deploy and register the servlet. Wait few seconds and point your browser to http://localhost:8080/MyJavaBridge (note the /MyJavaBridge uri corresponds to the deployed war filename, easily changeable) 
+Tomcat will automatically deploy and register the servlet. Wait few seconds and point your browser to http://localhost:8080/MyJavaBridge (note the /MyJavaBridge uri corresponds to the deployed war filename, easily changeable)
+
+## 使用
+
+```php
+<?php
+
+$options = [     
+    'servlet_address' => 'http://localhost:8080/MyJavaBridge/servlet.phpjavabridge'
+];
+
+try {
+	$ba = new Soluble\Japha\Bridge\Adapter($options);
+
+	// Some standard JVM classes
+	$hashMap = $ba->java('java.util.HashMap', [         
+		'message' => 'Hello world',                 
+		'value'   => $ba->java('java.math.BigInteger', PHP_INT_MAX)
+	]);
+	$hashMap->put('message', '你好，世界');
+	echo $hashMap->get('message');  
+} catch (Soluble\Japha\Bridge\Exception\ClassNotFoundException $e) { 
+    echo $e->getMessage(); 
+} catch (Soluble\Japha\Bridge\Exception\JavaException $e) { 
+    echo $e->getMessage() . ' [' . $e->getJavaClassName() . ']';
+    echo $e->getStackTrace(); 
+}
+```

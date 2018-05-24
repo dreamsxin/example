@@ -1,3 +1,8 @@
+## 查看内存
+
+```shell
+redis-cli info memory
+```
 
 ## Redis数据回写机制
 
