@@ -3,7 +3,15 @@
 https://github.com/iBotPeaches/Apktool
 
 ```shell
-apktool d xxx.apk
+apktool d -f xxx.apk
+apktool b -f xxx
+```
+
+```shell
+keytool -genkey -keystore ks2.keystore -keyalg RSA -validity 10000 -alias ks2.keystore
+jarsigner -verbose -digestalg SHA1 -sigalg MD5withRSA -keystore ks2.keystore -signedjar xxx_signed.apk xxx.apk ks2.keystore
+jarsigner -verify -verbose -certs xxx_signed.apk
+zipalign -v 4 xxx_signed.apk xxx_align.apk
 ```
 
 
