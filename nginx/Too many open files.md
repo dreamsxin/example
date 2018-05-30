@@ -58,3 +58,47 @@ sysctl -p
 -u 	用户最大可用的进程数。 	ulimit – u 64；限制用户最多可以使用 64 个进程。
 -v 	进程最大可用的虚拟内存，以 Kbytes 为单位。 	ulimit – v 200000；限制最大可用的虚拟内存为 200000 Kbytes。
 ```
+
+## 11: Resource temporarily unavailable
+
+```shell
+echo 'net.core.somaxconn = 2048' >> /etc/sysctl.conf
+sysctl -p
+# or
+sudo sysctl -w net.core.somaxconn=1024
+```
+
+PHP FPM
+```conf
+listen.backlog = 2048
+```
+
+
+
+* 文件预读
+```shell
+blockdev --getra /dev/sda
+```
+设置
+```shell
+blockdev --setra 4096 /dev/sda
+```
+将命令添加至`rc.local`
+
+* `sysctl.conf` 其它选项
+
+- vm.swappiness = 0         # 0有物理内存的情况下就不使用文件交换， 10为积极使用swapper 中间以此类推
+- vm.overcommit_memory = 1  # 1最大化分配物理内存，2为可超过物理加虚拟内存，0为内存溢出就返回至应用
+- fs.file-max = 655350　　# 系统文件描述符总量
+- net.ipv4.ip_local_port_range = 1024 65535　　# 打开端口范围
+- net.ipv4.tcp_max_tw_buckets = 2000　　# 设置tcp连接时TIME_WAIT个数
+- net.ipv4.tcp_tw_recycle = 1　　# 开启快速tcp TIME_WAIT快速回收
+- net.ipv4.tcp_tw_reuse = 1　　# 开启TIME_WAIT重用
+- net.ipv4.tcp_syncookies = 1　　# 开启SYN cookies 当出现syn等待溢出，启用cookies来处理，可防范少量的syn攻击
+- net.ipv4.tcp_syn_retries = 2　　# 对于一个新建的tcp连接，内核要发送几个SYN连接请求才决定放弃
+- net.ipv4.tcp_synack_retries = 2　　# 这里是三次握手的第二次连接，服务器端发送syn+ack响应 这里决定内核发送次数
+- net.ipv4.tcp_keepalive_time = 1200　　# tcp的长连接，这里注意：tcp的长连接与HTTP的长连接不同
+- net.ipv4.tcp_fin_timeout = 15　　  # 设置保持在FIN_WAIT_2状态的时间
+- net.ipv4.tcp_max_syn_backlog = 20000　　# tcp半连接最大限制数
+- net.core.somaxconn = 65535　　# 定义一个监听最大的队列数
+- net.core.netdev_max_backlog = 65535　　# 当网络接口比内核处理数据包速度快时，允许送到队列数据包的最大数目
