@@ -203,6 +203,16 @@ server {
                 # With php7.0-fpm:
                 fastcgi_pass unix:/run/php/php7.1-fpm.sock;
         }
+
+        location ~ \.php$ {
+                include snippets/fastcgi-php.conf;
+                if ($request_uri ~ /api/) {
+                        # With php7.0-cgi alone:
+                        fastcgi_pass 127.0.0.1:9000;
+                        # With php7.0-fpm:
+                        #fastcgi_pass unix:/run/php/php7.1-fpm.sock;
+                }
+        }
 }
 ```
 
