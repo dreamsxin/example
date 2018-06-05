@@ -1,3 +1,9 @@
+## 安装
+
+```shell
+sudo add-apt-repository ppa:webupd8team/java
+```
+
 ## 调试
 
 ```shell
@@ -82,4 +88,23 @@ exit
                URIEncoding="UTF-8"
 	       maxKeepAliveRequests="10"
                redirectPort="8443" maxKeepAliveRequests="5" />
+```
+
+```conf
+upstream tomcats {
+    server localhost:8080 weight=1;
+}
+server {
+        listen 8181;
+        server_name localhost;
+        underscores_in_headers on;
+        location / {
+		proxy_redirect off;
+		proxy_buffering off;
+
+		proxy_http_version 1.1;
+		proxy_request_buffering off;
+		proxy_pass http://tomcats;
+        }
+}
 ```
