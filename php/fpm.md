@@ -1,5 +1,9 @@
 # PHP-FPM
 
+```shell
+sudo add-apt-repository ppa:ondrej/php
+```
+
 ## 优化
 
 查询单个 `php-fpm` 进程占用的内存：

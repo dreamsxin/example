@@ -192,6 +192,32 @@ nginx -t
 nginx -t -c my-nginx.conf  
 ```
 
+## 配置
+
+(1) keepalive_timeout
+该参数用于设置客户端连接保持会话的超时时间，超过这个时间服务器会关闭该连接
+
+(2) client_header_timeout
+该参数用于设置读取客户端请求头数据的超时时间，如果超时客户端还没有发送完整的 header 数据，服务器将返回 "Request time out (408)" 错误
+
+(3) client_body_timeout
+该参数用于设置读取客户端请求主体数据的超时时间，如果超时客户端还没有发送完整的主体数据，服务器将返回 "Request time out (408)" 错误
+
+(4) send_timeout
+用于指定响应客户端的超时时间，如果超过这个时间，客户端没有任何活动，Nginx 将会关闭连接
+
+(5) tcp_nodelay
+默认情况下当数据发送时，内核并不会马上发送，可能会等待更多的字节组成一个数据包，这样可以提高 I/O 性能，但是，在每次只发送很少字节的业务场景中，使用 tcp_nodelay 功能，等待时间会比较长
+
+(6) fastcgi_connect_timeout
+链接
+
+(7) fastcgi_read_timeout
+读取
+
+(8) fastcgi_send_timeout
+发请求
+
 ## 平滑重启
 
 ```shell
@@ -760,7 +786,96 @@ worker_rlimit_nofile 30000;
 listen.backlog = 1024
 ```
 
+## 负载均衡
+
+```conf
+upstream apis {
+	least_conn;
+        server localhost:80 weight=1;
+        server localhost:81 weight=2;
+}
+server {
+        listen 8282;
+        server_name localhost;
+
+
+        location / {
+                # First attempt to serve request as file, then
+                # as directory, then fall back to displaying a 404.
+                try_files $uri $uri/ /index.php?$query_string;
+        }
+
+        location ^~ /api/ads {
+                proxy_pass http://apis$request_uri$query_string$is_args$args;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+                #proxy_buffering off;
+        }
+
+        # pass PHP scripts to FastCGI server
+        location ~ \.php$ {
+                limit_req zone=allips burst=5 nodelay;
+                include snippets/fastcgi-php.conf;
+                if ($request_uri ~ /api/) {
+                        fastcgi_pass phpfpm;
+                }
+                if ($request_uri !~ /api/) {
+                        fastcgi_pass 127.0.0.1:9001;
+                }
+                # With php-fpm (or other unix sockets):
+                #fastcgi_pass unix:/var/run/php/php7.1-fpm.sock;
+                ## With php-cgi (or other tcp sockets):
+                #fastcgi_pass phpfpm;
+        }
+}
+
+upstream apis {
+        least_conn;
+        server localhost:81;
+}
+server {
+        listen 8282;
+        server_name localhost;
+        limit_conn perserver 200;
+        keepalive_timeout 3;
+	reset_timedout_connection on;
+	client_header_timeout 1;
+	client_body_timeout 2;
+	send_timeout 2;
+        location / {
+                proxy_pass http://apis;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_connect_timeout 1s;
+                proxy_read_timeout 1s;
+                proxy_send_timeout 1s;
+                proxy_next_upstream_tries 1;
+                proxy_next_upstream error off;
+                proxy_next_upstream_timeout 1s;
+                #proxy_set_header Authorization $http_authorization;
+                #proxy_pass_header Authorization;
+                #proxy_buffering off;
+        }
+}
+```
+
 ## 日志
+
+
+- log_not_found
+默认为on：启用或禁用404错误日志
+
+location = /favicon.ico {
+	log_not_found off;
+	access_log off;
+}
+
+`error_log off` 并不能关闭日志记录功能，它将日志文件写入`/usr/share/nginx/off`文件中，应使用以下配置：
+`error_log /dev/null crit;`
+
 
 默认日志格式：
 ```conf

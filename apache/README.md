@@ -1,32 +1,149 @@
+# 安装
+
+```shell
+sudo apt-get install apache2  libapache2-mod-php7.1
+sudo a2enmod rewrite
+```
+
 # 查看模块
 ```shell
 apache2ctl -l
 sudo apache2ctl -M
 ```
+```
+
+# 修改配置
+
+```shell
+<VirtualHost *:81>
+        # The ServerName directive sets the request scheme, hostname and port that
+        # the server uses to identify itself. This is used when creating
+        # redirection URLs. In the context of virtual hosts, the ServerName
+        # specifies what hostname must appear in the request's Host: header to
+        # match this virtual host. For the default virtual host (this file) this
+        # value is not decisive as it is used as a last resort host regardless.
+        # However, you must set it for any further virtual host explicitly.
+        #ServerName www.example.com
+
+        ServerAdmin webmaster@localhost
+        DocumentRoot /var/www/html/ads/public
+
+        <Directory /var/www/html/ads/public/>
+                Options Indexes FollowSymLinks
+                AllowOverride all
+                Order deny,allow
+                Allow from all
+        </Directory>
+        # Available loglevels: trace8, ..., trace1, debug, info, notice, warn,
+        # error, crit, alert, emerg.
+        # It is also possible to configure the loglevel for particular
+        # modules, e.g.
+        #LogLevel info ssl:warn
+
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+```
+
 
 # 开启限速模块
 文档 `http://httpd.apache.org/docs/2.4/mod/mod_ratelimit.html`
 ```shell
 sudo a2enmod ratelimit
-```
 
-# 修改配置
-```shell
+```text
 <Directory /var/www/html/>
     SetOutputFilter RATE_LIMIT
     SetEnv rate-limit 400
 </Directory>
 ```
 
-## Apache 2.4 使用 PHP FPM
+# 重写规则
+`.htaccess`
+```text
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} ^/(server-info|server-http-status)
+    RewriteRule . - [L]
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^(.*)$ index.php?_url=/$1 [QSA,L]
+</IfModule>
+```
+
+`mods-available/mpm_event.conf`
+
+```conf
+# event MPM
+# StartServers: initial number of server processes to start
+# MinSpareThreads: minimum number of worker threads which are kept spare
+# MaxSpareThreads: maximum number of worker threads which are kept spare
+# ThreadsPerChild: constant number of worker threads in each server process
+# MaxRequestWorkers: maximum number of worker threads
+# MaxConnectionsPerChild: maximum number of requests a server process serves
+<IfModule mpm_event_module>
+        StartServers             20     # 在启动后建立的子进程数
+        MinSpareThreads          25     # 最小空闲进线程，当空闲子进程数小于25时，那么将会立刻生成新的子线程
+        MaxSpareThreads          1200   # 最大空闲进线程，当空闲子进程数超过75时，那么父进程会杀死多余的子线程，必须要大于StartServers*ThreadsPerChild=20*50=1000
+        ThreadLimit              64	# 每个进程可以生成最大线程数
+        ThreadsPerChild          50     # 每个进程可以生成的线程数
+        MaxRequestWorkers        1500   # 所能接受的总请求数，当请求超过1500时，多余的请求会进入请求队列
+        MaxConnectionsPerChild   0      # 每个子进程所能接受的最大请求数
+</IfModule>
+
+<IfModule mpm_event_module>
+        StartServers             20
+        MinSpareThreads          25
+        MaxSpareThreads          1200
+        ThreadLimit              64
+        ThreadsPerChild          50
+        MaxRequestWorkers        1500
+        MaxConnectionsPerChild   0
+</IfModule>
+```
+
+`mods-available/mpm_prefork.conf`
+```conf
+# prefork MPM
+# StartServers: number of server processes to start
+# MinSpareServers: minimum number of server processes which are kept spare
+# MaxSpareServers: maximum number of server processes which are kept spare
+# MaxRequestWorkers: maximum number of server processes allowed to start
+# MaxConnectionsPerChild: maximum number of requests a server process serves
+
+<IfModule mpm_prefork_module>
+        StartServers              5    # 默认启动的进程数
+        MinSpareServers           5    # 最小空闲进程数
+        MaxSpareServers           10   # 最大空闲进程数
+        MaxRequestWorkers         150  # 最大工作进程数
+        MaxConnectionsPerChild    0    # 最大请求数量
+</IfModule>
+
+<IfModule mpm_prefork_module>
+	ServerLimit               1000
+        StartServers              20
+        MinSpareServers           10
+        MaxSpareServers           60
+        MaxRequestWorkers         1000
+        MaxConnectionsPerChild    0
+</IfModule>
+```
+
+
+* 开启状态服务
+
+`mods-available/status.conf`
+
+* 使用 PHP FPM
+
 ```conf
 <FilesMatch \.php$>
          SetHandler "proxy:fcgi://127.0.0.1:9000"
 </FilesMatch>
 ```
 
+`/etc/apache2/mods-enabled/mpm_prefork.conf`
 ```conf
-sudo vi /etc/apache2/mods-enabled/mpm_prefork.conf
 <IfModule mpm_prefork_module>
         ServerLimit 1000
         StartServers        10
@@ -35,15 +152,6 @@ sudo vi /etc/apache2/mods-enabled/mpm_prefork.conf
         MaxRequestWorkers   1000
         MaxConnectionsPerChild   0
 </IfModule>
-```
-
-```conf
-listen = 127.0.0.1:9000
-pm = dynamic
-pm.max_children = 200
-pm.start_servers = 100
-pm.min_spare_servers = 30
-pm.max_spare_servers = 200
 ```
 
 或者
@@ -87,6 +195,14 @@ pm.max_spare_servers = 200
         </Directory>
         ErrorLog ${APACHE_LOG_DIR}/error.log
         CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+```
+
+# 传送 Authorization 头
+
+```conf
+<VirtualHost *:81 *:80>
+	SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
 </VirtualHost>
 ```
 
@@ -229,4 +345,43 @@ Alias /test "/var/www/html/test/public"
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^(.*)$ index.php?_url=/$1 [QSA,L]
 </IfModule>
+```
+
+## 使用 Nginx 实现负载均衡
+
+Nginx 配置
+
+```conf
+upstream myCluster{
+	server 127.0.0.1:80;
+	server 127.0.0.1:81;
+}
+server {
+        listen 8181;
+        server_name localhost;
+
+        root /var/www/html/www/public;
+
+        # Add index.php to the list if you are using PHP
+        index index.php index.html;
+
+        server_name _;
+
+        location / {
+                # First attempt to serve request as file, then
+                # as directory, then fall back to displaying a 404.
+                try_files $uri $uri/ /index.php?$query_string;
+        }
+
+        location ~ \.php$ {
+		proxy_set_header Authorization $http_authorization;
+		proxy_set_header HTTP_AUTHORIZATION $http_authorization;
+		proxy_pass_header Authorization;
+		proxy_pass http://myCluster$request_uri$query_string$is_args$args;
+		proxy_redirect off;
+		proxy_set_header Host $host;
+		proxy_set_header X-Real-IP $remote_addr;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+}
 ```
