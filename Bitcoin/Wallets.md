@@ -48,3 +48,5 @@ https://github.com/Coinomi/coinomi-android
 # Bitcoin Wallet
 
 https://github.com/bitcoin-wallet/bitcoin-wallet
+
+https://github.com/bither/bither-android
