@@ -6,10 +6,30 @@ sudo add-apt-repository ppa:ondrej/php
 
 ## 优化
 
+连接数监控
+```shell
+netstat -ant|wc -l
+netstat -ant|awk  '{print $6}'|sort|uniq -c|sort -n
+netstat -anpo|grep php-cgi|wc -l   # 连接进程数
+netstat -ant|grep 11111|wc -l      # 连接端口数
+```
+
+查看 TIME_WAIT 和 CLOSE_WAIT 链接状态。
+
+```shell
+netstat -n | awk '/^tcp/ {++S[$NF]} END {for(a in S) print a, S[a]}'
+```
+
+按顺序列出内存占用率的进程
+```shell
+ps -A --sort -rss -o comm,pmem,pcpu|uniq -c |head -15
+```
+
 查询单个 `php-fpm` 进程占用的内存：
 
 ```shell
 pmap $(pgrep php-fpm | head -1)
+pmap $(pgrep php-cgi | head -1)
 ```
 
 通过命令查看服务器上一共开了多少的 php-cgi 进程
