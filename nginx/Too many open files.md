@@ -24,11 +24,27 @@ ulimit -SHn 65535
 ```
 
 前两句是修改参数 最后一句是生效
+
 修改内核参数
 ```shell
 /etc/sysctl.conf  
-echo "fs.file-max=65536" >> /etc/sysctl.conf  
+echo "fs.file-max=65536" >> /etc/sysctl.conf
 sysctl -p
+```
+
+`/etc/sysctl.conf：
+```conf
+fs.file-max=65536
+net.core.somaxconn = 65535
+net.core.netdev_max_backlog = 65535
+net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_tw_recycle = 1
+net.ipv4.tcp_fin_timeout=30
+```
+
+```shell
+cat /proc/sys/fs/file-max
 ```
 
 `/etc/security/limits.conf`
