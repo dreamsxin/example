@@ -54,6 +54,17 @@ echo "dump成功，请前往查看(文件名包含时间，为了采集更准确
 exit
 ```
 
+## 打印日志
+
+* 控制台
+```shell
+tail -f /var/log/tomcat8/catalina.out
+```
+
+* 输出到控制台
+```java
+System.out.print(jb.toString());
+```
 ## 关闭日志
 
 `logging.properties`

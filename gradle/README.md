@@ -206,9 +206,11 @@ task wrapper(type: Wrapper) {
 ```
 
 * 下载和初始化 wrapper 脚本
+
 ```text
 gradle wrapper
 ```
+
 命令执行完后，我们可以看到增加了一些新文件。有两个文件在根目录下，
 
 wapper 的 jar 文件和 properties 文件在新增的 gradle/wrapper 目录下。
