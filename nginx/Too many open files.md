@@ -6,6 +6,40 @@
 ulimit -a
 ```
 
+文件 `/etc/pam.d/common-session` 追加行
+```text
+session required pam_limits.so
+```
+
+文件 `/etc/sysctl.conf` 追加行
+```
+fs.file-max = 2097152
+```
+运行 `sysctl -p`
+
+* 查看 Hard Limit
+```shell
+ulimit -Hn
+```
+
+* 查看 Soft Limit
+```shell
+ulimit -Sn
+```
+
+* 查看其它用户 Limit
+
+```shell
+su - www-data -c 'ulimit -aHS' -s '/bin/bash'
+```
+
+* 查看进程 Limit
+
+```shell
+ps aux | grep php-fpm
+cat /proc/pid/limits
+```
+
 需要调大限制
 ```shell
 ulimit -u 65535
@@ -26,6 +60,7 @@ ulimit -SHn 65535
 前两句是修改参数 最后一句是生效
 
 修改内核参数
+
 ```shell
 /etc/sysctl.conf  
 echo "fs.file-max=65536" >> /etc/sysctl.conf
@@ -45,6 +80,7 @@ net.ipv4.tcp_fin_timeout=30
 
 ```shell
 cat /proc/sys/fs/file-max
+sysctl fs.file-max
 ```
 
 `/etc/security/limits.conf`
