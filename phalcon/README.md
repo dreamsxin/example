@@ -1,4 +1,8 @@
-# 系统环境
+# Phalcon
+
+依赖倒置•控制反转•依赖注入•面向接口编程
+
+## 系统环境
 
 ```shell
 sudo apt-get install git vim build-essential libpcre3-dev
