@@ -2,6 +2,88 @@
 
 ```shell
 sudo add-apt-repository ppa:webupd8team/java
+sudo apt-get install tomcat8
+```
+
+## 自定义安装
+
+* 安装 Java
+
+```shell
+sudo apt-get install default-jdk 
+update-alternatives --config java 
+```
+
+* 增加 JAVA_HOME
+
+```shell
+nano /etc/environment
+```
+`JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java"`
+ 
+```shell
+source /etc/environment
+echo $JAVA_HOME 
+```
+
+```shell
+groupadd tomcat
+useradd -s /bin/false -g tomcat -d /opt/tomcat tomcat
+```
+ 
+
+*  下载 Tomcat.
+
+```shell
+wget http://ftp.mirror.tw/pub/apache/tomcat/tomcat-8/v8.5.31/bin/apache-tomcat-8.5.31.tar.gz
+mkdir /opt/tomcat
+tar xvf apache-tomcat-8*tar.gz -C /opt/tomcat --strip-components=1
+cd /opt/
+sudo chown -R tomcat tomcat/
+```
+
+* 配置 Tomcat
+
+创建配置文件
+```shell
+nano /etc/systemd/system/tomcat.service 
+```
+内容如下
+```text
+[Unit]
+Description=Apache Tomcat Web Application Container
+After=network.target
+
+[Service]
+Type=forking
+
+Environment=JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64/jre
+Environment=CATALINA_PID=/opt/tomcat/temp/tomcat.pid
+Environment=CATALINA_HOME=/opt/tomcat
+Environment=CATALINA_BASE=/opt/tomcat
+Environment='CATALINA_OPTS=-Xms512M -Xmx1024M -server -XX:+UseParallelGC'
+Environment='JAVA_OPTS=-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom'
+
+ExecStart=/opt/tomcat/bin/startup.sh
+ExecStop=/opt/tomcat/bin/shutdown.sh
+
+User=tomcat
+Group=tomcat
+UMask=0007
+RestartSec=10
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+Reload the SystemD daemon so that the service settings that were added are included.
+```shell
+sudo systemctl daemon-reload
+```
+Start the Tomcat service.
+```shell
+sudo systemctl start tomcat
+sudo systemctl status tomcat 
 ```
 
 ## 调试
