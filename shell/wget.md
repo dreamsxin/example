@@ -1,5 +1,11 @@
 # wget
 
+* 下载图片
+
+```shell
+wget -e robots=off -p -A "*jpg,*.png" http://www.example.com/
+```
+
 * 断点续传
 
 ```shell
