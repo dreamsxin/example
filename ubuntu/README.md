@@ -1,3 +1,10 @@
+# 查看 cpu 温度
+
+```shell
+sudo apt-get install lm-sensors
+sensors
+```
+
 # 快捷键
 
 ## 打开终端
