@@ -22,10 +22,17 @@ Jun 12 17:51:09 ubuntu failsafe: Failsafe of 120 seconds reached.
 Jun 12 17:51:11 ubuntu kernel: [   16.939278] init: failsafe main process (899) killed by TERM signal
 ```
 
-* 解决方法
+* 解决方法（不一定有效）
 
-方法一修改 `/boot/grub/grub.conf`，在 kernel 一行最后加上添加 `intremap=off` 或者 `intremap=no_x2apic_optout`
- 
+方法一添加 `intremap=off` 或者 `intremap=no_x2apic_optout`
+ubuntu：
+`/etc/default/grub`
+```text
+GRUB_CMDLINE_LINUX_DEFAULT="intermap=off"
+```
+CentOS:
+修改 `/boot/grub/grub.conf`，在 kernel 一行最后加上
+
 然后重启服务器即可。
 
 参数解释：
@@ -37,7 +44,7 @@ nosid：重映射时不对SID(Source ID)做检查
 no_x2apic_optout：无视BIOS的设置，强制禁用x2APIC特性，主要用于解决某些对x2APIC支持有缺陷的BIOS导致的故障
 
 
-方法二升级内核。
+方法二升级内核或重装高版本系统
 
 查看当前内核：
 ```shell
@@ -49,4 +56,7 @@ dpkg -l|grep linux-image
 ```shell
 sudo apt-cache search linux-image
 sudo apt-get install linux-image-4.4.0-98-generic linux-image-extra-4.4.0-98-generic
+sudo apt-get install linux-image-3.13.0-129-generic linux-image-extra-3.13.0-129-generic
+# 卸载新内核，回滚到老版本
+sudo apt-get purge linux-image-4.4.0-98-generic linux-image-extra-4.4.0-98-generic
 ```
