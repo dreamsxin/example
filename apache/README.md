@@ -7,6 +7,7 @@ sudo a2enmod rewrite
 
 # 查看模块
 ```shell
+source /etc/apache2/envvars
 apache2ctl -l
 sudo apache2ctl -M
 ```
