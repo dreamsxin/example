@@ -17,12 +17,19 @@ sudo apt-get update
 sudo apt-get install postgresql
 ```
 
-## Ubuntu 14 到 Postgresql 官网 https://www.postgresql.org/download/linux/ubuntu/
+## Ubuntu
+
+官网 https://www.postgresql.org/download/linux/ubuntu/
 
 编辑 `/etc/apt/sources.list` 追加一行
 
+14.04
 ```conf
 deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main
+```
+16.04
+```conf
+deb http://apt.postgresql.org/pub/repos/apt/ xenial-pgdg main
 ```
 
 执行

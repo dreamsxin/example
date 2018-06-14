@@ -2,7 +2,7 @@
 
 ```shell
 sudo apt install software-properties-common
-sudo apt-get install python-software-properties
+#sudo apt-get install python-software-properties
 # 添加 PHP 软件源
 sudo add-apt-repository ppa:ondrej/php
 
