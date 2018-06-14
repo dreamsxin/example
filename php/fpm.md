@@ -14,6 +14,12 @@ netstat -anpo|grep php-cgi|wc -l   # 连接进程数
 netstat -ant|grep 11111|wc -l      # 连接端口数
 ```
 
+CPU 占用率
+```shell
+top -p $(pgrep php-fpm | head -20 | tr "\\n" "," | sed 's/,$//')
+
+ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%cpu | head
+```
 查看 TIME_WAIT 和 CLOSE_WAIT 链接状态。
 
 ```shell
@@ -342,4 +348,123 @@ rlimit_core = unlimited
 
 ```shell
 gdb /path/to/php-fpm core.dump
+```
+
+## 日志格式
+
+```text
+; The access log file
+
+; Default: not set
+
+;access.log = log/$pool.access.log
+
+;接收日志，默认没有设置
+
+
+; The access log format.
+
+; The following syntax is allowed
+
+;   %%: the '%' character
+
+;   %C: %CPU used by the request
+
+;       it can accept the following format:
+
+;       - %{user}C for user CPU only
+
+;       - %{system}C for system CPU only
+
+;       - %{total}C  for user + system  CPU (default)
+
+;   %d: time taken to serve the request
+
+;       it can accept the following format:
+
+;       - %{seconds}d (default)
+
+;       - %{miliseconds}d
+
+;       - %{mili}d
+
+;       - %{microseconds}d
+
+;       - %{micro}d
+
+;   %e: an environment variable (same as $_ENV or $_SERVER)
+
+;       it must be associated with embraces to specify the name of the env
+
+;       variable. Some exemples:
+
+;       - server specifics like: %{REQUEST_METHOD}e or %{SERVER_PROTOCOL}e
+
+;       - HTTP headers like: %{HTTP_HOST}e or %{HTTP_USER_AGENT}e
+
+;   %f: script filename
+
+;   %l: content-length of the request (for POST request only)
+
+;   %m: request method
+
+;   %M: peak of memory allocated by PHP
+
+;       it can accept the following format:
+
+;       - %{bytes}M (default)
+
+;       - %{kilobytes}M
+
+;       - %{kilo}M
+
+;       - %{megabytes}M
+
+;       - %{mega}M
+
+;   %n: pool name
+
+;   %o: ouput header
+
+;       it must be associated with embraces to specify the name of the header:
+
+;       - %{Content-Type}o
+
+;       - %{X-Powered-By}o
+
+;       - %{Transfert-Encoding}o
+
+;       - ....
+
+;   %p: PID of the child that serviced the request
+
+;   %P: PID of the parent of the child that serviced the request
+
+;   %q: the query string
+
+;   %Q: the '?' character if query string exists
+
+;   %r: the request URI (without the query string, see %q and %Q)
+
+;   %R: remote IP address
+
+;   %s: status (response code)
+
+;   %t: server time the request was received
+
+;       it can accept a strftime(3) format:
+
+;       %d/%b/%Y:%H:%M:%S %z (default)
+
+;   %T: time the log has been written (the request has finished)
+
+;       it can accept a strftime(3) format:
+
+;       %d/%b/%Y:%H:%M:%S %z (default)
+
+;   %u: remote user
+
+;
+
+; Default: "%R - %u %t \"%m  %r\" %s"
 ```

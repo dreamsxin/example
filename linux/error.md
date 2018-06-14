@@ -20,6 +20,7 @@ Jun 12 17:51:09 ubuntu kernel: [   14.408634] ACPI Error: Method parse/execution
 Jun 12 17:51:09 ubuntu kernel: [   14.408643] ACPI Error: Method parse/execution failed [\_SB_.PMI0._PMC] (Node ffff880819605a78), AE_NOT_EXIST (20131115/psparse-536)
 Jun 12 17:51:09 ubuntu failsafe: Failsafe of 120 seconds reached.
 Jun 12 17:51:11 ubuntu kernel: [   16.939278] init: failsafe main process (899) killed by TERM signal
+Jun 13 17:51:48 ubuntu kernel: [   11.068868] ACPI Error: Region IPMI (ID=7) has no handler (20150930/exfldio-297)
 ```
 
 * 解决方法（不一定有效）
@@ -29,6 +30,10 @@ ubuntu：
 `/etc/default/grub`
 ```text
 GRUB_CMDLINE_LINUX_DEFAULT="intermap=off"
+```
+重新构建 grub 配置
+```shell
+update-grub
 ```
 CentOS:
 修改 `/boot/grub/grub.conf`，在 kernel 一行最后加上
