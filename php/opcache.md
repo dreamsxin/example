@@ -58,5 +58,13 @@ Kernel.shmall 是系统一次可以使用的最大共享内存大小。单位是
 修改 `/etc/sysctl.conf`：
 ```conf
 kernel.shmall = 2359296
+
+fs.file-max=65536
+net.core.somaxconn = 65535
+net.core.netdev_max_backlog = 65535
+net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_tw_recycle = 1
+net.ipv4.tcp_fin_timeout=30
 vm.nr_hugepages = 512
 ```
