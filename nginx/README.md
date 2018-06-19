@@ -580,6 +580,7 @@ location / {
 
 # 日志格式
 ```conf
+log_format main ' $remote_user [$time_local] $http_x_Forwarded_for $remote_addr $request $http_x_forwarded_for $upstream_addr ups_resp_time: $upstream_response_time request_time: $request_time';
 log_format combined '$remote_addr-$remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent"';
 log_format main '$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent"';
 log_format main '$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $http_x_forwarded_for "$request_time" $request_body';
