@@ -1,9 +1,14 @@
 <?php
 
 class App extends Phalcon\Application {
-        public function handle($uri = NULL):Phalcon\Http\ResponseInterface{
-                return new Phalcon\Http\Response('hello');
-        }
+	public function handle($data = NULL):Phalcon\Http\ResponseInterface{
+		$response = new Phalcon\Http\Response('hello');
+		$response->setHeader("Content-Type", "text/html");
+		if ($data) {
+			$response->setContent(json_encode($data));
+		}
+		return $response;
+	}
 }
 // Phalcon\Debug::enable();
 $app = new App;

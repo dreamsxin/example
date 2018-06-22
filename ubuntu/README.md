@@ -158,6 +158,8 @@ source ~/.profile
 
 ## 双网卡 NAT 配置
 
+firestarter
+
 ```shell
 sudo iptables -F
 sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE #打开NAT
