@@ -1,6 +1,6 @@
 <?php
 
-$server = new Phalcon\Websocket\Server(8080);
+$server = new Phalcon\Websocket\Server(8080, Phalcon\Websocket\Server::WRITE_TEXT);
 $server->on(Phalcon\Websocket\Server::ON_ACCEPT, function($server, $conn){
 	echo 'Accept'.PHP_EOL;
 	$conn->send('Hello world!');

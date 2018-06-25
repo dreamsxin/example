@@ -2,7 +2,7 @@
 
 $stdin = fopen('php://stdin', 'r');
 
-$client = new Phalcon\Websocket\Client('127.0.0.1', 8080);
+$client = new Phalcon\Websocket\Client('127.0.0.1', 8080, NULL, Phalcon\Websocket\Server::WRITE_TEXT);
 $client->on(Phalcon\Websocket\Client::ON_ACCEPT, function($client, $conn){
 	echo 'Accept'.PHP_EOL;
 	$conn->send('Hello Server!');
