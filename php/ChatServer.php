@@ -1,40 +1,47 @@
+#!/usr/bin/php
 <?php
 
-$server = new Phalcon\Socket\Server('127.0.0.1', 5000);
-$server->setEvent(Phalcon\Socket\Server::USE_SELECT);
-$server->run(
-	function(Phalcon\Socket\Client $client){
-		echo "Connecting...".count($this->getClients()).PHP_EOL;
-	},
-	function(Phalcon\Socket\Client $client, $mssage){
-		// Received
-		echo '接收到消息：'.$mssage.PHP_EOL;
-		// 向所有连接转发数据
-		echo 'Client write'.PHP_EOL;
-		foreach($this->getClients() as $otherclient) {
-			if ($client != $otherclient) {
-				$otherclient->write($mssage);
-			}
-		}
-	},
-	function(Phalcon\Socket\Client $client){
-		// Write
-	},
-	function(Phalcon\Socket\Client $client){
-		// Close
-		echo 'Client '.$client->getSocketId().' disconnected'.PHP_EOL;
-		foreach($this->getClients() as $otherclient) {
-			if ($client != $otherclient) {
-				$otherclient->write($client->getSocketID().'断开连接');
-			}
-		}
-	},
-	function(Phalcon\Socket\Client $client){
-		// Error
-		echo 'Client '.$client->getSocketId().' error'.PHP_EOL;
-	},
-	function(){
-		// Timeout
-		echo 'Timeout'.PHP_EOL;
+$stdin = fopen('php://stdin', 'r');
+$filename = __DIR__.'/chat.log';
+echo 'Please enter your name:'.PHP_EOL;
+$user = trim(fgets($stdin));
+$message = '['.date('Y-m-d H:i:s').'] '.$user.' joined the chat'.PHP_EOL;
+file_put_contents($filename, $message, FILE_APPEND);
+
+echo '['.date('Y-m-d H:i:s').'] Welcome to the chat '.$user.'!'.PHP_EOL;
+$pid = pcntl_fork();
+
+if ($pid  == - 1 ) {
+	die( 'could not fork' );
+} else if ($pid) {
+	while ($msg = fgets($stdin)) {
+		$message = '['.date('Y-m-d H:i:s').'] '.$user.' '.$msg.PHP_EOL;
+		file_put_contents($filename, $message, FILE_APPEND);
 	}
-);
+	pcntl_wait($status);
+} else {
+	$lastmtime = null;
+	$ftell = null;
+
+	while (1) {
+		$fp = fopen($filename,  'r');
+		if ($fp) {
+			$fstat = fstat($fp);
+			$mtime = $fstat['mtime'];
+			if (!$lastmtime) {
+				fseek($fp, 0, SEEK_END);
+				$lastmtime = $mtime;
+				$ftell = ftell($fp);
+			} else if ($lastmtime < $mtime) {
+				$lastmtime = $mtime;
+				fseek($fp, $ftell);
+				while (!feof($fp) && ($line  =  fgets($fp, 4096)) !==  false ) {
+					echo $line;
+				}
+				$ftell = ftell($fp);
+			}
+			fclose($fp);
+		}
+		sleep(1);
+	}
+}
