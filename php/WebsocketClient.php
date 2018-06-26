@@ -16,7 +16,7 @@ $client->on(Phalcon\Websocket\Client::ON_DATA, function($client, $conn, $data){
 });
 $client->on(Phalcon\Websocket\Client::ON_TICK, function($client){
 	$data = 'Hello Tick!';
-	echo 'Tick '.$data.PHP_EOL;
-	$client->send($data);
+	echo $data.PHP_EOL;
+	//$client->send($data, Phalcon\Websocket\Client::WRITE_BINARY);
 });
 $client->connect();
