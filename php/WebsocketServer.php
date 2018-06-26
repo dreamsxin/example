@@ -11,6 +11,7 @@ $server->on(Phalcon\Websocket\Server::ON_CLOSE, function($server){
 });
 $server->on(Phalcon\Websocket\Server::ON_DATA, function($server, $conn, $data){
 	echo 'Data '.$data.PHP_EOL;
+	$server->broadcast($data, [$conn->getUid()]);
 });
 $server->on(Phalcon\Websocket\Server::ON_TICK, function($server){
 	$data = 'Server Tick!';

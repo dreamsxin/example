@@ -1,54 +1,122 @@
 <!DOCTYPE HTML>
-
 <html>
-   <head>
-      <meta charset="utf-8"/>
-      <script type = "text/javascript">
-         function WebSocketTest() {
-            
-            if ("WebSocket" in window) {
-               alert("WebSocket is supported by your Browser!");
-               
-               // Let us open a web socket
-               var ws = new WebSocket("ws://localhost:8080/");
-				
-               ws.onopen = function() {
-                  
-                  // Web Socket is connected, send data using send()
-                  ws.send("Message to send");
-                  alert("Message is sent...");
-               };
-				
-               ws.onmessage = function (evt) { 
-                  var received_msg = evt.data;
-                  alert("Message is received...");
-                  console.log(received_msg);
-                  var reader = new FileReader();
-                  reader.onload = function() {
-                     alert(reader.result);
-                  }
-                  reader.readAsText(received_msg);
-               };
-				
-               ws.onclose = function() { 
-                  
-                  // websocket is closed.
-                  alert("Connection is closed..."); 
-               };
-            } else {
-              
-               // The browser doesn't support WebSocket
-               alert("WebSocket NOT supported by your Browser!");
-            }
-         }
-      </script>
-		
-   </head>
-   
-   <body>
-      <div id = "sse">
-         <a href = "javascript:WebSocketTest()">Run WebSocket</a>
-      </div>
+<head>
+<meta charset="utf-8"/>
+<style>
+#chat { width: 97%; }
+.them { font-weight: bold; }
+.them:before { content: 'them '; color: #bbb; font-size: 14px; }
+.you { font-style: italic; }
+.you:before { content: 'you '; color: #bbb; font-size: 14px; font-weight: bold; }
+#log {
+  overflow: auto;
+  max-height: 300px;
+  list-style: none;
+  padding: 0;
+/*  margin: 0;*/
+}
+#log li {
+  border-top: 1px solid #ccc;
+  margin: 0;
+  padding: 10px 0;
+}
+</style>
+</head>
+<body>
+<article>
+  <form onsubmit="return sendMessage(event)">
+    <input type="text" id="chat" placeholder="type and press enter to chat" />
+    <button type="submit">Send</button>
+  </form>
+  <p id="status">Not connected</p>
+  <p>Users connected: <span id="connected">0</span></p>
+  <p>To test, open two windows with Web Socket support, type a message above and press return.</p>
+  <ul id="log"></ul>
+</article>
+
+<script type = "text/javascript">
+// For discussion and comments, see: http://remysharp.com/2009/01/07/html5-enabling-script/
+(function(){if(!/*@cc_on!@*/0)return;var e = "abbr,article,aside,audio,bb,canvas,datagrid,datalist,details,dialog,eventsource,figure,footer,header,hgroup,mark,menu,meter,nav,output,progress,section,time,video".split(','),i=e.length;while (i--){document.createElement(e[i])}})();
+
+// let's invite Firefox to the party.
+if (window.MozWebSocket) {
+  window.WebSocket = window.MozWebSocket;
+}
+
+var connected = document.getElementById('connected'),
+    log = document.getElementById('log'),
+    chat = document.getElementById('chat'),
+    form = chat.form,
+    conn = {},
+    state = document.getElementById('status'),
+    entities = {
+      '<' : '&lt;',
+      '>' : '&gt;',
+      '&' : '&amp;'
+    };
+
+function openConnection(url) {
+  // uses global 'conn' object
+  if (conn.readyState === undefined || conn.readyState > 1) {
+    conn = new WebSocket(url);
+    conn.onopen = function () {
+      state.className = 'success';
+      state.innerHTML = 'Socket open';
+    };
+    conn.onmessage = function (event) {
+      // console.log(event.data);
+      var message = event.data;
       
-   </body>
+      if (typeof message != String) {
+          var reader = new FileReader();
+          reader.onload = function() {
+              message = reader.result;
+              if (!(/^\d+$/).test(message)) {
+                log.innerHTML = '<li class="them">' + message.replace(/[<>&]/g, function (m) { return entities[m]; }) + '</li>' + log.innerHTML;
+              } else {
+                log.innerHTML = '<li class="them">' + message + '</li>' + log.innerHTML;
+              }
+          }
+          reader.readAsText(message);
+      } else {
+          if (!(/^\d+$/).test(message)) {
+            log.innerHTML = '<li class="them">' + message.replace(/[<>&]/g, function (m) { return entities[m]; }) + '</li>' + log.innerHTML;
+          } else {
+            connected.innerHTML = message;
+          }
+      }
+    };
+    conn.onclose = function (event) {
+      state.className = 'fail';
+      state.innerHTML = 'Socket closed';
+    };
+  }
+}
+
+if (window.WebSocket === undefined) {
+  state.innerHTML = 'Sockets not supported';
+  state.className = 'fail';
+} else {
+  state.onclick = function () {
+    if (conn.readyState !== 1) {
+      conn.close();
+      setTimeout(function () {
+        openConnection('ws://localhost:8080/');
+      }, 250);
+    }
+  };
+  function sendMessage(event) {
+    event.preventDefault();
+    // if we're connected
+    if (conn.readyState === 1) {
+      conn.send(chat.value);
+      log.innerHTML = '<li class="you">' + chat.value.replace(/[<>&]/g, function (m) { return entities[m]; }) + '</li>' + log.innerHTML;
+      chat.value = '';
+    }
+    return false;
+  }
+  openConnection('ws://localhost:8080/');
+}
+</script>
+</body>
 </html>
