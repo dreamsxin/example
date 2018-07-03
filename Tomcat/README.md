@@ -212,10 +212,75 @@ server {
 }
 ```
 
-# 设置tomcat线程池大小
+## 设置tomcat线程池大小
 
 众所周知，tomcat接受一个request后处理过程中，会涉及到cpu和IO时间。其中IO等待时间，cpu被动放弃执行，其他线程就可以利用这段时间片进行操作。所以我们可以采用服务器IO优化的通用规则。
 线程大小 = ( (线程io时间 + 线程cpu) / 线程cpu time) * cpu核数
 
 线程io时间为100ms(IO操作比如数据库查询，同步远程调用等)，线程cpu时间10ms，服务器物理机核数为4个。
 通过上面的公式，我们计算出来的大小是 ((100 + 10 )/10 ) *4 = 44。理论上我们有依据，但是实际计算过程中我们怎么知道线程IO时间和cpu时间呢？
+
+## 创建新实例
+
+```shell
+sudo apt-get install tomcat8-user
+cd /opt
+sudo tomcat8-instance-create -p 8080 -c 8081 tomcat8-php
+sudo chown tomcat8:root ./tomcat8-php -R
+sudo ln -s /etc/tomcat8/policy.d /opt/tomcat8-php/conf/policy.d
+sudo cp /etc/init.d/tomcat8 /etc/init.d/tomcat8-php
+```
+
+
+编辑 `/opt/tomcat8-php/conf/server.xml`：
+```xml
+<Server port="8006" shutdown="SHUTDOWN">
+	<Executor name="tomcatThreadPool" namePrefix="catalina-exec-" 
+		maxThreads="500" minSpareThreads="100" prestartminSpareThreads = "true" maxQueueSize = "100" />
+
+	<Connector executor="tomcatThreadPool" port="8081" protocol="org.apache.coyote.http11.Http11Nio2Protocol" 
+		connectionTimeout="3000" redirectPort="8443" enableLookups="false" 
+		acceptCount="100"
+	/>
+</Server>
+```
+
+编辑 `/etc/init.d/tomcat8-php`：
+```conf
+#!/bin/sh
+#
+# /etc/init.d/tomcat8 -- startup script for the Tomcat 8 servlet engine
+#
+# Written by Miquel van Smoorenburg <miquels@cistron.nl>.
+# Modified for Debian GNU/Linux by Ian Murdock <imurdock@gnu.ai.mit.edu>.
+# Modified for Tomcat by Stefan Gybas <sgybas@debian.org>.
+# Modified for Tomcat6 by Thierry Carrez <thierry.carrez@ubuntu.com>.
+# Modified for Tomcat7 by Ernesto Hernandez-Novich <emhn@itverx.com.ve>.
+# Additional improvements by Jason Brittain <jason.brittain@mulesoft.com>.
+#
+### BEGIN INIT INFO
+# Provides:          tomcat8-php
+# Required-Start:    $local_fs $remote_fs $network
+# Required-Stop:     $local_fs $remote_fs $network
+# Should-Start:      $named
+# Should-Stop:       $named
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start Tomcat.
+# Description:       Start the Tomcat servlet engine.
+### END INIT INFO
+
+NAME=tomcat8-php
+DESC="Tomcat Pumba servlet engine"
+#DEFAULT=/etc/default/$NAME
+DEFAULT=/etc/default/tomcat8
+JVM_TMP=/tmp/$NAME-tmp
+
+CATALINA_HOME=/usr/share/tomcat8
+#CATALINA_BASE=/var/lib/$NAME
+CATALINA_BASE=/opt/tomcat8-php
+```
+
+```shell
+sudo update-rc.d tomcat8-php defaults 90
+```
