@@ -146,3 +146,51 @@ INSERT INTO test(txt) VALUES ('');
 
 select * from test;
 ```
+
+## 索引
+
+PostgreSQL支持Json格式数据，有两种类型：json和jsonb。
+
+json 类型可以作包含判断和是否存在的判断（containment or existence），表示符号分别为@>和?（以及其它一些变种）。对于这两种牵涉到多个键和元素的判断场景，json类型比下面要讲的arrays更适合，因为其对查询有内在的优化机制，而array只是单纯的线性查找。
+
+jsonb 支持两种特有的GIN索引`jsonb_ops`和`jsonb_path_ops`。创建的语法如下：
+```sql
+CREATE INDEX idxgin ON api USING GIN (jdoc);
+CREATE INDEX idxginp ON api USING GIN (jdoc jsonb_path_ops); -- 只是比前一行多了jsonb_path_ops标记
+```
+我们知道，GIN索引建立时，会先通过内建函数从表中每行数据的索引字段的值中，抽取键（key），一个字段值一般可抽取多个key。然后，将每个key与含有此key的所有行的ID组成键值对，再将它们插入b树索引供查询。那么这两种GIN索引有什么区别呢？
+
+它们的区别在于，生成`GIN key`的方式不同。`jsonb_ops`调用`gin_extract_jsonb`函数生成key，这样每个字段的json数据中的所有键和值都被转成GIN的key；而jsonb_path_ops使用函数gin_extract_jsonb_path抽取：如果将一个jsonb类型的字段值看做一颗树，叶子节点为具体的值，中间节点为键，则抽取的每个键值实际上时每个从根节点到叶子节点的路径对应的hash值。
+
+不难推测，`jsonb_path_ops`索引的key的数目和`jsonb`的叶子节点数有关，用叶子节点的路径做查询条件时会比较快（这也是这种索引唯一支持的查询方式）；而`jsonb_ops`索引的key的数目与jsonb包含的键和值（即树形结构的所有节点）的总数有关，可以用于路径查询之外的其他查询。
+
+我们可以对json数据中的某一属性建GIN索引（可称之为属性索引），如：
+`CREATE INDEX idxgintags ON api USING GIN ((jdoc -> 'tags'));`
+这能提升检索键值对的效率，比如如下场景：
+```sql
+SELECT jdoc->'guid', jdoc->'name' FROM api WHERE jdoc -> 'tags' ? 'qui';
+```
+当然我们也可以不使用属性索引，而是换一种查询方式：
+```sql
+SELECT jdoc->'guid', jdoc->'name' FROM api WHERE jdoc @> '{"tags": ["qui"]}';
+```
+
+## 唯一索引
+
+```sql
+CREATE UNIQUE INDEX people_data_pos_idx ON peoples( (data->>'pos') ) ;
+CREATE INDEX idx_btree_hobbies ON jsonTbl USING BTREE ((jsb->>'hobbies'));
+CREATE INDEX idx_btree_hobbies ON jsonTbl USING HASH ((jsb->>'hobbies'));
+SELECT count(*) FROM jsonTbl WHERE jsb->>'hobbies' = 'snowboarding';
+SELECT count(*) FROM jsonTbl WHERE jsb->>'hobbies' = 'snowboarding' OR jsb->>'hobbies' = 'varenie';
+CREATE INDEX idx_btree_hobbies ON jsonTbl USING GIN ((jsb->'hobbies'));
+
+SELECT count(*) FROM jsonTbl WHERE jsb->'hobbies' ? 'snowboarding';
+SELECT count(*) FROM jsonTbl WHERE jsb->'hobbies' ? 'snowboarding' OR jsb->'hobbies' ? 'varenie';
+
+CREATE INDEX idx_btree_hobbies ON jsonTbl USING GIN (jsb jsonb_ops);
+CREATE INDEX idx_btree_hobbies ON jsonTbl USING GIN (jsb jsonb_path_ops);
+
+SELECT count(*) FROM jsonTbl WHERE jsb @> '{“hobbies” :“snowboarding”};
+SELECT count(*) FROM jsonTbl WHERE jsb @> '{“hobbies”:”snowboarding”}' OR jsb @> '{“hobbies”:”varenie”}';
+```

@@ -1,3 +1,5 @@
+中文手册 https://github.com/postgres-cn/pgdoc-cn
+
 # 生态圈
 
  Data processing engine base on Postgresql 
