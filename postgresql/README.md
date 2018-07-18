@@ -44,7 +44,7 @@ apt-get install postgresql-9.5
 ## psql 使用
 
 - 查看所有库：\l
-- 查看所有表： \dt
+- 查看所有表：\dt
 - 查看某个表的结构： \d 表名
 
 # 设置默认密码
