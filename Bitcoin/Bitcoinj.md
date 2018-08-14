@@ -36,6 +36,26 @@ if (args[1].equals("testnet")) {
 
 每一个网络都拥有起始的区块、独立的端口号和地址前缀。这些都封装在 NetworkParameters 单例对象中，使用时调用`call()`方法。值得一提的是，在`testnet`中可以免费从`TestNet Faucet`获取大量的币。在`regtest`模式中不存在公有的设施，我们可以使用`bitcoind -regtest setgenerate true`产生新的区块。
 
+* NetworkParameters
+
+NetworkParameters包含bitcoin链实例工作需要的数据。这是一个抽象类，具体实例可在params包中被发现。有4个实现类：一个是主网络MainNetParams，一个是为了测试网，另外两个是为了单元测试和本地app开发。虽然这些类包含一些别号，我们鼓励去调用get的静态方法。
+
+这个类所有的实现类都在org.bitcoinj.params这个包下面。
+
+* MainNetParams
+
+MainNetParams 继承 AbstractBitcoinNetParams，这里指的是主链上的配置信息，包括 dns seeds。
+
+三种seed
+
+- dnsSeeds
+- httpSeeds
+- addrSeeds
+
+* 得到节点列表
+
+https://github.com/sipa/bitcoin-seeder
+
 * 密钥和地址
 
 比特币交易通常是将钱发送到一个由椭圆曲线生成的公钥。发送者生成一个交易，交易中包含有接受者的地址。接受者的地址是由公钥经过hash得到的。关于私钥、公钥、地址的关系我总结如下：
