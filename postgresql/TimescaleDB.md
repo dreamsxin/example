@@ -1,25 +1,26 @@
 # TimescaleDB
 
-http://docs.timescale.com/latest/getting-started/installation/linux/installation-apt
+TimescaleDB 是 PostgreSQL 数据库的一个插件，通过 `hypertable` 实现对时间序列数据库进行分块，通过把大表分为多个小表的方式，新的数据总是插入到最新的块上，由于进行了分块，使得索引数据变小，保持索引一直处于>内存当中，不用去磁盘交换数据，因此加快了数据的插入速度。
+官方提供了数据库性能测试工具和数据，可参考 https://github.com/timescale/benchmark-postgres。
 
-TimescaleDB是一款针对快速获取和复杂查询而优化的开源时间序列数据库。它使用“标准的SQL”语句，并且像传统的关系数据库那样容易使用，像nosql那样可扩展。
-与这两种替代品（关系数据库与NoSQL）相比,TimescaleDB为时间序列数据集合了两种数据库的优点：
+TimescaleDB 是一款针对快速获取和复杂查询而优化的开源时间序列数据库。它使用“标准的SQL”语句，并且像传统的关系数据库那样容易使用，像nosql那样可扩展。
+与这两种替代品（关系数据库与NoSQL）相比,TimescaleDB为时间序列数据集合了两种数据库的优点。
 
-## 易用
+* 易用
 
 - PostgreSQL原生支持的所有SQL,包含完整SQL接口（包括辅助索引，非时间聚合，子查询，JOIN，窗口函数）
 - 任何使用PostgreSQL的客户端或工具，可以直接应用到该数据库，不需要更改
 - 时间为导向的特性，API功能和相应的优化
 - 可靠的数据存储
 
-## 可扩展
+* 可扩展
 
 - 透明时间/空间分区，用于放大（单个节点）和扩展（即将出现）
 - 高数据写入速率（包括批量提交，内存中索引，事务支持，数据备份支持)
 - 单个节点上的大小合适的块（二维数据分区），以确保即使在大数据量时即可快速读取
 - 块之间和服务器之间的并行操作
 
-## 可靠性
+* 可靠性
 
 - 作为PostgreSQL的扩展。
 - 受益于20多年的PostgreSQL研究的成功经验（包括流式复制，备份）
@@ -28,6 +29,8 @@ TimescaleDB是一款针对快速获取和复杂查询而优化的开源时间序
 本节的其余部分描述了TimescaleDB架构的设计和动机,包括为什么时间序列数据不同，以及在构建 TimescaleDB 时如何利用其特性。
 
 ## 安装
+
+http://docs.timescale.com/latest/getting-started/installation/linux/installation-apt
 
 ```shell
 # Add our PPA
@@ -140,6 +143,12 @@ SELECT create_hypertable('conditions', 'time', 'location', 4);
 转换时如果已经是 hypertable 不发出警告：
 ```sql
 SELECT create_hypertable('conditions', 'time', if_not_exists => TRUE);
+```
+
+## 查询 timescale 的区块信息
+
+```sql
+select * from chunk_relation_size('conditions');
 ```
 
 ## 转换已存在的表和数据
