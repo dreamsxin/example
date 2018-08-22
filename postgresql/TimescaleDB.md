@@ -220,7 +220,7 @@ SELECT * FROM conditions ORDER BY time DESC LIMIT 100;
 * 清除
 
 ```sql
-SELECT drop_chunks(interval '24 hours', 'conditions');.
+SELECT drop_chunks(interval '24 hours', 'conditions');
 ```
 
 * 索引数据
