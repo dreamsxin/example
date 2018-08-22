@@ -37,7 +37,7 @@ http://docs.timescale.com/latest/getting-started/installation/linux/installation
 sudo add-apt-repository ppa:timescale/timescaledb-ppa
 sudo apt-get update
 # To install
-sudo apt install timescaledb
+sudo apt install timescaledb-postgresql-10
 ```
 
 `postgresql.conf`
@@ -217,7 +217,14 @@ INSERT INTO conditions(time, location, temperature, humidity) VALUES (NOW(), 'of
 SELECT * FROM conditions ORDER BY time DESC LIMIT 100;
 ```
 
+* 清除
+
+```sql
+SELECT drop_chunks(interval '24 hours', 'conditions');.
+```
+
 * 索引数据
+
 ```sql
 CREATE INDEX ON conditions (location, time DESC);
 ```

@@ -37,40 +37,40 @@ the class we write our response to the client with.
 // 定义第一个应用类 hello
 class hello : public cppcms::application {
 public:
-    hello(cppcms::service &srv) :
-        cppcms::application(srv)
-    {
-    }
-    virtual void main(std::string url);
+	hello(cppcms::service &srv) :
+	cppcms::application(srv)
+	{
+	}
+	virtual void main(std::string url);
 };
 
 // 覆盖成员函数 cppcms::application::main，返回响应数据
 void hello::main(std::string /*url*/)
 {
-    response().out() <<
-        "<html>\n"
-        "<body>\n"
-        "  <h1>Hello World</h1>\n"
-        "</body>\n"
-        "</html>\n";
+	response().out() <<
+	"<html>\n"
+	"<body>\n"
+	"  <h1>Hello World</h1>\n"
+	"</body>\n"
+	"</html>\n";
 }
 
 int main(int argc,char ** argv)
 {
-    try {
+	try {
 		// 创建服务类，解析命令行参数并搜索配置选项
-        cppcms::service srv(argc,argv);
+		cppcms::service srv(argc,argv);
 
 		// 告知 applications_pool 类使用应用类 hello
-        srv.applications_pool().mount(
-          cppcms::applications_factory<hello>()
-        );
+		srv.applications_pool().mount(
+			cppcms::applications_factory<hello>()
+		);
 
 		// 运行事件循环
-        srv.run();
-    } catch(std::exception const &e) {
-        std::cerr << e.what() << std::endl;
-    }
+		srv.run();
+	} catch(std::exception const &e) {
+		std::cerr << e.what() << std::endl;
+	}
 }
 ```
 
@@ -86,13 +86,13 @@ c++ -Wl,-rpath=/usr/local/lib hello.cpp -lcppcms -o hello
 
 ```json
 {
-    "service" : {
-        "api" : "http",
-        "port" : 8080
-    },
-    "http" : {
-        "script_names" : [ "/hello" ]
-    }
+	"service" : {
+	"api" : "http",
+	"port" : 8080
+	},
+	"http" : {
+	"script_names" : [ "/hello" ]
+	}
 }
 ```
 
@@ -129,63 +129,63 @@ cd cppdb && mkdir build && cd build && cmake .. && make && sudo make install
 * Sqlite3 读写
 
 ```shell
-        try {
-                cppdb::session sql("sqlite3:db=db.db");
-                
-                sql << "DROP TABLE IF EXISTS test" << cppdb::exec;
+	try {
+		cppdb::session sql("sqlite3:db=db.db");
+		
+		sql << "DROP TABLE IF EXISTS test" << cppdb::exec;
 
-                sql<<   "CREATE TABLE test ( "
-                        "   id   INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
-                        "   n    INTEGER,"
-                        "   f    REAL, "
-                        "   t    TIMESTAMP,"
-                        "   name TEXT "
-                        ")  " << cppdb::exec;
-                
-                std::time_t now_time = std::time(0);
-                
-                std::tm now = *std::localtime(&now_time);
+		sql<<   "CREATE TABLE test ( "
+			"   id   INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
+			"   n	INTEGER,"
+			"   f	REAL, "
+			"   t	TIMESTAMP,"
+			"   name TEXT "
+			")  " << cppdb::exec;
+		
+		std::time_t now_time = std::time(0);
+		
+		std::tm now = *std::localtime(&now_time);
 
-                cppdb::statement stat;
-                
-                stat = sql << 
-                        "INSERT INTO test(n,f,t,name) "
-                        "VALUES(?,?,?,?)"
-                        << 10 << 3.1415926565 << now <<"Hello 'World'";
+		cppdb::statement stat;
+		
+		stat = sql << 
+			"INSERT INTO test(n,f,t,name) "
+			"VALUES(?,?,?,?)"
+			<< 10 << 3.1415926565 << now <<"Hello 'World'";
 
-                stat.exec();
-                std::cout<<"ID: "<<stat.last_insert_id() << std::endl;
-                std::cout<<"Affected rows "<<stat.affected()<<std::endl;
-                
-                stat.reset();
+		stat.exec();
+		std::cout<<"ID: "<<stat.last_insert_id() << std::endl;
+		std::cout<<"Affected rows "<<stat.affected()<<std::endl;
+		
+		stat.reset();
 
-                stat.bind(20);
-                stat.bind_null();
-                stat.bind(now);
-                stat.bind("Hello 'World'");
-                stat.exec();
+		stat.bind(20);
+		stat.bind_null();
+		stat.bind(now);
+		stat.bind("Hello 'World'");
+		stat.exec();
 
-                cppdb::result res = sql << "SELECT id,n,f,t,name FROM test";
+		cppdb::result res = sql << "SELECT id,n,f,t,name FROM test";
 
-                while(res.next()) {
-                        double f=-1;
-                        int id,k;
-                        std::tm atime;
-                        std::string name;
-                        res >> id >> k >> f >> atime >> name;
-                        std::cout <<id << ' '<<k <<' '<<f<<' '<<name<<' '<<asctime(&atime)<< std::endl;
-                }
+		while(res.next()) {
+			double f=-1;
+			int id,k;
+			std::tm atime;
+			std::string name;
+			res >> id >> k >> f >> atime >> name;
+			std::cout <<id << ' '<<k <<' '<<f<<' '<<name<<' '<<asctime(&atime)<< std::endl;
+		}
 
-                res = sql << "SELECT n,f FROM test WHERE id=?" << 1 << cppdb::row;
-                if(!res.empty()) {
-                        int n = res.get<int>("n");
-                        double f=res.get<double>(1);
-                        std::cout << "The values are " << n <<" " << f << std::endl;
-                }
-        } catch(std::exception const &e) {
-                std::cerr << "ERROR: " << e.what() << std::endl;
-                return 1;
-        }
+		res = sql << "SELECT n,f FROM test WHERE id=?" << 1 << cppdb::row;
+		if(!res.empty()) {
+			int n = res.get<int>("n");
+			double f=res.get<double>(1);
+			std::cout << "The values are " << n <<" " << f << std::endl;
+		}
+	} catch(std::exception const &e) {
+		std::cerr << "ERROR: " << e.what() << std::endl;
+		return 1;
+	}
 ```
 
 * 编译
