@@ -4,6 +4,42 @@
 sudo add-apt-repository ppa:ondrej/php
 ```
 
+## 测试
+
+```shell
+sudo apt-get install libfcgi0ldbl
+```
+
+* ping
+
+```shell
+SCRIPT_NAME=/ping \
+SCRIPT_FILENAME=/ping \
+REQUEST_METHOD=GET \
+cgi-fcgi -bind -connect 127.0.0.1:9000
+```
+
+* status
+
+```shell
+SCRIPT_NAME=/status \
+SCRIPT_FILENAME=/status \
+REQUEST_METHOD=GET \
+cgi-fcgi -bind -connect 127.0.0.1:9000
+```
+
+* script
+
+```shell
+SCRIPT_NAME=/custom.php \
+SCRIPT_FILENAME=/custom.php \
+QUERY_STRING=VAR1 \
+DOCUMENT_ROOT=/var/www/example.com/htdocs/ \
+REQUEST_METHOD=GET \
+cgi-fcgi -bind -connect 127.0.0.1:9000
+```
+
+
 ## 优化
 
 连接数监控
