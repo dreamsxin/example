@@ -86,6 +86,13 @@ sudo systemctl start tomcat
 sudo systemctl status tomcat 
 ```
 
+## 查看线程数
+
+```shell
+ps -ef|grep tomcat
+ps -Lf pid |wc -l
+```
+
 ## 调试
 
 ```shell

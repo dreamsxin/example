@@ -80,3 +80,11 @@ ORDER BY title_relevance DESC, relevance DESC
 -- alternatively:
 ORDER BY title_relevance + relevance DESC
 ```
+
+## error
+
+*  Access denied for user 'root'@'localhost' 
+
+```sql
+grant all privileges on *.* to 'root'@'localhost' identified by 'root' with grant option;
+```

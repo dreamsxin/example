@@ -975,3 +975,53 @@ cat access.log|awk '{sum+=$10} END {print sum/1024/1024/1024}'
 ```shell
 cat access.log|awk -F'[: ]' '{a[$5":"$6]+=$14}END{for(i in a){print i,a[i]}}'|sort|awk '{a+=$2;if(NR%5==0){if(a>b){b=a;c=$1};a=0}}END{print c,b*8/300/1024/1024}'
 ```
+
+## 统计请求时间
+
+```conf
+log_format _main '$remote_addr "$time_iso8601" $request_method "$request_uri" $status $body_bytes_sent $request_time "$http_user_agent" "$args" "$request_body"';
+```
+
+```shell
+#! /bin/bash
+
+function cal_work(){
+        ls | grep 'access.log' | xargs cat | awk   'BEGIN{FPAT="[^ ]+|\"[^\"]+\"";max=0;min=1}
+                {if ($4 ~ /^"'"$1"'/  && $(NF-3)==200){
+                        sum+=$7; count+=1;
+                        if($7 > max) max=$7 fi;if($7 < min) min=$7 fi;
+                    }
+                }
+                END {print "Average = ", sum/count;print "Max = ", max;print "Min", min;print "Sum", sum;print "Count", count}'
+}
+
+function get_stat(){
+        target=$1
+        target=${target//\//\\/}
+        cal_work $target
+}
+
+get_stat '/api/ads'
+```
+
+```shell
+#! /bin/bash
+
+function cal_work(){
+        ls | grep 'access.log' | xargs cat | awk   'BEGIN{max=0;min=1}
+                {if ($4 ~ /^"'"$1"'$/){
+                        sum+=$7; count+=1;
+                        if($7 > max) max=$7 fi;if($7 < min) min=$7 fi;
+                    }
+                }
+                END {print "Average = ", sum/count;print "Max = ", max;print "Min", min;print "Sum", sum;print "Count", count}'
+}
+
+function get_stat(){
+        target=$1
+        target=${target//\//\\/}
+        cal_work $target
+}
+
+get_stat '/api/ads'
+```
