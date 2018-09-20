@@ -25,6 +25,15 @@ create database phalcon_test charset=utf8 collate=utf8_unicode_ci;
 use phalcon_test;
 ```
 
+## 创建用户授权
+
+```sql
+use mysql;
+CREATE USER "prestashop"@"localhost" IDENTIFIED BY "1234567";
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER ON "prestashop".* TO "prestashop"@"localhost";
+FLUSH PRIVILEGES;
+```
+
 ### 导入sql
 
 ```shell
@@ -87,4 +96,13 @@ ORDER BY title_relevance + relevance DESC
 
 ```sql
 grant all privileges on *.* to 'root'@'localhost' identified by 'root' with grant option;
+```
+
+## 批量删除数据表
+
+```shell
+for table_name in `mysql -uroot --password=123456 -e 'use prestashop2; show tables' | grep ps2_`
+do
+  mysql -uroot  --password=123456 -e 'use prestashop2; drop table if exists $table_name '
+done
 ```

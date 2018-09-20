@@ -24,7 +24,9 @@ sudo phpdismod xxx
 # 使用源码编译安装 PHP7
 
 ```shell
+# sudo apt-get install libpcre3 libpcre3-dev
 # sudo apt-get install libxml2-dev
+# sudo apt-get install libicu-dev
 # sudo apt-get install libmcrypt-dev
 # sudo apt-get install libpostgresql-ocaml-dev
 # wget http://launchpadlibrarian.net/140087283/libbison-dev_2.7.1.dfsg-1_amd64.deb
@@ -38,6 +40,9 @@ sudo phpdismod xxx
 
 # 简易配置
 ./configure --prefix=/usr/local/php --with-config-file-path=/usr/local/php/etc --with-pdo-pgsql --disable-rpath --enable-bcmath --enable-shmop --enable-sysvsem --enable-inline-optimization --with-curl --enable-mbregex --enable-mbstring --with-mcrypt --with-mhash --without-pear --with-gettext --disable-fileinfo --enable-maintainer-zts --enable-phpdbg-debug --enable-debug
+
+# PHP 5.6 配置
+./configure --prefix=/usr --with-config-file-path=/etc/php5/fpm --enable-fpm --with-fpm-user=www-data --with-fpm-group=www-data --with-config-file-scan-dir=/etc/php5/fpm/conf.d --sysconfdir=/etc --localstatedir=/var --mandir=/usr/share/man --disable-debug --with-regex=php --disable-rpath --disable-static --with-pic --with-layout=GNU --with-pear=/usr/share/php --enable-calendar --enable-sysvsem --enable-sysvshm --enable-sysvmsg --enable-bcmath --with-bz2 --enable-ctype --with-iconv --enable-exif --enable-ftp --with-gettext --enable-mbstring --enable-shmop --enable-sockets --enable-wddx --with-libxml-dir=/usr --with-zlib --with-openssl --enable-soap --enable-zip --with-mhash=yes --with-mysql-sock=/var/run/mysqld/mysqld.sock --without-mm --with-curl=shared,/usr --with-zlib-dir=/usr --with-gd=shared --enable-gd-native-ttf --with-kerberos=/usr --with-imap-ssl --with-jpeg-dir=shared,/usr --with-xpm-dir=shared,/usr/X11R6 --with-png-dir=shared,/usr --with-freetype-dir=shared,/usr --with-imap=shared,/usr --enable-intl=shared --with-mcrypt=shared,/usr --with-mysql=shared,/usr --with-mysqli=shared,/usr/bin/mysql_config --with-pgsql=shared,/usr --with-pdo-pgsql  --with-pdo-mysql --with-pdo-sqlite
 
 make -j4
 
