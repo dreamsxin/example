@@ -37,7 +37,7 @@ python setup.py install
 
 `/etc/rc.local`
 ```shell
-nohup ssserver -c /etc/shadowsocks.json  > /log/shadowsocks.log &
+nohup ssserver -c /etc/shadowsocks.json > /var/log/shadowsocks.log &
 ```
 通过帮助提示我们知道各个参数怎么配置，比如 `sslocal -c` 后面加上我们的json配置文件，或者像下面这样直接命令参数写上运行。
 
