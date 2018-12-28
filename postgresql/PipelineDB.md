@@ -267,3 +267,74 @@ psql -h localhost -p 5432 -d pipeline -c "SELECT * FROM msg_result";
 ```
 ps: 当我们连接到PipelineDB，我们可以使用PostgreSQL的命令，来查看有那些数据库对象生成。例如通过 \d 可以查看到，当我们创建CONTINUOUS VIEW的时候，额外创建了msg_result_mrel、msg_result_seq和msg_result_osrel，实际的数据就存储在msg_result_mrel中。
 
+### 应用场景  
+
+假设传感器会上传3个数据，分别是传感器ID `gid`，时间 `crt_time`，以及采样值 `val`。
+
+应用需要实时统计每分钟，每小时，每天，每个传感器上传的值的最大，最小，平均值，以及 count。    
+
+创建三个流视图，每个代表一个统计维度：   
+
+```sql
+CREATE CONTINUOUS VIEW sv01  AS SELECT gid::int,date_trunc('min',crt_time::timestamp),max(val::int),min(val),avg(val),count(val) FROM stream01 group by gid,date_trunc('min',crt_time);
+CREATE CONTINUOUS VIEW sv02  AS SELECT gid::int,date_trunc('hour',crt_time::timestamp),max(val::int),min(val),avg(val),count(val) FROM stream01 group by gid,date_trunc('hour',crt_time);
+CREATE CONTINUOUS VIEW sv03  AS SELECT gid::int,date_trunc('day',crt_time::timestamp),max(val::int),min(val),avg(val),count(val) FROM stream01 group by gid,date_trunc('day',crt_time);
+```
+
+## Postgresql 10 下使用
+
+### 创建扩展
+
+* 配置 postgresql.conf
+
+```conf
+# At the bottom of <data directory>/postgresql.conf
+shared_preload_libraries = 'pipelinedb'
+max_worker_processes = 128
+```
+重启数据库执行：
+```sql
+CREATE EXTENSION pipelinedb
+```
+
+### 创建连续观察视图 Continuous View
+
+```sql
+CREATE FOREIGN TABLE wiki_stream (
+        hour timestamp,
+        project text,
+        title text,
+        view_count bigint,
+        size bigint)
+SERVER pipelinedb;
+
+CREATE VIEW wiki_stats WITH (action=materialize) AS
+SELECT hour, project,
+        count(*) AS total_pages,
+        sum(view_count) AS total_views,
+        min(view_count) AS min_views,
+        max(view_count) AS max_views,
+        avg(view_count) AS avg_views,
+        percentile_cont(0.99) WITHIN GROUP (ORDER BY view_count) AS p99_views,
+        sum(size) AS total_bytes_served
+FROM wiki_stream
+GROUP BY hour, project;
+
+SELECT * FROM pipelinedb.view;
+```
+
+### 创建连续转换 Continuous Transforms
+
+可以用来连续变换输入的时间序列数据，而不需要存储它。由于没有存储数据，Continuous transforms不支持聚合。转换的结果可以管道传输到另一个流中，或者写入外部数据存储。
+
+```sql
+CREATE VIEW t WITH (action=transform) AS
+  SELECT t.y FROM some_stream s JOIN some_table t ON s.x = t.x;
+
+This transform now writes values from the joined table out to its output stream, which can be read using output_of:
+
+CREATE VIEW v WITH (action=materialize) AS
+  SELECT sum(y) FROM output_of('t');
+
+SELECT * FROM pipelinedb.transforms;
+```
