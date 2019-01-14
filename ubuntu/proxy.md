@@ -1,5 +1,12 @@
 # 设置代理
 
+## 安装代理
+
+```shel
+sudo apt-get install tinyproxy -y
+```
+配置文件在 `/etc/tinyproxy.conf`
+
 ## 全局代理
 
 在“首选项”->“网络代理”那里，多了个“System-wide”按钮，在这里设置后，`apt-get`确实可以使用代理了。

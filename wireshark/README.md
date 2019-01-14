@@ -6,6 +6,35 @@
 sudo add-apt-repository ppa:n-muench/programs-ppa
 sudo apt-get update
 sudo apt-get install wireshark
+sudo apt-get install libcap2-bin
+```
+
+安装后打开wireshark 提示权限不足消息：
+
+`Couldn’t run /usr/bin/dumpcap in child process: Permission denied`
+
+解决方案：
+```shell
+sudo apt-get install libcap2-bin
+#添加一个组，名字为 wireshark ..我执行时，提示已经存在相同名字的组了
+sudo groupadd wireshark  
+#把自己当前的用户名添加到 wireshark组
+sudo usermod -a -G wireshark YOUR-USER-NAME
+```
+
+newgrp wireshark
+```shell
+#修改组别
+sudo chgrp wireshark /usr/bin/dumpcap
+#添加执行权限
+sudo chmod 754 /usr/bin/dumpcap
+```
+
+最后一步：Grant Capabilities
+```shell
+#下面两句执行其中一句就可以了，我执行的是第一句
+sudo setcap cap_net_raw,cap_net_admin=eip /usr/bin/dumpcap
+sudo setcap 'CAP_NET_RAW+eip CAP_NET_ADMIN+eip' /usr/bin/dumpcap
 ```
 
 ## 编译
