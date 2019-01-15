@@ -398,3 +398,69 @@ MVCC简介：
         假设在一个分布式系统中，更新操作以事务进行，每个事务对若干不同节点的同步更新操作。更新事务比较具有原子性。
     基于MVCC的分布式方法为：
         为每个事务分配一个递增的事务编号，这个编号表示数据的版本号。当事务在各个节点上面执行的时候，各个节点只需要记录更新操作及事务编号，当事务在各个节点完成的时候，在全局元信息中记录本次事务的编号。在读取数据时，先读取元信息中已经成功的最大事务编号，再于各个节点上读取数据，只读更新操作编号小于等于最后最大已成功提交事务编号的操作，并将这些操作应用到基础数据形成读取结果。
+
+
+<table> 
+ <tbody> 
+  <tr> 
+   <td> <p><strong>技术</strong></p> </td> 
+   <td> <p><strong>优点</strong></p> </td> 
+   <td> <p><strong>缺点</strong></p> </td> 
+   <td> <p><strong>总结</strong></p> </td> 
+  </tr> 
+  <tr> 
+   <td> <p><strong>1、&nbsp;&nbsp; HDFS</strong></p> </td> 
+   <td> <p>1、<strong>大数据</strong>批量读写，吞吐量高；</p> <p>2、一次写入，多次读取，顺序读写；</p> </td> 
+   <td> <p>1、交互式应用，低延迟很难满足；</p> <p>2、不支持多用户并发写相同文件。</p> </td> 
+   <td> <p>如果是很多小文件，nameNode压力大</p> </td> 
+  </tr> 
+  <tr> 
+   <td> <p>2、&nbsp;&nbsp;&nbsp; <strong>googleFs</strong></p> </td> 
+   <td> <p>1、成本低，运行在廉价的普通硬件上</p> </td> 
+   <td> <p>1、不开源</p> </td> 
+   <td> <p>不开源，使用困难</p> </td> 
+  </tr> 
+  <tr> 
+   <td> <p><strong>3、&nbsp;&nbsp; Tfs</strong></p> </td> 
+   <td> <p>1、&nbsp;&nbsp;&nbsp; 开源</p> </td> 
+   <td> <p>1、小于1M的文件</p> <p>2、TFS内部是没有任何数据的内存缓冲的</p> </td> 
+   <td> <p>&nbsp;适合单个文件比较小的系统</p> </td> 
+  </tr> 
+  <tr> 
+   <td> <p><strong>4、&nbsp;&nbsp; Lustre</strong></p> </td> 
+   <td> <p>1、&nbsp; 开源</p> <p>2、&nbsp; 支持POSIX</p> <p>3、&nbsp; 文件被分割成若干的Chunk，每个chunk是一般为1MB－4MB</p> </td> 
+   <td> <p>&nbsp;</p> </td> 
+   <td> <p>&nbsp;</p> </td> 
+  </tr> 
+  <tr> 
+   <td> <p><strong>5、 Ceph</strong></p> <p><strong>&nbsp;</strong></p> </td> 
+   <td> <p>1、支持POSIX</p> <p>2、开源</p> </td> 
+   <td> <p>&nbsp;</p> <p>&nbsp;</p> </td> 
+   <td> <p>1、&nbsp; 在Linux主流内核中找到ceph</p> <p>2、不成熟，处于测试推广阶段</p> </td> 
+  </tr> 
+  <tr> 
+   <td> <p>6、&nbsp; <strong>MogileFs</strong></p> </td> 
+   <td> <p>1、开源</p> </td> 
+   <td> <p>&nbsp;</p> </td> 
+   <td> <p>&nbsp;比<strong>FastDFS</strong> 差</p> </td> 
+  </tr> 
+  <tr> 
+   <td> <p><strong>7、&nbsp;&nbsp; FastDFS</strong></p> </td> 
+   <td> <p>1、&nbsp; 开源</p> <p>2、&nbsp; 适合以文件为载体的在线服务</p> <p>3、&nbsp; FastDFS没有对文件做分块存储</p> <p>4、&nbsp; 不需要二次开发即可直接使用</p> <p>5、&nbsp; 比mogileFS更易维护和使用</p> <p>6、&nbsp; 直接使用socket通信方式，相对于MogileFS的HTTP方式，效率更高。</p> </td> 
+   <td> <p>1、文件访问方式使用专有API，不支持POSIX</p> </td> 
+   <td> <p>&nbsp;</p> </td> 
+  </tr> 
+  <tr> 
+   <td> <span id="OSC_h3_3"></span><h3 id="h3_3">8、swiftfs</h3> </td> 
+   <td> <p>&nbsp;</p> </td> 
+   <td> <p>&nbsp;</p> </td> 
+   <td> <p>1、基于HDFS</p> </td> 
+  </tr> 
+  <tr> 
+   <td> <span id="OSC_h3_4"></span><h3 id="h3_4">9、<strong>NFS</strong></h3> </td> 
+   <td> <p>1、用户和程序可以象访问本地文件一样访问远端系统上的文件</p> </td> 
+   <td> <p>&nbsp;</p> </td> 
+   <td> <p>&nbsp;</p> </td> 
+  </tr> 
+ </tbody> 
+</table>
