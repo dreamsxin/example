@@ -1,3 +1,9 @@
+## 认证
+
+```shell
+redis-cli auth 
+```
+
 ## 查看内存
 
 ```shell

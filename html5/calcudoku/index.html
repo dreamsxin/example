@@ -1,0 +1,124 @@
+<!DOCTYPE	HTML
+			PUBLIC "-//W3C//DTD HTML 4.01//EN"
+			"http://www.w3.org/TR/html4/strict.dtd">
+
+<HTML>
+	<HEAD>
+		<META http-equiv="Content-Type" content="text/html;charset=utf-8">
+		<META http-equiv="Content-Script-Type" content="text/javascript">
+
+  		<STYLE type="text/css">
+			/* Basic Style */
+			html {
+				background:			white;
+			}
+			body {
+				color:				black;
+				font-size:			75%;
+			}
+
+			/* Development Style */
+			div.banner {
+				position:			absolute;
+				left:				1em;
+				top:				1em;
+				width:				65em;
+				text-align:			center;
+				border-bottom:		2px solid black;
+			}
+			div.banner p {
+				margin:				0.5em 0px;
+				font-size:			1.5em;
+			}
+			div.copy {
+				position:			absolute;
+				left:				1em;
+				top:				5em;
+				width:				24em;
+			}
+			div.field {
+				position:			absolute;
+				left:				25em;
+				top:				5em;
+				width:				41em;
+				text-align:			center;
+			}
+			p.controls {
+				padding-left:			4em;
+			}
+			input#generate {
+				margin-left:			4em;
+			}
+			input#cage_value {
+				margin-left:			2em;
+				width:				5em;
+				text-align:			right;
+			}
+			table {
+				margin:			0px auto;
+				border-collapse:	collapse;
+			}
+			td {
+				width:				4em;
+				height:				4em;
+				border-width:		1px;
+				padding:			0px;
+				text-align:			center;
+			}
+			td.board_header {
+				vertical-align:		center;
+			}
+			td.board_cell {
+				vertical-align:		top;
+			}
+			td p {
+				margin:				0px;
+				border:				0px;
+				padding:			0px;
+			}
+			td p.cage_header {
+				height:				1.5em;
+				text-align:			left;
+			}
+			td p.cage_header span {
+				font-family:		Verdana;
+				font-weight:		bold;
+				font-size:			0.75em;
+				padding-left:		0.5em;
+			}
+			td p.cell_data {
+				text-align:			center;
+			}
+		</STYLE>
+		<TITLE>NekNek - A solver for KenKen puzzles</TITLE>
+	</HEAD>
+
+	<BODY>
+		<DIV class="field">
+			<P class="controls">
+				<SELECT id="load"><OPTION></OPTION></SELECT>
+				<INPUT id="reset" type="button" value="Reset">
+				<INPUT id="generate" type="button" value="Make Puzzle">
+				<INPUT id="solve" type="button" value="Solve">
+			</P>
+			<DIV id="test_div"></DIV>
+			<P class="controls">
+				Highlighted cell(s) must
+				<SELECT id="cage_type">
+					<OPTION value="!">equal</OPTION>
+					<OPTION value="+">produce a sum of</OPTION>
+					<OPTION value="-">produce a difference of</OPTION>
+					<OPTION value="*">produce a product of</OPTION>
+					<OPTION value="/">produce a quotient of</OPTION>
+					<OPTION value="?">produce a result of</OPTION>
+				</SELECT>
+				<INPUT id="cage_value" type="text">
+			</P>
+		</DIV>
+
+		<SCRIPT type="text/javascript" src="neknek.js"></SCRIPT>
+		<SCRIPT type="text/javascript">
+			window.onload = function() { app.RenderCageControls(); };
+		</SCRIPT>
+	</BODY>
+</HTML>
