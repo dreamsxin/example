@@ -1,9 +1,28 @@
 # Zephir 安装
 
+* composer
+
 ```shell
+composer config -g repo.packagist composer https://packagist.phpcomposer.com
+# or
+composer config repo.packagist composer https://packagist.phpcomposer.com
+```
+
+```shell
+sudo apt-get install git gcc make re2c php php-json php-dev libpcre3-dev build-essential
+sudo apt-get install composer libgmp-dev
+
+git clone https://github.com/phalcon/php-zephir-parser.git
+cd php-zephir-parser
+phpize
+./configure
+make
+sudo make install
+
 git clone https://github.com/phalcon/zephir
 cd zephir
-./install -c
+composer install --dev
+./zephir
 ```
 
 ## Mac 安装 re2c
