@@ -654,9 +654,91 @@ func printSlice(s string, x []int) {
 }
 ```
 
+### 分片与数组的区别
+
+数组是固定长度的，而分片确实可动态增长的，以定义为例：
+
+```go
+// 定义数组, 一定要指定长度
+var names [5]string
+
+// 定义分片, 不需要指定长度
+var names []string
+```
+
+在函数调用时, 数组是值传递，而分片是引用传递。
+
+其实对于 golang 来讲，函数调用的时候都是值传递，拷贝一个副本，之所以表现为值传递和引用传递，在于一个拷贝的是数据值，另一个拷贝的是数据指针，两个指针值指向的是同一个内存地址。
+
+### 分片的实现
+
+分片的底层数据还是使用的数组，它一共包含 3 个字段：
+
+- 地址指针
+- 长度
+- 容量
+
+```go
+// source 是一个分片， 大小为 4， 容量为： 5
+source := make([]string, 4, 5)
+fmt.Println(source, len(source), cap(source))
+// 输出： [   ] 4 5
+
+// 注意这里不会进行内存分配，因为 source 还有剩余空间可以新加数据
+source = append(source, "1")
+fmt.Println(source, len(source), cap(source))
+// 输出： [    1] 5 5
+```
+
+在使用 `append` 来为分片添加数据时，没有内存分配时会修改源数组：
+
+```go
+source := []string{"1", "2", "3", "4", "5"}
+
+// 拷贝 source 的第二到第三个元素（不包括第三个）这时的容量将使用源数组的。
+copied := source[2:3]
+
+fmt.Println("source-->", source)
+fmt.Println("copied-->", copied)
+
+copied = append(copied, "mike")
+fmt.Println("source-->", source)
+fmt.Println("copied-->", copied)
+```
+输出：
+```text
+source--> [1 2 3 4 5]
+copied--> [3]
+source--> [1 2 3 mike 5]
+copied--> [3 mike]
+```
+
+当 append 有内存分配时：
+```go
+source := []string{"1", "2", "3", "4", "5"}
+
+// 拷贝 source 的第二到第三个元素（不包括第三个），容量 3
+copied := source[2:3:3]
+// 此时 copied 会和 source 共享底层数组
+
+fmt.Println("source-->", source)
+fmt.Println("copied-->", copied)
+
+copied = append(copied, "mike")
+fmt.Println("source-->", source)
+fmt.Println("copied-->", copied)
+```
+输出：
+```text
+source--> [1 2 3 4 5]
+copied--> [3]
+source--> [1 2 3 4 5]
+copied--> [3 mike]
+```
+
 ## `range`
 
-for 循环的 range 格式可以对 slice 或者 map 进行迭代循环。
+`for` 循环的 range 格式可以对 slice 或者 map 进行迭代循环。
 可以通过赋值给 `_` 来忽略序号和值。
 如果只需要索引值，去掉“, value”的部分即可。
 
