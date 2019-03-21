@@ -298,6 +298,63 @@ u := uint(f)
 
 与 C 不同的是 Go 的在不同类型之间的项目赋值时需要显式转换。 
 
+### 字符串中的每一个元素叫做“字符”
+
+Go 语言的字符有以下两种：
+
+- byte
+代表了 ASCII 码的一个字符，实际上是 uint8 。
+
+- rune
+代表一个 `UTF-8` 字符。当需要处理中文、日文或者其他复合字符时，则需要用到 rune 类型。rune 类型实际是 int32。
+
+使用 `fmt.Printf` 中的 `%T` 格式符可以输出变量的实际类型：
+
+```go
+var a byte = 'a'
+fmt.Printf("%d %T\n", a, a)
+var b rune = '你'
+fmt.Printf("%d %T\n", b, b)
+```
+
+### `[]byte` 转换成 `string`
+
+```go
+package main
+ 
+import (
+    "fmt"
+    _ "unsafe"
+)
+ 
+func main() {
+    bytes := []byte("I am byte array !")
+    str := string(bytes)
+    bytes[0] = 'i' //注意这一行，bytes在这里修改了数据，但是str打印出来的依然没变化，
+    fmt.Println(str) // I am byte array !
+}
+```
+
+接着看下面的代码
+```go	
+package main
+ 
+import (
+    "fmt"
+    "unsafe"
+)
+ 
+func main() {
+    bytes := []byte("I am byte array !")
+    str := (*string)(unsafe.Pointer(&bytes))
+    bytes[0] = 'i'
+    fmt.Println(*str) // i am byte array !
+}
+```
+
+现在打印出来的信息已经是改变过的了，现在可以看出来str和bytes共用一片内存。
+这样做的意义在于，在网络通信中，大多数的接受方式都是[]byte，如果[]byte的数据比较大，内存拷贝的话会影响系统的性能。
+
 ## 常量
 
 常量的定义与变量类似，只不过使用 const 关键字。
