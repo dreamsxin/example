@@ -6,6 +6,39 @@
 sudo apt-get install golang-go gccgo
 ```
 
+## 配置环境变量
+
+在当前用户文件 `~/.bashrc` 末尾加入（当bash shell被打开时，该文件被读取执行）：
+```shell
+export GOPATH=/usr/local/go
+export PATH=$PATH:$GOPATH/bin
+# or
+export GOROOT=/usr/local/go
+export GOPATH=~/gowork
+export PATH=$GOROOT/bin:$GOPATH:$PATH
+```
+或者在文件 `~/.bash_profile` （当用户登录时，该文件被执行一次）
+
+`/etc/profile`
+用来设置系统环境参数，比如$PATH. 这里面的环境变量是对系统内所有用户生效的；
+
+`/etc/bashrc`
+这个文件设置系统 bash shell 相关的东西，对系统内所有用户生效。只要用户运行 bash 命令，那么这里面的东西就在起作用
+
+`~/.bash_profile`
+用来设置一些环境变量，功能和 /etc/profile 类似，但是这个是针对当前用户来设定的；
+
+`~/.bashrc`
+作用类似于 /etc/bashrc，只是针对用户自己而言，不对其他用户生效。
+
+## 显示环境变量
+
+```shell
+ echo "GOPATH:$GOPATH"
+ go env
+ go version
+ ```
+
 ## 包与导入
 
 每个 Go 程序都是由包组成的。
@@ -1273,4 +1306,23 @@ func main() {
 	}()
 	fibonacci(c, quit)
 }
+```
+
+## 启动脚本
+
+```shell
+#! /bin/bash
+ 
+export GOPATH=/home/ficow/gopath
+echo "GOPATH:$GOPATH"
+ 
+export GOROOT=/home/ficow/go
+echo "GOROOT:$GOROOT"
+ 
+PATH=$PATH:$HOME/bin:usr/local/git/bin:$GOROOT/bin:$GOPATH/bin:
+echo "PATH:$PATH"
+ 
+(go run main.go >> /home/ficow/ficowblog/src/blogLog.txt 2>&1 &)
+ 
+echo "*** 服务器重启完成！ ***"
 ```
