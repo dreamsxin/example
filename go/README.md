@@ -60,6 +60,13 @@ import (
 )
 ```
 
+## 安装第三方库
+
+```shell
+go get code.google.com/p/go.net/websocket
+go get -u github.com/golang/net/websocket
+```
+
 ## 编写 Hello world
 
 ```go
