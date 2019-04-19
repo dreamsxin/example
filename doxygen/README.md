@@ -89,3 +89,25 @@ GENERATE TREEVIEW ＝ ALL
 \end{CJK*}
 \end{document}
 ```
+
+## LaTeX 添加水印
+
+添加宏包，引入 tikz、eso-pic 套件
+```tex
+\usepackage{tikz}
+\usepackage{eso-pic}
+```
+
+定义命令
+```tex
+\newcommand\BackgroundPicture{%
+  \put(0,0){%
+    \parbox[b][\paperheight]{\paperwidth}{%
+      \vfill
+      \centering%
+\begin{tikzpicture}[remember picture,overlay]
+\node [rotate=60,scale=10,text opacity=0.2] at (current page.center) {你想加的水印，可以是CONFIDENTIAL可以试试DRAFT，哈什么都行}; %中括号内是旋转角度，字体大小
+\end{tikzpicture}%
+      \vfill
+    }}}
+```
