@@ -327,6 +327,40 @@ static void async_task_scheduler_dispose(async_task_scheduler *scheduler)
 ## 任务创建运行
 
 ```c
+static zend_always_inline void trigger_ops(async_task *task)
+{
+	async_op *op;
+	
+	while (task->operations.first != NULL) {
+		ASYNC_NEXT_OP(&task->operations, op);
+		
+		if (task->status == ASYNC_OP_RESOLVED) {
+			ASYNC_RESOLVE_OP(op, &task->result);
+		} else {
+			ASYNC_FAIL_OP(op, &task->result);
+		}
+	}
+}
+
+static zend_always_inline void async_task_dispose(async_task *task)
+{
+	if (task->flags & ASYNC_TASK_FLAG_DISPOSED) {
+		return;
+	}
+	
+	task->flags |= ASYNC_TASK_FLAG_DISPOSED;
+
+	if (task->status == ASYNC_TASK_STATUS_SUSPENDED) {
+		task->status = ASYNC_TASK_STATUS_RUNNING;
+
+		async_fiber_switch(task->scheduler, task->fiber, ASYNC_FIBER_SUSPEND_PREPEND);
+	}
+
+	trigger_ops(task);
+	
+	ASYNC_DELREF(&task->std);
+}
+
 ASYNC_CALLBACK dispatch_tasks(uv_idle_t *idle)
 {
 	async_task_scheduler *scheduler;
