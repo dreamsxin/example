@@ -323,3 +323,130 @@ static void async_task_scheduler_dispose(async_task_scheduler *scheduler)
 	zval_ptr_dtor(&error);
 }
 ```
+
+## 任务创建运行
+
+```c
+
+static zend_always_inline void async_task_scheduler_enqueue(async_task *task)
+{
+	async_task_scheduler *scheduler;
+
+	scheduler = task->scheduler;
+
+	ZEND_ASSERT(scheduler != NULL);
+	
+	if (UNEXPECTED(ASYNC_G(exit))) {
+		switch (task->status) {
+		case ASYNC_TASK_STATUS_INIT:
+			async_task_dispose(task);
+			break;
+		case ASYNC_TASK_STATUS_SUSPENDED:
+			async_task_dispose(task);
+			break;
+		}
+		
+		return;
+	}
+	
+	switch (task->status) {
+	case ASYNC_TASK_STATUS_INIT:
+		ASYNC_ADDREF(&task->std);
+	case ASYNC_TASK_STATUS_SUSPENDED:
+		break;
+	default:
+		return;
+	}
+
+	if (scheduler->ready.first == NULL) {
+		// 放入 uv idle 队列
+		uv_idle_start(&scheduler->idle, dispatch_tasks);
+	}
+
+	ASYNC_LIST_APPEND(&scheduler->ready, task);
+}
+
+static async_task *async_task_object_create(zend_execute_data *call, async_task_scheduler *scheduler, async_context *context)
+{
+	async_task *task;
+	zend_long stack_size;
+
+	ZEND_ASSERT(scheduler != NULL);
+	ZEND_ASSERT(context != NULL);
+
+	task = ecalloc(1, sizeof(async_task));
+
+	task->status = ASYNC_TASK_STATUS_INIT;
+
+	stack_size = ASYNC_G(stack_size);
+
+	if (stack_size == 0) {
+		stack_size = 4096 * (((sizeof(void *)) < 8) ? 16 : 128);
+	}
+
+	task->stack_size = stack_size;
+
+	ZVAL_NULL(&task->result);
+
+	task->scheduler = scheduler;
+	task->context = context;
+	
+	ASYNC_ADDREF(&context->std);
+
+	zend_object_std_init(&task->std, async_task_ce);
+	task->std.handlers = &async_task_handlers;
+
+	if (call != NULL && call->func && ZEND_USER_CODE(call->func->common.type)) {
+		if (call->func->op_array.filename != NULL) {
+			task->file = zend_string_copy(call->func->op_array.filename);
+		}
+
+		task->line = call->opline->lineno;
+	}
+
+	async_task_scheduler_enqueue(task);
+
+	return task;
+}
+
+static ZEND_METHOD(Task, async)
+{
+	async_task *task;
+
+	zend_fcall_info fci;
+	zend_fcall_info_cache fcc;
+	uint32_t count;
+	uint32_t i;
+
+	zval *params;
+	zval obj;
+
+	ZEND_PARSE_PARAMETERS_START_EX(ZEND_PARSE_PARAMS_THROW, 1, -1)
+		Z_PARAM_FUNC_EX(fci, fcc, 1, 0)
+		Z_PARAM_OPTIONAL
+		Z_PARAM_VARIADIC('+', params, count)
+	ZEND_PARSE_PARAMETERS_END();
+
+	for (i = 1; i <= count; i++) {
+		ASYNC_CHECK_ERROR(ARG_SHOULD_BE_SENT_BY_REF(fcc.function_handler, i), "Cannot pass async call argument %d by reference", (int) i);
+	}
+
+	fci.no_separation = 1;
+
+	if (count == 0) {
+		fci.param_count = 0;
+	} else {
+		zend_fcall_info_argp(&fci, count, params);
+	}
+
+	task = async_task_object_create(EX(prev_execute_data), async_task_scheduler_get(), async_context_get());
+	task->fci = fci;
+	task->fcc = fcc;
+	
+	ASYNC_ADDREF_CB(task->fci);
+
+	ZVAL_OBJ(&obj, &task->std);
+
+	RETURN_ZVAL(&obj, 1, 1);
+}
+```
