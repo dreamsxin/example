@@ -327,6 +327,38 @@ static void async_task_scheduler_dispose(async_task_scheduler *scheduler)
 ## 任务创建运行
 
 ```c
+ASYNC_CALLBACK dispatch_tasks(uv_idle_t *idle)
+{
+	async_task_scheduler *scheduler;
+	async_task *task;
+
+	scheduler = (async_task_scheduler *) idle->data;
+
+	ZEND_ASSERT(scheduler != NULL);
+
+	while (scheduler->ready.first != NULL) {
+		ASYNC_LIST_EXTRACT_FIRST(&scheduler->ready, task);
+
+		if (EXPECTED(task->fiber == NULL)) {
+			task->fiber = async_fiber_create();
+		
+			ASYNC_CHECK_FATAL(task->fiber == NULL, "Failed to create native fiber context");
+			ASYNC_CHECK_FATAL(!async_fiber_init(task->fiber, task->context, run_task_fiber, task, task->stack_size), "Failed to create native fiber");
+		
+			async_fiber_switch(task->scheduler, task->fiber, ASYNC_FIBER_SUSPEND_PREPEND);
+		} else {
+			task->status = ASYNC_TASK_STATUS_RUNNING;
+
+			async_fiber_switch(task->scheduler, task->fiber, ASYNC_FIBER_SUSPEND_PREPEND);
+		}
+
+		if (UNEXPECTED(task->status == ASYNC_OP_RESOLVED || task->status == ASYNC_OP_FAILED)) {
+			async_task_dispose(task);
+		}
+	}
+	
+	uv_idle_stop(idle);
+}
 
 static zend_always_inline void async_task_scheduler_enqueue(async_task *task)
 {
@@ -359,7 +391,7 @@ static zend_always_inline void async_task_scheduler_enqueue(async_task *task)
 	}
 
 	if (scheduler->ready.first == NULL) {
-		// 放入 uv idle 队列
+		// 启动 uv idle 队列
 		uv_idle_start(&scheduler->idle, dispatch_tasks);
 	}
 
