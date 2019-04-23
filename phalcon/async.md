@@ -229,7 +229,7 @@ void async_fiber_suspend(async_task_scheduler *scheduler)
 	ZEND_ASSERT(scheduler != NULL);
 	ZEND_ASSERT(current != NULL);
 	
-	// 判断协程信息队列是否为空
+	// 判断协程信息队列是否为空，来自 async_task_scheduler_enqueue
 	if (scheduler->fibers.first == NULL) {
 		next = scheduler->runner; // 创建任务对象的时候的时候创建和初始化（async_task_scheduler_object_create & async_fiber_init）
 	} else {
@@ -276,6 +276,7 @@ static zend_always_inline void async_task_scheduler_run_loop(async_task_schedule
 	scheduler->caller = NULL;
 }
 
+// 布置任务
 static void async_task_scheduler_dispose(async_task_scheduler *scheduler)
 {
 	async_cancel_cb *cancel;
@@ -296,6 +297,7 @@ static void async_task_scheduler_dispose(async_task_scheduler *scheduler)
 	ASYNC_PREPARE_ERROR(&error, "Task scheduler has been disposed");
 	
 	do {
+		// 来自 deferred::register_task_op
 		if (scheduler->operations.first != NULL) {
 			do {
 				ASYNC_NEXT_OP(&scheduler->operations, op);
