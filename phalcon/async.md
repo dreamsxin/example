@@ -250,12 +250,12 @@ void async_fiber_suspend(async_task_scheduler *scheduler)
 	ZEND_ASSERT(to->initialized);
 	
 	// ASYNC_DEBUG_LOG("SUSPEND: %d -> %d\n", from->id, to->id);
-	
+	// 保存当前上下文
 	async_fiber_capture_state(current);	
 	ASYNC_G(fiber) = next;
-	
+	// 切换上下文
 	ASYNC_CHECK_FATAL(-1 == swapcontext(&from->ctx, &to->ctx), "Failed to switch fiber context");
-	
+	// 恢复
 	async_fiber_restore_state(current);
 }
 
