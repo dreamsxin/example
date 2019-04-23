@@ -46,3 +46,32 @@ nohup ssserver -c /etc/shadowsocks.json > /var/log/shadowsocks.log &
 sslocal -s myleft.org -p 8388 -k "123456" -l 1080 -t 600 -m aes-256-cfb
 ```
 -s表示服务IP, -p指的是服务端的端口，-l是本地端口默认是1080, -k 是密码（要加""）, -t超时默认300,-m是加密方法默认aes-256-cfb，
+
+## 客户端
+
+```shell
+sudo pip3 install shadowsocks
+```
+
+## 强行升级 pip
+
+```shell
+wget https://bootstrap.pypa.io/get-pip.py  --no-check-certificate
+sudo python3 get-pip.py --force-reinstall
+```
+
+##  undefined symbol: EVP_CIPHER_CTX_cleanup错误。
+
+这个问题是由于在openssl1.1.0版本中，废弃了 `EVP_CIPHER_CTX_cleanup` 函数，如官网中所说：
+
+>> EVP_CIPHER_CTX was made opaque in OpenSSL 1.1.0. As a result, EVP_CIPHER_CTX_reset() appeared and EVP_CIPHER_CTX_cleanup() disappeared. 
+>> EVP_CIPHER_CTX_init() remains as an alias for EVP_CIPHER_CTX_reset().
+
+
+修改方法：
+
+`/usr/local/lib/python3.5/dist-packages/shadowsocks/crypto/openssl.py` 
+
+找到包括的函数改为 
+`libcrypto.EVP_CIPHER_CTX_reset.argtypes`
+`libcrypto.EVP_CIPHER_CTX_reset(self._ctx)`
