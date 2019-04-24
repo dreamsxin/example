@@ -4,7 +4,7 @@
 int64_t counter = 0;
 
 void idle_cb(uv_idle_t *handle) {
-    printf("Idle callback\n");
+    printf("Idle callback: %ld\n", counter);
     counter++;
 
     if (counter >= 5) {
@@ -15,6 +15,12 @@ void idle_cb(uv_idle_t *handle) {
 
 void prep_cb(uv_prepare_t *handle) {
     printf("Prep callback\n");
+	sleep(1);
+    printf("--Prep callback--\n");
+}
+
+void prep_cb2(uv_prepare_t *handle) {
+    printf("Prep callback2\n");
 }
 
 int main() {
@@ -26,8 +32,10 @@ int main() {
 
     uv_prepare_init(uv_default_loop(), &prep);
     uv_prepare_start(&prep, prep_cb);
+    uv_prepare_start(&prep, prep_cb2);
 
     uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 
+    printf("main\n");
     return 0;
 }
