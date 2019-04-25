@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <unistd.h>
 #include <uv.h>
 
 int64_t counter = 0;
