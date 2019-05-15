@@ -1,0 +1,34 @@
+.TH cdate 1 "November 2011" Linux "User Manuals"
+.SH NAME
+cdate \- show Chinese lunisolar date,显示中国传统农历日期
+.SH SYNOPSIS
+.B cdate [-h] [-d
+.I date
+.B ] [-a] [-g] [-n] [-z] [
+.I date
+.B ]
+.SH DESCRIPTION
+\fIcdate\fR显示中国传统农历日期，默认显示当天的农历年月日或当前的年月日时四
+柱。也可以指定1901-2050年之间的日期。
+.SH "OPTIONS"
+.IP "\fB\-d \fIdate\fR\fR"
+使用指定的年月日时 \fIdate\fR.
+.IP "\fB\-a\fR"
+显示所有项。
+.IP "\fB\-g\fR"
+显示公历年月日及星期。
+.IP "\fB\-n\fR"
+不显示农历年月日及节气、节日。
+.IP "\fB\-z\fR"
+显示四柱。
+.IP "\fB\-h\fR"
+显示帮助。
+.SH "PARAMETERS"
+指定的\fIdate\fR格式必须为0000年00月00日00时，且年份在1901与2050年之间，
+如2050010101 。
+.SH "REPORTING BUGS"
+Send bug reports and/or suggestions to vinoca <supoingo@163.com>.
+.SH "COPYING"
+Licensed under the BSD license.
+.SH "SEE ALSO"
+.BR date (1)

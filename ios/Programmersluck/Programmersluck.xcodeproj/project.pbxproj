@@ -1,0 +1,928 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		C000FEB216F31FFD0079B4CF /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C000FEB116F31FFD0079B4CF /* UIKit.framework */; };
+		C000FEB416F31FFD0079B4CF /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C000FEB316F31FFD0079B4CF /* Foundation.framework */; };
+		C000FEB616F31FFD0079B4CF /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C000FEB516F31FFD0079B4CF /* CoreGraphics.framework */; };
+		C000FEBC16F31FFD0079B4CF /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C000FEBA16F31FFD0079B4CF /* InfoPlist.strings */; };
+		C000FEBE16F31FFD0079B4CF /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C000FEBD16F31FFD0079B4CF /* main.m */; };
+		C000FEC216F31FFD0079B4CF /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C000FEC116F31FFD0079B4CF /* AppDelegate.m */; };
+		C000FEC416F31FFD0079B4CF /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = C000FEC316F31FFD0079B4CF /* Default.png */; };
+		C000FEC616F31FFD0079B4CF /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C000FEC516F31FFD0079B4CF /* Default@2x.png */; };
+		C000FEC816F31FFD0079B4CF /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C000FEC716F31FFD0079B4CF /* Default-568h@2x.png */; };
+		C000FECB16F31FFD0079B4CF /* CalendarViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C000FECA16F31FFD0079B4CF /* CalendarViewController.m */; };
+		C000FED216F31FFD0079B4CF /* BallotViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C000FED116F31FFD0079B4CF /* BallotViewController.m */; };
+		C000FEEA16F31FFD0079B4CF /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C000FEE916F31FFD0079B4CF /* SenTestingKit.framework */; };
+		C000FEEB16F31FFD0079B4CF /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C000FEB116F31FFD0079B4CF /* UIKit.framework */; };
+		C000FEEC16F31FFD0079B4CF /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C000FEB316F31FFD0079B4CF /* Foundation.framework */; };
+		C000FEF416F31FFD0079B4CF /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C000FEF216F31FFD0079B4CF /* InfoPlist.strings */; };
+		C000FEF716F31FFE0079B4CF /* ProgrammersluckTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C000FEF616F31FFE0079B4CF /* ProgrammersluckTests.m */; };
+		C000FF1916F321950079B4CF /* CalendarLogic.m in Sources */ = {isa = PBXBuildFile; fileRef = C000FF0316F321950079B4CF /* CalendarLogic.m */; };
+		C000FF1A16F321950079B4CF /* CalendarMonth.m in Sources */ = {isa = PBXBuildFile; fileRef = C000FF0616F321950079B4CF /* CalendarMonth.m */; };
+		C000FF1B16F321950079B4CF /* CalendarView.m in Sources */ = {isa = PBXBuildFile; fileRef = C000FF0916F321950079B4CF /* CalendarView.m */; };
+		C000FF1C16F321950079B4CF /* CalendarBackground.png in Resources */ = {isa = PBXBuildFile; fileRef = C000FF0D16F321950079B4CF /* CalendarBackground.png */; };
+		C000FF1D16F321950079B4CF /* CalendarDaySelected.png in Resources */ = {isa = PBXBuildFile; fileRef = C000FF0E16F321950079B4CF /* CalendarDaySelected.png */; };
+		C000FF1E16F321950079B4CF /* CalendarDayTile.png in Resources */ = {isa = PBXBuildFile; fileRef = C000FF0F16F321950079B4CF /* CalendarDayTile.png */; };
+		C000FF1F16F321950079B4CF /* CalendarDayToday.png in Resources */ = {isa = PBXBuildFile; fileRef = C000FF1016F321950079B4CF /* CalendarDayToday.png */; };
+		C000FF2016F321950079B4CF /* CalendarDayTodaySelected.png in Resources */ = {isa = PBXBuildFile; fileRef = C000FF1116F321950079B4CF /* CalendarDayTodaySelected.png */; };
+		C000FF2116F321950079B4CF /* CalendarShadow.png in Resources */ = {isa = PBXBuildFile; fileRef = C000FF1216F321950079B4CF /* CalendarShadow.png */; };
+		C000FF2216F321950079B4CF /* CalendarTitleColor.png in Resources */ = {isa = PBXBuildFile; fileRef = C000FF1316F321950079B4CF /* CalendarTitleColor.png */; };
+		C000FF2316F321950079B4CF /* CalendarTitleDimColor.png in Resources */ = {isa = PBXBuildFile; fileRef = C000FF1416F321950079B4CF /* CalendarTitleDimColor.png */; };
+		C000FF2416F321950079B4CF /* CalendarDayTodayMark.png in Resources */ = {isa = PBXBuildFile; fileRef = C000FF1516F321950079B4CF /* CalendarDayTodayMark.png */; };
+		C000FF2D16F32E330079B4CF /* ExpandNSDate.m in Sources */ = {isa = PBXBuildFile; fileRef = C000FF2C16F32E330079B4CF /* ExpandNSDate.m */; };
+		C000FF2E16F333E80079B4CF /* ExpandNSDate.m in Sources */ = {isa = PBXBuildFile; fileRef = C000FF2C16F32E330079B4CF /* ExpandNSDate.m */; };
+		C000FF3216F356ED0079B4CF /* lunardate.c in Sources */ = {isa = PBXBuildFile; fileRef = C000FF3016F356ED0079B4CF /* lunardate.c */; };
+		C000FF3616F357D10079B4CF /* OCLunarDate.m in Sources */ = {isa = PBXBuildFile; fileRef = C000FF3516F357D10079B4CF /* OCLunarDate.m */; };
+		C000FF3916F362740079B4CF /* solarterm.c in Sources */ = {isa = PBXBuildFile; fileRef = C000FF3716F362730079B4CF /* solarterm.c */; };
+		C000FF3F16F369430079B4CF /* chinesefestivals.c in Sources */ = {isa = PBXBuildFile; fileRef = C000FF3D16F369420079B4CF /* chinesefestivals.c */; };
+		C036318417017AD000C855A5 /* TodoTaskIcon.png in Resources */ = {isa = PBXBuildFile; fileRef = C036318317017AD000C855A5 /* TodoTaskIcon.png */; };
+		C04438D916FEFC58003BA87A /* BallotItemViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C04438D716FEFC58003BA87A /* BallotItemViewController.m */; };
+		C04438DA16FEFC58003BA87A /* BallotItemViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = C04438D816FEFC58003BA87A /* BallotItemViewController.xib */; };
+		C04438DF16FF0E11003BA87A /* MoveViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C04438DD16FF0E11003BA87A /* MoveViewController.m */; };
+		C04438E016FF0E11003BA87A /* MoveViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = C04438DE16FF0E11003BA87A /* MoveViewController.xib */; };
+		C0456CF316F593460098EFEE /* FortuneDataManager.m in Sources */ = {isa = PBXBuildFile; fileRef = C0456CF216F593460098EFEE /* FortuneDataManager.m */; };
+		C0456CF716F6019E0098EFEE /* FortuneViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C0456CF516F6019E0098EFEE /* FortuneViewController.m */; };
+		C0456CF816F6019E0098EFEE /* FortuneViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = C0456CF616F6019E0098EFEE /* FortuneViewController.xib */; };
+		C06ADC141705B904000C10BD /* BallotViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = C06ADC121705B904000C10BD /* BallotViewController.xib */; };
+		C06ADC191705B973000C10BD /* CalendarViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = C06ADC171705B973000C10BD /* CalendarViewController.xib */; };
+		C072C2CF16FA204100C31CB0 /* ZCRandom.m in Sources */ = {isa = PBXBuildFile; fileRef = C072C2CE16FA204100C31CB0 /* ZCRandom.m */; };
+		C0815FE8173B78C1002A768B /* README.txt in Resources */ = {isa = PBXBuildFile; fileRef = C0815FB7173B78C1002A768B /* README.txt */; };
+		C0815FEC173BCD76002A768B /* libGoogleAdMobAds.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C0815FB6173B78C1002A768B /* libGoogleAdMobAds.a */; };
+		C0C69EDD170802BE00DB57EC /* Icon-72.png in Resources */ = {isa = PBXBuildFile; fileRef = C0C69ED4170802BE00DB57EC /* Icon-72.png */; };
+		C0C69EDE170802BE00DB57EC /* Icon-Small-50.png in Resources */ = {isa = PBXBuildFile; fileRef = C0C69ED5170802BE00DB57EC /* Icon-Small-50.png */; };
+		C0C69EDF170802BE00DB57EC /* Icon-Small.png in Resources */ = {isa = PBXBuildFile; fileRef = C0C69ED6170802BE00DB57EC /* Icon-Small.png */; };
+		C0C69EE0170802BE00DB57EC /* Icon-Small@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C0C69ED7170802BE00DB57EC /* Icon-Small@2x.png */; };
+		C0C69EE1170802BE00DB57EC /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = C0C69ED8170802BE00DB57EC /* Icon.png */; };
+		C0C69EE3170802BE00DB57EC /* Icon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C0C69EDA170802BE00DB57EC /* Icon@2x.png */; };
+		C0C69EE4170802BE00DB57EC /* iTunesArtwork in Resources */ = {isa = PBXBuildFile; fileRef = C0C69EDB170802BE00DB57EC /* iTunesArtwork */; };
+		C0D4ED3B17006C8E00C66E38 /* ADmobBanner.m in Sources */ = {isa = PBXBuildFile; fileRef = C0D4ED3817006C8E00C66E38 /* ADmobBanner.m */; };
+		C0D4ED3C17006C8E00C66E38 /* MyAdvertisingView.m in Sources */ = {isa = PBXBuildFile; fileRef = C0D4ED3A17006C8E00C66E38 /* MyAdvertisingView.m */; };
+		C0D4ED3E1700724F00C66E38 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0D4ED3D1700724F00C66E38 /* AudioToolbox.framework */; };
+		C0D4ED401700725B00C66E38 /* Accounts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0D4ED3F1700725B00C66E38 /* Accounts.framework */; };
+		C0D4ED421700726D00C66E38 /* AdSupport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0D4ED411700726C00C66E38 /* AdSupport.framework */; };
+		C0D4ED441700728000C66E38 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0D4ED431700728000C66E38 /* SystemConfiguration.framework */; };
+		C0D4ED46170072AA00C66E38 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0D4ED45170072AA00C66E38 /* MessageUI.framework */; };
+		C0D4ED48170072B700C66E38 /* Social.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0D4ED47170072B700C66E38 /* Social.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		C0D4ED4A170072CE00C66E38 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0D4ED49170072CE00C66E38 /* StoreKit.framework */; };
+		C0D4ED4F1700831400C66E38 /* calendar.png in Resources */ = {isa = PBXBuildFile; fileRef = C0D4ED4B1700831400C66E38 /* calendar.png */; };
+		C0D4ED501700831400C66E38 /* calendar@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C0D4ED4C1700831400C66E38 /* calendar@2x.png */; };
+		C0D4ED511700831400C66E38 /* ticket.png in Resources */ = {isa = PBXBuildFile; fileRef = C0D4ED4D1700831400C66E38 /* ticket.png */; };
+		C0D4ED521700831400C66E38 /* ticket@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C0D4ED4E1700831400C66E38 /* ticket@2x.png */; };
+		C0EAD67016F8198F00BB1CA7 /* LunarCalendarView.m in Sources */ = {isa = PBXBuildFile; fileRef = C0EAD66F16F8198E00BB1CA7 /* LunarCalendarView.m */; };
+		C0EAD67216F8996500BB1CA7 /* Data.json in Resources */ = {isa = PBXBuildFile; fileRef = C0EAD67116F8996500BB1CA7 /* Data.json */; };
+		C0EAD67516F89A2500BB1CA7 /* LoadData.m in Sources */ = {isa = PBXBuildFile; fileRef = C0EAD67416F89A2500BB1CA7 /* LoadData.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C000FEED16F31FFD0079B4CF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C000FEA616F31FFD0079B4CF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C000FEAD16F31FFD0079B4CF;
+			remoteInfo = Programmersluck;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		C000FEAE16F31FFD0079B4CF /* Programmersluck.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Programmersluck.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C000FEB116F31FFD0079B4CF /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		C000FEB316F31FFD0079B4CF /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		C000FEB516F31FFD0079B4CF /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		C000FEB916F31FFD0079B4CF /* Programmersluck-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Programmersluck-Info.plist"; sourceTree = "<group>"; };
+		C000FEBB16F31FFD0079B4CF /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		C000FEBD16F31FFD0079B4CF /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		C000FEBF16F31FFD0079B4CF /* Programmersluck-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Programmersluck-Prefix.pch"; sourceTree = "<group>"; };
+		C000FEC016F31FFD0079B4CF /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		C000FEC116F31FFD0079B4CF /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		C000FEC316F31FFD0079B4CF /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
+		C000FEC516F31FFD0079B4CF /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default@2x.png"; sourceTree = "<group>"; };
+		C000FEC716F31FFD0079B4CF /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
+		C000FEC916F31FFD0079B4CF /* CalendarViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CalendarViewController.h; sourceTree = "<group>"; };
+		C000FECA16F31FFD0079B4CF /* CalendarViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CalendarViewController.m; sourceTree = "<group>"; };
+		C000FED016F31FFD0079B4CF /* BallotViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BallotViewController.h; sourceTree = "<group>"; };
+		C000FED116F31FFD0079B4CF /* BallotViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BallotViewController.m; sourceTree = "<group>"; };
+		C000FEE816F31FFD0079B4CF /* ProgrammersluckTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ProgrammersluckTests.octest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C000FEE916F31FFD0079B4CF /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
+		C000FEF116F31FFD0079B4CF /* ProgrammersluckTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ProgrammersluckTests-Info.plist"; sourceTree = "<group>"; };
+		C000FEF316F31FFD0079B4CF /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		C000FEF516F31FFD0079B4CF /* ProgrammersluckTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProgrammersluckTests.h; sourceTree = "<group>"; };
+		C000FEF616F31FFE0079B4CF /* ProgrammersluckTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ProgrammersluckTests.m; sourceTree = "<group>"; };
+		C000FF0216F321950079B4CF /* CalendarLogic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CalendarLogic.h; sourceTree = "<group>"; };
+		C000FF0316F321950079B4CF /* CalendarLogic.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CalendarLogic.m; sourceTree = "<group>"; };
+		C000FF0416F321950079B4CF /* CalendarLogicDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CalendarLogicDelegate.h; sourceTree = "<group>"; };
+		C000FF0516F321950079B4CF /* CalendarMonth.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CalendarMonth.h; sourceTree = "<group>"; };
+		C000FF0616F321950079B4CF /* CalendarMonth.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CalendarMonth.m; sourceTree = "<group>"; };
+		C000FF0716F321950079B4CF /* CalendarMonthMarkLocation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CalendarMonthMarkLocation.h; sourceTree = "<group>"; };
+		C000FF0816F321950079B4CF /* CalendarView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CalendarView.h; sourceTree = "<group>"; };
+		C000FF0916F321950079B4CF /* CalendarView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CalendarView.m; sourceTree = "<group>"; };
+		C000FF0A16F321950079B4CF /* CalendarViewDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CalendarViewDelegate.h; sourceTree = "<group>"; };
+		C000FF0B16F321950079B4CF /* CalendarViewScrollDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CalendarViewScrollDelegate.h; sourceTree = "<group>"; };
+		C000FF0D16F321950079B4CF /* CalendarBackground.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = CalendarBackground.png; sourceTree = "<group>"; };
+		C000FF0E16F321950079B4CF /* CalendarDaySelected.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = CalendarDaySelected.png; sourceTree = "<group>"; };
+		C000FF0F16F321950079B4CF /* CalendarDayTile.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = CalendarDayTile.png; sourceTree = "<group>"; };
+		C000FF1016F321950079B4CF /* CalendarDayToday.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = CalendarDayToday.png; sourceTree = "<group>"; };
+		C000FF1116F321950079B4CF /* CalendarDayTodaySelected.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = CalendarDayTodaySelected.png; sourceTree = "<group>"; };
+		C000FF1216F321950079B4CF /* CalendarShadow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = CalendarShadow.png; sourceTree = "<group>"; };
+		C000FF1316F321950079B4CF /* CalendarTitleColor.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = CalendarTitleColor.png; sourceTree = "<group>"; };
+		C000FF1416F321950079B4CF /* CalendarTitleDimColor.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = CalendarTitleDimColor.png; sourceTree = "<group>"; };
+		C000FF1616F321950079B4CF /* en */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = en; path = en.lproj/CalendarDayTodayMark.png; sourceTree = "<group>"; };
+		C000FF1716F321950079B4CF /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "zh-Hans"; path = "zh-Hans.lproj/CalendarDayTodayMark.png"; sourceTree = "<group>"; };
+		C000FF2B16F32E330079B4CF /* ExpandNSDate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ExpandNSDate.h; sourceTree = "<group>"; };
+		C000FF2C16F32E330079B4CF /* ExpandNSDate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ExpandNSDate.m; sourceTree = "<group>"; };
+		C000FF3016F356ED0079B4CF /* lunardate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = lunardate.c; path = ChinaCalendar/lunardate.c; sourceTree = "<group>"; };
+		C000FF3116F356ED0079B4CF /* lunardate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lunardate.h; path = ChinaCalendar/lunardate.h; sourceTree = "<group>"; };
+		C000FF3416F357D10079B4CF /* OCLunarDate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OCLunarDate.h; path = ChinaCalendar/OCLunarDate.h; sourceTree = "<group>"; };
+		C000FF3516F357D10079B4CF /* OCLunarDate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OCLunarDate.m; path = ChinaCalendar/OCLunarDate.m; sourceTree = "<group>"; };
+		C000FF3716F362730079B4CF /* solarterm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = solarterm.c; path = ChinaCalendar/solarterm.c; sourceTree = "<group>"; };
+		C000FF3816F362730079B4CF /* solarterm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = solarterm.h; path = ChinaCalendar/solarterm.h; sourceTree = "<group>"; };
+		C000FF3D16F369420079B4CF /* chinesefestivals.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = chinesefestivals.c; path = ChinaCalendar/chinesefestivals.c; sourceTree = "<group>"; };
+		C000FF3E16F369420079B4CF /* chinesefestivals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = chinesefestivals.h; path = ChinaCalendar/chinesefestivals.h; sourceTree = "<group>"; };
+		C000FF4316F37F970079B4CF /* CalendarLocalization.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CalendarLocalization.h; sourceTree = "<group>"; };
+		C036318317017AD000C855A5 /* TodoTaskIcon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = TodoTaskIcon.png; path = Resources/TodoTaskIcon.png; sourceTree = "<group>"; };
+		C04438D616FEFC58003BA87A /* BallotItemViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BallotItemViewController.h; sourceTree = "<group>"; };
+		C04438D716FEFC58003BA87A /* BallotItemViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BallotItemViewController.m; sourceTree = "<group>"; };
+		C04438D816FEFC58003BA87A /* BallotItemViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = BallotItemViewController.xib; sourceTree = "<group>"; };
+		C04438DC16FF0E11003BA87A /* MoveViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MoveViewController.h; sourceTree = "<group>"; };
+		C04438DD16FF0E11003BA87A /* MoveViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MoveViewController.m; sourceTree = "<group>"; };
+		C04438DE16FF0E11003BA87A /* MoveViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MoveViewController.xib; sourceTree = "<group>"; };
+		C0456CF116F593460098EFEE /* FortuneDataManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FortuneDataManager.h; sourceTree = "<group>"; };
+		C0456CF216F593460098EFEE /* FortuneDataManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FortuneDataManager.m; sourceTree = "<group>"; };
+		C0456CF416F6019E0098EFEE /* FortuneViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FortuneViewController.h; sourceTree = "<group>"; };
+		C0456CF516F6019E0098EFEE /* FortuneViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FortuneViewController.m; sourceTree = "<group>"; };
+		C0456CF616F6019E0098EFEE /* FortuneViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = FortuneViewController.xib; sourceTree = "<group>"; };
+		C06ADC121705B904000C10BD /* BallotViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = BallotViewController.xib; sourceTree = "<group>"; };
+		C06ADC171705B973000C10BD /* CalendarViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = CalendarViewController.xib; sourceTree = "<group>"; };
+		C072C2CD16FA204100C31CB0 /* ZCRandom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZCRandom.h; sourceTree = "<group>"; };
+		C072C2CE16FA204100C31CB0 /* ZCRandom.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ZCRandom.m; sourceTree = "<group>"; };
+		C0815F54173B78C1002A768B /* DFPBannerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DFPBannerView.h; sourceTree = "<group>"; };
+		C0815F55173B78C1002A768B /* DFPExtras.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DFPExtras.h; sourceTree = "<group>"; };
+		C0815F56173B78C1002A768B /* DFPInterstitial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DFPInterstitial.h; sourceTree = "<group>"; };
+		C0815F57173B78C1002A768B /* DFPSwipeableBannerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DFPSwipeableBannerView.h; sourceTree = "<group>"; };
+		C0815F58173B78C1002A768B /* GADAdSizeDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GADAdSizeDelegate.h; sourceTree = "<group>"; };
+		C0815F59173B78C1002A768B /* GADAppEventDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GADAppEventDelegate.h; sourceTree = "<group>"; };
+		C0815F5A173B78C1002A768B /* GADSwipeableBannerViewDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GADSwipeableBannerViewDelegate.h; sourceTree = "<group>"; };
+		C0815FA4173B78C1002A768B /* GADCustomEventBanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GADCustomEventBanner.h; sourceTree = "<group>"; };
+		C0815FA5173B78C1002A768B /* GADCustomEventBannerDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GADCustomEventBannerDelegate.h; sourceTree = "<group>"; };
+		C0815FA6173B78C1002A768B /* GADCustomEventExtras.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GADCustomEventExtras.h; sourceTree = "<group>"; };
+		C0815FA7173B78C1002A768B /* GADCustomEventInterstitial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GADCustomEventInterstitial.h; sourceTree = "<group>"; };
+		C0815FA8173B78C1002A768B /* GADCustomEventInterstitialDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GADCustomEventInterstitialDelegate.h; sourceTree = "<group>"; };
+		C0815FA9173B78C1002A768B /* GADCustomEventRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GADCustomEventRequest.h; sourceTree = "<group>"; };
+		C0815FAB173B78C1002A768B /* GADSearchBannerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GADSearchBannerView.h; sourceTree = "<group>"; };
+		C0815FAC173B78C1002A768B /* GADSearchRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GADSearchRequest.h; sourceTree = "<group>"; };
+		C0815FAD173B78C1002A768B /* GADAdMobExtras.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GADAdMobExtras.h; sourceTree = "<group>"; };
+		C0815FAE173B78C1002A768B /* GADAdNetworkExtras.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GADAdNetworkExtras.h; sourceTree = "<group>"; };
+		C0815FAF173B78C1002A768B /* GADAdSize.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GADAdSize.h; sourceTree = "<group>"; };
+		C0815FB0173B78C1002A768B /* GADBannerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GADBannerView.h; sourceTree = "<group>"; };
+		C0815FB1173B78C1002A768B /* GADBannerViewDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GADBannerViewDelegate.h; sourceTree = "<group>"; };
+		C0815FB2173B78C1002A768B /* GADInterstitial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GADInterstitial.h; sourceTree = "<group>"; };
+		C0815FB3173B78C1002A768B /* GADInterstitialDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GADInterstitialDelegate.h; sourceTree = "<group>"; };
+		C0815FB4173B78C1002A768B /* GADRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GADRequest.h; sourceTree = "<group>"; };
+		C0815FB5173B78C1002A768B /* GADRequestError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GADRequestError.h; sourceTree = "<group>"; };
+		C0815FB6173B78C1002A768B /* libGoogleAdMobAds.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libGoogleAdMobAds.a; sourceTree = "<group>"; };
+		C0815FB7173B78C1002A768B /* README.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.txt; sourceTree = "<group>"; };
+		C0C69ED4170802BE00DB57EC /* Icon-72.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon-72.png"; sourceTree = "<group>"; };
+		C0C69ED5170802BE00DB57EC /* Icon-Small-50.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon-Small-50.png"; sourceTree = "<group>"; };
+		C0C69ED6170802BE00DB57EC /* Icon-Small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon-Small.png"; sourceTree = "<group>"; };
+		C0C69ED7170802BE00DB57EC /* Icon-Small@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon-Small@2x.png"; sourceTree = "<group>"; };
+		C0C69ED8170802BE00DB57EC /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
+		C0C69EDA170802BE00DB57EC /* Icon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon@2x.png"; sourceTree = "<group>"; };
+		C0C69EDB170802BE00DB57EC /* iTunesArtwork */ = {isa = PBXFileReference; lastKnownFileType = file; path = iTunesArtwork; sourceTree = "<group>"; };
+		C0D4ED3717006C8E00C66E38 /* ADmobBanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ADmobBanner.h; sourceTree = "<group>"; };
+		C0D4ED3817006C8E00C66E38 /* ADmobBanner.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ADmobBanner.m; sourceTree = "<group>"; };
+		C0D4ED3917006C8E00C66E38 /* MyAdvertisingView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MyAdvertisingView.h; sourceTree = "<group>"; };
+		C0D4ED3A17006C8E00C66E38 /* MyAdvertisingView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MyAdvertisingView.m; sourceTree = "<group>"; };
+		C0D4ED3D1700724F00C66E38 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		C0D4ED3F1700725B00C66E38 /* Accounts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accounts.framework; path = System/Library/Frameworks/Accounts.framework; sourceTree = SDKROOT; };
+		C0D4ED411700726C00C66E38 /* AdSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdSupport.framework; path = System/Library/Frameworks/AdSupport.framework; sourceTree = SDKROOT; };
+		C0D4ED431700728000C66E38 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		C0D4ED45170072AA00C66E38 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
+		C0D4ED47170072B700C66E38 /* Social.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Social.framework; path = System/Library/Frameworks/Social.framework; sourceTree = SDKROOT; };
+		C0D4ED49170072CE00C66E38 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
+		C0D4ED4B1700831400C66E38 /* calendar.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = calendar.png; path = Resources/calendar.png; sourceTree = "<group>"; };
+		C0D4ED4C1700831400C66E38 /* calendar@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "calendar@2x.png"; path = "Resources/calendar@2x.png"; sourceTree = "<group>"; };
+		C0D4ED4D1700831400C66E38 /* ticket.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = ticket.png; path = Resources/ticket.png; sourceTree = "<group>"; };
+		C0D4ED4E1700831400C66E38 /* ticket@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "ticket@2x.png"; path = "Resources/ticket@2x.png"; sourceTree = "<group>"; };
+		C0EAD66E16F8198E00BB1CA7 /* LunarCalendarView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LunarCalendarView.h; sourceTree = "<group>"; };
+		C0EAD66F16F8198E00BB1CA7 /* LunarCalendarView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LunarCalendarView.m; sourceTree = "<group>"; };
+		C0EAD67116F8996500BB1CA7 /* Data.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = Data.json; sourceTree = "<group>"; };
+		C0EAD67316F89A2500BB1CA7 /* LoadData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LoadData.h; sourceTree = "<group>"; };
+		C0EAD67416F89A2500BB1CA7 /* LoadData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LoadData.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C000FEAB16F31FFD0079B4CF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C0815FEC173BCD76002A768B /* libGoogleAdMobAds.a in Frameworks */,
+				C0D4ED4A170072CE00C66E38 /* StoreKit.framework in Frameworks */,
+				C0D4ED48170072B700C66E38 /* Social.framework in Frameworks */,
+				C0D4ED46170072AA00C66E38 /* MessageUI.framework in Frameworks */,
+				C0D4ED441700728000C66E38 /* SystemConfiguration.framework in Frameworks */,
+				C0D4ED421700726D00C66E38 /* AdSupport.framework in Frameworks */,
+				C0D4ED401700725B00C66E38 /* Accounts.framework in Frameworks */,
+				C0D4ED3E1700724F00C66E38 /* AudioToolbox.framework in Frameworks */,
+				C000FEB216F31FFD0079B4CF /* UIKit.framework in Frameworks */,
+				C000FEB416F31FFD0079B4CF /* Foundation.framework in Frameworks */,
+				C000FEB616F31FFD0079B4CF /* CoreGraphics.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C000FEE416F31FFD0079B4CF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C000FEEA16F31FFD0079B4CF /* SenTestingKit.framework in Frameworks */,
+				C000FEEB16F31FFD0079B4CF /* UIKit.framework in Frameworks */,
+				C000FEEC16F31FFD0079B4CF /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		C000FEA516F31FFD0079B4CF = {
+			isa = PBXGroup;
+			children = (
+				C000FEB716F31FFD0079B4CF /* Programmersluck */,
+				C000FEEF16F31FFD0079B4CF /* ProgrammersluckTests */,
+				C000FEB016F31FFD0079B4CF /* Frameworks */,
+				C000FEAF16F31FFD0079B4CF /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		C000FEAF16F31FFD0079B4CF /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C000FEAE16F31FFD0079B4CF /* Programmersluck.app */,
+				C000FEE816F31FFD0079B4CF /* ProgrammersluckTests.octest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C000FEB016F31FFD0079B4CF /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				C0D4ED49170072CE00C66E38 /* StoreKit.framework */,
+				C0D4ED47170072B700C66E38 /* Social.framework */,
+				C0D4ED45170072AA00C66E38 /* MessageUI.framework */,
+				C0D4ED431700728000C66E38 /* SystemConfiguration.framework */,
+				C0D4ED411700726C00C66E38 /* AdSupport.framework */,
+				C0D4ED3F1700725B00C66E38 /* Accounts.framework */,
+				C0D4ED3D1700724F00C66E38 /* AudioToolbox.framework */,
+				C000FEB116F31FFD0079B4CF /* UIKit.framework */,
+				C000FEB316F31FFD0079B4CF /* Foundation.framework */,
+				C000FEB516F31FFD0079B4CF /* CoreGraphics.framework */,
+				C000FEE916F31FFD0079B4CF /* SenTestingKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		C000FEB716F31FFD0079B4CF /* Programmersluck */ = {
+			isa = PBXGroup;
+			children = (
+				C0815F51173B78C1002A768B /* GoogleAdMobAdsSdkiOS-6.4.1 */,
+				C000FF2A16F32E130079B4CF /* Tool */,
+				C000FF0016F321250079B4CF /* Resources */,
+				C0456CF016F593050098EFEE /* DataManager */,
+				C000FF0116F321950079B4CF /* Calendar */,
+				C0456CF916F607130098EFEE /* CalendarView */,
+				C0FC6E9516FC13C00015A338 /* BallotView */,
+				C04438DB16FF0DE4003BA87A /* MoreView */,
+				C000FEC016F31FFD0079B4CF /* AppDelegate.h */,
+				C000FEC116F31FFD0079B4CF /* AppDelegate.m */,
+				C000FEB816F31FFD0079B4CF /* Supporting Files */,
+			);
+			path = Programmersluck;
+			sourceTree = "<group>";
+		};
+		C000FEB816F31FFD0079B4CF /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				C000FEB916F31FFD0079B4CF /* Programmersluck-Info.plist */,
+				C000FEBA16F31FFD0079B4CF /* InfoPlist.strings */,
+				C000FEBD16F31FFD0079B4CF /* main.m */,
+				C000FEBF16F31FFD0079B4CF /* Programmersluck-Prefix.pch */,
+				C000FEC316F31FFD0079B4CF /* Default.png */,
+				C000FEC516F31FFD0079B4CF /* Default@2x.png */,
+				C000FEC716F31FFD0079B4CF /* Default-568h@2x.png */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		C000FEEF16F31FFD0079B4CF /* ProgrammersluckTests */ = {
+			isa = PBXGroup;
+			children = (
+				C000FEF516F31FFD0079B4CF /* ProgrammersluckTests.h */,
+				C000FEF616F31FFE0079B4CF /* ProgrammersluckTests.m */,
+				C000FEF016F31FFD0079B4CF /* Supporting Files */,
+			);
+			path = ProgrammersluckTests;
+			sourceTree = "<group>";
+		};
+		C000FEF016F31FFD0079B4CF /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				C000FEF116F31FFD0079B4CF /* ProgrammersluckTests-Info.plist */,
+				C000FEF216F31FFD0079B4CF /* InfoPlist.strings */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		C000FF0016F321250079B4CF /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				C0C69ED3170802BE00DB57EC /* icon */,
+				C036318317017AD000C855A5 /* TodoTaskIcon.png */,
+				C0D4ED4B1700831400C66E38 /* calendar.png */,
+				C0D4ED4C1700831400C66E38 /* calendar@2x.png */,
+				C0D4ED4D1700831400C66E38 /* ticket.png */,
+				C0D4ED4E1700831400C66E38 /* ticket@2x.png */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		C000FF0116F321950079B4CF /* Calendar */ = {
+			isa = PBXGroup;
+			children = (
+				C000FF2F16F356BE0079B4CF /* ChinaCalendar */,
+				C000FF0C16F321950079B4CF /* Images */,
+				C000FF0216F321950079B4CF /* CalendarLogic.h */,
+				C000FF0316F321950079B4CF /* CalendarLogic.m */,
+				C000FF0416F321950079B4CF /* CalendarLogicDelegate.h */,
+				C000FF0516F321950079B4CF /* CalendarMonth.h */,
+				C000FF0616F321950079B4CF /* CalendarMonth.m */,
+				C000FF0716F321950079B4CF /* CalendarMonthMarkLocation.h */,
+				C000FF0816F321950079B4CF /* CalendarView.h */,
+				C000FF0916F321950079B4CF /* CalendarView.m */,
+				C000FF0A16F321950079B4CF /* CalendarViewDelegate.h */,
+				C000FF0B16F321950079B4CF /* CalendarViewScrollDelegate.h */,
+				C000FF4316F37F970079B4CF /* CalendarLocalization.h */,
+			);
+			path = Calendar;
+			sourceTree = "<group>";
+		};
+		C000FF0C16F321950079B4CF /* Images */ = {
+			isa = PBXGroup;
+			children = (
+				C000FF0D16F321950079B4CF /* CalendarBackground.png */,
+				C000FF0E16F321950079B4CF /* CalendarDaySelected.png */,
+				C000FF0F16F321950079B4CF /* CalendarDayTile.png */,
+				C000FF1016F321950079B4CF /* CalendarDayToday.png */,
+				C000FF1116F321950079B4CF /* CalendarDayTodaySelected.png */,
+				C000FF1216F321950079B4CF /* CalendarShadow.png */,
+				C000FF1316F321950079B4CF /* CalendarTitleColor.png */,
+				C000FF1416F321950079B4CF /* CalendarTitleDimColor.png */,
+				C000FF1516F321950079B4CF /* CalendarDayTodayMark.png */,
+			);
+			path = Images;
+			sourceTree = "<group>";
+		};
+		C000FF2A16F32E130079B4CF /* Tool */ = {
+			isa = PBXGroup;
+			children = (
+				C0D4ED3717006C8E00C66E38 /* ADmobBanner.h */,
+				C0D4ED3817006C8E00C66E38 /* ADmobBanner.m */,
+				C0D4ED3917006C8E00C66E38 /* MyAdvertisingView.h */,
+				C0D4ED3A17006C8E00C66E38 /* MyAdvertisingView.m */,
+				C000FF2B16F32E330079B4CF /* ExpandNSDate.h */,
+				C000FF2C16F32E330079B4CF /* ExpandNSDate.m */,
+				C072C2CD16FA204100C31CB0 /* ZCRandom.h */,
+				C072C2CE16FA204100C31CB0 /* ZCRandom.m */,
+			);
+			name = Tool;
+			sourceTree = "<group>";
+		};
+		C000FF2F16F356BE0079B4CF /* ChinaCalendar */ = {
+			isa = PBXGroup;
+			children = (
+				C000FF3016F356ED0079B4CF /* lunardate.c */,
+				C000FF3116F356ED0079B4CF /* lunardate.h */,
+				C000FF3716F362730079B4CF /* solarterm.c */,
+				C000FF3816F362730079B4CF /* solarterm.h */,
+				C000FF3D16F369420079B4CF /* chinesefestivals.c */,
+				C000FF3E16F369420079B4CF /* chinesefestivals.h */,
+				C000FF3416F357D10079B4CF /* OCLunarDate.h */,
+				C000FF3516F357D10079B4CF /* OCLunarDate.m */,
+			);
+			name = ChinaCalendar;
+			sourceTree = "<group>";
+		};
+		C04438DB16FF0DE4003BA87A /* MoreView */ = {
+			isa = PBXGroup;
+			children = (
+				C04438DC16FF0E11003BA87A /* MoveViewController.h */,
+				C04438DD16FF0E11003BA87A /* MoveViewController.m */,
+				C04438DE16FF0E11003BA87A /* MoveViewController.xib */,
+			);
+			name = MoreView;
+			sourceTree = "<group>";
+		};
+		C0456CF016F593050098EFEE /* DataManager */ = {
+			isa = PBXGroup;
+			children = (
+				C0456CF116F593460098EFEE /* FortuneDataManager.h */,
+				C0456CF216F593460098EFEE /* FortuneDataManager.m */,
+				C0EAD67316F89A2500BB1CA7 /* LoadData.h */,
+				C0EAD67416F89A2500BB1CA7 /* LoadData.m */,
+				C0EAD67116F8996500BB1CA7 /* Data.json */,
+			);
+			name = DataManager;
+			sourceTree = "<group>";
+		};
+		C0456CF916F607130098EFEE /* CalendarView */ = {
+			isa = PBXGroup;
+			children = (
+				C000FEC916F31FFD0079B4CF /* CalendarViewController.h */,
+				C000FECA16F31FFD0079B4CF /* CalendarViewController.m */,
+				C0EAD66E16F8198E00BB1CA7 /* LunarCalendarView.h */,
+				C0EAD66F16F8198E00BB1CA7 /* LunarCalendarView.m */,
+				C06ADC171705B973000C10BD /* CalendarViewController.xib */,
+				C0456CF416F6019E0098EFEE /* FortuneViewController.h */,
+				C0456CF516F6019E0098EFEE /* FortuneViewController.m */,
+				C0456CF616F6019E0098EFEE /* FortuneViewController.xib */,
+			);
+			name = CalendarView;
+			sourceTree = "<group>";
+		};
+		C0815F51173B78C1002A768B /* GoogleAdMobAdsSdkiOS-6.4.1 */ = {
+			isa = PBXGroup;
+			children = (
+				C0815F52173B78C1002A768B /* Add-ons */,
+				C0815FAD173B78C1002A768B /* GADAdMobExtras.h */,
+				C0815FAE173B78C1002A768B /* GADAdNetworkExtras.h */,
+				C0815FAF173B78C1002A768B /* GADAdSize.h */,
+				C0815FB0173B78C1002A768B /* GADBannerView.h */,
+				C0815FB1173B78C1002A768B /* GADBannerViewDelegate.h */,
+				C0815FB2173B78C1002A768B /* GADInterstitial.h */,
+				C0815FB3173B78C1002A768B /* GADInterstitialDelegate.h */,
+				C0815FB4173B78C1002A768B /* GADRequest.h */,
+				C0815FB5173B78C1002A768B /* GADRequestError.h */,
+				C0815FB6173B78C1002A768B /* libGoogleAdMobAds.a */,
+				C0815FB7173B78C1002A768B /* README.txt */,
+			);
+			path = "GoogleAdMobAdsSdkiOS-6.4.1";
+			sourceTree = "<group>";
+		};
+		C0815F52173B78C1002A768B /* Add-ons */ = {
+			isa = PBXGroup;
+			children = (
+				C0815F53173B78C1002A768B /* DoubleClick */,
+				C0815FA3173B78C1002A768B /* Mediation */,
+				C0815FAA173B78C1002A768B /* Search */,
+			);
+			path = "Add-ons";
+			sourceTree = "<group>";
+		};
+		C0815F53173B78C1002A768B /* DoubleClick */ = {
+			isa = PBXGroup;
+			children = (
+				C0815F54173B78C1002A768B /* DFPBannerView.h */,
+				C0815F55173B78C1002A768B /* DFPExtras.h */,
+				C0815F56173B78C1002A768B /* DFPInterstitial.h */,
+				C0815F57173B78C1002A768B /* DFPSwipeableBannerView.h */,
+				C0815F58173B78C1002A768B /* GADAdSizeDelegate.h */,
+				C0815F59173B78C1002A768B /* GADAppEventDelegate.h */,
+				C0815F5A173B78C1002A768B /* GADSwipeableBannerViewDelegate.h */,
+			);
+			path = DoubleClick;
+			sourceTree = "<group>";
+		};
+		C0815FA3173B78C1002A768B /* Mediation */ = {
+			isa = PBXGroup;
+			children = (
+				C0815FA4173B78C1002A768B /* GADCustomEventBanner.h */,
+				C0815FA5173B78C1002A768B /* GADCustomEventBannerDelegate.h */,
+				C0815FA6173B78C1002A768B /* GADCustomEventExtras.h */,
+				C0815FA7173B78C1002A768B /* GADCustomEventInterstitial.h */,
+				C0815FA8173B78C1002A768B /* GADCustomEventInterstitialDelegate.h */,
+				C0815FA9173B78C1002A768B /* GADCustomEventRequest.h */,
+			);
+			path = Mediation;
+			sourceTree = "<group>";
+		};
+		C0815FAA173B78C1002A768B /* Search */ = {
+			isa = PBXGroup;
+			children = (
+				C0815FAB173B78C1002A768B /* GADSearchBannerView.h */,
+				C0815FAC173B78C1002A768B /* GADSearchRequest.h */,
+			);
+			path = Search;
+			sourceTree = "<group>";
+		};
+		C0C69ED3170802BE00DB57EC /* icon */ = {
+			isa = PBXGroup;
+			children = (
+				C0C69ED4170802BE00DB57EC /* Icon-72.png */,
+				C0C69ED5170802BE00DB57EC /* Icon-Small-50.png */,
+				C0C69ED6170802BE00DB57EC /* Icon-Small.png */,
+				C0C69ED7170802BE00DB57EC /* Icon-Small@2x.png */,
+				C0C69ED8170802BE00DB57EC /* Icon.png */,
+				C0C69EDA170802BE00DB57EC /* Icon@2x.png */,
+				C0C69EDB170802BE00DB57EC /* iTunesArtwork */,
+			);
+			name = icon;
+			path = Resources/icon;
+			sourceTree = "<group>";
+		};
+		C0FC6E9516FC13C00015A338 /* BallotView */ = {
+			isa = PBXGroup;
+			children = (
+				C000FED016F31FFD0079B4CF /* BallotViewController.h */,
+				C000FED116F31FFD0079B4CF /* BallotViewController.m */,
+				C06ADC121705B904000C10BD /* BallotViewController.xib */,
+				C04438D616FEFC58003BA87A /* BallotItemViewController.h */,
+				C04438D716FEFC58003BA87A /* BallotItemViewController.m */,
+				C04438D816FEFC58003BA87A /* BallotItemViewController.xib */,
+			);
+			name = BallotView;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		C000FEAD16F31FFD0079B4CF /* Programmersluck */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C000FEFA16F31FFE0079B4CF /* Build configuration list for PBXNativeTarget "Programmersluck" */;
+			buildPhases = (
+				C000FEAA16F31FFD0079B4CF /* Sources */,
+				C000FEAB16F31FFD0079B4CF /* Frameworks */,
+				C000FEAC16F31FFD0079B4CF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Programmersluck;
+			productName = Programmersluck;
+			productReference = C000FEAE16F31FFD0079B4CF /* Programmersluck.app */;
+			productType = "com.apple.product-type.application";
+		};
+		C000FEE716F31FFD0079B4CF /* ProgrammersluckTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C000FEFD16F31FFE0079B4CF /* Build configuration list for PBXNativeTarget "ProgrammersluckTests" */;
+			buildPhases = (
+				C000FEE316F31FFD0079B4CF /* Sources */,
+				C000FEE416F31FFD0079B4CF /* Frameworks */,
+				C000FEE516F31FFD0079B4CF /* Resources */,
+				C000FEE616F31FFD0079B4CF /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C000FEEE16F31FFD0079B4CF /* PBXTargetDependency */,
+			);
+			name = ProgrammersluckTests;
+			productName = ProgrammersluckTests;
+			productReference = C000FEE816F31FFD0079B4CF /* ProgrammersluckTests.octest */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		C000FEA616F31FFD0079B4CF /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0460;
+				ORGANIZATIONNAME = cuibo;
+			};
+			buildConfigurationList = C000FEA916F31FFD0079B4CF /* Build configuration list for PBXProject "Programmersluck" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				"zh-Hans",
+			);
+			mainGroup = C000FEA516F31FFD0079B4CF;
+			productRefGroup = C000FEAF16F31FFD0079B4CF /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				C000FEAD16F31FFD0079B4CF /* Programmersluck */,
+				C000FEE716F31FFD0079B4CF /* ProgrammersluckTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C000FEAC16F31FFD0079B4CF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C000FEBC16F31FFD0079B4CF /* InfoPlist.strings in Resources */,
+				C000FEC416F31FFD0079B4CF /* Default.png in Resources */,
+				C000FEC616F31FFD0079B4CF /* Default@2x.png in Resources */,
+				C000FEC816F31FFD0079B4CF /* Default-568h@2x.png in Resources */,
+				C000FF1C16F321950079B4CF /* CalendarBackground.png in Resources */,
+				C000FF1D16F321950079B4CF /* CalendarDaySelected.png in Resources */,
+				C000FF1E16F321950079B4CF /* CalendarDayTile.png in Resources */,
+				C000FF1F16F321950079B4CF /* CalendarDayToday.png in Resources */,
+				C000FF2016F321950079B4CF /* CalendarDayTodaySelected.png in Resources */,
+				C000FF2116F321950079B4CF /* CalendarShadow.png in Resources */,
+				C000FF2216F321950079B4CF /* CalendarTitleColor.png in Resources */,
+				C000FF2316F321950079B4CF /* CalendarTitleDimColor.png in Resources */,
+				C000FF2416F321950079B4CF /* CalendarDayTodayMark.png in Resources */,
+				C0456CF816F6019E0098EFEE /* FortuneViewController.xib in Resources */,
+				C0EAD67216F8996500BB1CA7 /* Data.json in Resources */,
+				C04438DA16FEFC58003BA87A /* BallotItemViewController.xib in Resources */,
+				C04438E016FF0E11003BA87A /* MoveViewController.xib in Resources */,
+				C0D4ED4F1700831400C66E38 /* calendar.png in Resources */,
+				C0D4ED501700831400C66E38 /* calendar@2x.png in Resources */,
+				C0D4ED511700831400C66E38 /* ticket.png in Resources */,
+				C0D4ED521700831400C66E38 /* ticket@2x.png in Resources */,
+				C036318417017AD000C855A5 /* TodoTaskIcon.png in Resources */,
+				C06ADC141705B904000C10BD /* BallotViewController.xib in Resources */,
+				C06ADC191705B973000C10BD /* CalendarViewController.xib in Resources */,
+				C0C69EDD170802BE00DB57EC /* Icon-72.png in Resources */,
+				C0C69EDE170802BE00DB57EC /* Icon-Small-50.png in Resources */,
+				C0C69EDF170802BE00DB57EC /* Icon-Small.png in Resources */,
+				C0C69EE0170802BE00DB57EC /* Icon-Small@2x.png in Resources */,
+				C0C69EE1170802BE00DB57EC /* Icon.png in Resources */,
+				C0C69EE3170802BE00DB57EC /* Icon@2x.png in Resources */,
+				C0C69EE4170802BE00DB57EC /* iTunesArtwork in Resources */,
+				C0815FE8173B78C1002A768B /* README.txt in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C000FEE516F31FFD0079B4CF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C000FEF416F31FFD0079B4CF /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		C000FEE616F31FFD0079B4CF /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Run the unit tests in this test bundle.\n\"${SYSTEM_DEVELOPER_DIR}/Tools/RunUnitTests\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C000FEAA16F31FFD0079B4CF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C000FF2E16F333E80079B4CF /* ExpandNSDate.m in Sources */,
+				C000FEBE16F31FFD0079B4CF /* main.m in Sources */,
+				C000FEC216F31FFD0079B4CF /* AppDelegate.m in Sources */,
+				C000FECB16F31FFD0079B4CF /* CalendarViewController.m in Sources */,
+				C000FED216F31FFD0079B4CF /* BallotViewController.m in Sources */,
+				C000FF1916F321950079B4CF /* CalendarLogic.m in Sources */,
+				C000FF1A16F321950079B4CF /* CalendarMonth.m in Sources */,
+				C000FF1B16F321950079B4CF /* CalendarView.m in Sources */,
+				C000FF3216F356ED0079B4CF /* lunardate.c in Sources */,
+				C000FF3616F357D10079B4CF /* OCLunarDate.m in Sources */,
+				C000FF3916F362740079B4CF /* solarterm.c in Sources */,
+				C000FF3F16F369430079B4CF /* chinesefestivals.c in Sources */,
+				C0456CF316F593460098EFEE /* FortuneDataManager.m in Sources */,
+				C0456CF716F6019E0098EFEE /* FortuneViewController.m in Sources */,
+				C0EAD67016F8198F00BB1CA7 /* LunarCalendarView.m in Sources */,
+				C0EAD67516F89A2500BB1CA7 /* LoadData.m in Sources */,
+				C072C2CF16FA204100C31CB0 /* ZCRandom.m in Sources */,
+				C04438D916FEFC58003BA87A /* BallotItemViewController.m in Sources */,
+				C04438DF16FF0E11003BA87A /* MoveViewController.m in Sources */,
+				C0D4ED3B17006C8E00C66E38 /* ADmobBanner.m in Sources */,
+				C0D4ED3C17006C8E00C66E38 /* MyAdvertisingView.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C000FEE316F31FFD0079B4CF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C000FEF716F31FFE0079B4CF /* ProgrammersluckTests.m in Sources */,
+				C000FF2D16F32E330079B4CF /* ExpandNSDate.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		C000FEEE16F31FFD0079B4CF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C000FEAD16F31FFD0079B4CF /* Programmersluck */;
+			targetProxy = C000FEED16F31FFD0079B4CF /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		C000FEBA16F31FFD0079B4CF /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C000FEBB16F31FFD0079B4CF /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		C000FEF216F31FFD0079B4CF /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C000FEF316F31FFD0079B4CF /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		C000FF1516F321950079B4CF /* CalendarDayTodayMark.png */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C000FF1616F321950079B4CF /* en */,
+				C000FF1716F321950079B4CF /* zh-Hans */,
+			);
+			name = CalendarDayTodayMark.png;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		C000FEF816F31FFE0079B4CF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C000FEF916F31FFE0079B4CF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		C000FEFB16F31FFE0079B4CF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "iPhone Distribution: li shuang";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution: li shuang";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Programmersluck/Programmersluck-Prefix.pch";
+				INFOPLIST_FILE = "Programmersluck/Programmersluck-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/Programmersluck/GoogleAdMobAdsSdkiOS-6.4.1/Add-ons/GoogleAnalyticsiOS_2.0beta4/Library\"",
+					"\"$(SRCROOT)/Programmersluck/GoogleAdMobAdsSdkiOS-6.4.1\"",
+				);
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "A4D932CC-5C79-4F26-940F-CAB527770A18";
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "A4D932CC-5C79-4F26-940F-CAB527770A18";
+				TARGETED_DEVICE_FAMILY = 1;
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		C000FEFC16F31FFE0079B4CF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "iPhone Distribution: li shuang";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution: li shuang";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Programmersluck/Programmersluck-Prefix.pch";
+				INFOPLIST_FILE = "Programmersluck/Programmersluck-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/Programmersluck/GoogleAdMobAdsSdkiOS-6.4.1/Add-ons/GoogleAnalyticsiOS_2.0beta4/Library\"",
+					"\"$(SRCROOT)/Programmersluck/GoogleAdMobAdsSdkiOS-6.4.1\"",
+				);
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "A4D932CC-5C79-4F26-940F-CAB527770A18";
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "A4D932CC-5C79-4F26-940F-CAB527770A18";
+				TARGETED_DEVICE_FAMILY = 1;
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+		C000FEFE16F31FFE0079B4CF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Programmersluck.app/Programmersluck";
+				FRAMEWORK_SEARCH_PATHS = (
+					"\"$(SDKROOT)/Developer/Library/Frameworks\"",
+					"\"$(DEVELOPER_LIBRARY_DIR)/Frameworks\"",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Programmersluck/Programmersluck-Prefix.pch";
+				INFOPLIST_FILE = "ProgrammersluckTests/ProgrammersluckTests-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUNDLE_LOADER)";
+				WRAPPER_EXTENSION = octest;
+			};
+			name = Debug;
+		};
+		C000FEFF16F31FFE0079B4CF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Programmersluck.app/Programmersluck";
+				FRAMEWORK_SEARCH_PATHS = (
+					"\"$(SDKROOT)/Developer/Library/Frameworks\"",
+					"\"$(DEVELOPER_LIBRARY_DIR)/Frameworks\"",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Programmersluck/Programmersluck-Prefix.pch";
+				INFOPLIST_FILE = "ProgrammersluckTests/ProgrammersluckTests-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUNDLE_LOADER)";
+				WRAPPER_EXTENSION = octest;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C000FEA916F31FFD0079B4CF /* Build configuration list for PBXProject "Programmersluck" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C000FEF816F31FFE0079B4CF /* Debug */,
+				C000FEF916F31FFE0079B4CF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C000FEFA16F31FFE0079B4CF /* Build configuration list for PBXNativeTarget "Programmersluck" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C000FEFB16F31FFE0079B4CF /* Debug */,
+				C000FEFC16F31FFE0079B4CF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C000FEFD16F31FFE0079B4CF /* Build configuration list for PBXNativeTarget "ProgrammersluckTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C000FEFE16F31FFE0079B4CF /* Debug */,
+				C000FEFF16F31FFE0079B4CF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = C000FEA616F31FFD0079B4CF /* Project object */;
+}

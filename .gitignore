@@ -1,4 +1,9 @@
+*.exe
+*.pdb
+*.ncb
+*.aps
 *Zone.Identifier
+Release
 tmp
 *.pyc
 ext

@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LeastSquare", "LeastSquare\LeastSquare.vcproj", "{4878C839-FB1D-40CC-B3EE-13A07B3E40DF}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "spline", "spline\spline.vcproj", "{82CEF33F-A1C1-433F-8E70-87CF7810D33D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4878C839-FB1D-40CC-B3EE-13A07B3E40DF}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4878C839-FB1D-40CC-B3EE-13A07B3E40DF}.Debug|Win32.Build.0 = Debug|Win32
+		{4878C839-FB1D-40CC-B3EE-13A07B3E40DF}.Release|Win32.ActiveCfg = Release|Win32
+		{4878C839-FB1D-40CC-B3EE-13A07B3E40DF}.Release|Win32.Build.0 = Release|Win32
+		{82CEF33F-A1C1-433F-8E70-87CF7810D33D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{82CEF33F-A1C1-433F-8E70-87CF7810D33D}.Debug|Win32.Build.0 = Debug|Win32
+		{82CEF33F-A1C1-433F-8E70-87CF7810D33D}.Release|Win32.ActiveCfg = Release|Win32
+		{82CEF33F-A1C1-433F-8E70-87CF7810D33D}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

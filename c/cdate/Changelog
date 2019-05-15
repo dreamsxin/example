@@ -1,0 +1,46 @@
+2012-04-07  vinoca  <supoingo@163.com>
+
+	* release: 1.0.5
+
+2012-04-02  vinoca  <supoingo@163.com>
+
+	* chinese_cal.h: 修改days_of_permonth为局部变量，为全局变量时将导致
+			which_day_is_jieqi函数计算错误。
+
+2012-03-12  vinoca  <supoingo@163.com>
+
+	* Makefile: 互换MANDIR与BINDIR。
+
+2012-03-05  vinoca  <supoingo@163.com>
+
+	* cdate.c: 添加公历节日“学雷锋日”。
+
+2012-02-04  vinoca  <supoingo@163.com>
+
+	* chinese_cal.h: 将农历年起始日由立春改为正月初一。
+
+2012-01-01  vinoca  <supoingo@163.com>
+
+	* chinese_cal.h: 公历1月农历年柱修正。
+
+2011-12-05  vinoca  <supoingo@163.com>
+
+	* cdate.c: 农历节日名称细微修正。
+	* cdate.c: 使用splint格式化代码。
+
+2011-12-01  vinoca  <supoingo@163.com>
+
+	* configure:
+	* cdate.1:
+
+2011-11-28  vinoca  <supoingo@163.com>
+
+	* Changelog:
+	* README:
+
+2011-11-27  vinoca  <supoingo@163.com>
+
+	* Makefile:
+	* cdate.c:
+	* chinese_cal.h:
+

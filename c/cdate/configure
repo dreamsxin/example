@@ -1,0 +1,24 @@
+#!/bin/sh
+
+prefix='/usr'
+
+while [ -n "$1" ]; do
+	e="`expr "$1" : '--\(.*=.*\)'`"
+	if [ -z "$e" ]; then
+		cat<<EOF
+Usage: $0 [OPTIONS]
+Option		Description				Default
+--prefix=...	Directories to put files in		$prefix
+EOF
+		exit;
+	fi
+	
+	keyname=$(expr "$e" : '\(.*\)=.*' | sed 's/[^a-z0-9_]/_/g')
+	value=$(expr "$e" : '.*=\(.*\)' | sed "s/'/_/g")
+	
+	eval "$keyname='$value'"
+	shift;
+done
+
+sed -i "1a\PREFIX=$prefix" Makefile
+
