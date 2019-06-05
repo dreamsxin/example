@@ -8,3 +8,7 @@ phpcs --config-set installed_paths /xxx/PHPCompatibility
 ln -s ~/.config/composer/vendor/bin/phpcs /usr/local/bin/phpcs
 ln -s ~/.config/composer/vendor/bin/phpcbf /usr/local/bin/phpcbf
 ```
+
+```shell
+phpcs --standard=PHPCompatibility
+```
