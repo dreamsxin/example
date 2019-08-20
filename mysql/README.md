@@ -13,16 +13,35 @@ sudo apt-get install mysql-server
 mysql -uroot -p
 ```
 
+### 显示所有库和表
+
+```sql
+show database;
+show tables;
+```
+
 ### 创建数据库
 
-```shell
+```sql
 create database phalcon_test charset=utf8 collate=utf8_unicode_ci;
 ```
 
 ### 切换数据库
 
-```shell
+```sql
 use phalcon_test;
+```
+
+### 创建表
+
+```sql
+CREATE TABLE person(
+    id int not null auto_increment,
+    name varchar(8),
+    birthday datetime,
+    constraint pk__person primary key(id)
+);
+INSERT INTO person (name, birthday) VALUES ('A', '2019-08-01 00:00:00'), ('B', '2019-08-01 23:59:59'), ('C', '2019-08-02 00:00:00');
 ```
 
 ## 创建用户授权
