@@ -41,6 +41,7 @@ CREATE TABLE person(
     birthday datetime,
     constraint pk__person primary key(id)
 );
+ALTER TABLE person ADD INDEX idx_birthday (birthday); 
 INSERT INTO person (name, birthday) VALUES ('A', '2019-08-01 00:00:00'), ('B', '2019-08-01 23:59:59'), ('C', '2019-08-02 00:00:00');
 ```
 
