@@ -1,3 +1,10 @@
+
+## Cannot find OpenSSL's <evp.h>
+
+```shell
+export PHP_OPENSSL_DIR=yes
+```
+
 ```php
 <?php
 
