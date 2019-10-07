@@ -21,6 +21,16 @@ export ZEND_DONT_UNLOAD_MODULES=1
 gdb php -tui
 ```
 
+### 执行
+
+```shell
+gdb --args php -d extension=phalcon.so manual.php <<EOF
+run
+bt full
+quit
+EOF
+```
+
 ## 设置断点
 
 ```shell
