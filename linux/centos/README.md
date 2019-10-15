@@ -7,6 +7,13 @@ sh ./atomic
 yum check-update
 ```
 
+## 安装Tab键自动补全功能：bash-completion
+
+```shell
+yum install epel-release yum-utils
+sudo yum install -y bash-completion
+```
+
 ## yum 使用
 
 ```shell
