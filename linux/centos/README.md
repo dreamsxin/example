@@ -9,10 +9,16 @@ yum check-update
 
 ## 安装Tab键自动补全功能：bash-completion
 
+## 防火墙
+
 ```shell
-yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm
-yum install epel-release yum-utils
-sudo yum install -y bash-completion
+yum install -y iptables
+yum update -y iptables
+yum install -y iptables-services
+
+iptables -I INPUT -p tcp --dport 80 -j ACCEPT
+/etc/rc.d/init.d/iptables save
+service iptables restart
 ```
 
 ## yum 使用
