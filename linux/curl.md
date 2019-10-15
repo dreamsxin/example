@@ -85,3 +85,29 @@ curl -u ftpuser:ftppass -T "{file1,file2}" ftp://ftp.testserver.com
 ```shell
 curl -u ftpuser:ftppass -T - ftp://ftp.testserver.com/myfile_1.txt
 ```
+
+## curl命令测试网络请求中DNS解析、响应时间
+
+经查遇到需要测量网络请求时间的问题，包括DNS解析、连接、传输等时间。Linux下的curl命令可以很好的测量网络请求。
+
+如下
+```shell
+curl -o /dev/null -s -w %{time_connect}:%{time_starttransfer}:%{time_total} http://www.baidu.com
+curl -o /dev/null -s -w %{time_connect}-Start:%{time_starttransfer}-Seep:%{speed_download}-Total:%{time_total}-DNS:%{time_namelookup} http://www.baidu.com
+```
+
+
+- -o 表示输出结果到 /dev/null
+- -s 表示去除状态信息
+- -w 表示列出后面的参数的结果
+
+curl命令支持的参数，有如下
+```text
+time_connect        建立到服务器的 TCP 连接所用的时间
+time_starttransfer  在发出请求之后,Web 服务器返回数据的第一个字节所用的时间
+time_total          完成请求所用的时间
+time_namelookup     DNS解析时间,从请求开始到DNS解析完毕所用时间(记得关掉 Linux 的 nscd 的服务测试)
+speed_download      下载速度，单位-字节每秒。
+```
+
+通过该命令，可以计算网络请求中DNS解析、连接、传输及总的时间，进行初步的故障排查。

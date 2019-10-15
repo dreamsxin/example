@@ -1,3 +1,36 @@
+
+## 
+
+```shell
+wget ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.68.tar.gz
+tar zxvf autoconf-2.68.tar.gz
+cd autoconf-2.68
+./configure --prefix=/usr/
+make && make install
+```
+
+## CentOS 6 配置第三方源
+
+```shell
+wget http://www.atomicorp.com/installers/atomic
+sh ./atomic
+yum check-update
+```
+
+## 安装Tab键自动补全功能：bash-completion
+
+## 防火墙
+
+```shell
+yum install -y iptables
+yum update -y iptables
+yum install -y iptables-services
+
+iptables -I INPUT -p tcp --dport 80 -j ACCEPT
+/etc/rc.d/init.d/iptables save
+service iptables restart
+```
+
 ## yum 使用
 
 ```shell
