@@ -10,6 +10,7 @@ yum check-update
 ## 安装Tab键自动补全功能：bash-completion
 
 ```shell
+yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm
 yum install epel-release yum-utils
 sudo yum install -y bash-completion
 ```
