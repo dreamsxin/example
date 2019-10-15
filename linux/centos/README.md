@@ -1,3 +1,12 @@
+
+## CentOS 6 配置第三方源
+
+```shell
+wget http://www.atomicorp.com/installers/atomic
+sh ./atomic
+yum check-update
+```
+
 ## yum 使用
 
 ```shell
