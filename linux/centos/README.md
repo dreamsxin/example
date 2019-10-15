@@ -1,4 +1,14 @@
 
+## 
+
+```shell
+wget ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.68.tar.gz
+tar zxvf autoconf-2.68.tar.gz
+cd autoconf-2.68
+./configure --prefix=/usr/
+make && make install
+```
+
 ## CentOS 6 配置第三方源
 
 ```shell
