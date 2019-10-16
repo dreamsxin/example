@@ -135,7 +135,7 @@ $channel = $conn->channel();
 // 声明交换机
 $type = 'direct'; // 交换器类型 DIRECT("direct"), FANOUT("fanout"), TOPIC("topic"), HEADERS("headers");
 $durable = false; // 是否持久化,durable设置为true表示持久化,反之是非持久化,持久化的可以将交换器存盘,在服务器重启的时候不会丢失信息.
-$autoDelete = true; // 是否自动删除,设置为TRUE则表是自动删除,自删除的前提是至少有一个队列或者交换器与这交换器绑定,之后所有与这个交换器绑定的队列或者交换器都与此解绑,一般都设置为fase
+$autoDelete = true; // 是否自动删除，设置为TRUE则表是自动删除，是至少有一个队列或者交换器与这交换器绑定，一般都设置为 false ，此时需要发送ack消息，才会删除
 $internal = false; // 是否内置,如果设置 为true,则表示是内置的交换器,客户端程序无法直接发送消息到这个交换器中,只能通过交换器路由到交换器的方式
 $arguments = NULL; // 其它一些结构化参数比如:alternate-exchange
 
@@ -158,10 +158,17 @@ $channel->close();
 $conn->close();
 ```
 
-## 路由匹配
+## 交换机类型
+
+1、匿名交换机，工作队列模式（不用显示申明交换机）
+2、扇形交换机（fanout），发布订阅/广播模式 
+3、直连交换机（direct），路由绑定/广播精确匹配 
+4、主题交换机（topic），路由规则/广播模糊
+
+交换机类型CPU开销是不一样的，一般来说CPU开销顺序是:
+`主题交换机 > 直连交换机 > 扇形交换机 > 匿名交换机
 
 上面的代码中，当我们声明初始化交换机的时候第二个参数使用`direct`参数，其实还有另外3种参数可选，分别为：
-
 
 - direct
 精准推送
@@ -181,7 +188,110 @@ $conn->close();
 	* all
 	在发布消息时携带的所有 `Entry` 必须和绑定在队列上的所有 `Entry` 完全匹配
 
-## HEADERS 交换机使用
+### 匿名交换机
+
+应用场景：并行处理任务队列 
+
+工作队列（又称：任务队列—Task Queues）是为了避免等待一些占用大量资源、时间的操作。当我们把任务（Task）当作消息发送到队列中，一个运行在后台的工作者（worker）进程就会取出任务然后处理。当你运行多个工作者（workers），任务就会在它们之间共享。
+
+使用工作队列的一个好处就是它能够并行的处理队列。如果堆积了很多任务，我们只需要添加更多的工作者（workers）就可以了，扩展很简单。
+
+默认来说，RabbitMQ会按顺序得把消息发送给每个消费者（consumer）。平均每个消费者都会收到同等数量得消息。这种发送消息得方式叫做——轮询（round-robin）。
+
+代码示例
+
+1）生产者
+```php
+//声明队列，$queue,$passive,$durable,$exclusive,$auto_delete
+$channel->queue_declare('task_queue', false, true, false, false);
+//发布消息到队列，$message,$exchange,$queue
+$channel->basic_publish($msg, '', 'task_queue');
+```
+2）消费者
+```php
+//声明队列
+$channel->queue_declare('task_queue', false, true, false, false);
+//消费数据异步回调，$queue,$consumer_tag,$no_local,$no_ack,$exclusive,$nowait,$callback
+$channel->basic_consume('task_queue', '', false, false, false, false, $callback);
+```
+* 相关特性
+
+1）持久化。
+如果你没有特意告诉RabbitMQ，那么在它退出或者崩溃的时候，将会丢失所有队列和消息。
+已经定义过非持久化的队列不能再定义为持久化队列，我们得重新命名一个新的队列。必须把“队列”和“消息”都设为持久化。
+
+```php
+//交换机持久化
+$channel->exchange_declare('exchange', 'fanout', false, true, false);
+//对列持久化
+$channel->queue_declare('task_queue', false, true, false, false);
+//消息持久化
+$msg = new AMQPMessage($body, ['delivery_mode' => 2]);
+```
+
+2）Ack消息确认。
+我们不想丢失任何任务消息。如果一个工作者（worker）挂掉了，我们希望任务会重新发送给其他的工作者（worker）。为了防止消息丢失，RabbitMQ提供了消息响应（acknowledgments）。消费者会通过一个ack（响应），告诉RabbitMQ已经收到并处理了某条消息，然后RabbitMQ就会释放并删除这条消息。
+```php
+$channel->basic_consume('task_queue', '', false, false, false, false, $callback);
+//在回调函数中发送ack消息
+$msg->delivery_info['channel']->basic_ack($msg->delivery_info['delivery_tag']);
+```
+
+3）Qos公平调度。
+如果多个worker进程中，某个worker处理比较慢，另一个worker比较快，默认RabbitMQ只管分发进入队列的消息，不会关心有多少消费者（consumer）没有作出响应，这样会使得比较慢的worker消息堆积过多，导致任务分配不均。Qos公平调度设置prefetch_count=1，即在同一时刻，不会发送超过1条消息给一个工作者（worker），直到它已经处理了上一条消息并且作出了响应。这样，RabbitMQ就会把消息分发给下一个空闲的工作者（worker）。
+```php
+//$prefetch_size,$prefetch_count,$global
+$channel->basic_qos(null, 1, null);
+```
+
+4）消息事务。
+将消息设为持久化并不能完全保证不会丢失。持久化只是告诉了RabbitMq要把消息存到硬盘，但从RabbitMq收到消息到保存之间还是有一个很小的间隔时间。因为RabbitMq并不是所有的消息都使用同步IO—它有可能只是保存到缓存中，并不一定会写到硬盘中。并不能保证真正的持久化，但已经足够应付我们的简单工作队列。如果你一定要保证持久化，我们需要改写代码来支持事务（transaction）。
+```php
+$channel->tx_select();
+$channel->basic_publish($msg, '', 'task_queue');
+$channel->tx_commit();
+```
+
+5）confirm消息确认。
+AMQP消息协议提供了事务支持，不过事务机制会导致性能急剧下降，所以rabbitmq特别引入了 confirm 机制。
+
+Confirm有三种编程方式：
+	
+1、普通confirm模式。每发送一条消息后，调用wait_for_pending_acks()方法，等待服务器端confirm。实际上是一种串行confirm。
+2、批量confirm模式。每次发送一批消息后，调用wait_for_pending_acks()方法，等待服务器端confirm。
+3、异步confirm模式。提供一个回调方法，服务器端confirm了一条(或多条)消息后客户端会回调这个方法。
+
+代码示例：
+```php
+// 一旦消息被设为confirm模式，就不能设置事务模式，反之亦然
+$channel->confirm_select();
+// 阻塞等待消息确认
+$channel->wait_for_pending_acks();
+// 异步回调消息确认
+$channel->set_ack_handle();
+$channel->set_nack_handler();
+```
+
+### 扇形交换机
+
+应用场景：简单的发布订阅模式，广播消息 
+
+这种广播式交换机会忽略路由关键字，不使用任何绑定参数将队列和交换机绑定在一起。 
+producer每向交换机发送一条消息，消息都会被无条件的传递到所有和这个交换机绑定的消息队列中。
+ 
+代码示例
+```php
+//声明交换机类型，匿名交换机无需声明，$exchange,$type,$passive,$durable,$auto_delete
+$channel->exchange_declare('logs', 'fanout', false, false, false);
+//发布消息到fanout交换机，忽略routing_key
+$channel->basic_publish($msg, 'logs');
+//创建随机的临时队列
+list($queue_name, ,) = $channel->queue_declare("");
+//绑定队列到交换机
+$channel->queue_bind($queue_name, 'logs');
+```
+
+### HEADERS 交换机
 
 生产者发送带 header 的消息：
 ```php
