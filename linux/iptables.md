@@ -8,4 +8,7 @@ iptables -I INPUT -s 192.168.1.0/24 -p tcp --dport 80 -j ACCEPT
 
 #开启ip段211.123.16.123/24端ip段的80口
 iptables -I INPUT -s 211.123.16.123/24 -p tcp --dport 80 -j ACCEPT
+
+#允许特定ip
+iptables -I INPUT -s 192.168.1.123 -ptcp --dport 3306 -j ACCEPT
 ```
