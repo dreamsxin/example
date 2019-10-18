@@ -1,13 +1,21 @@
 ## 认证
 
 ```shell
-redis-cli auth 
+redis-cli
+auth mypassword
 ```
 
 ## 查看内存
 
 ```shell
-redis-cli info memory
+redis-cli
+info memory
+```
+
+## 查看指定key过期时间
+
+```shell
+ttl keyname
 ```
 
 ## Redis数据回写机制
