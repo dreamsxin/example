@@ -1,4 +1,10 @@
-# 解决 Linux 下 TIME_WAIT 和 CLOSE_WAIT 过多的问题
+## 查看系统中都在监听哪些端口
+
+```shell
+netstat -ntl
+```
+
+## 解决 Linux 下 TIME_WAIT 和 CLOSE_WAIT 过多的问题
 
 使用以下命令查看 TIME_WAIT 和 CLOSE_WAIT 链接状态。
 
@@ -32,3 +38,35 @@ net.ipv4.tcp_fin_timeout=30  #表示如果套接字由本端要求关闭，这�
 
 解决方案：代码需要判断 socket ，一旦读到 0，断开连接，read 返回负，检查一下 errno，如果不是 AGAIN，就断开连接。
 所以解决 CLOSE_WAIT 大量存在的方法还是从自身的代码出发。
+
+## ping 丢包
+
+```shell
+ping -c 100 -i 1 -s 1024 -f ip
+```
+
+* mtr 路由逐跳 ping
+
+```shell
+mtr -c 10 -i 1 -n -r ip
+```
+
+    mtr报告各列含义
+```text
+    Loss%       表示在每一跳的丢包率
+    Snt         每个中间设备收到的发送的报的数目（上图为400个包），MTR会同            时对所有中间节点发送ICMP包进行测试。
+    Last        最后一个数据包往返时间（ms）
+    Avg         数据包往返平均时间（ms）
+    Best        数据包往返最小时间（ms）
+    Wrst        数据包往返最大时间（ms）
+    StDev       标准偏差。如果标准偏差越高，说明数据包在这个节点上的延时越  
+```
+
+接下来接着说相关参数：
+
+- -s 用来指定ping数据包的大小
+- -n no-dns不对IP地址做域名解析
+- -a 来设置发送数据包的IP地址 这个对一个主机由多个IP地址是有用的
+- -i 使用这个参数来设置ICMP返回之间的要求默认是1秒
+- -4 IPv4
+- -6 IPv6
