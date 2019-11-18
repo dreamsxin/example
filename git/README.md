@@ -269,3 +269,19 @@ export all_proxy=socks5://127.0.0.1:7070
 sudo apt-get intsall git-cvs
 git cvsimport -o origin -v -d :pserver:anonymous@cvs.schmorp.de/schmorpforge libeio
 ```
+
+## 子项目/子模块
+
+修改 `.gitmodules` 然后同步 url 到 `.git/config`
+```shell
+ git submodule sync
+ ```
+
+遍历子项目
+ ```shell
+ git submodule foreach xxxx
+ git submodule foreach git fetch origin
+ git submodule foreach git checkout master
+ git submodule foreach git pull
+
+ ```
