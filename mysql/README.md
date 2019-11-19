@@ -16,8 +16,9 @@ mysql -uroot -p
 ### 显示所有库和表
 
 ```sql
-show database;
+show databases;
 show tables;
+desc tablename;
 ```
 
 ### 创建数据库
