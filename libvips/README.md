@@ -40,3 +40,8 @@ $x = vips_call("invert", $x)["out"];
 vips_image_write_to_file($x, $argv[2]);
 EOF;
 ```
+
+## 创建空白图片
+
+```php
+```

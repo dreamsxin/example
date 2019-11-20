@@ -1,3 +1,13 @@
+# 
+
+## 升级
+
+```shell
+sudo apt-get remove composer
+sudo wget https://getcomposer.org/download/1.9.1/composer.phar -O /usr/local/bin/composer
+sudo chmod a+x /usr/local/bin/composer
+```
+
 ```shell
 composer config -g repo.packagist composer https://packagist.phpcomposer.com  
 composer global require "squizlabs/php_codesniffer=*"
