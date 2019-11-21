@@ -1,3 +1,42 @@
+# 备份
+
+* 记录分区块的位置
+```shell
+fdisk -l
+```
+`/etc/fstab`和`/boot/grub/menu.lst(grub.cfg)`里面的UUID
+
+* 备份主引导
+```shell
+# 备份拷贝到U盘
+dd if=/dev/sda of=/xxx/mbr bs=1 count=512
+
+# 用0填充破坏
+dd if=/dev/zero of=/dev/sda bs=1 count=512
+hexdump -C -n 512 /dev/sda
+# 进入恢复模式
+dd if=/xxx/mbr of=/dev/sda bs=1 count=512  
+```
+`sfdisk/sgdisk`
+```shell
+# 备份分区表:
+sfdisk -d /dev/sda > sda-partition.backup
+# 恢复分区表
+cat sda-partition.backup | sfdisk -f /dev/sda
+# 同理，克隆sda分区表到sdb(需要两块盘一样)
+sfdisk -d /dev/sda | sfdisk -f /dev/sdb
+```
+
+恢复分区后`vgchange -ay` 就能识别到lvm分区了
+
+恢复的步骤
+1、恢复分区表；
+2、vgchange -ay 识别所有lvm；
+3、恢复引导记录
+4、挂载根分区
+5、将根分区的内容解压到挂在点；
+6、umount && reboot
+7、对比下/etc/fstab和/boot/grub/menu.lst(grub.cfg)
 
 ```shell
 vgextend VolGroup /dev/sda3
