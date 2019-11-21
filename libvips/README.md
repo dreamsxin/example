@@ -16,6 +16,8 @@ sudo apt-get install gobject-introspection
 make -j4 && sudo make install
 ```
 
+如果出现错误 `libvips/Makefile.am:77: error: HAVE_INTROSPECTION does not appear in AM_CONDITIONAL` 请安装 `gobject-introspection`
+
 如果出现错误 `config.status: error: cannot find input file: `Makefile.in'` 执行下列命令生成：
 ```shell
 aclocal
