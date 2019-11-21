@@ -4,6 +4,7 @@ https://github.com/libvips/libvips
 https://github.com/libvips/php-vips-ext
 
 ```shlel
+sudo apt-get install libpango1.0-dev
 sudo apt-get install gtk-doc-tools
 sudo apt-get install gobject-introspection
 ```
@@ -12,7 +13,7 @@ sudo apt-get install gobject-introspection
 
 ```shell
 ./autogen.sh
-./configure
+./configure --enable-debug=yes --with-pangoft2
 make -j4 && sudo make install
 ```
 
