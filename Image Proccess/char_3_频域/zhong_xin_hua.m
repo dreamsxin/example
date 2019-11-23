@@ -1,0 +1,12 @@
+clear all;close all;
+im = zeros(400,400);
+im(195:255,195:205)=255;
+subplot(1,4,1);imshow(im);title('空域');
+im_DFT1 = fft2(im);
+subplot(1,4,2);imshow(log(abs(im_DFT1)),[]);title('未中心化频域');
+im_DFT2 = fftshift(im_DFT1);
+subplot(1,4,3);imshow(log(abs(im_DFT2)),[]);title('中心化频域');
+im2 = ifft2(im_DFT2);
+subplot(1,4,4);imshow(im2);title('空域');
+figure();mesh(log(abs(im_DFT1)));title('未中心化频域');
+figure();mesh(log(abs(im_DFT2)));title('中心化频域');

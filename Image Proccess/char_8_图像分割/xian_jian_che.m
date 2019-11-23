@@ -1,0 +1,30 @@
+clear all;close all;
+im = imread('./pics/xian.bmp');
+%im = rgb2gray(im);
+h1 = [-1,-1,-1;
+       2, 2 ,2;
+       -1,-1,-1];
+h2 = [ -1,-1,  2;
+       -1, 2, -1;
+        2,-1,-1];
+h3 = [-1,2,-1;
+       -1, 2, -1;
+       -1,2,-1];
+h4 = [2,-1,-1;
+       -1, 2, -1;
+       -1,-1,2];
+A1 = imfilter(im,h1);
+A2 = imfilter(im,h2);
+A3 = imfilter(im,h3);
+A4 = imfilter(im,h4);
+% 将图像反转 便于观察
+A1 = 255 - A1;
+A2 = 255 - A2;
+A3 = 255 - A3;
+A4 = 255 - A4;
+
+subplot(2,3,1),imshow(im),title('原图');
+subplot(2,3,2),imshow(A1),title('水平直线');
+subplot(2,3,3),imshow(A2),title('+45');
+subplot(2,3,4),imshow(A3),title('垂线');
+subplot(2,3,5),imshow(A4),title('-45');

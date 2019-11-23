@@ -1,0 +1,34 @@
+im = imread('./pics/Fig1016(a)(building_original).tif');
+sobel_x = [-1,-2,-1;
+            0,0,0;
+            1,2,1];
+sobel_y = [-1,0,1;
+            -2,0,2;
+            -1,0,1];
+prewitt_x = [-1,-1,-1;
+            0,0,0;
+            1,1,1];
+prewitt_y = [-1,0,1;
+            -1,0,1;
+            -1,0,1];
+sobel_1 = imfilter(im,sobel_x);
+sobel_2 = imfilter(im,sobel_y); 
+sobel = sobel_1 + sobel_2;
+sobel = 255 - sobel;
+sobel_1 = 255 - sobel_1;
+sobel_2 = 255 - sobel_2;
+
+prewitt_1 = imfilter(im,prewitt_x);
+prewitt_2 = imfilter(im,prewitt_y); 
+prewitt = prewitt_1 + prewitt_2;
+prewitt = 255 - prewitt;
+prewitt_1 = 255 - prewitt_1;
+prewitt_2 = 255 - prewitt_2;
+
+subplot(3,3,1),imshow(im),title('ԭͼ');
+subplot(3,3,2),imshow(sobel_1),title('sobel_x');
+subplot(3,3,3),imshow(sobel_2),title('sobel_y');
+subplot(3,3,4),imshow(sobel),title('sobel');
+subplot(3,3,5),imshow(prewitt_1),title('prewitt_x');
+subplot(3,3,6),imshow(prewitt_2),title('prewitt_y');
+subplot(3,3,7),imshow(prewitt),title('prewitt');

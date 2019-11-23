@@ -1,0 +1,10 @@
+%% ПЊБедЫЫу
+clc 
+clear
+A1 = imread('./pics/Fig0905(a)(wirebond-mask).tif');
+
+
+subplot(2,2,1),imshow(A1),title('A1');
+subplot(2,2,2),imshow(A2),title('A2');
+subplot(2,2,3),imshow(A3),title('A3');
+subplot(2,2,4),imshow(A4),title('A4');
