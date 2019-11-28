@@ -33,3 +33,26 @@ apt-get 还有有一个`-o`选项，直接设置变量：
 sudo apt-get -o Acquire::http::proxy="http://127.0.0.1:8000/" update
 sudo apt-get -o Acquire::socks::proxy="socks5://127.0.0.1:1080" update;
 ```
+
+## 代理上网工具 tsocks/proxychains
+
+Linux 有一个能够强迫任何软件通过 SOCKS 代理上网的工具，其名就是 tsocks。
+
+```shell
+sudo apt-get install tsocks
+sudo apt-get install proxychains
+```
+
+`/etc/tsocks.conf`
+```conf
+local = 192.168.1.0/255.255.255.0 # local表示本地的网络，也就是不使用socks代理的网络
+server = 127.0.0.1                # SOCKS 服务器的 IP
+server_type = 5                   # SOCKS 服务版本
+server_port = 9999                # SOCKS 服务使用的端口
+```
+使用范例
+```shell
+tsocks apt-get update
+```
+
+`/etc/proxychains.conf`
