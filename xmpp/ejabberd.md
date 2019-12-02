@@ -16,3 +16,9 @@ http://localhost:5280/admin
 ```shell
 ejabberdctl register admin localhost password
 ```
+
+显示指定域名下所有注册用户
+
+```shell
+./ejabberdctl registered_users
+```
