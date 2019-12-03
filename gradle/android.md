@@ -17,7 +17,12 @@ Expiring Daemon because JVM heap space is exhausted
 Daemon will be stopped at the end of the build after running out of JVM memory
 
 ```shell
-set DEFAULT_JVM_OPTS="-Xmx512m"
+export DEFAULT_JVM_OPTS="-Xmx512m"
 // 或添加
-set GRADLE_OPTS="$GRADLE_OPTS -Xmx512m"
+export GRADLE_OPTS="$GRADLE_OPTS -Xmx512m"
+```
+在 ~/.gradle 目录下的 `gradle.properties` 文件中新增下面的配置即可：
+
+```ini
+org.gradle.jvmargs=-Xmx2048m
 ```
