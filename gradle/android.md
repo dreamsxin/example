@@ -24,5 +24,23 @@ export GRADLE_OPTS="$GRADLE_OPTS -Xmx512m"
 在 ~/.gradle 目录下的 `gradle.properties` 文件中新增下面的配置即可：
 
 ```ini
-org.gradle.jvmargs=-Xmx2048m
+// 增加jvm的内存
+org.gradle.jvmargs=-Xmx4096M
+// 并行
+org.gradle.parallel=true
+/ 守护进程(复用每个gradle进程)
+org.gradle.daemon=true
+```
+
+## 生成签名
+
+```shell
+keytool -genkey -keystore ./keystore.sign -keyalg RSA -validity 10000 -alias phalcon7
+//注：validity为天数，keyfile为生成key存放的文件，RSA为指定的加密算法(可用RSA或DSA)
+```
+`signing.properties`
+```shell
+STORE_FILE = ./keystore.sign
+STORE_PASSWORD = 123456
+KEY_ALIAS = 
 ```
