@@ -3,7 +3,8 @@
 ```shell
 apt-get install ejabberd
 # or
-wget  http://www.process-one.net/downloads/ejabberd/2.1.13/ejabberd-2.1.13-linux-x86_64-installer.run
+wget http://www.process-one.net/downloads/ejabberd/2.1.13/ejabberd-2.1.13-linux-x86_64-installer.run
+wget https://www.process-one.net/downloads/ejabberd/19.09.1/ejabberd-19.09.1-linux-x64.run
 chmod +x ejabberd-2.1.13-linux-x86_64-installer.run
 ./ejabberd-2.1.13-linux-x86_64-installer.run
 ```
