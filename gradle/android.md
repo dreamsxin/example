@@ -40,7 +40,7 @@ keytool -genkey -keystore ./keystore.sign -keyalg RSA -validity 10000 -alias pha
 ```
 `signing.properties`
 ```ini
-tore = ./keystore.sign
+keystore = ./keystore.sign
 keystore.password = 123456
 keystore.alias = phalcon7
 ```
