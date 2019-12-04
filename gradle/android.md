@@ -25,7 +25,7 @@ export GRADLE_OPTS="$GRADLE_OPTS -Xmx512m"
 
 ```ini
 // 增加jvm的内存
-org.gradle.jvmargs=-Xmx4096M
+org.gradle.jvmargs=-Xmx4096m -XX:MaxPermSize=512m
 // 并行
 org.gradle.parallel=true
 / 守护进程(复用每个gradle进程)
