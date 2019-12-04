@@ -39,8 +39,8 @@ keytool -genkey -keystore ./keystore.sign -keyalg RSA -validity 10000 -alias pha
 //注：validity为天数，keyfile为生成key存放的文件，RSA为指定的加密算法(可用RSA或DSA)
 ```
 `signing.properties`
-```shell
-STORE_FILE = ./keystore.sign
-STORE_PASSWORD = 123456
-KEY_ALIAS = 
+```ini
+tore = ./keystore.sign
+keystore.password = 123456
+keystore.alias = phalcon7
 ```
