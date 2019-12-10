@@ -115,3 +115,26 @@ iv =1528E9AD498FF118AB7ECB3025AD0DC6
 ```
 
 可以看到，不使用-S参数，salt参数随机生成，key和iv值也不断变化，当slat值固定时，key和iv值也是固定的。
+
+## 生成证书
+
+复制 `server.pem` 格式的根证书，重命名为 `server.crt`
+
+```shell
+openssl req -new -x509 -newkey rsa:1024 -days 3650 -keyout privkey.pem -out server.pem
+cp server.pem server.crt
+```
+然后，执行下边的命令
+
+添加证书：
+```shell
+sudo cp server.crt /usr/local/share/ca-certificates
+sudo update-ca-certificates
+```
+ 
+
+删除证书：
+```shell
+sudo rm -f /usr/local/share/ca-certificates/server.crt  
+sudo update-ca-certificates
+```
