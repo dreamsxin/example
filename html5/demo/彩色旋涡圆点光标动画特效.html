@@ -1,0 +1,141 @@
+﻿<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>交互式纺纱点</title>
+
+<style>
+body {
+  margin: 0;
+  background: #000;
+  overflow: hidden;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+}
+</style>
+
+</head>
+<body>
+
+<script type="text/javascript" src="js/dat.gui.min.js"></script>
+<script type="text/javascript" src="js/TweenMax.min.js"></script>
+
+<canvas id="c"></canvas>
+
+<script>
+var c = document.querySelector('#c'),
+ 	ctx = c.getContext('2d'),
+	ratio = window.devicePixelRatio || 1,
+	dots = [],
+	color = 0,
+	rotation = 23,
+	options = {
+		size: 10,
+		spawnRate: 4,
+		spawnRotationSpeed: 23,
+		dotRotationSpeed: -0.2,
+		colorRotate: 24,
+		moveSpeed: 2,
+		shrinkTime: 5,
+		clear: true
+	},
+	mouse = {
+		x: (window.innerWidth * ratio) / 2, 
+		y: (window.innerHeight * ratio) / 2
+	};
+
+function render() {
+
+	if (options.clear) {
+		ctx.clearRect(0, 0, c.width, c.height);
+	}else{
+		ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+		ctx.fillRect(0, 0, c.width, c.height);
+	}
+
+	for (var i = 0; i < options.spawnRate; i++) {
+
+		rotation = rotation < 360 ? rotation + options.spawnRotationSpeed : rotation - 360 + options.spawnRotationSpeed;
+
+		color += options.colorRotate;
+		color = color < 360 ? color : color - 360;
+
+		var dot = {
+			rotation: rotation,
+			x: mouse.x,
+			y: mouse.y,
+			size: options.size,
+			color: 'hsl(' + color + ', 100%, 60%)'
+		};
+
+		TweenMax.to(dot, options.shrinkTime, {size: 0});
+		dots.push(dot);
+
+	}
+
+	dots.forEach(function(dot, i) {
+
+		var d = {
+			x: options.moveSpeed * Math.cos(dot.rotation * Math.PI / 180),
+			y: options.moveSpeed * Math.sin(dot.rotation * Math.PI / 180)
+		};
+
+		dot.x += d.x;
+		dot.y += d.y;
+
+		dot.rotation += options.dotRotationSpeed;
+
+		if (dot.size < 0.5) {
+			dots.splice(i, 1);
+			return;
+		}
+
+		ctx.fillStyle = dot.color;
+		ctx.beginPath();
+		ctx.arc(dot.x, dot.y, dot.size * ratio, 0, 2 * Math.PI, false);
+		ctx.fill();
+
+	})
+
+}
+
+window.addEventListener("mousemove", function(e) {
+	mouse.x = e.clientX;
+	mouse.y = e.clientY;
+});
+
+window.addEventListener("touchmove", function(e) {
+	e.preventDefault();
+	mouse.x = e.changedTouches[0].pageX;
+	mouse.y = e.changedTouches[0].pageX;
+});
+
+window.addEventListener('resize', function() {
+	c.width = window.innerWidth * ratio;
+	c.height = window.innerHeight * ratio;
+})
+
+window.dispatchEvent(new Event('resize'));
+
+(function renderLoop() {
+	requestAnimationFrame(renderLoop);
+	render();
+})();
+
+var datGUI = new dat.GUI();
+datGUI.add(options, 'size').min(1).max(20).step(1).name('Size');
+datGUI.add(options, 'colorRotate').min(1).max(359).step(1).name('Color Rotate');
+datGUI.add(options, 'spawnRate').min(1).max(5).step(1).name('Spawn Rate');
+datGUI.add(options, 'spawnRotationSpeed').min(0).max(50).step(1).name('Spawn Rotation');
+datGUI.add(options, 'dotRotationSpeed').min(-1).max(1).step(0.01).name('Dot Rotation');
+datGUI.add(options, 'moveSpeed').min(1).max(5).step(1).name('Move Speed');
+datGUI.add(options, 'shrinkTime').min(0.1).max(20).step(0.1).name('Shrink Time (seconds)');
+datGUI.add(options, 'clear', true, false).name('Clear');
+datGUI.close();
+</script>
+
+</body>
+</html>

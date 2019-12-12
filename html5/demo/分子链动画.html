@@ -1,0 +1,317 @@
+﻿<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html">
+
+<title>化学键</title>
+
+<style>
+html,
+body {
+  height: 100%;
+  font-size: 100%;
+  font-family: arial;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  color: #222;
+  background-color: #111;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2em;
+}
+
+canvas {
+  background-color: #eeeed8;
+}
+</style>
+</head>
+<body>
+<div></div>
+
+<script>
+// particules
+
+class Point {
+  constructor(x, y) {
+    this.pos = {
+      x: x,
+      y: y
+    };
+    this.old_pos = {
+      x: x,
+      y: y
+    };
+    this.radius = Utl.random(20, 40);
+    let color_id = Math.floor(Utl.random(0, colorTheme.length));
+    this.color = colorTheme[color_id];
+    this.target = {
+      x: W / 2,
+      y: H / 2
+    };
+    this.linked = false;
+    this.connected_to = [];
+    this.is_dragged = false;
+  }
+  draw() {
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.pos.x, this.pos.y, this.radius, 0, 2 * Math.PI, false);
+    ctx.fill();
+    ctx.closePath();
+    if (Utl.distance(pointer.pos, this.pos) < this.radius) {
+      ctx.fillStyle = selection_color;
+      ctx.beginPath();
+      ctx.arc(this.pos.x, this.pos.y, this.radius - 10, 0, 2 * Math.PI, false);
+      ctx.fill();
+      ctx.closePath();
+    }
+  }
+  update() {
+    let vx = (this.pos.x - this.old_pos.x) * 0.96,
+        vy = (this.pos.y - this.old_pos.y) * 0.96;
+    this.old_pos.x = this.pos.x;
+    this.old_pos.y = this.pos.y;
+    this.pos.x += vx;
+    this.pos.y += vy;
+
+    if (!this.linked) {
+      let angle = Utl.angleFrom(this.pos, this.target);
+      this.pos.x += Math.cos(angle) * 0.2;
+      this.pos.y += Math.sin(angle) * 0.2;
+    }
+
+    if (pointer.active && pointer.target === false) {
+      if (Utl.distance(pointer.pos, this.pos) < this.radius) {
+        pointer.offset.x = pointer.pos.x - this.pos.x;
+        pointer.offset.y = pointer.pos.y - this.pos.y;
+        this.being_dragged = true;
+        pointer.target = this;
+      }
+    }
+
+    if (this.being_dragged && pointer.drag) {
+      this.pos.x = pointer.pos.x - pointer.offset.x;
+      this.pos.y = pointer.pos.y - pointer.offset.y;
+    }
+
+    if (this.pos.x + this.radius > W) {
+      this.pos.x = W - this.radius;
+      this.old_pos.x = this.pos.x + vx * 0.2;
+    } else if (this.pos.x < this.radius) {
+      this.pos.x = this.radius;
+      this.old_pos.x = this.pos.x + vx * 0.2;
+    }
+
+    if (this.pos.y + this.radius > H) {
+      this.pos.y = H - this.radius;
+      this.old_pos.y = this.pos.y + vy * 0.2;
+    } else if (this.pos.y < this.radius) {
+      this.pos.y = this.radius;
+      this.old_pos.y = this.pos.y + vy * 0.2;
+    }
+  }
+}
+
+class Stick {
+  constructor(point_array, stick_array, p0, p1, min_distance) {
+    this.point_array = point_array;
+    this.stick_array = stick_array;
+    this.p0 = this.point_array[p0];
+    this.p1 = this.point_array[p1];
+    let distance = Utl.distance(this.p0.pos, this.p1.pos);
+    this.min_distance = min_distance;
+    this.length = Math.max(min_distance, distance) + Utl.random(10, 80);
+    this.maxLength = this.length + 100;
+    this.max_link_width = Math.min(this.p0.radius, this.p1.radius);
+  }
+  update() {
+    let dx = this.p1.pos.x - this.p0.pos.x,
+        dy = this.p1.pos.y - this.p0.pos.y,
+        distance = Math.sqrt(dx * dx + dy * dy);
+    if (distance > this.maxLength) {
+      this.p0.connected_to[this.point_array.indexOf(this.p1)] = false;
+      this.p1.connected_to[this.point_array.indexOf(this.p0)] = false;
+      this.stick_array.splice(this.stick_array.indexOf(this), 1);
+    }
+    let difference = this.length - distance,
+        percent = difference / distance / 60,
+        offsetX = dx * percent,
+        offsetY = dy * percent;
+    this.p0.pos.x -= offsetX;
+    this.p0.pos.y -= offsetY;
+    this.p1.pos.x += offsetX;
+    this.p1.pos.y += offsetY;
+  }
+  draw() {
+    let distance = Utl.distance(this.p1.pos, this.p0.pos);
+    ctx.lineWidth = Utl.map(
+      distance,
+      this.min_distance,
+      this.maxLength,
+      this.max_link_width,
+      0
+    );
+    ctx.strokeStyle = link_color;
+    ctx.beginPath();
+    ctx.moveTo(this.p0.pos.x, this.p0.pos.y);
+    ctx.lineTo(this.p1.pos.x, this.p1.pos.y);
+    ctx.stroke();
+  }
+}
+
+// synapse.js
+Utl = {};
+Utl.distance = function(p1, p2) {
+  return Math.hypot(p1.x - p2.x, p1.y - p2.y);
+};
+Utl.random = function(min, max) {
+  return min + Math.random() * (max - min);
+};
+Utl.angleFrom = function(p1, p2) {
+  return Math.atan2(p2.y - p1.y, p2.x - p1.x);
+};
+Utl.map = function(a, b, c, d, e) {
+  return (a - b) / (c - b) * (e - d) + d;
+};
+
+class Synapse {
+  constructor() {
+    this.points = [];
+    this.sticks = [];
+    this.number_point = 20;
+    for (var i = 0; i < this.number_point; i++) {
+      this.points.push(new Point(Utl.random(0, W), Utl.random(0, H)));
+    }
+  }
+  updatePoints() {
+    for (let p = this.points.length - 1; p >= 0; p--) {
+      this.points[p].update();
+      for (let others = this.points.length - 1; others >= 0; others--) {
+        if (this.points[p] === this.points[others]) continue;
+        let min_distance = this.points[p].radius + this.points[others].radius;
+        if (
+          Utl.distance(this.points[p].pos, this.points[others].pos) <
+          min_distance
+        ) {
+          if (this.points[p].connected_to[others] === true) continue;
+          this.sticks.push(
+            new Stick(this.points, this.sticks, p, others, min_distance)
+          );
+          this.points[p].linked = true;
+          this.points[p].connected_to[others] = true;
+        }
+      }
+    }
+  }
+  renderPoints() {
+    for (var i = this.points.length - 1; i >= 0; i--) {
+      this.points[i].draw();
+    }
+  }
+  renderSticks() {
+    for (var i = this.sticks.length - 1; i >= 0; i--) {
+      this.sticks[i].draw();
+    }
+  }
+  updateSticks() {
+    for (var i = this.sticks.length - 1; i >= 0; i--) {
+      this.sticks[i].update();
+    }
+  }
+  update() {
+    this.updatePoints();
+    this.updateSticks();
+  }
+  draw() {
+    this.renderSticks();
+    this.renderPoints();
+  }
+}
+
+let canvas = document.createElement("canvas"),
+    ctx = canvas.getContext("2d");
+document.body.appendChild(canvas);
+let W = (canvas.width = window.innerWidth),
+    H = (canvas.height = window.innerHeight);
+
+document.addEventListener("mousedown", event => pointerDown(event), false);
+document.addEventListener("mouseup", event => pointerUp(event), false);
+document.addEventListener("mousemove", event => pointerMove(event), false);
+
+colorTheme = [
+  "#3fc778",
+  "#00a383",
+  "#007dc7",
+  "#bcb7c5",
+  "#ea71bd",
+  "#e1534a",
+  "#ad3e50",
+  "#f29546",
+  "#e33247"
+];
+selection_color = "#ffce00";
+link_color = "#6c3b4f";
+
+// colorTheme = ["#007dc7","#ea71bd","#64468d"];
+// link_color = "#332041";
+
+let pointer = {
+  pos: {
+    x: 0,
+    y: 0
+  },
+  offset: {
+    x: 0,
+    y: 0
+  },
+  active: false,
+  drag: false,
+  target: false
+};
+
+function pointerDown(event) {
+  pointer.active = true;
+}
+
+function pointerUp(event) {
+  if (!pointer.drag) {
+    console.log("simple clique");
+  }
+  if (pointer.target.being_dragged) {
+    pointer.target.being_dragged = false;
+    pointer.target = false;
+  }
+  pointer.active = false;
+  pointer.drag = false;
+}
+
+function pointerMove(event) {
+  if (pointer.active) {
+    pointer.drag = true;
+  }
+  updatePointerPosition(event);
+}
+
+function updatePointerPosition(event) {
+  pointer.pos.x = event.pageX - canvas.offsetLeft;
+  pointer.pos.y = event.pageY - canvas.offsetTop;
+}
+
+let memory_cloud = new Synapse();
+function main_loop() {
+  ctx.clearRect(0, 0, W, H);
+  memory_cloud.update();
+  memory_cloud.draw();
+  requestAnimationFrame(main_loop);
+}
+main_loop();
+</script>
+
+</body>
+</html>

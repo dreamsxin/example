@@ -1,0 +1,330 @@
+﻿<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html">
+
+<title>canvas背景动画</title>
+
+<style>
+body {
+  background: #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+</style>
+</head>
+<body>
+
+<script type="text/javascript" src="js/tinycolor.min.js"></script>
+
+<canvas id="cnv"></canvas>
+
+<script type="text/javascript">
+(function() {
+  var App, Pixr, Random, Utils, Vec, log, rnd, twopi, utl;
+
+  Vec = (function() {
+    var degrees2radian, radian2degrees;
+
+    class Vec {
+      constructor(x, y) {
+        this.x = x || 0;
+        this.y = y || 0;
+        if (!(this instanceof Vec)) {
+          new this(x, y);
+        }
+      }
+
+      add(v) {
+        this.x += v.x;
+        this.y += v.y;
+        return this;
+      }
+
+      sub(v) {
+        this.x -= v.x;
+        this.y -= v.y;
+        return this;
+      }
+
+      mul(v) {
+        this.x *= v.x;
+        this.y *= v.y;
+        return this;
+      }
+
+      div(v) {
+        this.x /= v.x;
+        this.y /= v.y;
+        return this;
+      }
+
+      limit(max, f = 0) {
+        if (this.x > max) {
+          this.x = max;
+        }
+        if (this.y > max) {
+          this.y = max;
+        }
+        return this;
+      }
+
+      zero() {
+        this.x = 0;
+        this.y = 0;
+        return this;
+      }
+
+      clone() {
+        return new Vec(this.x, this.y);
+      }
+
+      rotate(angle) {
+        var nx, ny;
+        nx = this.x * Math.cos(angle) - (this.y * Math.sin(angle));
+        ny = this.x * Math.sin(angle) + (this.y * Math.cos(angle));
+        this.x = nx;
+        this.y = ny;
+        return this;
+      }
+
+      rotateDeg(angle) {
+        angle = degrees2radian(angle);
+        return this.rotate(angle);
+      }
+
+      inside(x, y, w, h) {
+        if (this.x > x || this.x < w || this.y > y || this.y < h) {
+          return true;
+        }
+        return false;
+      }
+
+      outside(x, y, w, h) {
+        if (this.x < x || this.x > w || this.y < y || this.y > h) {
+          return true;
+        }
+        return false;
+      }
+
+    };
+
+    radian2degrees = function(rad) {
+      return rad * (180 / Math.PI);
+    };
+
+    degrees2radian = function(deg) {
+      return deg / (180 / Math.PI);
+    };
+
+    return Vec;
+
+  }).call(this);
+
+  Random = class Random {
+    constructor() {
+      return;
+    }
+
+    int(min = -1, max = 1) {
+      return Math.floor(Math.random() * (max - min + 1) + min);
+    }
+
+    real(min, max) {
+      if (!min) {
+        return Math.random();
+      }
+      return Math.random() * (max - min) + min;
+    }
+
+    ranger(min, max, val) {
+      var rs;
+      rs = this.int(min, max);
+      if (rs === val) {
+        return true;
+      }
+      return false;
+    }
+
+    pick(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    fill(min, max, size, int = true) {
+      var arr, i, j, k, ref, ref1;
+      arr = [];
+      if (int) {
+        for (i = j = 0, ref = size; 0 <= ref ? j < ref : j > ref; i = 0 <= ref ? ++j : --j) {
+          arr.push(this.int(min, max));
+        }
+      } else {
+        for (i = k = 0, ref1 = size; 0 <= ref1 ? k < ref1 : k > ref1; i = 0 <= ref1 ? ++k : --k) {
+          arr.push(this.real(min, max));
+        }
+      }
+      return arr;
+    }
+
+    hex() {
+      var h, i, j;
+      h = "#";
+      for (i = j = 1; j <= 6; i = ++j) {
+        h += this.pick([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "a", "b", "c", "d", "e", "f"]);
+      }
+      return h;
+    }
+
+    alpha() {
+      return this.int(100) / 100;
+    }
+
+    rgb() {
+      return `rgb(${this.int(255)},${this.int(255)},${this.int(255)})`;
+    }
+
+    rgba() {
+      return `rgba(${this.int(255)},${this.int(255)},${this.int(255)},${this.alpha()})`;
+    }
+
+    radian() {
+      return this.real() * (Math.PI * 2);
+    }
+
+    degree(real = false) {
+      if (real) {
+        return this.real() * 360;
+      } else {
+        return this.int(360);
+      }
+    }
+
+  };
+
+  Utils = class Utils {
+    constructor() {
+      this.pi = Math.PI;
+      this.twopi = this.pi * 2;
+      return;
+    }
+
+    toRad(deg) {
+      return deg * (this.pi / 180);
+    }
+
+    toDeg(rad) {
+      return rad * (180 / this.pi);
+    }
+
+  };
+
+  log = console.log.bind(console);
+
+  rnd = new Random();
+
+  utl = new Utils();
+
+  //log utl.toRad(1) is Math.PI/180
+  //log utl.toDeg(Math.PI) is 180
+  /* for testing 
+  picks = [10]
+  for i in [0..100]
+    log rnd.pick(picks) if rnd.ranger(1,3,1)
+  color = rnd.rgba()
+  log color
+  document.body.style.backgroundColor = color
+  */
+  rnd = new Random();
+
+  twopi = Math.PI * 2;
+
+  Pixr = class Pixr {
+    constructor(ctx) {
+      this.ctx = ctx;
+      this.w = this.ctx.canvas.width;
+      this.h = this.ctx.canvas.height;
+      this.clr = tinycolor("dodgerblue");
+      if (rnd.ranger(1, 35, 2)) {
+        this.clr = this.clr.complement();
+      }
+      this.clrs = this.clr.analogous();
+      return;
+    }
+
+    draw() {
+      var clr;
+      this.ctx.save();
+      clr = rnd.pick(this.clrs);
+      clr.setAlpha(rnd.real(0.00125, 0.0625));
+      if (rnd.ranger(1, 200, 1)) {
+        clr.setAlpha(1);
+      }
+      this.ctx.fillStyle = clr.toRgbString();
+      this.pos = new Vec(rnd.int(-this.w / 3, this.w / 3), rnd.int(-this.h / 3, this.h / 3));
+      this.size = rnd.real(0.25, 36.25);
+      this.ctx.translate(this.pos.x, this.pos.y);
+      this.ctx.rotate(rnd.real(0, twopi));
+      this.ctx.fillRect(0, 0, this.size, this.size);
+      this.ctx.restore();
+    }
+
+  };
+
+  App = class App {
+    constructor() {
+      this.ctx = document.getElementById("cnv").getContext("2d");
+      this.resetCnv();
+      this.objects = [];
+      this.initObjects();
+      this.rot = 0;
+      //kick off the loop
+      window.requestAnimationFrame((t) => {
+        return this.draw(t);
+      });
+      return;
+    }
+
+    resetCnv() {
+      this.w = this.ctx.canvas.width = window.innerWidth;
+      this.h = this.ctx.canvas.height = window.innerHeight;
+    }
+
+    initObjects() {
+      var i, j, results;
+      results = [];
+      for (i = j = 0; j <= 750; i = ++j) {
+        results.push(this.objects.push(new Pixr(this.ctx)));
+      }
+      return results;
+    }
+
+    draw(t) {
+      var j, len, obj, ref;
+      this.ctx.save();
+      this.ctx.translate(this.w / 2, this.h / 2);
+      this.ctx.rotate(this.rot);
+      ref = this.objects;
+      for (j = 0, len = ref.length; j < len; j++) {
+        obj = ref[j];
+        obj.draw();
+      }
+      this.ctx.restore();
+      this.rot += 1.35;
+      //loopy
+      window.requestAnimationFrame((t) => {
+        return this.draw(t);
+      });
+    }
+
+  };
+
+  window.onload = function() {
+    var app;
+    return app = new App();
+  };
+
+}).call(this);</script>
+
+</body>
+</html>

@@ -1,0 +1,187 @@
+﻿<!DOCTYPE HTML5>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html">
+	
+	<title>Canvas绘图</title>		
+	<style>
+        body{
+            background: block;
+        }
+        #canvas{
+            /*background: #fff;*/
+            background: #000;
+        }
+	</style>
+</head>
+<body>
+	<canvas id="canvas" width="1000" height="1000"></canvas>
+</body>
+<script type="text/javascript">
+    function drawSunSystem(){//太阳系
+        var canvas = document.getElementById("canvas");
+        var context = canvas.getContext("2d");
+        //轨道
+        context.strokeStyle = "#fff";
+        context.beginPath();
+        context.arc(500,500,100,0,360,false);
+        context.closePath();
+        context.stroke();
+        //太阳
+        context.beginPath();
+        context.arc(500,500,20,0,360,false);
+        context.closePath();
+        //填充太阳
+        
+        var sunColor = context.createRadialGradient(500,500,4,500,500,20);//径向渐变
+        sunColor.addColorStop(0,"#f30");
+        sunColor.addColorStop(1,"#fb0");
+        context.fillStyle = sunColor;
+        context.fill();
+
+        //地球
+        context.save();
+        context.translate(500,500);
+        context.rotate(90*Math.PI/180);
+        context.beginPath();
+        context.arc(0,100,10,0,360,false);
+        context.closePath();
+        var earthColor = context.createRadialGradient(0,100,0,0,100,10);
+        earthColor.addColorStop(0,"#78b1e8");
+        earthColor.addColorStop(1,"#050c12");
+        context.fillStyle = earthColor;
+        context.fill();
+        context.restore();
+
+    }
+    //画轨道
+    var canvas = document.getElementById("canvas");
+    var context = canvas.getContext("2d");
+    function drawTrack(){
+        for(var i=0;i<8;i++){
+            context.beginPath();
+            context.arc(500,500,(i+1)*50,0,360,false);
+            context.closePath();
+            context.strokeStyle = "#fff";
+            context.stroke();
+        }
+    }
+    //封装类，利用类的继承形成8颗行星以及太阳
+    function Star(x,y,radius,cycle,sColor,eColor){
+        this.x = x;
+        this.y = y;
+        this.radius = radius;//半径
+        this.cycle = cycle;  //公转周期
+        this.sColor = sColor;//星球颜色渐变开始色
+        this.eColor = eColor;//星球颜色渐变开始色
+        this.color = null;
+        this.interal = 0;
+        this.drawStar = function() {
+            context.save();//保存之前的画布内容
+            context.translate(500,500);//重置0,0坐标点
+            context.rotate(this.interal*(360/this.cycle)*Math.PI/180);
+            //画星球
+            context.beginPath();
+            context.arc(this.x,this.y,this.radius,0,360,false);
+            context.closePath();
+            //设置星球颜色
+            this.color = context.createRadialGradient(this.x,this.y,0,this.x,this.y,this.radius) ;
+            this.color.addColorStop(0,this.sColor);//渐变开始点
+            this.color.addColorStop(1,this.eColor);//渐变结束点
+            context.fillStyle = this.color;
+            context.fill();
+            context.restore();//恢复之前保存的画布内容
+            this.interal += 1;//每个时间间隔改变时间
+        }
+    };
+    //以下为创建各星球的构造函数
+    function Sun(){
+        Star.call(this,0,0,20,0,"#F00","#F90");
+    }
+    function Mercury(){//水星
+        Star.call(this,0,-50,10,87.70,"#a69697","#5c3e40");
+    }
+    function Venus(){
+        Star.call(this,0,-100,10,224.701,"#c4bbac","#1f1315");
+    }
+    function Earth(){
+        Star.call(this,0,-150,10,365,"#78b1e8","#050c12");
+    }
+    function Mars(){
+        Star.call(this,0,-200,10,686.98,"#cec986","#76422d");
+    }
+    function Jupiter(){
+        Star.call(this,0,-250,10,4332.589,"#c0a4be","#322222");
+    }
+    function Satum(){
+        Star.call(this,0,-300,10,10759.5,"#f7f9e3","#5c4533");
+    }
+    function Uranus(){
+        Star.call(this,0,-350,10,30799.095,"#a7e1e5","#19243a");
+    }
+    function Neptune(){
+        Star.call(this,0,-400,10,60152,"#0661b2","#1e3b73");
+    }
+    
+    var sun = new Sun();
+    var mercury = new Mercury();
+    var venus = new Venus();
+    var earth = new Earth();
+    var mars = new Mars();
+    var jupiter = new Jupiter();
+    var satum = new Satum();
+    var uranus = new Uranus();
+    var neptune = new Neptune();
+    function move(){
+        context.clearRect(0,0,1000,1000);
+        drawTrack();
+        sun.drawStar();
+        mercury.drawStar();
+        venus.drawStar();
+        earth.drawStar();
+        mars.drawStar();
+        jupiter.drawStar();
+        satum.drawStar();
+        uranus.drawStar();
+        neptune.drawStar();
+    }
+    //sun.drawStar();
+    setInterval(move,10);
+    //draw("canvas");
+	//clearRectect("canvas");
+	//drawArc("canvas");
+	//drawLine("canvas");
+	//drawCurve("canvas");
+	//drawGradient("canvas");
+	//drawRadialGradient("canvas");
+    //drawTanslate("canvas");
+    //drawOperation("canvas");
+    //drawStar("canvas");
+    //drawMove("canvas");
+    //draw13("canvas");
+    //draw28("canvas");
+    //draw12("canvas");
+    //draw15("canvas");//图片裁剪
+    //drawTxt("canvas");
+    //setInterval(drawClock,1000);
+    //drawClock();
+    //drawSunSystem();
+    /*   */
+    /*window.onload = function(){
+        var canvas = document.getElementById("canvas");
+        var context = canvas.getContext("2d");
+        var x = 188;
+        var y = 130;
+        var width = 200;
+        var height = 137;
+        var image = new Image();
+        image.onload = function() {
+            context.drawImage(image,x,y,width,height);
+        };
+        image.src = "img/html5.png";
+    }
+*/
+</script>
+</html>
+
