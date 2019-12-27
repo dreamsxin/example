@@ -109,6 +109,17 @@ fn main() {
 v run hello_world.v
 ```
 
+## 编译模块
+
+```shell
+v build module modulepath
+```
+ ## 编译动态库
+
+```shell
+v -shared -prod *.v
+```
+
 ## 注释范例（Comments）
 
 ```txt
