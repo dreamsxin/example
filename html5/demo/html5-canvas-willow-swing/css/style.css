@@ -1,0 +1,40 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+body {
+  user-select:none;
+  background-color: #1D0D21;
+  align-items: center;
+  justify-content: center;
+}
+canvas {
+  flex-shrink: 0;
+  background-color: #222;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: pixelated;
+  object-fit: contain;
+}
+
+#message{
+  color:white;
+  font-family:sans-serif;
+  position:absolute;
+  left:50%;
+  top:40%;
+  transform:translate(-50%,-50%);
+  text-align:center;
+}
+h1,h4{
+  margin:0;
+}
+h1{
+  font-size:10vmin;
+}
+
+h4{
+ font-size:4vmin;
+}

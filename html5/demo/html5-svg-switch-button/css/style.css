@@ -1,0 +1,24 @@
+body{
+  font-size: 20px;
+  background-color: #d5d9e0;
+  padding: 40px;
+}
+#checkbox-on{
+  display: none;
+}
+
+.text-label{
+  font-size: 1.8em;
+  font-family: sans-serif;
+  fill: #6D7788;
+  text-shadow: 0 0.02em 0.1em rgba(0, 0, 0, 0.35);
+   pointer-events: none;
+}
+
+.position-container{
+  cursor: pointer;
+}
+
+.svg-switch-container{
+  width: 16em;
+}

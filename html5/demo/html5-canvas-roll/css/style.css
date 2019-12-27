@@ -1,0 +1,787 @@
+html, body {
+  height: 100%;
+}
+
+body {
+  overflow: hidden;
+  margin: 0;
+  perspective: 160em;
+  perspective-origin: 50% 0%;
+  background: black;
+  color: cyan;
+}
+
+.scene {
+  transform: translate(4em, 10em) rotateX(75deg) rotate(-22.5deg);
+}
+.scene, .scene * {
+  box-sizing: border-box;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-style: preserve-3d;
+}
+
+.assembly:nth-child(1) {
+  transform: translate(0, -7em);
+  animation: slide1 1s ease-in-out infinite;
+}
+@keyframes slide1 {
+  to {
+    transform: translate(8em, -7em);
+  }
+}
+.assembly:nth-child(1) .strip {
+  background-size: 8em 100%;
+}
+.assembly:nth-child(1) .roller {
+  transform: rotateY(90deg) translateZ(4em) rotateY(-90deg);
+  animation: inherit;
+  animation-name: roll1;
+}
+@keyframes roll1 {
+  to {
+    transform: rotateY(-90deg) translateZ(4em) rotateY(-90deg);
+  }
+}
+.assembly:nth-child(1) .side {
+  margin: -2em -4em;
+  width: 8em;
+  height: 4em;
+}
+.assembly:nth-child(1) .side:nth-child(1) {
+  transform: rotateY(0deg);
+}
+.assembly:nth-child(1) .side:nth-child(2) {
+  transform: rotateY(180deg);
+}
+.assembly:nth-child(2) {
+  transform: translate(0, -14em);
+  animation: slide2 1s ease-in-out infinite;
+}
+@keyframes slide2 {
+  to {
+    transform: translate(6.9282em, -14em);
+  }
+}
+.assembly:nth-child(2) .strip {
+  background-size: 6.9282em 100%;
+}
+.assembly:nth-child(2) .roller {
+  transform: rotateY(60deg) translateZ(4.0em) rotateY(-60deg);
+  animation: inherit;
+  animation-name: roll2;
+}
+@keyframes roll2 {
+  to {
+    transform: rotateY(-60deg) translateZ(4.0em) rotateY(-60deg);
+  }
+}
+.assembly:nth-child(2) .side {
+  margin: -2em -3.4641em;
+  width: 6.9282em;
+  height: 4em;
+}
+.assembly:nth-child(2) .side:nth-child(1) {
+  transform: rotateY(0deg) translateZ(-2em);
+}
+.assembly:nth-child(2) .side:nth-child(2) {
+  transform: rotateY(120deg) translateZ(-2em);
+}
+.assembly:nth-child(2) .side:nth-child(3) {
+  transform: rotateY(240deg) translateZ(-2em);
+}
+.assembly:nth-child(3) {
+  transform: translate(0, -21em);
+  animation: slide3 1s ease-in-out infinite;
+}
+@keyframes slide3 {
+  to {
+    transform: translate(4.0em, -21em);
+  }
+}
+.assembly:nth-child(3) .strip {
+  background-size: 4.0em 100%;
+}
+.assembly:nth-child(3) .roller {
+  transform: rotateY(45deg) translateZ(2.82843em) rotateY(-45deg);
+  animation: inherit;
+  animation-name: roll3;
+}
+@keyframes roll3 {
+  to {
+    transform: rotateY(-45deg) translateZ(2.82843em) rotateY(-45deg);
+  }
+}
+.assembly:nth-child(3) .side {
+  margin: -2em -2.0em;
+  width: 4.0em;
+  height: 4em;
+}
+.assembly:nth-child(3) .side:nth-child(1) {
+  transform: rotateY(0deg) translateZ(-2em);
+}
+.assembly:nth-child(3) .side:nth-child(2) {
+  transform: rotateY(90deg) translateZ(-2em);
+}
+.assembly:nth-child(3) .side:nth-child(3) {
+  transform: rotateY(180deg) translateZ(-2em);
+}
+.assembly:nth-child(3) .side:nth-child(4) {
+  transform: rotateY(270deg) translateZ(-2em);
+}
+.assembly:nth-child(4) {
+  transform: translate(0, -28em);
+  animation: slide4 1s ease-in-out infinite;
+}
+@keyframes slide4 {
+  to {
+    transform: translate(2.90617em, -28em);
+  }
+}
+.assembly:nth-child(4) .strip {
+  background-size: 2.90617em 100%;
+}
+.assembly:nth-child(4) .roller {
+  transform: rotateY(36deg) translateZ(2.47214em) rotateY(-36deg);
+  animation: inherit;
+  animation-name: roll4;
+}
+@keyframes roll4 {
+  to {
+    transform: rotateY(-36deg) translateZ(2.47214em) rotateY(-36deg);
+  }
+}
+.assembly:nth-child(4) .side {
+  margin: -2em -1.45309em;
+  width: 2.90617em;
+  height: 4em;
+}
+.assembly:nth-child(4) .side:nth-child(1) {
+  transform: rotateY(0deg) translateZ(-2em);
+}
+.assembly:nth-child(4) .side:nth-child(2) {
+  transform: rotateY(72deg) translateZ(-2em);
+}
+.assembly:nth-child(4) .side:nth-child(3) {
+  transform: rotateY(144deg) translateZ(-2em);
+}
+.assembly:nth-child(4) .side:nth-child(4) {
+  transform: rotateY(216deg) translateZ(-2em);
+}
+.assembly:nth-child(4) .side:nth-child(5) {
+  transform: rotateY(288deg) translateZ(-2em);
+}
+.assembly:nth-child(5) {
+  transform: translate(0, -35em);
+  animation: slide5 1s ease-in-out infinite;
+}
+@keyframes slide5 {
+  to {
+    transform: translate(2.3094em, -35em);
+  }
+}
+.assembly:nth-child(5) .strip {
+  background-size: 2.3094em 100%;
+}
+.assembly:nth-child(5) .roller {
+  transform: rotateY(30deg) translateZ(2.3094em) rotateY(-30deg);
+  animation: inherit;
+  animation-name: roll5;
+}
+@keyframes roll5 {
+  to {
+    transform: rotateY(-30deg) translateZ(2.3094em) rotateY(-30deg);
+  }
+}
+.assembly:nth-child(5) .side {
+  margin: -2em -1.1547em;
+  width: 2.3094em;
+  height: 4em;
+}
+.assembly:nth-child(5) .side:nth-child(1) {
+  transform: rotateY(0deg) translateZ(-2em);
+}
+.assembly:nth-child(5) .side:nth-child(2) {
+  transform: rotateY(60deg) translateZ(-2em);
+}
+.assembly:nth-child(5) .side:nth-child(3) {
+  transform: rotateY(120deg) translateZ(-2em);
+}
+.assembly:nth-child(5) .side:nth-child(4) {
+  transform: rotateY(180deg) translateZ(-2em);
+}
+.assembly:nth-child(5) .side:nth-child(5) {
+  transform: rotateY(240deg) translateZ(-2em);
+}
+.assembly:nth-child(5) .side:nth-child(6) {
+  transform: rotateY(300deg) translateZ(-2em);
+}
+.assembly:nth-child(6) {
+  transform: translate(0, -42em);
+  animation: slide6 1s ease-in-out infinite;
+}
+@keyframes slide6 {
+  to {
+    transform: translate(1.9263em, -42em);
+  }
+}
+.assembly:nth-child(6) .strip {
+  background-size: 1.9263em 100%;
+}
+.assembly:nth-child(6) .roller {
+  transform: rotateY(25.71429deg) translateZ(2.21983em) rotateY(-25.71429deg);
+  animation: inherit;
+  animation-name: roll6;
+}
+@keyframes roll6 {
+  to {
+    transform: rotateY(-25.71429deg) translateZ(2.21983em) rotateY(-25.71429deg);
+  }
+}
+.assembly:nth-child(6) .side {
+  margin: -2em -0.96315em;
+  width: 1.9263em;
+  height: 4em;
+}
+.assembly:nth-child(6) .side:nth-child(1) {
+  transform: rotateY(0deg) translateZ(-2em);
+}
+.assembly:nth-child(6) .side:nth-child(2) {
+  transform: rotateY(51.42857deg) translateZ(-2em);
+}
+.assembly:nth-child(6) .side:nth-child(3) {
+  transform: rotateY(102.85714deg) translateZ(-2em);
+}
+.assembly:nth-child(6) .side:nth-child(4) {
+  transform: rotateY(154.28571deg) translateZ(-2em);
+}
+.assembly:nth-child(6) .side:nth-child(5) {
+  transform: rotateY(205.71429deg) translateZ(-2em);
+}
+.assembly:nth-child(6) .side:nth-child(6) {
+  transform: rotateY(257.14286deg) translateZ(-2em);
+}
+.assembly:nth-child(6) .side:nth-child(7) {
+  transform: rotateY(308.57143deg) translateZ(-2em);
+}
+.assembly:nth-child(7) {
+  transform: translate(0, -49em);
+  animation: slide7 1s ease-in-out infinite;
+}
+@keyframes slide7 {
+  to {
+    transform: translate(1.65685em, -49em);
+  }
+}
+.assembly:nth-child(7) .strip {
+  background-size: 1.65685em 100%;
+}
+.assembly:nth-child(7) .roller {
+  transform: rotateY(22.5deg) translateZ(2.16478em) rotateY(-22.5deg);
+  animation: inherit;
+  animation-name: roll7;
+}
+@keyframes roll7 {
+  to {
+    transform: rotateY(-22.5deg) translateZ(2.16478em) rotateY(-22.5deg);
+  }
+}
+.assembly:nth-child(7) .side {
+  margin: -2em -0.82843em;
+  width: 1.65685em;
+  height: 4em;
+}
+.assembly:nth-child(7) .side:nth-child(1) {
+  transform: rotateY(0deg) translateZ(-2em);
+}
+.assembly:nth-child(7) .side:nth-child(2) {
+  transform: rotateY(45deg) translateZ(-2em);
+}
+.assembly:nth-child(7) .side:nth-child(3) {
+  transform: rotateY(90deg) translateZ(-2em);
+}
+.assembly:nth-child(7) .side:nth-child(4) {
+  transform: rotateY(135deg) translateZ(-2em);
+}
+.assembly:nth-child(7) .side:nth-child(5) {
+  transform: rotateY(180deg) translateZ(-2em);
+}
+.assembly:nth-child(7) .side:nth-child(6) {
+  transform: rotateY(225deg) translateZ(-2em);
+}
+.assembly:nth-child(7) .side:nth-child(7) {
+  transform: rotateY(270deg) translateZ(-2em);
+}
+.assembly:nth-child(7) .side:nth-child(8) {
+  transform: rotateY(315deg) translateZ(-2em);
+}
+.assembly:nth-child(8) {
+  transform: translate(0, -56em);
+  animation: slide8 1s ease-in-out infinite;
+}
+@keyframes slide8 {
+  to {
+    transform: translate(1.45588em, -56em);
+  }
+}
+.assembly:nth-child(8) .strip {
+  background-size: 1.45588em 100%;
+}
+.assembly:nth-child(8) .roller {
+  transform: rotateY(20deg) translateZ(2.12836em) rotateY(-20deg);
+  animation: inherit;
+  animation-name: roll8;
+}
+@keyframes roll8 {
+  to {
+    transform: rotateY(-20deg) translateZ(2.12836em) rotateY(-20deg);
+  }
+}
+.assembly:nth-child(8) .side {
+  margin: -2em -0.72794em;
+  width: 1.45588em;
+  height: 4em;
+}
+.assembly:nth-child(8) .side:nth-child(1) {
+  transform: rotateY(0deg) translateZ(-2em);
+}
+.assembly:nth-child(8) .side:nth-child(2) {
+  transform: rotateY(40deg) translateZ(-2em);
+}
+.assembly:nth-child(8) .side:nth-child(3) {
+  transform: rotateY(80deg) translateZ(-2em);
+}
+.assembly:nth-child(8) .side:nth-child(4) {
+  transform: rotateY(120deg) translateZ(-2em);
+}
+.assembly:nth-child(8) .side:nth-child(5) {
+  transform: rotateY(160deg) translateZ(-2em);
+}
+.assembly:nth-child(8) .side:nth-child(6) {
+  transform: rotateY(200deg) translateZ(-2em);
+}
+.assembly:nth-child(8) .side:nth-child(7) {
+  transform: rotateY(240deg) translateZ(-2em);
+}
+.assembly:nth-child(8) .side:nth-child(8) {
+  transform: rotateY(280deg) translateZ(-2em);
+}
+.assembly:nth-child(8) .side:nth-child(9) {
+  transform: rotateY(320deg) translateZ(-2em);
+}
+.assembly:nth-child(9) {
+  transform: translate(0, -63em);
+  animation: slide9 1s ease-in-out infinite;
+}
+@keyframes slide9 {
+  to {
+    transform: translate(1.29968em, -63em);
+  }
+}
+.assembly:nth-child(9) .strip {
+  background-size: 1.29968em 100%;
+}
+.assembly:nth-child(9) .roller {
+  transform: rotateY(18deg) translateZ(2.10292em) rotateY(-18deg);
+  animation: inherit;
+  animation-name: roll9;
+}
+@keyframes roll9 {
+  to {
+    transform: rotateY(-18deg) translateZ(2.10292em) rotateY(-18deg);
+  }
+}
+.assembly:nth-child(9) .side {
+  margin: -2em -0.64984em;
+  width: 1.29968em;
+  height: 4em;
+}
+.assembly:nth-child(9) .side:nth-child(1) {
+  transform: rotateY(0deg) translateZ(-2em);
+}
+.assembly:nth-child(9) .side:nth-child(2) {
+  transform: rotateY(36deg) translateZ(-2em);
+}
+.assembly:nth-child(9) .side:nth-child(3) {
+  transform: rotateY(72deg) translateZ(-2em);
+}
+.assembly:nth-child(9) .side:nth-child(4) {
+  transform: rotateY(108deg) translateZ(-2em);
+}
+.assembly:nth-child(9) .side:nth-child(5) {
+  transform: rotateY(144deg) translateZ(-2em);
+}
+.assembly:nth-child(9) .side:nth-child(6) {
+  transform: rotateY(180deg) translateZ(-2em);
+}
+.assembly:nth-child(9) .side:nth-child(7) {
+  transform: rotateY(216deg) translateZ(-2em);
+}
+.assembly:nth-child(9) .side:nth-child(8) {
+  transform: rotateY(252deg) translateZ(-2em);
+}
+.assembly:nth-child(9) .side:nth-child(9) {
+  transform: rotateY(288deg) translateZ(-2em);
+}
+.assembly:nth-child(9) .side:nth-child(10) {
+  transform: rotateY(324deg) translateZ(-2em);
+}
+.assembly:nth-child(10) {
+  transform: translate(0, -70em);
+  animation: slide10 1s ease-in-out infinite;
+}
+@keyframes slide10 {
+  to {
+    transform: translate(1.17451em, -70em);
+  }
+}
+.assembly:nth-child(10) .strip {
+  background-size: 1.17451em 100%;
+}
+.assembly:nth-child(10) .roller {
+  transform: rotateY(16.36364deg) translateZ(2.08443em) rotateY(-16.36364deg);
+  animation: inherit;
+  animation-name: roll10;
+}
+@keyframes roll10 {
+  to {
+    transform: rotateY(-16.36364deg) translateZ(2.08443em) rotateY(-16.36364deg);
+  }
+}
+.assembly:nth-child(10) .side {
+  margin: -2em -0.58725em;
+  width: 1.17451em;
+  height: 4em;
+}
+.assembly:nth-child(10) .side:nth-child(1) {
+  transform: rotateY(0deg) translateZ(-2em);
+}
+.assembly:nth-child(10) .side:nth-child(2) {
+  transform: rotateY(32.72727deg) translateZ(-2em);
+}
+.assembly:nth-child(10) .side:nth-child(3) {
+  transform: rotateY(65.45455deg) translateZ(-2em);
+}
+.assembly:nth-child(10) .side:nth-child(4) {
+  transform: rotateY(98.18182deg) translateZ(-2em);
+}
+.assembly:nth-child(10) .side:nth-child(5) {
+  transform: rotateY(130.90909deg) translateZ(-2em);
+}
+.assembly:nth-child(10) .side:nth-child(6) {
+  transform: rotateY(163.63636deg) translateZ(-2em);
+}
+.assembly:nth-child(10) .side:nth-child(7) {
+  transform: rotateY(196.36364deg) translateZ(-2em);
+}
+.assembly:nth-child(10) .side:nth-child(8) {
+  transform: rotateY(229.09091deg) translateZ(-2em);
+}
+.assembly:nth-child(10) .side:nth-child(9) {
+  transform: rotateY(261.81818deg) translateZ(-2em);
+}
+.assembly:nth-child(10) .side:nth-child(10) {
+  transform: rotateY(294.54545deg) translateZ(-2em);
+}
+.assembly:nth-child(10) .side:nth-child(11) {
+  transform: rotateY(327.27273deg) translateZ(-2em);
+}
+.assembly:nth-child(11) {
+  transform: translate(0, -77em);
+  animation: slide11 1s ease-in-out infinite;
+}
+@keyframes slide11 {
+  to {
+    transform: translate(1.0718em, -77em);
+  }
+}
+.assembly:nth-child(11) .strip {
+  background-size: 1.0718em 100%;
+}
+.assembly:nth-child(11) .roller {
+  transform: rotateY(15deg) translateZ(2.07055em) rotateY(-15deg);
+  animation: inherit;
+  animation-name: roll11;
+}
+@keyframes roll11 {
+  to {
+    transform: rotateY(-15deg) translateZ(2.07055em) rotateY(-15deg);
+  }
+}
+.assembly:nth-child(11) .side {
+  margin: -2em -0.5359em;
+  width: 1.0718em;
+  height: 4em;
+}
+.assembly:nth-child(11) .side:nth-child(1) {
+  transform: rotateY(0deg) translateZ(-2em);
+}
+.assembly:nth-child(11) .side:nth-child(2) {
+  transform: rotateY(30deg) translateZ(-2em);
+}
+.assembly:nth-child(11) .side:nth-child(3) {
+  transform: rotateY(60deg) translateZ(-2em);
+}
+.assembly:nth-child(11) .side:nth-child(4) {
+  transform: rotateY(90deg) translateZ(-2em);
+}
+.assembly:nth-child(11) .side:nth-child(5) {
+  transform: rotateY(120deg) translateZ(-2em);
+}
+.assembly:nth-child(11) .side:nth-child(6) {
+  transform: rotateY(150deg) translateZ(-2em);
+}
+.assembly:nth-child(11) .side:nth-child(7) {
+  transform: rotateY(180deg) translateZ(-2em);
+}
+.assembly:nth-child(11) .side:nth-child(8) {
+  transform: rotateY(210deg) translateZ(-2em);
+}
+.assembly:nth-child(11) .side:nth-child(9) {
+  transform: rotateY(240deg) translateZ(-2em);
+}
+.assembly:nth-child(11) .side:nth-child(10) {
+  transform: rotateY(270deg) translateZ(-2em);
+}
+.assembly:nth-child(11) .side:nth-child(11) {
+  transform: rotateY(300deg) translateZ(-2em);
+}
+.assembly:nth-child(11) .side:nth-child(12) {
+  transform: rotateY(330deg) translateZ(-2em);
+}
+.assembly:nth-child(12) {
+  transform: translate(0, -84em);
+  animation: slide12 1s ease-in-out infinite;
+}
+@keyframes slide12 {
+  to {
+    transform: translate(0.98591em, -84em);
+  }
+}
+.assembly:nth-child(12) .strip {
+  background-size: 0.98591em 100%;
+}
+.assembly:nth-child(12) .roller {
+  transform: rotateY(13.84615deg) translateZ(2.05986em) rotateY(-13.84615deg);
+  animation: inherit;
+  animation-name: roll12;
+}
+@keyframes roll12 {
+  to {
+    transform: rotateY(-13.84615deg) translateZ(2.05986em) rotateY(-13.84615deg);
+  }
+}
+.assembly:nth-child(12) .side {
+  margin: -2em -0.49296em;
+  width: 0.98591em;
+  height: 4em;
+}
+.assembly:nth-child(12) .side:nth-child(1) {
+  transform: rotateY(0deg) translateZ(-2em);
+}
+.assembly:nth-child(12) .side:nth-child(2) {
+  transform: rotateY(27.69231deg) translateZ(-2em);
+}
+.assembly:nth-child(12) .side:nth-child(3) {
+  transform: rotateY(55.38462deg) translateZ(-2em);
+}
+.assembly:nth-child(12) .side:nth-child(4) {
+  transform: rotateY(83.07692deg) translateZ(-2em);
+}
+.assembly:nth-child(12) .side:nth-child(5) {
+  transform: rotateY(110.76923deg) translateZ(-2em);
+}
+.assembly:nth-child(12) .side:nth-child(6) {
+  transform: rotateY(138.46154deg) translateZ(-2em);
+}
+.assembly:nth-child(12) .side:nth-child(7) {
+  transform: rotateY(166.15385deg) translateZ(-2em);
+}
+.assembly:nth-child(12) .side:nth-child(8) {
+  transform: rotateY(193.84615deg) translateZ(-2em);
+}
+.assembly:nth-child(12) .side:nth-child(9) {
+  transform: rotateY(221.53846deg) translateZ(-2em);
+}
+.assembly:nth-child(12) .side:nth-child(10) {
+  transform: rotateY(249.23077deg) translateZ(-2em);
+}
+.assembly:nth-child(12) .side:nth-child(11) {
+  transform: rotateY(276.92308deg) translateZ(-2em);
+}
+.assembly:nth-child(12) .side:nth-child(12) {
+  transform: rotateY(304.61538deg) translateZ(-2em);
+}
+.assembly:nth-child(12) .side:nth-child(13) {
+  transform: rotateY(332.30769deg) translateZ(-2em);
+}
+.assembly:nth-child(13) {
+  transform: translate(0, -91em);
+  animation: slide13 1s ease-in-out infinite;
+}
+@keyframes slide13 {
+  to {
+    transform: translate(0.91297em, -91em);
+  }
+}
+.assembly:nth-child(13) .strip {
+  background-size: 0.91297em 100%;
+}
+.assembly:nth-child(13) .roller {
+  transform: rotateY(12.85714deg) translateZ(2.05143em) rotateY(-12.85714deg);
+  animation: inherit;
+  animation-name: roll13;
+}
+@keyframes roll13 {
+  to {
+    transform: rotateY(-12.85714deg) translateZ(2.05143em) rotateY(-12.85714deg);
+  }
+}
+.assembly:nth-child(13) .side {
+  margin: -2em -0.45649em;
+  width: 0.91297em;
+  height: 4em;
+}
+.assembly:nth-child(13) .side:nth-child(1) {
+  transform: rotateY(0deg) translateZ(-2em);
+}
+.assembly:nth-child(13) .side:nth-child(2) {
+  transform: rotateY(25.71429deg) translateZ(-2em);
+}
+.assembly:nth-child(13) .side:nth-child(3) {
+  transform: rotateY(51.42857deg) translateZ(-2em);
+}
+.assembly:nth-child(13) .side:nth-child(4) {
+  transform: rotateY(77.14286deg) translateZ(-2em);
+}
+.assembly:nth-child(13) .side:nth-child(5) {
+  transform: rotateY(102.85714deg) translateZ(-2em);
+}
+.assembly:nth-child(13) .side:nth-child(6) {
+  transform: rotateY(128.57143deg) translateZ(-2em);
+}
+.assembly:nth-child(13) .side:nth-child(7) {
+  transform: rotateY(154.28571deg) translateZ(-2em);
+}
+.assembly:nth-child(13) .side:nth-child(8) {
+  transform: rotateY(180deg) translateZ(-2em);
+}
+.assembly:nth-child(13) .side:nth-child(9) {
+  transform: rotateY(205.71429deg) translateZ(-2em);
+}
+.assembly:nth-child(13) .side:nth-child(10) {
+  transform: rotateY(231.42857deg) translateZ(-2em);
+}
+.assembly:nth-child(13) .side:nth-child(11) {
+  transform: rotateY(257.14286deg) translateZ(-2em);
+}
+.assembly:nth-child(13) .side:nth-child(12) {
+  transform: rotateY(282.85714deg) translateZ(-2em);
+}
+.assembly:nth-child(13) .side:nth-child(13) {
+  transform: rotateY(308.57143deg) translateZ(-2em);
+}
+.assembly:nth-child(13) .side:nth-child(14) {
+  transform: rotateY(334.28571deg) translateZ(-2em);
+}
+.assembly:nth-child(14) {
+  transform: translate(0, -98em);
+  animation: slide14 1s ease-in-out infinite;
+}
+@keyframes slide14 {
+  to {
+    transform: translate(0.85023em, -98em);
+  }
+}
+.assembly:nth-child(14) .strip {
+  background-size: 0.85023em 100%;
+}
+.assembly:nth-child(14) .roller {
+  transform: rotateY(12deg) translateZ(2.04468em) rotateY(-12deg);
+  animation: inherit;
+  animation-name: roll14;
+}
+@keyframes roll14 {
+  to {
+    transform: rotateY(-12deg) translateZ(2.04468em) rotateY(-12deg);
+  }
+}
+.assembly:nth-child(14) .side {
+  margin: -2em -0.42511em;
+  width: 0.85023em;
+  height: 4em;
+}
+.assembly:nth-child(14) .side:nth-child(1) {
+  transform: rotateY(0deg) translateZ(-2em);
+}
+.assembly:nth-child(14) .side:nth-child(2) {
+  transform: rotateY(24deg) translateZ(-2em);
+}
+.assembly:nth-child(14) .side:nth-child(3) {
+  transform: rotateY(48deg) translateZ(-2em);
+}
+.assembly:nth-child(14) .side:nth-child(4) {
+  transform: rotateY(72deg) translateZ(-2em);
+}
+.assembly:nth-child(14) .side:nth-child(5) {
+  transform: rotateY(96deg) translateZ(-2em);
+}
+.assembly:nth-child(14) .side:nth-child(6) {
+  transform: rotateY(120deg) translateZ(-2em);
+}
+.assembly:nth-child(14) .side:nth-child(7) {
+  transform: rotateY(144deg) translateZ(-2em);
+}
+.assembly:nth-child(14) .side:nth-child(8) {
+  transform: rotateY(168deg) translateZ(-2em);
+}
+.assembly:nth-child(14) .side:nth-child(9) {
+  transform: rotateY(192deg) translateZ(-2em);
+}
+.assembly:nth-child(14) .side:nth-child(10) {
+  transform: rotateY(216deg) translateZ(-2em);
+}
+.assembly:nth-child(14) .side:nth-child(11) {
+  transform: rotateY(240deg) translateZ(-2em);
+}
+.assembly:nth-child(14) .side:nth-child(12) {
+  transform: rotateY(264deg) translateZ(-2em);
+}
+.assembly:nth-child(14) .side:nth-child(13) {
+  transform: rotateY(288deg) translateZ(-2em);
+}
+.assembly:nth-child(14) .side:nth-child(14) {
+  transform: rotateY(312deg) translateZ(-2em);
+}
+.assembly:nth-child(14) .side:nth-child(15) {
+  transform: rotateY(336deg) translateZ(-2em);
+}
+
+.strip {
+  margin: -2em -1px;
+  width: 120em;
+  height: 4em;
+  border: solid 0.125em cyan;
+  background-image: linear-gradient(90deg, cyan 0.125em, transparent 0);
+  background-position: -1px 0;
+}
+
+.side {
+  border: solid 0.125em cyan;
+}
+.side:before, .side:after {
+  position: absolute;
+  left: 0;
+  width: inherit;
+  height: .125em;
+  background: cyan;
+  transform: rotateX(90deg);
+  content: '';
+}
+.side:before {
+  top: -1px;
+}
+.side:after {
+  bottom: -1px;
+}

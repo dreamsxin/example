@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> 
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>15个超绚丽的HTML5 Canvas时钟动画特效DEMO演示</title>
+
+<link rel="stylesheet" type="text/css" href="css/zzsc.css">
+</head>
+<body>
+<div style="text-align:center;clear:both">
+<script src="/gg_bd_ad_720x90.js" type="text/javascript"></script>
+<script src="/follow.js" type="text/javascript"></script>
+</div>
+<div class="zzsc-content">
+	<canvas id="clock1_" width="200px" height="200px">
+	</canvas>
+	<canvas id="clock2_" width="200px" height="200px">
+	</canvas>
+	<canvas id="clock3_" width="200px" height="200px">
+	</canvas>
+	<canvas id="clock4_" width="200px" height="200px">
+	</canvas>
+	<canvas id="clock5_" width="200px" height="200px">
+	</canvas>
+	<canvas id="clock6_" width="200px" height="200px">
+	</canvas>
+	<canvas id="clock7_" width="200px" height="200px">
+	</canvas>
+	<canvas id="clock8_" width="200px" height="200px">
+	</canvas>
+	<canvas id="clock9_" width="200px" height="200px">
+	</canvas>
+	<canvas id="clock10_" width="200px" height="200px">
+	</canvas>
+	<canvas id="clock11_" width="200px" height="200px">
+	</canvas>
+	<canvas id="clock12_" width="200px" height="200px">
+	</canvas>
+	<canvas id="clock13_" width="200px" height="200px">
+	</canvas>
+	<canvas id="clock14_" width="200px" height="200px">
+	</canvas>
+	<canvas id="clock15_" width="200px" height="200px">
+	</canvas>
+</div>
+
+<script src="js/canvas_clock.js"></script>
+<script>
+	  clockd1_={
+			  "indicate": true,
+			  "indicate_color": "#222",
+			  "dial1_color": "#666600",
+			  "dial2_color": "#81812e",
+			  "dial3_color": "#9d9d5c",
+			  "time_add": 1,
+			  "time_24h": true,
+			  "date_add":3,
+			  "date_add_color": "#999",
+			 };
+	  clockd2_={
+			  "indicate": true,
+			  "dial1_color": "#666600",
+			  "time_24h": true,
+			  "timeoffset":0,
+			  "date_add":3,
+			  "date_add_color": "#999",
+			 };
+	  clockd3_={
+			  "indicate": true,
+			  "indicate_color": "#222",
+			  "dial1_color": "#666600",
+			  "dial2_color": "#81812e",
+			  "dial3_color": "#9d9d5c",
+			  "time_add": 1,
+			  "time_24h": true,
+			  "date_add":3,
+			  "date_add_color": "#999",
+			 };
+	  clockd4_={
+			  "indicate": true,
+			  "indicate_color": "#222",
+			  "dial1_color": "#666600",
+			  "date_add":3,
+			  "date_add_color": "#999",
+			 };
+	  clockd5_={
+			  "indicate": true,
+			  "indicate_color": "#222",
+			  "dial1_color": "#666600",
+			  "dial2_color": "#81812e",
+			  "dial3_color": "#9d9d5c",
+			  "time_add": 1,
+			  "time_24h": true,
+			  "date_add":3,
+			  "date_add_color": "#999",
+			 };
+	  clockd6_={
+			  "indicate": true,
+			  "indicate_color": "#222",
+			  "dial1_color": "#666600",
+			  "dial2_color": "#81812e",
+			  "dial3_color": "#9d9d5c",
+			  "time_add": 1,
+			  "time_add_color": "#ccc",
+			  "time_24h": true,
+			  "timeoffset":0,
+			  "date_add":3,
+			  "date_add_color": "#999",
+			 };
+	  clockd7_={
+			  "indicate": true,
+			  "indicate_color": "#222",
+			  "dial1_color": "#666600",
+			  "dial2_color": "#81812e",
+			  "dial3_color": "#9d9d5c",
+			  "time_add": 1,
+			  "time_24h": true,
+			  "date_add":3,
+			  "date_add_color": "#999",
+			 };
+	  clockd8_={
+			  "indicate": true,
+			  "indicate_color": "#222",
+			  "dial1_color": "#666600",
+			  "dial2_color": "#81812e",
+			  "dial3_color": "#9d9d5c",
+			  "time_add": 1,
+			  "time_24h": true,
+			  "date_add":5,
+			  "date_add_color": "#999",
+			 };
+	  clockd9_={
+			  "indicate": true,
+			  "indicate_color": "#222",
+			  "dial1_color": "#666600",
+			  "dial2_color": "#81812e",
+			  "dial3_color": "#9d9d5c",
+			  "time_add": 1,
+			  "time_24h": true,
+			  "date_add":3,
+			  "date_add_color": "#999",
+			 };
+	  clockd10_={
+			  "indicate": true,
+			  "indicate_color": "#222",
+			  "dial1_color": "#666600",
+			  "dial2_color": "#81812e",
+			  "dial3_color": "#9d9d5c",
+			  "time_add": 1,
+			  "time_24h": true,
+			  "track": "#4b4b00",
+			 };
+	  clockd11_={
+			  "dial1_color": "#666600",
+			  "time_24h": true,
+			  "date_add":3,
+			  "date_add_color": "#999",
+			 };
+	  clockd12_={
+			  "indicate": true,
+			  "indicate_color": "#222",
+			  "dial1_color": "#666600",
+			  "dial2_color": "#81812e",
+			  "dial3_color": "#9d9d5c",
+			  "time_add": 1,
+			  "time_24h": true,
+			  "date_add":3,
+			  "date_add_color": "#999",
+			 };
+	  clockd13_={
+			  "indicate": true,
+			  "indicate_color": "#222",
+			  "dial1_color": "#666600",
+			  "dial2_color": "#81812e",
+			  "dial3_color": "#9d9d5c",
+			  "time_add": 1,
+			  "time_24h": true,
+			  "date_add":3,
+			  "date_add_color": "#999",
+			 };
+	  clockd14_={
+			  "indicate": true,
+			  "indicate_color": "#222",
+			  "dial1_color": "#666600",
+			  "time_add": 1,
+			  "time_24h": true,
+			  "date_add":3,
+			  "date_add_color": "#999",
+			 };
+	  clockd15_={
+			  "indicate": true,
+			  "indicate_color": "#222",
+			  "dial1_color": "#666600",
+			  "dial2_color": "#81812e",
+			  "dial3_color": "#9d9d5c",
+			  "time_add": 1,
+			  "time_24h": true,
+			  "date_add":3,
+			  "date_add_color": "#999",
+			 };
+	 
+	  var c = document.getElementById('clock1_');
+	  cns1_ = c.getContext('2d');
+	  var c = document.getElementById('clock2_');
+	  cns2_ = c.getContext('2d');
+	  var c = document.getElementById('clock3_');
+	  cns3_ = c.getContext('2d');
+	  var c = document.getElementById('clock4_');
+	  cns4_ = c.getContext('2d');
+	  var c = document.getElementById('clock5_');
+	  cns5_ = c.getContext('2d');
+	  var c = document.getElementById('clock6_');
+	  cns6_ = c.getContext('2d');
+	  var c = document.getElementById('clock7_');
+	  cns7_ = c.getContext('2d');
+	  var c = document.getElementById('clock8_');
+	  cns8_ = c.getContext('2d');
+	  var c = document.getElementById('clock9_');
+	  cns9_ = c.getContext('2d');
+	  var c = document.getElementById('clock10_');
+	  cns10_ = c.getContext('2d');
+	  var c = document.getElementById('clock11_');
+	  cns11_ = c.getContext('2d');
+	  var c = document.getElementById('clock12_');
+	  cns12_ = c.getContext('2d');
+	  var c = document.getElementById('clock13_');
+	  cns13_ = c.getContext('2d');
+	  var c = document.getElementById('clock14_');
+	  cns14_ = c.getContext('2d');
+	  var c = document.getElementById('clock15_');
+	  cns15_ = c.getContext('2d');
+		
+	  clock_conti(200,cns1_,clockd1_);
+	  clock_digital(200,cns2_,clockd2_);
+	  clock_norm(200,cns3_,clockd3_);
+	  clock_binary(200,cns4_,clockd4_);
+	  clock_follow(200,cns5_,clockd5_);
+	  clock_circles(200,cns6_,clockd6_);
+	  clock_dots(200,cns7_,clockd7_);
+	  clock_roulette(200,cns8_,clockd8_);
+	  clock_num(200,cns9_,clockd9_);
+	  clock_planets(200,cns10_,clockd10_);
+	  clock_digitalran(200,cns11_,clockd11_);
+	  clock_bars(200,cns12_,clockd12_);
+	  clock_grow(200,cns13_,clockd13_);
+	  clock_random(200,cns14_,clockd14_);
+	  clock_reverse(200,cns15_,clockd15_);
+</script>
+
+
+</body>
+</html>

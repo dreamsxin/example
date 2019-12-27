@@ -1,0 +1,145 @@
+@charset "UTF-8";
+/* CSS Document */
+
+body {
+	background: #2a282a;
+	color: white;
+}
+
+
+/*TYPE*/
+
+h1, h2, h3, h4, h5, h6, p {
+	text-align: center;
+	text-shadow: 3px 3px 5px #000000;
+}
+
+h1 {
+	font: 140px/140px 'Yanone Kaffeesatz', sans-serif;
+	margin-top: -13px;
+}
+
+h2 {
+	font: 50px/50px 'Alegreya Sans SC', sans-serif;
+	margin-bottom: -10px;
+}
+
+h3 {
+	font: 30px/40px 'Lobster', cursive;
+}
+
+/*MAIN*/
+
+.main-content { margin: 30px auto 0;
+	width: 400px;
+	position: relative;
+}
+
+.mask {
+	background-size:100% 100%;
+	width: 400px;
+	height: 400px;
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 10;
+	overflow: hidden;
+}
+
+#mask {
+	fill:#2a282a;
+}
+
+/*SHUTTER*/
+
+.shutter-area {
+	width: 400px;
+	height: 400px;
+	overflow: hidden;
+	position: absolute;
+	
+	background: #2b4654;
+background: -moz-radial-gradient(center, ellipse cover,  #2b4654 0%, #2a282a 46%, #2a282a 46%);
+background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,#2b4654), color-stop(46%,#2a282a), color-stop(46%,#2a282a));
+background: -webkit-radial-gradient(center, ellipse cover,  #2b4654 0%,#2a282a 46%,#2a282a 46%);
+background: -o-radial-gradient(center, ellipse cover,  #2b4654 0%,#2a282a 46%,#2a282a 46%);
+background: -ms-radial-gradient(center, ellipse cover,  #2b4654 0%,#2a282a 46%,#2a282a 46%);
+background: radial-gradient(ellipse at center,  #2b4654 0%,#2a282a 46%,#2a282a 46%);
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#2b4654', endColorstr='#2a282a',GradientType=1 );	
+}
+
+.shutter {
+	width: 184px;
+	height: 187px;
+	background-size:100% 100%;
+	position: absolute;
+	z-index: 0;
+}
+
+.no-1 {
+	top: -165px;
+	left: 147px;
+	z-index: 1;
+}
+
+.no-2 {
+	top: 211px;
+	left: 351px;
+	z-index: 1;
+	
+}
+
+.no-3 {
+	top: 575px;
+	left: 130px;
+	z-index: 1;
+}
+
+.no-4 {
+	top: 566px;
+	left: -297px;
+	z-index: 1;
+}
+
+.no-5 {
+	top: 191px;
+	left: -503px;
+	z-index: 2;
+}
+
+.no-6 {
+	top: -175px;
+	left: -281px;
+	z-index: 1;
+}
+
+.no-1, .border1 {
+	fill: #97d17a;
+}
+
+.no-2, .border2 {
+	fill:#f6c45b;
+}
+
+.no-3, .border3 {
+	fill:#4aabd5;
+}
+
+.no-4, .border4 {
+	fill:#aaced0;
+}
+
+.no-5, .border5 {
+	fill:#de6d52;
+}
+
+.no-6, .border6 {
+	fill:#f5e448;
+}
+
+
+/*TEXT*/
+
+.text {
+	margin-top: 90px;
+}

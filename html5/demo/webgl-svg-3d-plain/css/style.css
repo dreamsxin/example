@@ -1,0 +1,153 @@
+@import url("https://fonts.googleapis.com/css?family=Roboto+Condensed|Playfair+Display:700i|Didact+Gothic");
+html,
+body {
+  background: black;
+  font-family: monospace;
+  font-family: "Roboto", sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+
+h1 {
+  font-family: "Roboto Condensed", "Helvetica Neue", Helvetica, Arial,
+    sans-serif;
+  font-size: 40px;
+  line-height: 1;
+}
+
+h3 {
+  font-weight: lighter;
+}
+
+section {
+  color: white;
+  padding: 50px 25px;
+}
+
+p {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+a {
+  color: white;
+}
+
+span {
+  font-weight: bold;
+  font-size: 20px;
+}
+
+span.high {
+  color: #3fe687;
+}
+
+canvas[id*="number"] {
+  position: absolute;
+  z-index: -1;
+}
+
+button {
+  flex: 1;
+}
+
+button,
+label {
+  background: none;
+  border: none;
+  text-align: center;
+  padding: 5px 10px;
+  margin: 5px;
+  border: 1px solid white;
+  color: white;
+  font-size: 13px;
+}
+button:hover,
+label:hover{
+  cursor:pointer;
+}
+
+#controls {
+  position: fixed;
+  width: 100%;
+  top: 300px;
+  left: 0;
+  background: black;
+  display: flex;
+  -webkit-display: flex;
+}
+
+#content {
+  color: white;
+  background: #151515;
+}
+
+#paint {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 300px;
+  margin: auto;
+  z-index: 100;
+}
+
+#wrapper {
+  position: relative;
+  top: 300px;
+  background: black;
+}
+
+@media (min-width: 1200px) {
+  section {
+    padding: 25px;
+    pointer-events: initial;
+    max-width: 275px;
+    width: 100%;
+  }
+
+  #paint {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    top: 0;
+    left: 0;
+  }
+  #wrapper {
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    top: 0;
+    background: none;
+    position: relative;
+  }
+  .flex {
+    display: flex;
+    -webkit-display: flex;
+    justify-content: space-between;
+    -webkit-justify-content: space-between;
+    align-items: flex-end;
+    -webkit-align-items: flex-end;
+    flex-direction: row-reverse;
+    -webkit-flex-direction: row-reverse;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    pointer-events: none;
+    /*background: red;*/
+  }
+  #controls {
+    position: relative;
+    top: 0;
+    left: 0;
+    background: none;
+    pointer-events: initial;
+    width: auto;
+  }
+}

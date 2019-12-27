@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+  <meta charset="UTF-8">
+  <title>WebGL和SVG可视化3D飞机模型结构DEMO演示</title>
+  
+  
+  
+      <link rel="stylesheet" href="css/style.css">
+
+  
+</head>
+
+<body>
+  <div id="content">
+
+    <!-- canas -->
+    <div id="paint"></div>
+
+    <!-- text -->
+    <div id="wrapper">
+      <div class="flex">
+
+        <div id="controls">
+          <button class="one">Business class</button>
+          <button class="two">Ahead of wing</button>
+          <button class="three">Over the wing</button>
+          <button class="four">Rear cabin</button>
+          <label class="option">360 view<input type="checkbox" id="myCheck"></label>
+        </div> 
+      </div>
+    </div><!-- /text -->
+
+  </div>
+
+
+  <!-- numbers -->
+  <canvas id="number" width="100%" height="100%"></canvas>
+  <canvas id="number2" width="100%" height="100%"></canvas>
+  <canvas id="number3" width="100%" height="100%"></canvas>
+  <canvas id="number4" width="100%" height="100%"></canvas>
+
+
+  <script src="https://threejs.org/build/three.min.js"></script>
+  <script src='https://threejs.org/examples/js/controls/OrbitControls.js'></script>
+  <script src="https://threejs.org/examples/js/loaders/deprecated/LegacyJSONLoader.js"></script>
+  <script src="https://threejs.org/examples/js/controls/DeviceOrientationControls.js"></script>
+  <script src="https://threejs.org/examples/js/effects/StereoEffect.js"></script>
+  <script src="https://threejs.org/examples/js/libs/tween.min.js"></script>
+  
+  
+
+    <script  src="js/index.js"></script>
+
+
+
+
+</body>
+
+</html>

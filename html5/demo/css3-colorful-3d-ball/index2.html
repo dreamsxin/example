@@ -1,0 +1,262 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CSS3实现五彩3D旋转星球DEMO演示</title>
+
+<style>
+BODY {
+  -webkit-perspective: 40em;
+          perspective: 40em;
+  -webkit-perspective-origin: center center;
+          perspective-origin: center center;
+  overflow: hidden;
+  font-size: 14px;
+  background: #000;
+  background-image: -webkit-linear-gradient(left, rgba(255, 255, 255, 0.025) 50%, transparent 50%);
+  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.025) 50%, transparent 50%);
+  background-size: 2rem 100%;
+}
+
+.container {
+  width: 10em;
+  height: 10em;
+  -webkit-transform-style: preserve-3d;
+          transform-style: preserve-3d;
+  -webkit-animation: rotate 12s infinite linear;
+          animation: rotate 12s infinite linear;
+}
+
+.cube {
+  position: absolute;
+  width: 10em;
+  height: 10em;
+  -webkit-transform-style: preserve-3d;
+          transform-style: preserve-3d;
+}
+.cube--2 {
+  -webkit-transform: rotateX(45deg) rotateY(45deg);
+          transform: rotateX(45deg) rotateY(45deg);
+}
+.cube--3 {
+  -webkit-transform: rotateX(45deg) rotateZ(45deg);
+          transform: rotateX(45deg) rotateZ(45deg);
+}
+
+.side {
+  position: absolute;
+  width: 10em;
+  height: 10em;
+  border: 2px dotted rgba(255, 213, 0, 0.35);
+  border-radius: 50%;
+  -webkit-transform-style: preserve-3d;
+          transform-style: preserve-3d;
+  -webkit-transform: rotateY(180deg);
+          transform: rotateY(180deg);
+}
+.side::before, .side::after {
+  content: "";
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  margin: auto;
+  box-sizing: border-box;
+  border-radius: inherit;
+  border: 1px solid;
+  box-shadow: inset 0 0 2em, 0 0 2em;
+}
+.side::before {
+  width: 2.5em;
+  height: 2.5em;
+  color: gold;
+}
+.side::after {
+  width: 1.5em;
+  height: 1.5em;
+  -webkit-transform: translateZ(-2em);
+          transform: translateZ(-2em);
+  box-shadow: inset 0 0 1em, 0 0 1em;
+  color: teal;
+}
+
+.side--back {
+  -webkit-transform: translateZ(-5em) rotateY(180deg);
+          transform: translateZ(-5em) rotateY(180deg);
+}
+
+.side--left {
+  -webkit-transform: translateX(-5em) rotateY(-90deg);
+          transform: translateX(-5em) rotateY(-90deg);
+}
+
+.side--right {
+  -webkit-transform: translateX(5em) rotateY(90deg);
+          transform: translateX(5em) rotateY(90deg);
+}
+
+.side--top {
+  -webkit-transform: translateY(-5em) rotateX(90deg);
+          transform: translateY(-5em) rotateX(90deg);
+}
+
+.side--bottom {
+  -webkit-transform: translateY(5em) rotateX(-90deg);
+          transform: translateY(5em) rotateX(-90deg);
+}
+
+.side--front {
+  -webkit-transform: translateZ(5em);
+          transform: translateZ(5em);
+}
+
+.side__inner {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  width: 5em;
+  height: 5em;
+  margin: auto;
+  border-radius: inherit;
+  border: 1px solid;
+  box-shadow: inset 0 0 2em;
+  color: orangered;
+  -webkit-transform: translateZ(2em);
+          transform: translateZ(2em);
+  -webkit-transform-style: preserve-3d;
+          transform-style: preserve-3d;
+}
+.side__inner::before, .side__inner::after {
+  content: "";
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  margin: auto;
+  box-sizing: border-box;
+  border-radius: inherit;
+  border: 1px solid;
+  box-shadow: inset 0 0 2em, 0 0 2em;
+}
+.side__inner::before {
+  width: 2.5em;
+  height: 2.5em;
+  -webkit-transform: translateZ(2em);
+          transform: translateZ(2em);
+  color: crimson;
+}
+.side__inner::after {
+  width: 1.5em;
+  height: 1.5em;
+  -webkit-transform: translateZ(4em);
+          transform: translateZ(4em);
+  color: purple;
+}
+
+@-webkit-keyframes rotate {
+  100% {
+    -webkit-transform: rotateX(360deg) rotateY(720deg) rotateZ(360deg);
+            transform: rotateX(360deg) rotateY(720deg) rotateZ(360deg);
+  }
+}
+
+@keyframes rotate {
+  100% {
+    -webkit-transform: rotateX(360deg) rotateY(720deg) rotateZ(360deg);
+            transform: rotateX(360deg) rotateY(720deg) rotateZ(360deg);
+  }
+}
+HTML, BODY {
+  height: 100%;
+}
+
+BODY {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="cube cube--1">
+        <div class="side side--back">
+            <div class="side__inner"></div>
+        </div>
+        <div class="side side--left">
+            <div class="side__inner"></div>
+        </div>
+        <div class="side side--right">
+            <div class="side__inner"></div>
+        </div>
+        <div class="side side--top">
+            <div class="side__inner"></div>
+        </div>
+        <div class="side side--bottom">
+            <div class="side__inner"></div>
+        </div>
+        <div class="side side--front">
+            <div class="side__inner"></div>
+        </div>
+    </div>
+    
+    <div class="cube cube--2">
+        <div class="side side--back">
+            <div class="side__inner"></div>
+        </div>
+        <div class="side side--left">
+            <div class="side__inner"></div>
+        </div>
+        <div class="side side--right">
+            <div class="side__inner"></div>
+        </div>
+        <div class="side side--top">
+            <div class="side__inner"></div>
+        </div>
+        <div class="side side--bottom">
+            <div class="side__inner"></div>
+        </div>
+        <div class="side side--front">
+            <div class="side__inner"></div>
+        </div>
+    </div>
+    
+    <div class="cube cube--3">
+        <div class="side side--back">
+            <div class="side__inner"></div>
+        </div>
+        <div class="side side--left">
+            <div class="side__inner"></div>
+        </div>
+        <div class="side side--right">
+            <div class="side__inner"></div>
+        </div>
+        <div class="side side--top">
+            <div class="side__inner"></div>
+        </div>
+        <div class="side side--bottom">
+            <div class="side__inner"></div>
+        </div>
+        <div class="side side--front">
+            <div class="side__inner"></div>
+        </div>
+    </div>
+</div>
+
+
+</body>
+</html>
+

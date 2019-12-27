@@ -1,0 +1,20 @@
+body {
+    background: #333;
+}
+.box {
+    width: 270px;
+    background: red;
+    color: #fff;
+    background-color: #5cb85c;
+    display: inline-block;
+    padding: 6px;
+    font-size: 15px;
+    font-family: 'Helvetica', sans-serief;
+    border-radius: 4px;
+    position:absolute;
+}
+a {
+    color: #fff;
+    font-weight: bold;
+    text-decoration: none;
+}

@@ -1,0 +1,50 @@
+html
+  padding 0
+  margin 0
+  width 100%
+  height 100%
+  background-color #4
+  color #f
+body
+  padding 0
+  margin 0
+  width 100%
+  height 100%
+.ctrl
+  position absolute
+  //background-color #c
+  top 0
+  left 0
+  right 0
+  bottom 0
+  margin auto
+  width 125px
+  height 225px
+  text-align center
+  label
+    display block
+  input
+    box-sizing border-box
+    width 50px
+    text-align center
+    color #0
+    border 1px solid black
+svg
+  height 100%
+  width 100%
+  vertical-align top
+  .keyboard
+    //transform translate(50%, 50%)
+    path
+      stroke black
+      fill white
+      cursor pointer
+      vector-effect non-scaling-stroke
+      &.sharp
+        fill black
+      &.ut
+        fill #faa
+      &.first-ut
+        fill #f44
+      &:hover
+        fill grey

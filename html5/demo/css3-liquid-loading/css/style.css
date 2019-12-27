@@ -1,0 +1,63 @@
+body {
+  background: url(tweed.png);
+}
+
+.loading {
+  position: absolute;
+  left: 50%;
+  top: 150px;
+  width: 8em;
+  height: 8em;
+  margin: -4em 0 0 -4em;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.loading > div {
+  position: absolute;
+  width: 8em;
+  height: 8em;
+  animation: alpha 2.25s linear infinite forwards;
+  background: rgba(231, 76, 60, 0.75);
+}
+
+.loading > div:nth-child(1) {
+  top: -50%;
+  left: -50%;
+}
+
+.loading > div:nth-child(2) {
+  top: -50%;
+  right: -50%;
+}
+
+.loading > div:nth-child(3) {
+  bottom: -50%;
+  right: -50%;
+}
+
+.loading > div:nth-child(4) {
+  bottom: -50%;
+  left: -50%;
+}
+
+@keyframes alpha {
+  0% {
+    transform: rotate(0);
+    background: rgba(231, 76, 60, 0.75);
+  }
+  25% {
+    background: rgba(230, 126, 34, 0.75);
+  }
+  50% {
+    border-radius: 50%;
+    background: rgba(142, 68, 173, 0.75);
+  }
+  75% {
+    background: rgba(41, 128, 185, 0.75);
+  }
+  100% {
+    transform: rotate(360deg);
+    background: rgba(231, 76, 60, 0.75);
+  }
+}

@@ -1,0 +1,15 @@
+*{ padding: 0; margin: 0; font-family: sans-serif; }
+
+body {
+ background: #222;
+}
+
+canvas:active { 
+    cursor: pointer;
+    cursor: -webkit-grabbing;
+}
+
+#stage {
+  margin: 12px;
+  width: 100%;
+}

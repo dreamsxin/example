@@ -1,0 +1,105 @@
+body {
+  align-items: center;
+  background: #708fd4;
+  font-family: 'Inconsolata', monospace;
+  height: 100%;
+  justify-content: center;
+  margin: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.filter {
+  position: absolute;
+  left: -9999px;
+}
+
+.burger {
+  display: flex;
+  flex-direction: column;
+
+  padding: 30px;
+}
+
+.radios-boxes {
+  display: flex;
+  width:250px;
+  margin:0 auto;
+}
+
+.radios {
+  display: flex;
+  filter: url('#gooeyness');
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.radio {
+  -moz-appearance: none;
+  -ms-appearance: none;
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 50%;
+  border: 16px solid #ccc;
+  cursor: pointer;
+  height: 60px;
+  margin: 10px;
+  outline: 0;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 800ms;
+  width: 60px;
+}
+
+.radio.active {
+  border-color: white;
+}
+
+.ball {
+  background: white;
+  border-radius: 50%;
+  height: 34px;
+  left: 23px;
+  pointer-events: none;
+  position: absolute;
+  top: 23px;
+  transform: translateY(-80px);
+  transition: transform 800ms;
+  width: 34px;
+}
+
+.ball.pos0 {
+  transform: translateY(0px);
+}
+
+.ball.pos1 {
+  transform: translateY(80px);
+}
+
+.ball.pos2 {
+  transform: translateY(160px);
+}
+
+.ball.pos3 {
+  transform: translateY(240px);
+}
+
+.labels {
+  margin-left: 5px;
+}
+
+.label {
+  color: #ccc;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  font-size: 28px;
+  line-height: 50px;
+  padding: 15px 0;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 800ms;
+}
+
+.label.active {
+  color: white;
+}

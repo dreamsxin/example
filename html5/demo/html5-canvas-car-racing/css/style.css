@@ -1,0 +1,18 @@
+body {
+  background-color: #F8F3A9;
+  margin: 0;
+  -webkit-box-align: center;
+  -webkit-align-items: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+  -webkit-justify-content: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  min-height: 100vh;
+}
+
+canvas {
+  border-radius: .4em;
+  margin:20px auto;
+}

@@ -1,0 +1,367 @@
+@import "compass/css3";
+
+//colors
+$bg-color: #efd1b7;
+$orange: #d55e40;
+$gray: #363844;
+$light-gray: #756046;
+$red: #8b392e;
+$yellow: #f3ae53;
+$blue: #449ba2;
+$white: #ffffff;
+
+//typography 
+@import url(http://fonts.googleapis.com/css?family=Lato:400,700);
+
+//Compass Imports
+@import "compass/reset/";
+@include global-reset; 
+@import "compass/typography/";
+//main
+* {
+  @include box-sizing(border-box);
+}
+
+body {
+  background: $bg-color;
+  color: $gray;
+  padding: 40px 0;
+  font-family: 'Lato', sans-serif;
+}
+
+//screw {
+.screw {
+  position: absolute;
+  display: block;
+  width: 22px;
+  height: 22px;
+  background: $red;
+  border-radius: 50%; 
+}
+.screw-inner {
+  position: absolute;
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%; 
+  top: 3px;
+  left: 3px;
+  @include rotate(50deg); 
+   &:before, &:after {
+     content: "";
+     position: absolute;
+     z-index: 2;
+     background: $blue;
+     width: 5px;
+     @include border-radius(2px);
+   }
+  &:before {
+    left: 50%;
+    width: 40%;
+    margin-left: -20%;
+    height: 100%;
+  }
+  &:after {
+    top: 50%;
+    height: 40%;
+    margin-top: -20%;
+    width: 100%;
+  }
+}
+.screws {
+  .screw {
+    &:nth-child(1) {
+      top: 5px;
+      left: 10px;
+    }
+    
+    &:nth-child(2) {
+      top: 5px;
+      right: 10px;
+    }
+    &:nth-child(3) {
+      left: 10px;
+      bottom: 5px;
+    }
+    
+    &:nth-child(4) {
+      right: 10px;
+      bottom: 5px;
+    }
+  }
+}
+//cassette
+.cassette {
+    position:relative;
+    margin: 0 auto;
+    background:$orange;
+    @include border-radius(16px);
+    width: 534px;
+    height: 335px;
+    &:before {
+      position:absolute;
+      z-index:20;
+      bottom:20px;
+      left:-3px;
+      content:"";
+      height:90px;
+      border-right: $orange solid 5px;
+      border-top:transparent solid 10px;
+      border-bottom:transparent solid 10px;
+    }
+    &:after {
+      position:absolute;
+      z-index:20;
+      bottom:20px;
+      right: -3px;
+      content:"";
+      height:90px;
+      border-left: $orange solid 5px;
+      border-top:transparent solid 10px;
+      border-bottom:transparent solid 10px;
+    }
+  }//.cassette
+  .outer-sticker {
+    background: $red;
+    width: 474px;
+    height: 210px;
+    position: relative;
+    left: 50%;
+    margin-left: -237px;
+    @include border-radius(16px);
+    position: relative;
+    margin-top: 25px;
+    display: inline-block;
+    
+  }
+  .sticker {
+    background: $yellow;
+    margin: 0 auto;
+    width: 466px;
+    height: 200px;
+    @include border-radius(16px);
+    position: relative;
+    margin-top: 5px;
+    }
+    .sticker-header {
+      float: left;
+      //background: black;
+      padding: 10px 20px 0px;
+      width: 100%;
+      .side {
+        font-weight: 700;
+        font-size: 30px;
+        color: $yellow;
+        padding: 0 5px 1px;
+        line-height: 32px;
+        margin-top: 10px;
+        background: $orange;
+        float: left;
+        @include border-radius(5px);
+      }
+      .notes {
+        float: left;
+        margin-left: 15px;
+        width: 374px;
+        hr {
+          border: 0;
+          height: 3px;
+          background: $light-gray;
+          margin-bottom: 15px;
+        }
+      }
+    }//.sticker-header
+    .sticker-center {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+        .stripe-a {
+          background: $red;
+          display: inline-block;
+          width: 100%;
+          height: 30px;
+        }
+        .stripe-b {
+          background: $blue;
+          display: inline-block;
+          width: 100%;
+          height: 30px;
+          margin-top: 30px;
+        }
+        .cassete-center {
+          background: $orange;
+          margin: 0 auto;
+          width: 318px;
+          height: 92px;
+          @include border-radius(16px);
+          position: absolute;
+          top: 0;
+          left: 50%;
+          margin-left: -159px;
+          
+          .circle {
+            border-radius: 50%;
+            width: 65px;
+            height: 65px; 
+            background: #fff;
+            position: absolute;
+            top: 12px;
+            @include animation(spin 0.8s infinite linear);
+            
+            &:nth-child(1) { left: 15px; }
+            &:nth-child(2) { right: 15px; }
+            
+            i {
+            display: block;
+            position: absolute;
+            width: 5%;
+            height: 55%;
+            left: 45%;
+            top: -5%;
+            border-top: solid 15px $orange;
+            transform-origin: 50% 100%;
+            z-index: 999;
+              &:nth-child(1) { @include rotate(30deg); }
+              &:nth-child(2) { @include rotate(90deg); }
+              &:nth-child(3) { @include rotate(150deg); }
+              &:nth-child(4) { @include rotate(210deg); }
+              &:nth-child(5) { @include rotate(270deg); }
+              &:nth-child(6) { @include rotate(330deg); }
+            }//i
+          }//.circle 
+          
+          .window {
+            position: absolute;
+            overflow: hidden;
+            background: white;
+            width: 122px;
+            height: 60px;
+            left: 50%;
+            margin-left: -61px;
+            margin-top: 15px;
+            @include border-radius(5px);
+            .reel {
+              border-radius: 50%;
+              width: 190px;
+              height: 190px; 
+              background: $red;
+              position: absolute;
+              top: -60px;
+              @include animation(spin 0.8s infinite linear);
+              
+              &:nth-child(1) {
+                left: -150px; 
+              }
+               &:nth-child(2) {
+                right: -150px; 
+               }
+            }
+          }//.reel
+        }
+      }//.sticker-center
+      .sticker-bottom {
+        margin: 5px 5px;
+        border-top: 1px solid $gray;
+        border-bottom: 1px solid $gray;
+        overflow: auto;
+        hr {
+          border: 0;
+          height: 3px;
+          background: $gray;
+          width: 170px; 
+           &:nth-child(1) {
+              float: left;
+           }
+           &:nth-child(3) {
+             float: right;
+           }
+        }//hr
+        p {
+          font-size: 12px;
+          float: left;
+          line-height: 19px;
+          padding-left: 19px;
+        }
+      }//.sticker-bottom
+      .cassette-bottom-outer {
+        position: absolute;
+        left: 50%;
+        margin-left: -175px;
+        bottom: 0;
+        border-bottom: 80px solid $red;
+        border-left: 20px solid transparent;
+        border-right: 20px solid transparent;
+        height: 0;
+        width: 350px;
+      }
+      .cassette-bottom {
+        border-bottom: 80px solid $orange;
+        border-left: 20px solid transparent;
+        border-right: 20px solid transparent;
+        position: relative;
+        margin-left: -15px;
+        margin-top: 5px;
+        height: 0;
+        width: 340px;
+        .screw {
+          bottom: 0px;
+          left: 50%;
+          margin-left: -10px;
+          top: 20px;
+        }//.screw
+      }//.cassette-bottom
+      .holes {
+        div {
+          position: absolute;
+          bottom: -70px;
+        }
+        .hole-big {
+          width: 25px;
+	        height: 25px;
+          @include border-radius(50%);
+          background: $white;
+        }
+        .hole-small {
+          width: 20px;
+	        height: 20px;
+          @include border-radius(50%);
+          background: $white;
+        }
+        :nth-child(1) {
+          left: 20px;
+          @include box-shadow($red -2px 2px 0px);
+        }
+        :nth-child(2) {
+          left:  70px;
+          bottom: -60px;
+          @include box-shadow($red -2px 2px 0px);
+        }
+        :nth-child(3) {
+          right: 20px;
+          @include box-shadow($red 2px 2px 0px);
+        }
+        :nth-child(4) {
+          right: 70px;
+          bottom: -60px;
+          @include box-shadow($red 2px 2px 0px);
+        }
+      }
+
+//credits
+.credits {
+  margin-top: 20px;
+  p {
+    text-align: center;
+    color: $orange;
+    a {
+      @include link-colors($red, darken( $red, 10% ) , $red, $red, $red);
+    }
+  }
+}
+
+//animation
+
+@include keyframes(spin) {
+  0% {  @include rotateZ(0deg); }
+  100% { @include rotateZ(180deg); }  
+}

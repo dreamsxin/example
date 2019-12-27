@@ -1,0 +1,223 @@
+/*
+Thanks to the following for help:
+https://tympanus.net/codrops/2015/09/30/shaded-progress-bars-css-sass-excercise/
+*/
+@import url("https://fonts.googleapis.com/css?family=Nunito:400,900");
+* {
+  box-sizing: border-box;
+}
+
+body,
+html {
+  font-family: "Nunito", sans-serif;
+  background: linear-gradient(0deg, #EEEFED, #F9E3E9);
+  margin: 0;
+  padding: 0;
+  color: #4D5075;
+  font-weight: 300;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 7vh 15vw 0vh 15vw;
+}
+
+h1 {
+  text-align: center;
+  margin: 0 0 10vh 0;
+  font-size: 7vh;
+  font-weight: 500;
+  text-shadow: 0px -15px 70px rgba(77, 80, 117, 0.6);
+}
+
+h1 b {
+  font-weight: 900;
+}
+
+p {
+  text-align: center;
+  font-size: 1.3rem;
+  text-shadow: 10px 5px 25px rgba(77, 80, 117, 0.6);
+  margin-bottom: 8vh;
+}
+
+.third-bar-p {
+  margin-top: 7vh;
+}
+
+.perspective {
+  -webkit-perspective: 70vh;
+          perspective: 70vh;
+  text-align: center;
+  -webkit-perspective-origin: 50% 50%;
+          perspective-origin: 50% 50%;
+  position: relative;
+  transition: -webkit-transform 0.3s ease;
+  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, -webkit-transform 0.3s ease;
+}
+.perspective:hover {
+  -webkit-transform: scale(1.04);
+          transform: scale(1.04);
+}
+
+.bar-input {
+  position: absolute;
+  height: 100%;
+  left: 0;
+  right: 0;
+  margin: auto;
+  opacity: 0;
+}
+
+#first-bar .bar-input {
+  width: 55vh;
+}
+
+#second-bar .bar-input {
+  width: 40vh;
+}
+
+#third-bar .bar-input {
+  width: 42vh;
+}
+
+.bar {
+  display: inline-block;
+  position: relative;
+  -webkit-transform: rotateX(55deg);
+          transform: rotateX(55deg);
+  -webkit-transform-style: preserve-3d;
+          transform-style: preserve-3d;
+}
+.bar .bar-face {
+  display: inline-block;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  -webkit-transform-origin: 50% 100%;
+          transform-origin: 50% 100%;
+}
+.bar .bar-face.front {
+  -webkit-transform: rotateX(-90deg);
+          transform: rotateX(-90deg);
+}
+.bar .bar-face.percentage:before {
+  height: 100%;
+  content: "";
+  display: block;
+  position: absolute;
+  bottom: 0;
+  margin: 0;
+}
+
+#first-bar .bar {
+  width: 55vh;
+  height: 7vh;
+}
+#first-bar .bar .bar-face {
+  background: rgba(255, 255, 255, 0.5);
+}
+#first-bar .bar .bar-face.floor {
+  box-shadow: 0 1.3em 1.2em -0.4em rgba(0, 0, 70, 0.25), 0 -2em 15em 0.5em #4d5075, 0 -0.75em 25em 10em rgba(255, 255, 255, 0.4);
+}
+#first-bar .bar .bar-face.percentage:before {
+  box-shadow: 0 1.6em 7em -0.3em rgba(149, 65, 105, 0.5);
+}
+#first-bar .bar .bar-face.roof {
+  -webkit-transform: translateZ(7vh);
+          transform: translateZ(7vh);
+}
+#first-bar .bar .bar-face.back {
+  -webkit-transform: rotateX(-90deg) translateZ(-7vh);
+          transform: rotateX(-90deg) translateZ(-7vh);
+}
+#first-bar .bar .bar-face.percentage:before {
+  background-color: rgba(149, 65, 105, 0.6);
+}
+
+#second-bar .bar {
+  width: 40vh;
+  height: 10vh;
+}
+#second-bar .bar .bar-face {
+  background: rgba(60, 75, 132, 0.5);
+  background-image: linear-gradient(90deg, rgba(134, 114, 146, 0.5), rgba(60, 75, 132, 0.1)), url("https://zephyo.github.io/22Days/code/5/graphics/stars.svg"), url("https://zephyo.github.io/22Days/code/5/graphics/stars2.svg");
+  background-repeat: repeat repeat;
+}
+#second-bar .bar .bar-face.floor {
+  box-shadow: 0 1.3em 1.2em -0.4em rgba(0, 0, 70, 0.25), 0 -2em 15em 0.5em #4d5075, 0 -0.75em 25em 10em rgba(255, 255, 255, 0.4);
+}
+#second-bar .bar .bar-face.percentage:before {
+  box-shadow: 0 1.6em 7em -0.3em rgba(200, 212, 250, 0.5);
+}
+#second-bar .bar .bar-face.roof {
+  -webkit-transform: translateZ(10vh);
+          transform: translateZ(10vh);
+}
+#second-bar .bar .bar-face.back {
+  -webkit-transform: rotateX(-90deg) translateZ(-10vh);
+          transform: rotateX(-90deg) translateZ(-10vh);
+}
+#second-bar .bar .bar-face.percentage:before {
+  background-image: url("https://zephyo.github.io/22Days/code/5/graphics/sky.png");
+  opacity: 0.9;
+}
+
+#third-bar .bar {
+  width: 42vh;
+  height: 8vh;
+}
+#third-bar .bar .bar-face {
+  background: rgba(232, 154, 173, 0.7);
+}
+#third-bar .bar .bar-face.floor {
+  box-shadow: 0 1.3em 1.2em -0.4em rgba(0, 0, 70, 0.25), 0 -2em 15em 0.5em #4d5075, 0 -0.75em 25em 10em rgba(255, 255, 255, 0.4);
+}
+#third-bar .bar .bar-face.percentage:before {
+  box-shadow: 0 1.6em 7em -0.3em rgba(236, 0, 113, 0.5);
+}
+#third-bar .bar .bar-face.roof {
+  -webkit-transform: translateZ(8vh);
+          transform: translateZ(8vh);
+}
+#third-bar .bar .bar-face.back {
+  -webkit-transform: rotateX(-90deg) translateZ(-8vh);
+          transform: rotateX(-90deg) translateZ(-8vh);
+}
+#third-bar .bar .bar-face.percentage:before {
+  background: linear-gradient(90deg, rgba(245, 239, 200, 0.5), #ec0071);
+}
+#third-bar .bar .indicator {
+  box-shadow: 0px 15px 35px rgba(236, 0, 113, 0.3);
+  background: #ec0071;
+  width: 8vh;
+  height: 8vh;
+  color: white;
+  -webkit-transform: translateY(9.6vh);
+          transform: translateY(9.6vh);
+  text-align: center;
+  font-size: 2.5vh;
+  font-weight: 900;
+  line-height: 8vh;
+}
+#third-bar .bar .indicator:before {
+  content: "";
+  position: absolute;
+  background: #ec0071;
+  left: 0;
+  right: 0;
+  margin: auto;
+  top: -6px;
+  width: 4vh;
+  height: 4vh;
+  z-index: -1;
+  -webkit-transform: rotate(45deg);
+          transform: rotate(45deg);
+}

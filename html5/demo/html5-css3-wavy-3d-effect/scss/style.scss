@@ -1,0 +1,158 @@
+@import "compass/css3";
+
+$n: 49;
+$d: 1em;
+$k: 2;
+$p: 12;
+$t: 9s;
+
+$m: sqrt($n);
+$l: ($m - 1)*$d;
+
+@function _f($x, $y) {
+  @return 
+    $k*sin($x/$d*2*pi()/$m)*sin($y/$d*2*pi()/$m)*$d;
+}
+
+$default_err: pi()/14400;
+
+@function asin($val, $e: $default_err) {  
+  $sum: 0; // the "infinite" sum we compute
+  $sign: 1; // sign of angle
+  $flag: 0; // 0 if angle in absolute value < 45deg, 1 otherwise
+  $i: 0; // current index
+  $c: 1;
+  $j: 2*$i + 1;
+  
+  @if abs($val) > sin(45deg) {
+    $flag: 1;
+    $sign: $val/abs($val);
+    $val: sqrt(1 - pow($val, 2));
+  }
+  
+  $term: $c*pow($val, $j)/$j;
+  
+  @while abs($term) > $e {
+    $sum: $sum + $term;
+    
+    $i: $i + 1;
+    $c: $c*(2*$i - 1)/(2*$i);
+    $j: 2*$i + 1;
+    
+    $term: $c*pow($val, $j)/$j;
+  }
+  
+  $result: $sign*($flag*pi()/2 + pow(-1, $flag)*$sum);
+  
+  @return $result/pi()*180deg;
+}
+
+@function atan($val, $e: $default_err) {  
+  $val: $val/sqrt(1 + pow($val, 2));
+  
+  @return asin($val, $e);
+}
+
+html, body { overflow: hidden; margin: 0; height: 100%; }
+
+body {
+  perspective-origin: 5% -50%;
+  perspective: 32em;
+  font-size: 2.5em;
+  background: black;
+}
+
+.surface {
+  &, *, :before, :after {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform-style: preserve-3d;
+  }
+  margin: -$l/2;
+  width: $l; height: $l;
+  transform: rotateX(90deg) rotate(0deg) /*translate3d(0, -$l/2, -$l/4)*/;
+  animation: a $t*1.4 linear infinite;
+}
+
+.point {
+  &:before, &:after {
+    margin: -.0625em/2 0;
+    width: $d; height: .125em;
+    transform-origin: 100% 50%;
+    opacity: .01;
+    background: inherit;
+    animation: inherit;
+    content: '';
+  }
+  @for $i from 0 to $n {
+    $x: ($i%$m)*$d;
+    $x0: (($i - 1)%$m)*$d;
+    $y: floor($i/$m)*$d;
+    $y0: (floor($i/$m) - 1)*$d;
+    $z: _f($x, $y);
+    &:nth-child(#{$i + 1}) {
+      transform: translate3d($x - $l/2, $y - $l/2, $z);
+      background: hsl(($z + $k*$d)*90/2/$k/$d, 100%, 70%);
+      animation: h#{$i + 1} $t linear infinite;
+      @if $x != 0em {
+        $z0: _f($x0, $y);
+        $a: atan(($z - $z0)/$d);
+        &:before {
+          opacity: .99;
+          transform: rotate(0deg) 
+                     rotateY(-$a) scaleX(1/cos($a));
+          animation-name: x#{$i + 1};
+        }
+      }
+      @if $y != 0em {
+        $z0: _f($x, $y0);
+        $a: atan(($z - $z0)/$d);
+        &:after {
+          opacity: .99;
+          transform: rotate(90deg) 
+                     rotateY(-$a) scaleX(1/cos($a));
+          animation-name: y#{$i + 1};
+        }
+      }
+      @at-root {
+        @keyframes h#{$i + 1} {
+          @for $j from 0 to $p {
+            $theta: $j*2*pi()/$p;
+            $z: _f($x + $theta, $y + $theta);
+            #{$j*100%/$p} {
+              transform: translate3d($x - $l/2, $y - $l/2, $z);
+              background: hsl(($z + $k*$d)*90/2/$k/$d, 100%, 70%);
+            }
+          }
+        }
+        @keyframes x#{$i + 1} {
+          @for $j from 0 to $p {
+            $theta: $j*2*pi()/$p;
+            $z: _f($x + $theta, $y + $theta);
+            $z0: _f($x0 + $theta, $y + $theta);
+            $a: atan(($z - $z0)/$d);
+            #{$j*100%/$p} {
+              transform: rotate(0deg) 
+                     rotateY(-$a) scaleX(1/cos($a));
+            }
+          }
+        }
+        @keyframes y#{$i + 1} {
+          @for $j from 0 to $p {
+            $theta: $j*2*pi()/$p;
+            $z: _f($x + $theta, $y + $theta);
+            $z0: _f($x + $theta, $y0 + $theta);
+            $a: atan(($z - $z0)/$d);
+            #{$j*100%/$p} {
+              transform: rotate(90deg) 
+                     rotateY(-$a) scaleX(1/cos($a));
+            }
+          }
+        }
+      }
+    }
+  }
+}
+@keyframes a {
+  to { transform: rotateX(90deg) rotate(360deg); }
+}

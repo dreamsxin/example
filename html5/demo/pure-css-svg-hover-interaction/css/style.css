@@ -1,0 +1,116 @@
+.sitemakers {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: -webkit-radial-gradient(rgba(57,60,76,1), rgba(36,36,46,1) 80%);
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.wrap {
+
+}
+
+.wrap .bulb {
+    position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+}
+
+.wrap #s-bulb {
+  stroke: #262832;
+  fill: #262832;
+  stroke-width: 0;
+  transition: 300ms;
+}
+
+.wrap #s-bulb {
+  stroke: #262832;
+  fill: #262832;
+  transition: 1500ms;
+}
+
+.wrap:hover #s-bulb {
+  fill: #c4d8d9;
+  stroke: #c4d8d9;
+  stroke-width: 2;
+  transition: 100ms;
+}
+
+.wrap #www-filament {
+  stroke-width: 0;
+  stroke-width: 0;
+  transition: 300ms;
+}
+
+.wrap #www-filament {
+  fill: #333542;
+  stroke: #333542;
+  transition: 1500ms;
+}
+
+.wrap:hover #www-filament {
+  stroke: #ffdf43; 
+  stroke-width: 3;
+  fill: #ffdf43;
+  transition: all 600ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+
+.wrap .light {
+  width: 200px;
+  height: 200px;
+  margin-top: -20px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  
+}
+
+.wrap .light .glow {
+  width: 0px;
+  height: 0px;
+  border-radius: 50%;
+  opacity: 0;
+  background: -webkit-radial-gradient(rgba(255,223,67,1), rgba(255,223,67,0) 70%);
+  position: absolute;
+  display: block;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 1000ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.wrap:hover .light .glow {
+  width: 200px;
+  height: 200px;
+  opacity: 0.2;
+  background: -webkit-radial-gradient(rgba(255,223,67,1), rgba(255,223,67,0) 70%);
+  transition: all 800ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.wrap .light .flare {
+  width: 0px;
+  height: 0px;
+  border-radius: 50%;
+  opacity: 0;
+  background: rgba(255,223,67,0);
+  position: absolute;
+  display: block;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 1000ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.wrap:hover .light .flare {
+  width: 50px;
+  height: 50px;
+  opacity: 0.5;
+  background: rgba(255,223,67,1);
+  transition: all 600ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}

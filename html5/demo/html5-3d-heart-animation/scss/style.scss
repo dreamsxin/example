@@ -1,0 +1,46 @@
+@import "compass/css3";
+
+$width: 100px;
+$height: 160px;
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: black;
+}
+
+* { box-sizing: border-box; }
+
+.heart3d {
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  margin: auto;
+  width: $width;
+  height: $height;
+  transform-style: preserve-3d;
+  animation: spin 15s infinite linear;  
+  
+  [class^="rib"] {
+    position: absolute;
+    width: $width;
+    height: $height;
+    border: solid #f22613;
+    border-width: 1px 1px 0 0;
+    border-radius: 50% 50% 0 / 40% 50% 0;
+   }
+
+  @for $i from 1 through 36 {
+    [class$="#{$i}"] {
+      transform: rotateY($i*10deg) rotateZ(45deg) translateX(30px);
+    }
+  } 
+}
+
+@keyframes spin {
+    to {
+    transform: rotateY(360deg) rotateX(360deg);
+  }
+}

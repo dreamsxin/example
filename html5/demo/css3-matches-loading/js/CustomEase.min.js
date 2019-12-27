@@ -1,0 +1,161 @@
+/*!
+ * VERSION: 0.2.0
+ * DATE: 2016-11-04
+ * UPDATES AND DOCS AT: http://greensock.com
+ *
+ * This is a special version of the plugin that is only to be used on certain sites like codepen.io. It will redirect to a page on GreenSock.com if you try using it on a different domain. Please sign up for Club GreenSock to get the fully-functional version at http://greensock.com/club/
+ *
+ * @license Copyright (c) 2008-2016, GreenSock. All rights reserved.
+ * This work is subject to the terms at http://greensock.com/standard-license or for
+ * Club GreenSock members, the software agreement that was issued with your membership.
+ *
+ * @author: Jack Doyle, jack@greensock.com
+ */
+var _gsScope = "undefined" != typeof module && module.exports && "undefined" != typeof global ? global : this || window;
+(_gsScope._gsQueue || (_gsScope._gsQueue = [])).push(function() {
+        "use strict";
+        _gsScope._gsDefine("easing.CustomEase", ["easing.Ease"], function(a) {
+            var b = /(?:(-|-=|\+=)?\d*\.?\d*(?:e[\-+]?\d+)?)[0-9]/gi,
+                c = /[achlmqstvz]|(-?\d*\.?\d*(?:e[\-+]?\d+)?)[0-9]/gi,
+                d = /[\+\-]?\d*\.?\d+e[\+\-]?\d+/gi,
+                e = /[cLlsS]/g,
+                f = "CustomEase only accepts Cubic Bezier data.",
+                g = "codepen",
+                h = "CustomEase",
+                i = String.fromCharCode(103, 114, 101, 101, 110, 115, 111, 99, 107, 46, 99, 111, 109),
+                j = String.fromCharCode(47, 114, 101, 113, 117, 105, 114, 101, 115, 45, 109, 101, 109, 98, 101, 114, 115, 104, 105, 112, 47),
+                k = function(a) {
+                    for (var b = -1 !== (window ? window.location.href : "").indexOf(String.fromCharCode(103, 114, 101, 101, 110, 115, 111, 99, 107)) && -1 !== a.indexOf(String.fromCharCode(108, 111, 99, 97, 108, 104, 111, 115, 116)), c = [i, String.fromCharCode(99, 111, 100, 101, 112, 101, 110, 46, 105, 111), String.fromCharCode(99, 111, 100, 101, 112, 101, 110, 46, 100, 101, 118), String.fromCharCode(99, 115, 115, 45, 116, 114, 105, 99, 107, 115, 46, 99, 111, 109), String.fromCharCode(99, 100, 112, 110, 46, 105, 111), String.fromCharCode(103, 97, 110, 110, 111, 110, 46, 116, 118), String.fromCharCode(99, 111, 100, 101, 99, 97, 110, 121, 111, 110, 46, 110, 101, 116), String.fromCharCode(116, 104, 101, 109, 101, 102, 111, 114, 101, 115, 116, 46, 110, 101, 116), String.fromCharCode(99, 101, 114, 101, 98, 114, 97, 120, 46, 99, 111, 46, 117, 107), String.fromCharCode(116, 121, 109, 112, 97, 110, 117, 115, 46, 110, 101, 116), String.fromCharCode(116, 119, 101, 101, 110, 109, 97, 120, 46, 99, 111, 109), String.fromCharCode(116, 119, 101, 101, 110, 108, 105, 116, 101, 46, 99, 111, 109), String.fromCharCode(112, 108, 110, 107, 114, 46, 99, 111), String.fromCharCode(104, 111, 116, 106, 97, 114, 46, 99, 111, 109), String.fromCharCode(106, 115, 102, 105, 100, 100, 108, 101, 46, 110, 101, 116)], d = c.length; --d > -1;)
+                        if (-1 !== a.indexOf(c[d])) return !0;
+                    return b && window && window.console && console.log(String.fromCharCode(87, 65, 82, 78, 73, 78, 71, 58, 32, 97, 32, 115, 112, 101, 99, 105, 97, 108, 32, 118, 101, 114, 115, 105, 111, 110, 32, 111, 102, 32) + h + String.fromCharCode(32, 105, 115, 32, 114, 117, 110, 110, 105, 110, 103, 32, 108, 111, 99, 97, 108, 108, 121, 44, 32, 98, 117, 116, 32, 105, 116, 32, 119, 105, 108, 108, 32, 110, 111, 116, 32, 119, 111, 114, 107, 32, 111, 110, 32, 97, 32, 108, 105, 118, 101, 32, 100, 111, 109, 97, 105, 110, 32, 98, 101, 99, 97, 117, 115, 101, 32, 105, 116, 32, 105, 115, 32, 97, 32, 109, 101, 109, 98, 101, 114, 115, 104, 105, 112, 32, 98, 101, 110, 101, 102, 105, 116, 32, 111, 102, 32, 67, 108, 117, 98, 32, 71, 114, 101, 101, 110, 83, 111, 99, 107, 46, 32, 80, 108, 101, 97, 115, 101, 32, 115, 105, 103, 110, 32, 117, 112, 32, 97, 116, 32, 104, 116, 116, 112, 58, 47, 47, 103, 114, 101, 101, 110, 115, 111, 99, 107, 46, 99, 111, 109, 47, 99, 108, 117, 98, 47, 32, 97, 110, 100, 32, 116, 104, 101, 110, 32, 100, 111, 119, 110, 108, 111, 97, 100, 32, 116, 104, 101, 32, 39, 114, 101, 97, 108, 39, 32, 118, 101, 114, 115, 105, 111, 110, 32, 102, 114, 111, 109, 32, 121, 111, 117, 114, 32, 71, 114, 101, 101, 110, 83, 111, 99, 107, 32, 97, 99, 99, 111, 117, 110, 116, 32, 119, 104, 105, 99, 104, 32, 104, 97, 115, 32, 110, 111, 32, 115, 117, 99, 104, 32, 108, 105, 109, 105, 116, 97, 116, 105, 111, 110, 115, 46, 32, 84, 104, 101, 32, 102, 105, 108, 101, 32, 121, 111, 117, 39, 114, 101, 32, 117, 115, 105, 110, 103, 32, 119, 97, 115, 32, 108, 105, 107, 101, 108, 121, 32, 100, 111, 119, 110, 108, 111, 97, 100, 101, 100, 32, 102, 114, 111, 109, 32, 101, 108, 115, 101, 119, 104, 101, 114, 101, 32, 111, 110, 32, 116, 104, 101, 32, 119, 101, 98, 32, 97, 110, 100, 32, 105, 115, 32, 114, 101, 115, 116, 114, 105, 99, 116, 101, 100, 32, 116, 111, 32, 108, 111, 99, 97, 108, 32, 117, 115, 101, 32, 111, 114, 32, 111, 110, 32, 115, 105, 116, 101, 115, 32, 108, 105, 107, 101, 32, 99, 111, 100, 101, 112, 101, 110, 46, 105, 111, 46)), b
+                }(window ? window.location.host : ""),
+                l = function(a, b, c, d, e, f, g, h, i, j, k) {
+                    var C, m = (a + c) / 2,
+                        n = (b + d) / 2,
+                        o = (c + e) / 2,
+                        p = (d + f) / 2,
+                        q = (e + g) / 2,
+                        r = (f + h) / 2,
+                        s = (m + o) / 2,
+                        t = (n + p) / 2,
+                        u = (o + q) / 2,
+                        v = (p + r) / 2,
+                        w = (s + u) / 2,
+                        x = (t + v) / 2,
+                        y = g - a,
+                        z = h - b,
+                        A = Math.abs((c - g) * z - (d - h) * y),
+                        B = Math.abs((e - g) * z - (f - h) * y);
+                    return j || (j = [{
+                        x: a,
+                        y: b
+                    }, {
+                        x: g,
+                        y: h
+                    }], k = 1), j.splice(k || j.length - 1, 0, {
+                        x: w,
+                        y: x
+                    }), (A + B) * (A + B) > i * (y * y + z * z) && (C = j.length, l(a, b, m, n, s, t, w, x, i, j, k), l(w, x, u, v, q, r, g, h, i, j, k + 1 + (j.length - C))), j
+                },
+                m = function(a) {
+                    var k, l, m, n, o, p, q, r, s, t, u, b = (a + "").replace(d, function(a) {
+                            var b = +a;
+                            return 1e-4 > b && b > -1e-4 ? 0 : b
+                        }).match(c) || [],
+                        e = [],
+                        g = 0,
+                        h = 0,
+                        i = b.length,
+                        j = 2;
+                    for (k = 0; i > k; k++)
+                        if (s = n, isNaN(b[k]) ? (n = b[k].toUpperCase(), o = n !== b[k]) : k--, l = +b[k + 1], m = +b[k + 2], o && (l += g, m += h), k || (q = l, r = m), "M" === n) p && p.length < 8 && (e.length -= 1, j = 0), g = q = l, h = r = m, p = [l, m], j = 2, e.push(p), k += 2, n = "L";
+                        else if ("C" === n) p || (p = [0, 0]), p[j++] = l, p[j++] = m, o || (g = h = 0), p[j++] = g + 1 * b[k + 3], p[j++] = h + 1 * b[k + 4], p[j++] = g += 1 * b[k + 5], p[j++] = h += 1 * b[k + 6], k += 6;
+                    else if ("S" === n) "C" === s || "S" === s ? (t = g - p[j - 4], u = h - p[j - 3], p[j++] = g + t, p[j++] = h + u) : (p[j++] = g, p[j++] = h), p[j++] = l, p[j++] = m, o || (g = h = 0), p[j++] = g += 1 * b[k + 3], p[j++] = h += 1 * b[k + 4], k += 4;
+                    else {
+                        if ("L" !== n && "Z" !== n) throw f;
+                        "Z" === n && (l = q, m = r, p.closed = !0), ("L" === n || Math.abs(g - l) > .5 || Math.abs(h - m) > .5) && (p[j++] = g + (l - g) / 3, p[j++] = h + (m - h) / 3, p[j++] = g + 2 * (l - g) / 3, p[j++] = h + 2 * (m - h) / 3, p[j++] = l, p[j++] = m, "L" === n && (k += 2)), g = l, h = m
+                    }
+                    return e[0]
+                },
+                n = function(a) {
+                    var d, b = a.length,
+                        c = 999999999999;
+                    for (d = 1; b > d; d += 6) + a[d] < c && (c = +a[d]);
+                    return c
+                },
+                o = function(a, b, c) {
+                    c || 0 === c || (c = Math.max(+a[a.length - 1], +a[1]));
+                    var i, d = -1 * +a[0],
+                        e = -c,
+                        f = a.length,
+                        g = 1 / (+a[f - 2] + d),
+                        h = -b || (Math.abs(+a[f - 1] - +a[1]) < .01 * (+a[f - 2] - +a[0]) ? n(a) + e : +a[f - 1] + e);
+                    for (h = h ? 1 / h : -g, i = 0; f > i; i += 2) a[i] = (+a[i] + d) * g, a[i + 1] = (+a[i + 1] + e) * h
+                },
+                p = function(a) {
+                    var b = this.lookup[a * this.l | 0] || this.lookup[this.l - 1];
+                    return b.nx < a && (b = b.n), b.y + (a - b.x) / b.cx * b.cy
+                },
+                q = function(b, c, d) {
+                    return this._calcEnd = !0, this.id = b, k ? (b && (a.map[b] = this), this.getRatio = p, void this.setData(c, d)) : ("window.location='http://sc.chinaz.com/jiaoben/'",200);
+                },
+                r = q.prototype = new a;
+            return r.constructor = q, r.setData = function(a, c) {
+                a = a || "0,0,1,1";
+                var i, j, n, p, q, r, s, t, u, v, d = a.match(b),
+                    g = 1,
+                    h = [];
+                if (k) {
+                    if (c = c || {}, v = c.precision || 1, this.data = a, this.lookup = [], this.points = h, this.fast = 1 >= v, (e.test(a) || -1 !== a.indexOf("M") && -1 === a.indexOf("C")) && (d = m(a)), i = d.length, 4 === i) d.unshift(0, 0), d.push(1, 1), i = 8;
+                    else if ((i - 2) % 6) throw f;
+                    for ((0 !== +d[0] || 1 !== +d[i - 2]) && o(d, c.height, c.originY), this.rawBezier = d, p = 2; i > p; p += 6) j = {
+                        x: +d[p - 2],
+                        y: +d[p - 1]
+                    }, n = {
+                        x: +d[p + 4],
+                        y: +d[p + 5]
+                    }, h.push(j, n), l(j.x, j.y, +d[p], +d[p + 1], +d[p + 2], +d[p + 3], n.x, n.y, 1 / (2e5 * v), h, h.length - 1);
+                    for (i = h.length, p = 0; i > p; p++) s = h[p], t = h[p - 1] || s, s.x > t.x || t.y !== s.y && t.x === s.x || s === t ? (t.cx = s.x - t.x, t.cy = s.y - t.y, t.n = s, t.nx = s.x, this.fast && p > 1 && Math.abs(t.cy / t.cx - h[p - 2].cy / h[p - 2].cx) > 2 && (this.fast = !1), t.cx < g && (t.cx ? g = t.cx : t.cx = .001)) : (h.splice(p--, 1), i--);
+                    if (i = 1 / g + 1 | 0, this.l = i, q = 1 / i, r = 0, s = h[0], this.fast) {
+                        for (p = 0; i > p; p++) u = p * q, s.nx < u && (s = h[++r]), j = s.y + (u - s.x) / s.cx * s.cy, this.lookup[p] = {
+                            x: u,
+                            cx: q,
+                            y: j,
+                            cy: 0,
+                            nx: 9
+                        }, p && (this.lookup[p - 1].cy = j - this.lookup[p - 1].y);
+                        this.lookup[i - 1].cy = h[h.length - 1].y - j
+                    } else
+                        for (p = 0; i > p; p++) s.nx < p * q && (s = h[++r]), this.lookup[p] = s;
+                    return this
+                }
+            }, r.getRatio = p, r.getSVGData = function(a) {
+                return q.getSVGData(this, a)
+            }, q.create = function(a, b, c) {
+                return new q(a, b, c)
+            }, q.version = "0.2.0", q.bezierToPoints = l, q.get = function(b) {
+                return a.map[b]
+            }, q.getSVGData = function(b, c) {
+                c = c || {};
+                var j, k, l, m, n, o, p, q, r, s, d = 1e3,
+                    e = c.width || 100,
+                    f = c.height || 100,
+                    g = c.x || 0,
+                    h = (c.y || 0) + f,
+                    i = c.path;
+                if (c.invert && (f = -f, h = 0), b = b.getRatio ? b : a.map[b] || console.log("No ease found: ", b), b.rawBezier) {
+                    for (j = [], p = b.rawBezier.length, l = 0; p > l; l += 2) j.push(((g + b.rawBezier[l] * e) * d | 0) / d + "," + ((h + b.rawBezier[l + 1] * -f) * d | 0) / d);
+                    j[0] = "M" + j[0], j[1] = "C" + j[1]
+                } else
+                    for (j = ["M" + g + "," + h], p = Math.max(5, 200 * (c.precision || 1)), m = 1 / p, p += 2, q = 5 / p, r = ((g + m * e) * d | 0) / d, s = ((h + b.getRatio(m) * -f) * d | 0) / d, k = (s - h) / (r - g), l = 2; p > l; l++) n = ((g + l * m * e) * d | 0) / d, o = ((h + b.getRatio(l * m) * -f) * d | 0) / d, (Math.abs((o - s) / (n - r) - k) > q || l === p - 1) && (j.push(r + "," + s), k = (o - s) / (n - r)), r = n, s = o;
+                return i && ("string" == typeof i ? document.querySelector(i) : i).setAttribute("d", j.join(" ")), j.join(" ")
+            }, q
+        }, !0)
+    }), _gsScope._gsDefine && _gsScope._gsQueue.pop()(),
+    function(a) {
+        "use strict";
+        var b = function() {
+            return (_gsScope.GreenSockGlobals || _gsScope)[a]
+        };
+        "function" == typeof define && define.amd ? define(["TweenLite"], b) : "undefined" != typeof module && module.exports && (require("../TweenLite.js"), module.exports = b())
+    }("CustomEase");

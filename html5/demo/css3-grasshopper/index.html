@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <title>纯CSS3绘制可爱的蚱蜢 还有眨眼动画DEMO演示</title>
+
+    <style>
+body{
+  margin: 0;
+  padding: 0;
+  background: #e4ffdc;
+}
+
+.wrapper{
+  position: absolute;
+  width: 270px;
+  height: 100px;
+  top: calc(50% - 30px);
+  left: calc(50% - 90px);
+}
+
+.body{
+  position: absolute;
+  top: 15px;
+  left: 40px;
+  width: 200px;
+  height: 60px;
+  z-index: 1;
+  background: #32983e;
+  transform: skew(-25deg);
+}
+
+.body .eye{
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  z-index: 1;
+  width: 12px;
+  height: 12px;
+  border-radius: 360px;
+  background: #006837;
+  animation: eye 2.5s 1s linear infinite;
+}
+
+@keyframes eye{
+  0%{
+    width: 12px;
+    height: 12px;
+    border-radius: 360px;
+  }
+  5%{
+    width: 12px;
+    height: 1px;
+    border-radius: 0px;
+  }
+  10%{
+    width: 12px;
+    height: 12px;
+    border-radius: 360px;
+  }
+}
+
+.body .back{
+  position: absolute;
+  left: -90px;
+  width: 220px;
+  height: 60px;
+  border-bottom-left-radius: 20px;
+  background: #32983e;
+  z-index: 0;
+  transform: skew(55deg);
+}
+
+.body .wing{
+  position: absolute;
+  top: -3px;
+  left: 25px;
+  width: 120px;
+  height: 60px;
+  background: rgba(131,195,63,0.8);
+  transform: rotate(3deg);
+  z-index: 4;
+  border-bottom-left-radius: 50px;
+}
+
+.body .wing:before{
+  content: '';
+  position: absolute;
+  left: -160px;
+  width: 205px;
+  height: 60px;
+  border-bottom-left-radius: 400px;
+  background: rgba(131,195,63,0.8);
+  transform: skew(55deg);
+}
+
+.body .shading{
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  background: #39b549;
+  height: 50px;
+  width: 200px;
+  border-bottom-right-radius: 170px;
+  border-bottom-left-radius: 400px;
+}
+
+.shading_back{
+  position: absolute;
+  top: 0px;
+  left: -95px;
+  background: #39b549;
+  height: 50px;
+  width: 120px;
+  border-bottom-left-radius: 100px;
+  transform: skew(55deg);
+  z-index: 2;
+  overflow: hidden;
+}
+
+.shading_back .stripe1{
+  position: absolute;
+  top: -50px;
+  left: -16px;
+  width: 4px;
+  height: 200px;
+  background: #016a37;
+  transform: skew(-55deg);
+}
+
+.shading_back .stripe2{
+  position: absolute;
+  top: -50px;
+  left: 12px;
+  width: 6px;
+  height: 200px;
+  background: #016a37;
+  transform: skew(-50deg);
+}
+
+.shading_back .stripe3{
+  position: absolute;
+  top: -50px;
+  left: 40px;
+  width: 9px;
+  height: 200px;
+  background: #016a37;
+  transform: skew(-45deg);
+}
+
+.shading_back .stripe4{
+  position: absolute;
+  top: -50px;
+  left: 65px;
+  width: 9px;
+  height: 200px;
+  background: #016a37;
+  transform: skew(-40deg);
+}
+
+.leg{
+  position: absolute;
+  top: -10px;
+  left: -50px;
+  width: 200px;
+  height: 40px;
+  z-index: 3;
+  overflow: hidden;
+  transform: rotate(40deg);
+}
+
+.leg .main{
+  position: absolute;
+  top: 1px;
+  left: 5px;
+  background: #009245;
+  transform: skew(-30deg);
+  width: 200px;
+  height: 10px;
+}
+
+.leg .curve1{
+  position: absolute;
+  top: 10px;
+  left: 245px;
+  background: #009245;
+  transform: skew(80deg);
+  border-bottom-left-radius: 80px;
+  width: 200px;
+  height: 20px;
+  border-bottom: 65px solid #007a3a;
+}
+
+.leg_part2{
+  position: absolute;
+  top: -68px;
+  left: 18px;
+  width: 6px;
+  height: 175px;
+  transform: rotate(-25deg);
+  z-index: 6;
+  background: #009245;
+}
+
+.foot{
+  position: absolute;
+  z-index: 1;
+  left: 25px;
+  top: 71px;
+  width: 0; 
+  height: 0; 
+  transform: rotate(-102.5deg);
+  border-top: 45px solid transparent;
+  border-bottom: 10px solid transparent; 
+  border-right:10px solid #006635; 
+}
+
+.foot:after{
+  content:'';
+  position: absolute;
+  right: -11px;
+  bottom: -11px;
+  height: 12px;
+  width: 13px;
+  background: #006635;
+  border-top-left-radius: 100px;
+  transform: rotate(102.5deg) skew(25deg);
+}
+
+.leg2{
+  position: absolute;
+  top: -10px;
+  left: -70px;
+  width: 200px;
+  height: 40px;
+  overflow: hidden;
+  z-index: 0;
+  transform: rotate(38deg);
+}
+
+.leg2 .main{
+  position: absolute;
+  top: 1px;
+  left: 5px;
+  background: #39b549;
+  transform: skew(-30deg);
+  width: 200px;
+  height: 10px;
+}
+
+.leg2 .curve1{
+  position: absolute;
+  top: 10px;
+  left: 245px;
+  background: #39b549;
+  transform: skew(80deg);
+  border-bottom-left-radius: 80px;
+  width: 200px;
+  height: 20px;
+  border-bottom: 65px solid #32983d;
+}
+
+.leg_part3{
+  position: absolute;
+  top: -70px;
+  left: 4px;
+  width: 6px;
+  height: 175px;
+  transform: rotate(-31deg);
+  z-index: 0;
+  background: #39b549;
+}
+
+.small_leg{
+  position: absolute;
+  top: 45px;
+  left: 140px;
+  width: 9px;
+  height: 50px;
+  z-index: 7;
+  transform: rotate(-60deg);
+  background: #006837;
+}
+
+.small_leg2{
+  transform: rotate(60deg) scaleX(-1);
+  left: 180px;
+}
+
+.small_leg:after{
+  content: '';
+  position: absolute;
+  left: -50px;
+  top: 0px;
+  width: 0; 
+  height: 0; 
+  border-left: 50px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid #006837;
+}
+
+.a{
+  position: absolute;
+  top: -70px;
+  left: 24px;
+  width: 240px;
+  height: 100px;
+  border-radius: 360px;
+  background: #3cb64b;
+  z-index: 0;
+}
+
+.a:before{
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: -3px;
+  width: 240px;
+  height: 100px;
+  border-radius: 360px;
+  background: #e4ffdc;
+  z-index: 0;
+}
+
+.b{
+  position: absolute;
+  top: -60px;
+  left: 20px;
+  width: 240px;
+  height: 90px;
+  border-radius: 360px;
+  background: #3cb64b;
+  z-index: 0;
+}
+
+.b:before{
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: -3px;
+  width: 240px;
+  height: 90px;
+  border-radius: 360px;
+  background: #e4ffdc;
+  z-index: 0;
+}
+
+.circle{
+  position: absolute;
+  top: -100px;
+  left: -90px;
+  z-index: -1;
+  width: 400px;
+  height: 400px;
+  border-radius: 400px;
+  transform: rotateX(85deg);
+  background: rgba(0,0,0,0.2);
+}
+
+.credits{
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+  font-family: Helvetica, Arial;
+  color: #39b549;
+  background: rgba(131,195,63,0.4);
+  border-top-right-radius: 6px;
+  padding: 5px 10px 5px 10px;
+}
+
+.credits a{
+  text-decoration: none;
+  color: #006837;
+}
+</style>
+
+    <script src="js/prefixfree.min.js"></script>
+
+</head>
+
+<body>
+
+  <div class="wrapper">
+  <div class="a"></div>
+  <div class="b"></div>
+  <div class="body">
+    <div class="back"></div>
+    <div class="shading">
+      <div class="shading_back">
+        <div class="stripe1"></div>
+        <div class="stripe2"></div>
+        <div class="stripe3"></div>
+        <div class="stripe4"></div>
+      </div>
+    </div>
+    <div class="eye"></div>
+    <div class="wing"></div>
+  </div>
+  <div class="leg">
+    <div class="curve1"></div>
+    <div class="main"></div>
+  </div>
+  <div class="leg_part2"></div>
+  <div class="foot"></div>
+  <div class="leg2">
+    <div class="curve1"></div>
+    <div class="main"></div>
+  </div>
+  <div class="leg_part3"></div>
+  <div class="small_leg"></div>
+  <div class="small_leg small_leg2"></div>
+  <div class="circle"></div>
+</div>
+
+<div style="text-align:center;clear:both">
+<script src="/gg_bd_ad_720x90.js" type="text/javascript"></script>
+<script src="/follow.js" type="text/javascript"></script>
+</div>
+  <script src='js/jquery.js'></script>
+
+</body>
+
+</html>

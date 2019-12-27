@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+<meta charset="UTF-8">
+<title>HTML5 Canvas和SVG实现的五彩万花筒动画DEMO演示</title>
+
+<style>
+html,
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+  animation: torn 46s cubic-bezier(0.01, 1.099, 0.1, -6.99) infinite alternate;
+}
+
+html {
+  mix-blend-mode: difference;
+  z-index: 180;
+  background: yellow;
+}
+
+body {
+  z-index: 60;
+  background: #4d1500;
+}
+
+.container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.canvas {
+  position: absolute;
+  z-index: 20;
+  animation: turn 16s cubic-bezier(1, -3.099, 1, 2.99) infinite alternate;
+  mix-blend-mode: difference;
+}
+
+.canvas--shape {
+  z-index: 20;
+  opacity: 0;
+}
+
+@keyframes turn {
+  to {
+    transform: rotate(380deg);
+    filter: hue-rotate(1126.5262274987deg);
+    z-index: -15;
+  }
+}
+@keyframes torn {
+  to {
+    filter: hue-rotate(60deg);
+    z-index: -5;
+    background: rgba(43, 171, 107, 0.9);
+  }
+}
+@keyframes tern {
+  to {
+    mix-blend-mode: color-burn;
+    filter: hue-rotate(260deg);
+    z-index: -1;
+    background: rgba(255, 215, 0, 0.5);
+  }
+}
+@keyframes tirn {
+  to {
+    mix-blend-mode: xor;
+    filter: hue-rotate(260deg);
+    z-index: 2;
+  }
+}
+#paper {
+  position: absolute;
+  display: block;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  animation: tirn 16s cubic-bezier(1, -2.099, 0.001, 1.99) infinite;
+}
+
+#poper {
+  position: absolute;
+  display: block;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
+  z-index: -3;
+  animation: tern 20s cubic-bezier(1, 4.099, 1, -1.99) infinite;
+}
+
+svg {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  left: 0;
+  top: 0;
+}
+
+</style>
+
+<!--可无视-->
+<script src="js/prefixfree.min.js"></script>
+
+</head>
+
+<body>
+
+<div class="container">
+	<canvas class="canvas canvas--shape js-canvas" width="500" height="500"></canvas>
+	<canvas class="canvas js-canvas-2" width="500" height="500"></canvas>
+</div>
+
+<svg id="paper"></svg>
+<svg id="poper"></svg>
+
+<script src='js/snap.svg-min.js'></script>
+<script  src="js/index.js"></script>
+
+
+</body>
+</html>

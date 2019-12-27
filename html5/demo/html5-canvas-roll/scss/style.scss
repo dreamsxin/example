@@ -1,0 +1,88 @@
+@import "compass/css3";
+
+$ri: 2em;
+$c: cyan;
+
+html, body { height: 100%; }
+
+body {
+  overflow: hidden;
+  margin: 0;
+  perspective: 160em;
+  perspective-origin: 50% 0%;
+  background: black;
+  color: $c;
+}
+
+.scene {
+  &, * {
+    box-sizing: border-box;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform-style: preserve-3d;
+  }
+  transform: translate(4em, 10em) rotateX(75deg) rotate(-22.5deg)
+}
+
+.assembly {
+  @for $i from 1 to 15 {
+    $ca: 360deg/($i + 1);
+    $l: 2*$ri*(if($i != 1, tan($ca/2), 2));
+    $rc: $ri/(if($i != 1, cos($ca/2), .5));
+    &:nth-child(#{$i}) {
+      transform: translate(0, -3.5*$i*$ri);
+      animation: slide#{$i} 1s ease-in-out infinite;
+      @at-root {
+        @keyframes slide#{$i} {
+          to { transform: translate($l, -3.5*$i*$ri); }
+        }
+      }
+      .strip { background-size: $l 100%; }
+      .roller {
+        transform: rotateY($ca/2) translateZ($rc) rotateY(-$ca/2);
+        animation: inherit;
+        animation-name: roll#{$i};
+        @at-root {
+          @keyframes roll#{$i} {
+            to {
+              transform: rotateY(-$ca/2) 
+                         translateZ($rc) rotateY(-$ca/2);
+            }
+          }
+        }
+      }
+      .side {
+        margin: -$ri (-$l/2);
+        width: $l; height: 2*$ri;
+        @for $j from 0 to $i + 1 {
+          &:nth-child(#{$j + 1}) {
+            transform: rotateY($j*$ca) 
+                       if($i != 1, translateZ(-$ri), ());
+          }
+        }
+      }
+    }
+  }
+}
+
+.strip {
+  margin: -$ri -1px;
+  width: 120em; height: 2*$ri;
+  border: solid .125em $c;
+  background-image: 
+    linear-gradient(90deg, $c .125em, transparent 0);
+  background-position: -1px 0;
+}
+.side {
+  border: solid .125em $c;
+  &:before, &:after {
+    position: absolute;
+    left: 0;
+    width: inherit; height: .125em;
+    background: $c;
+    transform: rotateX(90deg);
+    content: '';
+  }
+  &:before { top: -1px; }
+  &:after { bottom: -1px; }
+}

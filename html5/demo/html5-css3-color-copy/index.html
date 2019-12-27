@@ -1,0 +1,1091 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>HTML5 CSS3颜色选取并复制十六进制值DEMO演示</title>
+
+<style>
+html {
+  box-sizing: border-box;
+  height: 100%;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *:before,
+  *:after {
+    -webkit-animation-duration: 0ms !important;
+            animation-duration: 0ms !important;
+    transition-duration: 0ms !important;
+  }
+}
+
+body {
+  height: 100%;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+html {
+  background-color: #b0bec5;
+  font-family: "Roboto", sans-serif;
+  font-weight: 500;
+}
+
+.container {
+  padding: 1em;
+}
+
+.material-color-picker {
+  display: flex;
+  width: 32em;
+  margin: 0 auto;
+  background-color: white;
+  border: 1px solid #78909c;
+  border-radius: 0.5em;
+  box-shadow: 0 1em 8em rgba(0, 0, 0, 0.35);
+}
+.material-color-picker__left-panel {
+  z-index: 1;
+}
+.material-color-picker__right-panel {
+  position: relative;
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.color-selector {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  padding: 1em 0;
+  border-right: 0.25em solid #E0E0E0;
+}
+.color-selector input[type='radio'] {
+  display: none;
+}
+.color-selector label {
+  position: relative;
+  display: inline-block;
+  padding: 0.5em 1.5em;
+  cursor: pointer;
+}
+.color-selector label:before {
+  content: '';
+  display: inline-block;
+  vertical-align: middle;
+  padding: 0.75em;
+  background-color: currentColor;
+  border-radius: 50%;
+}
+.color-selector label:after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+  padding: 0.5em;
+  border: 0.25em solid;
+  border-radius: 50%;
+  transition: padding 250ms;
+}
+.color-selector input[type='radio']:checked + label:after {
+  padding: 1em;
+}
+
+.color-palette-wrapper {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  -webkit-transform: translateX(-100%);
+          transform: translateX(-100%);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5em;
+}
+.color-palette-wrapper.js-active {
+  -webkit-transform: translateX(0);
+          transform: translateX(0);
+}
+
+.color-palette-header {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  margin-bottom: 1em;
+  font-weight: 400;
+  color: #757575;
+}
+
+.color-palette {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+.color-palette__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-grow: 1;
+  margin: 0.25em 0;
+  padding: 0 1em;
+  border-radius: 0.25em;
+  font-family: "Roboto Mono", monospace;
+  transition: -webkit-transform 250ms;
+  transition: transform 250ms;
+  transition: transform 250ms, -webkit-transform 250ms;
+  cursor: pointer;
+}
+.color-palette__item:hover {
+  -webkit-transform: scale(1.05);
+          transform: scale(1.05);
+}
+
+.copied-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, 0);
+          transform: translate(-50%, 0);
+  opacity: 0;
+  transition: all 250ms;
+}
+.copied-indicator.js-copied {
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+  opacity: 0.75;
+}
+</style>
+
+</head>
+<body>
+
+<script src="js/knockout-min.js"></script>
+<script src="js/clipboard.min.js"></script>
+<div style="text-align:center;clear:both;">
+<script src="/gg_bd_ad_720x90.js" type="text/javascript"></script>
+<script src="/follow.js" type="text/javascript"></script>
+</div>
+<div class="container">
+    <div class="material-color-picker">
+        <div class="material-color-picker__left-panel">
+            <ol class="color-selector" data-bind="foreach: materialColors">
+                <li>
+                    <input name="material-color" type="radio" data-bind="attr: { id: 'materialColor' + $index() }, checked: selectedColor, value: color" >
+                    <label data-bind="attr: { for: 'materialColor' + $index(), title: color }, style: { 'color': $data.variations[4].hex }"></label>
+                </li>
+            </ol>
+        </div>
+        <div class="material-color-picker__right-panel" data-bind="foreach: materialColors">
+            <div class="color-palette-wrapper" data-bind="css: { 'js-active': selectedColor() === color }">
+                <h2 class="color-palette-header" data-bind="text: color"></h2>
+                <ol class="color-palette" data-bind="foreach: variations">
+                    <li id="clipboardItem" class="color-palette__item" data-bind="attr: { 'data-clipboard-text': hex }, style: { 'background-color': hex }">
+                        <span data-bind="text: weight"></span>
+                        <span data-bind="text: hex"></span>
+                        <span class="copied-indicator" data-bind="css: { 'js-copied': copiedHex() === hex }">Color copied!</span>
+                    </li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+var copiedHex = ko.observable();
+var clipboard = new Clipboard('#clipboardItem');
+
+clipboard.on('success', function(el) {
+    console.clear();
+    console.info('Action:', el.action);
+    console.info('Text:', el.text);
+    console.info('Trigger:', el.trigger);
+    el.clearSelection();
+    
+    copiedHex(el.text);
+});
+
+///
+
+var selectedColor = ko.observable("Red"); // lazy
+
+ko.applyBindings({
+    materialColors: [
+        {
+            color: "Red",
+            variations: [
+                {
+                    weight: 50,
+                    hex: "#FFEBEE"
+                },
+                {
+                    weight: 100,
+                    hex: "#FFCDD2"
+                },
+                {
+                    weight: 200,
+                    hex: "#EF9A9A"
+                },
+                {
+                    weight: 300,
+                    hex: "#E57373"
+                },
+                {
+                    weight: 400,
+                    hex: "#EF5350"
+                },
+                {
+                    weight: 500,
+                    hex: "#F44336"
+                },
+                {
+                    weight: 600,
+                    hex: "#E53935"
+                },
+                {
+                    weight: 700,
+                    hex: "#D32F2F"
+                },
+                {
+                    weight: 800,
+                    hex: "#C62828"
+                },
+                {
+                    weight: 900,
+                    hex: "#B71C1C"
+                }
+            ]
+        },
+        {
+            color: "Pink",
+            variations: [
+                {
+                    weight: 50,
+                    hex: "#FCE4EC"
+                },
+                {
+                    weight: 100,
+                    hex: "#F8BBD0"
+                },
+                {
+                    weight: 200,
+                    hex: "#F48FB1"
+                },
+                {
+                    weight: 300,
+                    hex: "#F06292"
+                },
+                {
+                    weight: 400,
+                    hex: "#EC407A"
+                },
+                {
+                    weight: 500,
+                    hex: "#E91E63"
+                },
+                {
+                    weight: 600,
+                    hex: "#D81B60"
+                },
+                {
+                    weight: 700,
+                    hex: "#C2185B"
+                },
+                {
+                    weight: 800,
+                    hex: "#AD1457"
+                },
+                {
+                    weight: 900,
+                    hex: "#880E4F"
+                }
+            ]
+        },
+        {
+            color: "Purple",
+            variations: [
+                {
+                    weight: 50,
+                    hex: "#F3E5F5"
+                },
+                {
+                    weight: 100,
+                    hex: "#E1BEE7"
+                },
+                {
+                    weight: 200,
+                    hex: "#CE93D8"
+                },
+                {
+                    weight: 300,
+                    hex: "#BA68C8"
+                },
+                {
+                    weight: 400,
+                    hex: "#AB47BC"
+                },
+                {
+                    weight: 500,
+                    hex: "#9C27B0"
+                },
+                {
+                    weight: 600,
+                    hex: "#8E24AA"
+                },
+                {
+                    weight: 700,
+                    hex: "#7B1FA2"
+                },
+                {
+                    weight: 800,
+                    hex: "#6A1B9A"
+                },
+                {
+                    weight: 900,
+                    hex: "#4A148C"
+                }
+            ]
+        },
+        {
+            color: "Deep Purple",
+            variations: [
+                {
+                    weight: 50,
+                    hex: "#EDE7F6"
+                },
+                {
+                    weight: 100,
+                    hex: "#D1C4E9"
+                },
+                {
+                    weight: 200,
+                    hex: "#B39DDB"
+                },
+                {
+                    weight: 300,
+                    hex: "#9575CD"
+                },
+                {
+                    weight: 400,
+                    hex: "#7E57C2"
+                },
+                {
+                    weight: 500,
+                    hex: "#673AB7"
+                },
+                {
+                    weight: 600,
+                    hex: "#5E35B1"
+                },
+                {
+                    weight: 700,
+                    hex: "#512DA8"
+                },
+                {
+                    weight: 800,
+                    hex: "#4527A0"
+                },
+                {
+                    weight: 900,
+                    hex: "#311B92"
+                }
+            ]
+        },
+        {
+            color: "Indigo",
+            variations: [
+                {
+                    weight: 50,
+                    hex: "#E8EAF6"
+                },
+                {
+                    weight: 100,
+                    hex: "#C5CAE9"
+                },
+                {
+                    weight: 200,
+                    hex: "#9FA8DA"
+                },
+                {
+                    weight: 300,
+                    hex: "#7986CB"
+                },
+                {
+                    weight: 400,
+                    hex: "#5C6BC0"
+                },
+                {
+                    weight: 500,
+                    hex: "#3F51B5"
+                },
+                {
+                    weight: 600,
+                    hex: "#3949AB"
+                },
+                {
+                    weight: 700,
+                    hex: "#303F9F"
+                },
+                {
+                    weight: 800,
+                    hex: "#283593"
+                },
+                {
+                    weight: 900,
+                    hex: "#1A237E"
+                }
+            ]
+        },
+        {
+            color: "Blue",
+            variations: [
+                {
+                    weight: 50,
+                    hex: "#E3F2FD"
+                },
+                {
+                    weight: 100,
+                    hex: "#BBDEFB"
+                },
+                {
+                    weight: 200,
+                    hex: "#90CAF9"
+                },
+                {
+                    weight: 300,
+                    hex: "#64B5F6"
+                },
+                {
+                    weight: 400,
+                    hex: "#42A5F5"
+                },
+                {
+                    weight: 500,
+                    hex: "#2196F3"
+                },
+                {
+                    weight: 600,
+                    hex: "#1E88E5"
+                },
+                {
+                    weight: 700,
+                    hex: "#1976D2"
+                },
+                {
+                    weight: 800,
+                    hex: "#1565C0"
+                },
+                {
+                    weight: 900,
+                    hex: "#0D47A1"
+                }
+            ]
+        },
+        {
+            color: "Light Blue",
+            variations: [
+                {
+                    weight: 50,
+                    hex: "#E1F5FE"
+                },
+                {
+                    weight: 100,
+                    hex: "#B3E5FC"
+                },
+                {
+                    weight: 200,
+                    hex: "#81D4FA"
+                },
+                {
+                    weight: 300,
+                    hex: "#4FC3F7"
+                },
+                {
+                    weight: 400,
+                    hex: "#29B6F6"
+                },
+                {
+                    weight: 500,
+                    hex: "#03A9F4"
+                },
+                {
+                    weight: 600,
+                    hex: "#039BE5"
+                },
+                {
+                    weight: 700,
+                    hex: "#0288D1"
+                },
+                {
+                    weight: 800,
+                    hex: "#0277BD"
+                },
+                {
+                    weight: 900,
+                    hex: "#01579B"
+                }
+            ]
+        },
+        {
+            color: "Cyan",
+            variations: [
+                {
+                    weight: 50,
+                    hex: "#E0F7FA"
+                },
+                {
+                    weight: 100,
+                    hex: "#B2EBF2"
+                },
+                {
+                    weight: 200,
+                    hex: "#80DEEA"
+                },
+                {
+                    weight: 300,
+                    hex: "#4DD0E1"
+                },
+                {
+                    weight: 400,
+                    hex: "#26C6DA"
+                },
+                {
+                    weight: 500,
+                    hex: "#00BCD4"
+                },
+                {
+                    weight: 600,
+                    hex: "#00ACC1"
+                },
+                {
+                    weight: 700,
+                    hex: "#0097A7"
+                },
+                {
+                    weight: 800,
+                    hex: "#00838F"
+                },
+                {
+                    weight: 900,
+                    hex: "#006064"
+                }
+            ]
+        },
+        {
+            color: "Teal",
+            variations: [
+                {
+                    weight: 50,
+                    hex: "#E0F2F1"
+                },
+                {
+                    weight: 100,
+                    hex: "#B2DFDB"
+                },
+                {
+                    weight: 200,
+                    hex: "#80CBC4"
+                },
+                {
+                    weight: 300,
+                    hex: "#4DB6AC"
+                },
+                {
+                    weight: 400,
+                    hex: "#26A69A"
+                },
+                {
+                    weight: 500,
+                    hex: "#009688"
+                },
+                {
+                    weight: 600,
+                    hex: "#00897B"
+                },
+                {
+                    weight: 700,
+                    hex: "#00796B"
+                },
+                {
+                    weight: 800,
+                    hex: "#00695C"
+                },
+                {
+                    weight: 900,
+                    hex: "#004D40"
+                }
+            ]
+        },
+        {
+            color: "Green",
+            variations: [
+                {
+                    weight: 50,
+                    hex: "#E8F5E9"
+                },
+                {
+                    weight: 100,
+                    hex: "#C8E6C9"
+                },
+                {
+                    weight: 200,
+                    hex: "#A5D6A7"
+                },
+                {
+                    weight: 300,
+                    hex: "#81C784"
+                },
+                {
+                    weight: 400,
+                    hex: "#66BB6A"
+                },
+                {
+                    weight: 500,
+                    hex: "#4CAF50"
+                },
+                {
+                    weight: 600,
+                    hex: "#43A047"
+                },
+                {
+                    weight: 700,
+                    hex: "#388E3C"
+                },
+                {
+                    weight: 800,
+                    hex: "#2E7D32"
+                },
+                {
+                    weight: 900,
+                    hex: "#1B5E20"
+                }
+            ]
+        },
+        {
+            color: "Light Green",
+            variations: [
+                {
+                    weight: 50,
+                    hex: "#F1F8E9"
+                },
+                {
+                    weight: 100,
+                    hex: "#DCEDC8"
+                },
+                {
+                    weight: 200,
+                    hex: "#C5E1A5"
+                },
+                {
+                    weight: 300,
+                    hex: "#AED581"
+                },
+                {
+                    weight: 400,
+                    hex: "#9CCC65"
+                },
+                {
+                    weight: 500,
+                    hex: "#8BC34A"
+                },
+                {
+                    weight: 600,
+                    hex: "#7CB342"
+                },
+                {
+                    weight: 700,
+                    hex: "#689F38"
+                },
+                {
+                    weight: 800,
+                    hex: "#558B2F"
+                },
+                {
+                    weight: 900,
+                    hex: "#33691E"
+                }
+            ]
+        },
+        {
+            color: "Lime",
+            variations: [
+                {
+                    weight: 50,
+                    hex: "#F9FBE7"
+                },
+                {
+                    weight: 100,
+                    hex: "#F0F4C3"
+                },
+                {
+                    weight: 200,
+                    hex: "#E6EE9C"
+                },
+                {
+                    weight: 300,
+                    hex: "#DCE775"
+                },
+                {
+                    weight: 400,
+                    hex: "#D4E157"
+                },
+                {
+                    weight: 500,
+                    hex: "#CDDC39"
+                },
+                {
+                    weight: 600,
+                    hex: "#C0CA33"
+                },
+                {
+                    weight: 700,
+                    hex: "#AFB42B"
+                },
+                {
+                    weight: 800,
+                    hex: "#9E9D24"
+                },
+                {
+                    weight: 900,
+                    hex: "#827717"
+                }
+            ]
+        },
+        {
+            color: "Yellow",
+            variations: [
+                {
+                    weight: 50,
+                    hex: "#FFFDE7"
+                },
+                {
+                    weight: 100,
+                    hex: "#FFF9C4"
+                },
+                {
+                    weight: 200,
+                    hex: "#FFF59D"
+                },
+                {
+                    weight: 300,
+                    hex: "#FFF176"
+                },
+                {
+                    weight: 400,
+                    hex: "#FFEE58"
+                },
+                {
+                    weight: 500,
+                    hex: "#FFEB3B"
+                },
+                {
+                    weight: 600,
+                    hex: "#FDD835"
+                },
+                {
+                    weight: 700,
+                    hex: "#FBC02D"
+                },
+                {
+                    weight: 800,
+                    hex: "#F9A825"
+                },
+                {
+                    weight: 900,
+                    hex: "#F57F17"
+                }
+            ]
+        },
+        {
+            color: "Amber",
+            variations: [
+                {
+                    weight: 50,
+                    hex: "#FFF8E1"
+                },
+                {
+                    weight: 100,
+                    hex: "#FFECB3"
+                },
+                {
+                    weight: 200,
+                    hex: "#FFE082"
+                },
+                {
+                    weight: 300,
+                    hex: "#FFD54F"
+                },
+                {
+                    weight: 400,
+                    hex: "#FFCA28"
+                },
+                {
+                    weight: 500,
+                    hex: "#FFC107"
+                },
+                {
+                    weight: 600,
+                    hex: "#FFB300"
+                },
+                {
+                    weight: 700,
+                    hex: "#FFA000"
+                },
+                {
+                    weight: 800,
+                    hex: "#FF8F00"
+                },
+                {
+                    weight: 900,
+                    hex: "#FF6F00"
+                }
+            ]
+        },
+        {
+            color: "Orange",
+            variations: [
+                {
+                    weight: 50,
+                    hex: "#FFF3E0"
+                },
+                {
+                    weight: 100,
+                    hex: "#FFE0B2"
+                },
+                {
+                    weight: 200,
+                    hex: "#FFCC80"
+                },
+                {
+                    weight: 300,
+                    hex: "#FFB74D"
+                },
+                {
+                    weight: 400,
+                    hex: "#FFA726"
+                },
+                {
+                    weight: 500,
+                    hex: "#FF9800"
+                },
+                {
+                    weight: 600,
+                    hex: "#FB8C00"
+                },
+                {
+                    weight: 700,
+                    hex: "#F57C00"
+                },
+                {
+                    weight: 800,
+                    hex: "#EF6C00"
+                },
+                {
+                    weight: 900,
+                    hex: "#E65100"
+                }
+            ]
+        },
+        {
+            color: "Deep Orange",
+            variations: [
+                {
+                    weight: 50,
+                    hex: "#FBE9E7"
+                },
+                {
+                    weight: 100,
+                    hex: "#FFCCBC"
+                },
+                {
+                    weight: 200,
+                    hex: "#FFAB91"
+                },
+                {
+                    weight: 300,
+                    hex: "#FF8A65"
+                },
+                {
+                    weight: 400,
+                    hex: "#FF7043"
+                },
+                {
+                    weight: 500,
+                    hex: "#FF5722"
+                },
+                {
+                    weight: 600,
+                    hex: "#F4511E"
+                },
+                {
+                    weight: 700,
+                    hex: "#E64A19"
+                },
+                {
+                    weight: 800,
+                    hex: "#D84315"
+                },
+                {
+                    weight: 900,
+                    hex: "#BF360C"
+                }
+            ]
+        },
+        {
+            color: "Brown",
+            variations: [
+                {
+                    weight: 50,
+                    hex: "#EFEBE9"
+                },
+                {
+                    weight: 100,
+                    hex: "#D7CCC8"
+                },
+                {
+                    weight: 200,
+                    hex: "#BCAAA4"
+                },
+                {
+                    weight: 300,
+                    hex: "#A1887F"
+                },
+                {
+                    weight: 400,
+                    hex: "#8D6E63"
+                },
+                {
+                    weight: 500,
+                    hex: "#795548"
+                },
+                {
+                    weight: 600,
+                    hex: "#6D4C41"
+                },
+                {
+                    weight: 700,
+                    hex: "#5D4037"
+                },
+                {
+                    weight: 800,
+                    hex: "#4E342E"
+                },
+                {
+                    weight: 900,
+                    hex: "#3E2723"
+                }
+            ]
+        },
+        {
+            color: "Grey",
+            variations: [
+                {
+                    weight: 50,
+                    hex: "#FAFAFA"
+                },
+                {
+                    weight: 100,
+                    hex: "#F5F5F5"
+                },
+                {
+                    weight: 200,
+                    hex: "#EEEEEE"
+                },
+                {
+                    weight: 300,
+                    hex: "#E0E0E0"
+                },
+                {
+                    weight: 400,
+                    hex: "#BDBDBD"
+                },
+                {
+                    weight: 500,
+                    hex: "#9E9E9E"
+                },
+                {
+                    weight: 600,
+                    hex: "#757575"
+                },
+                {
+                    weight: 700,
+                    hex: "#616161"
+                },
+                {
+                    weight: 800,
+                    hex: "#424242"
+                },
+                {
+                    weight: 900,
+                    hex: "#212121"
+                }
+            ]
+        },
+        {
+            color: "Blue Grey",
+            variations: [
+                {
+                    weight: 50,
+                    hex: "#ECEFF1"
+                },
+                {
+                    weight: 100,
+                    hex: "#CFD8DC"
+                },
+                {
+                    weight: 200,
+                    hex: "#B0BEC5"
+                },
+                {
+                    weight: 300,
+                    hex: "#90A4AE"
+                },
+                {
+                    weight: 400,
+                    hex: "#78909C"
+                },
+                {
+                    weight: 500,
+                    hex: "#607D8B"
+                },
+                {
+                    weight: 600,
+                    hex: "#546E7A"
+                },
+                {
+                    weight: 700,
+                    hex: "#455A64"
+                },
+                {
+                    weight: 800,
+                    hex: "#37474F"
+                },
+                {
+                    weight: 900,
+                    hex: "#263238"
+                }
+            ]
+        }
+    ]
+});
+</script>
+
+</body>
+</html>

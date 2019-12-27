@@ -1,0 +1,27 @@
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: #111;
+  background: radial-gradient(#222, #000);
+  overflow: hidden;
+}
+
+canvas {
+  background: #000;
+  bottom: 0;
+  box-shadow:
+    0 0 0 10px #222,
+    0 30px 30px -20px #000
+  ;
+  left: 0;
+  margin: auto;
+  max-height: 100%;
+  max-width: 100%;
+  position: absolute;
+  right: 0;
+  top: 0;
+  
+}

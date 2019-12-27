@@ -1,0 +1,98 @@
+* {
+    margin: 0;
+    overflow: hidden;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -o-user-select: none;
+    user-select: none;
+}
+body {
+    background: #F2F2F2;
+}
+#c {
+    display: block;
+    margin: 20px auto 0;
+}
+#info {
+    position: absolute;
+    left: -1px;
+    top: -1px;
+    width: auto;
+    max-width: 420px;
+    height: auto;
+    background: #f2f2f2;
+    border-bottom-right-radius: 10px;
+    border:1px solid #333;
+}
+#top {
+    background: #fff;
+    width: 100%;
+    height: auto;
+    position: relative;
+    border-bottom: 1px solid #eee;
+}
+p {
+    font-family: Arial, sans-serif;
+    color: #666;
+    text-align: justify;
+    font-size: 16px;
+    margin: 10px;
+}
+#github {
+  color:#3377ee;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 19px;
+  display: block;
+  margin: 0 auto;
+  text-align: center;
+  text-decoration:none;
+}
+#net {
+  text-align:center;
+  white-space:nowrap;
+  font-size:19px;
+  background:rgba(0,0,0,0.1);
+  padding:8px 12px;
+  border-radius:8px;
+  display:block;
+  color:#888;
+}
+#net > span {
+  color:#3377ee;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  display: block;
+  margin: 0 auto;
+  text-align: center;
+  text-decoration:none;
+}
+a {
+    font-family: sans-serif;
+    color: #444;
+    text-decoration: none;
+    font-size: 20px;
+}
+#site {
+    float: left;
+    margin: 10px;
+    color: #ff9900;
+  border-bottom: 1px dashed #ccc;
+  padding-bottom:3px
+}
+#site:hover {
+    color: #ffaa11;
+}
+#close {
+    float: right;
+    margin: 10px;
+}
+#p {
+    font-family: Verdana, sans-serif;
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    color: #4099ff;
+    border: 1px dashed #4099ff;
+    padding: 4px 8px;
+}

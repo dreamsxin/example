@@ -1,0 +1,23 @@
+body {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background-color: #000;
+  }
+#wrapper {
+  display: block;
+  position: relative;
+}
+#myCanvas {
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+#pipiska {
+  color: white;
+  position: absolute;
+  z-index: 10;
+  top: 0px;
+  left: 20px;
+}

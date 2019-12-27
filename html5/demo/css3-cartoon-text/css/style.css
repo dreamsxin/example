@@ -1,0 +1,132 @@
+:root {
+  --stroke: #0A1C20;
+  --text: #FEDC0C;
+  --bg: #6FBFD9;
+  --duration: 550ms;
+  --easing: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background-image: radial-gradient(rgba(0, 0, 0, 0.1) 20%, transparent 20%), radial-gradient(rgba(0, 0, 0, 0.1) 20%, transparent 20%);
+  background-color: var(--bg);
+  background-position: 0 0, 20px 20px;
+  background-size: 40px 40px;
+}
+
+.content {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  -webkit-transform: translate(-90px, -50%);
+          transform: translate(-90px, -50%);
+}
+
+h1,
+h2 {
+  position: relative;
+  margin: 0;
+  color: var(--text);
+  -webkit-text-stroke-color: var(--stroke);
+  text-align: center;
+  font-family: 'Luckiest Guy', cursive;
+  line-height: 1;
+  white-space: nowrap;
+  -webkit-text-stroke-width: 0px;
+}
+
+h1 span {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: inline-block;
+  margin-top: 60px;
+  opacity: 0;
+  font-size: 0px;
+  height: 1000px;
+  transition: all calc( var(--duration) * 0.7 ) var(--easing) 300ms;
+  -webkit-transform-origin: bottom center;
+          transform-origin: bottom center;
+  -webkit-text-stroke-width: 4px;
+}
+h1 span.animate-in {
+  margin-top: 0px;
+  opacity: 1;
+  font-size: 160px;
+}
+h1 span.animate-in.capital {
+  font-size: 200px;
+}
+h1 span:nth-child(1) {
+  z-index: 8;
+  -webkit-transform: rotate(-19deg);
+          transform: rotate(-19deg);
+}
+h1 span:nth-child(2) {
+  z-index: 7;
+  -webkit-transform: rotate(-13deg);
+          transform: rotate(-13deg);
+}
+h1 span:nth-child(3) {
+  z-index: 6;
+  -webkit-transform: rotate(-8deg);
+          transform: rotate(-8deg);
+}
+h1 span:nth-child(4) {
+  z-index: 5;
+  -webkit-transform: rotate(-3deg);
+          transform: rotate(-3deg);
+}
+h1 span:nth-child(5) {
+  z-index: 4;
+  -webkit-transform: rotate(2deg);
+          transform: rotate(2deg);
+}
+h1 span:nth-child(6) {
+  z-index: 3;
+  -webkit-transform: rotate(13deg);
+          transform: rotate(13deg);
+}
+h1 span:nth-child(7) {
+  -webkit-text-stroke-width: 8px;
+  -webkit-transform: rotate(20deg);
+          transform: rotate(20deg);
+  z-index: 2;
+}
+h1 span:nth-child(8) {
+  z-index: 1;
+  -webkit-transform: rotate(23deg);
+          transform: rotate(23deg);
+}
+
+h2 {
+  position: absolute;
+  top: 160px;
+  left: 50%;
+  font-size: 50px;
+  letter-spacing: -4px;
+  -webkit-transform: translateX(-120px);
+          transform: translateX(-120px);
+  -webkit-text-stroke-width: 2px;
+}
+h2 span {
+  display: inline-block;
+  opacity: 0;
+  transition: all var(--duration) ease 750ms;
+  -webkit-transform: translateX(5px);
+          transform: translateX(5px);
+}
+h2 span.animate-in {
+  opacity: 1;
+  -webkit-transform: translateX(0px);
+          transform: translateX(0px);
+}
+h2 span.capital {
+  margin-left: 10px;
+  font-size: 65px;
+}
