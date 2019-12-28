@@ -111,13 +111,39 @@ v run hello_world.v
 
 ## 编译模块
 
-```shell
-v build module modulepath
+创建文件 `mytext.v`：
+```vlang
+module mytext
+
+pub fn hello() int {
+	println('hello world')
+	return 1
+}
 ```
+
+```shell
+v build module /home/xxx/example/vlang/code/modules/mytext
+```
+
+* 测试
+
+创建文件 `mytext_test.v`：
+```vlang
+import mytext
+
+fn test_mytext() {
+	assert mytext.hello() == 1
+}
+```
+
+```shell
+v test code/modules/mytext
+```
+
  ## 编译动态库
 
 ```shell
-v -shared -prod *.v
+v -shared -prod code/modules/mytext/mytext.v
 ```
 
 ## 注释范例（Comments）
@@ -174,6 +200,104 @@ pub fn public_function() {
 fn private_function() {
 }
 ```
+
+### 默认是纯函数（Pure functions by default）
+
+默认情况下所有函数参数都是不可变的，即使在传递引用时也是如此。
+然而，V并不是一种纯粹的函数语言。可以使用关键字`mut`：
+```vlang
+struct User {
+mut:
+	is_registered bool
+}
+
+fn (u mut User) register() {
+	u.is_registered = true
+}
+
+mut user := User{}
+println(user.is_registered) // "false" 
+user.register()
+println(user.is_registered) // "true" 
+
+// 普通函数
+fn multiply_by_2(arr mut []int) {
+	for i := 0; i < arr.len; i++ {
+		arr[i] *= 2
+	}
+}
+
+mut nums := [1, 2, 3]
+// 调用此函数时必须在 nums 之前添加 mut。这表明被调用的函数将修改该值。
+multiply_by_2(mut nums)
+println(nums) // "[2, 4, 6]"
+```
+最好使用返回值，而不是修改参数。只应在应用程序的性能关键部分中通过修改参数，以减少内存分配和复制。
+```vlang
+fn register(u User) User {
+	return { u | is_registered: true }
+}
+
+user = register(user)
+```
+
+## 引用（References）
+
+如果函数参数是不可变的，编译器会自行判断是通过值还是引用传递它，开发人员不需要考虑它。
+在 `V` 中引用类似于转到指针和C++引用。例如，树结构定义如下：
+```vlang
+struct Node<T> {
+	val   T
+	left  &Node
+	right &Node
+}
+```
+
+## 常量（Constants）
+
+使用 `const` 申明，只能在函数外定义。
+常量用永远不可修改，由于没有全局变量，所以常量常常当做全局变量使用。
+
+```vlang
+const (
+	pi    = 3.14
+	world = '世界'
+)
+
+println(pi)
+println(world)
+```
+
+可以定义更复杂的值：
+```vlang
+struct Color {
+        r int
+        g int
+        b int
+}
+
+fn (c Color) str() string { return '{$c.r, $c.g, $c.b}' }
+
+fn rgb(r, g, b int) Color { return Color{r: r, g: g, b: b} }
+
+const (
+        numbers = [1, 2, 3]
+
+        red  = Color{r: 255, g: 0, b: 0}
+        blue = rgb(0, 0, 255)
+)
+
+println(numbers)
+println(red)
+println(blue)
+```
+
+## println/print
+
+`println` 是一个简单而强大的内置函数，它可以打印任何东西：字符串、数字、数组、映射、结构。
+如果不想打印换行符，请使用`print（）`代替。
+如果要为类型定义自定义打印值，只需定义一个`.str（）`字符串方法。
+
 
 ## 变量 Variables
 
@@ -393,6 +517,24 @@ numbers := {
 }
 ```
 
+### 枚举（Enums）
+
+```vlang
+enum Color {
+	red green blue
+}
+
+fn main() {
+	mut color := Color.red
+	// V knows that `color` is a `Color`. No need to use `color = Color.green` here.
+	color = .green
+	println(color) // "1"  TODO: print "green"? 
+	if color == .green {
+		println("it's green")
+	}
+}
+```
+
 ### 结构体（Structs）
 
 结构是在堆栈上分配的，要在堆上分配，并获取对它的引用，请使用前缀 `&`：
@@ -447,20 +589,9 @@ __global:
                   // starts with __)
 ```
 
-例如，内置模块中字符串类型的定义：
-```vlang
-pub struct string {
-	// mut:
-	// hash_cache int
-pub:
-	str byteptr // points to a C style 0 terminated string of bytes.
-	len int // the length of the .str field, excluding the ending 0 byte. It is always equal to strlen(.str).
-}
-```
+## 定义类型方法
 
-* 定义方法
-
-`V` 没有类，但可以为类型定义方法：
+`V` 没有类，但可以为类型定义方法，下面定义结构类型的方法：
 
 ```vlang
 struct User {
@@ -483,44 +614,139 @@ println(user2.can_register()) // "true"
 在本例中，`can_register`方法有一个`User`类型为u的接收器。
 惯例不是使用`self`或`this`这样的接收器名称，而是一个短的、最好是一个字母长的名称。
 
-* Pure functions by default
+## 有限运算符重载
 
-默认情况下所有函数参数都是不可变的，即使在传递引用时也是如此。
-然而，V并不是一种纯粹的函数语言。可以使用关键字`mut`：
+为了提高安全性和可维护性，运算符重载有几个限制：
+
+- 只能重载`+`、`-`、`*`、`/`运算符。
+- 不允许在运算符函数内调用其他函数。
+- 运算符函数无法修改其参数。
+- 两个参数必须具有相同的类型（就像V中的所有运算符一样）
+
+为了提高可读性，运算符重载非常重要，例如：
+
 ```vlang
-struct User {
-mut:
-	is_registered bool
-}
-
-fn (u mut User) register() {
-	u.is_registered = true
-}
-
-mut user := User{}
-println(user.is_registered) // "false" 
-user.register()
-println(user.is_registered) // "true" 
-
-// 普通函数
-fn multiply_by_2(arr mut []int) {
-	for i := 0; i < arr.len; i++ {
-		arr[i] *= 2
-	}
-}
-
-mut nums := [1, 2, 3]
-// 调用此函数时必须在 nums 之前添加 mut。这表明被调用的函数将修改该值。
-multiply_by_2(mut nums)
-println(nums) // "[2, 4, 6]"
+a + b + c * d
 ```
-最好使用返回值，而不是修改参数。只应在应用程序的性能关键部分中通过修改参数，以减少内存分配和复制。
+可读性比
 ```vlang
-fn register(u User) User {
-	return { u | is_registered: true }
+a.add(b).add(c.mul(d))
+```
+高多了。
+
+例如，内置模块中字符串类型`string`：
+```vlang
+pub struct string {
+	// mut:
+	// hash_cache int
+pub:
+	str byteptr // points to a C style 0 terminated string of bytes.
+	len int // the length of the .str field, excluding the ending 0 byte. It is always equal to strlen(.str).
+}
+```
+
+重载的操作符：
+```vlang
+
+// ==
+fn (s string) eq(a string) bool {
+	if isnil(s.str) {
+		// should never happen
+		panic('string.eq(): nil string')
+	}
+	if s.len != a.len {
+		return false
+	}
+	for i := 0; i < s.len; i++ {
+		if s[i] != a[i] {
+			return false
+		}
+	}
+	return true
 }
 
-user = register(user)
+// !=
+fn (s string) ne(a string) bool {
+	return !s.eq(a)
+}
+
+// s < a
+fn (s string) lt(a string) bool {
+	for i := 0; i < s.len; i++ {
+		if i >= a.len || s[i] > a[i] {
+			return false
+		}
+		else if s[i] < a[i] {
+			return true
+		}
+	}
+	if s.len < a.len {
+		return true
+	}
+	return false
+}
+
+// s <= a
+fn (s string) le(a string) bool {
+	return s.lt(a) || s.eq(a)
+}
+
+// s > a
+fn (s string) gt(a string) bool {
+	return !s.le(a)
+}
+
+// s >= a
+fn (s string) ge(a string) bool {
+	return !s.lt(a)
+}
+
+// TODO `fn (s string) + (a string)` ? To be consistent with operator overloading syntax.
+fn (s string) add(a string) string {
+	new_len := a.len + s.len
+	mut res := string{
+		len: new_len
+		str: malloc(new_len + 1)
+	}
+	for j := 0; j < s.len; j++ {
+		res[j] = s[j]
+	}
+	for j := 0; j < a.len; j++ {
+		res[s.len + j] = a[j]
+	}
+	res[new_len] = `\0` // V strings are not null terminated, but just in case
+	return res
+}
+```
+
+## 接口（Interfaces）
+
+类型通过实现其方法来实现接口。没有明确的意图声明，没有“implements”关键字。
+
+```vlang
+struct Dog {}
+struct Cat {}
+
+fn (d Dog) speak() string {
+	return 'woof'
+}
+
+fn (c Cat) speak() string {
+	return 'meow' 
+}
+
+interface Speaker {
+	speak() string
+}
+
+fn perform(s Speaker) {
+	println(s.speak())
+}
+
+dog := Dog{}
+cat := Cat{}
+perform(dog) // "woof" 
+perform(cat) // "meow"
 ```
 
 ## 基本操作
@@ -655,6 +881,177 @@ fn is_red_or_blue(c Color) bool {
 		else { false }
 	}
 }
+```
+
+## 可选返回类型与错误处理（Option/Result types & error handling）
+
+函数返回类型加个 `?` 前置，即表示可能返回不同值，可选值可以是 `return none` or `return error('some error')`。
+
+```vlang
+struct User {
+	id int
+	name string
+}
+
+struct Repo {
+	users []User
+}
+
+fn new_repo() Repo {
+	return Repo {
+		users: [User{1, 'Andrew'}, User {2, 'Bob'}, User {10, 'Charles'}]
+	}
+}
+
+fn (r Repo) find_user_by_id(id int) ?User {
+	for user in r.users {
+		if user.id == id {
+			// V automatically wraps this into an option type 
+			return user
+		}
+	}
+	return error('User $id not found')
+}
+
+fn main() {
+	repo := new_repo()
+	user := repo.find_user_by_id(10) or { // Option types must be handled by `or` blocks 
+		return  // `or` block must end with `return`, `break`, or `continue` 
+	}
+	println(user.id) // "10" 
+	println(user.name) // "Charles"
+}
+```
+
+我们可以不使用 `or` 捕捉错误，而是继续抛出错误：
+```vlang
+fn test(url string) ?string { 
+	resp := http.get(url)?
+	return resp.body
+}
+```
+如果调用函数不是可选函数，将导致程序异常停止，所以一般可以如下处理：
+```vlang
+fn test(url string) string { 
+	resp := http.get(url) or { panic(err) }
+	return resp.body
+}
+```
+
+## 泛型（Generics）
+
+```vlang
+struct Repo<T> {
+	db DB
+}
+
+fn new_repo<T>(db DB) Repo<T> {
+	return Repo<T>{db: db}
+}
+
+// This is a generic function. V will generate it for every type it's used with.
+fn (r Repo<T>) find_by_id(id int) ?T {
+	table_name := T.name // in this example getting the name of the type gives us the table name
+	return r.db.query_one<T>('select * from $table_name where id = ?', id)
+}
+
+db := new_db()
+users_repo := new_repo<User>(db)
+posts_repo := new_repo<Post>(db)
+user := users_repo.find_by_id(1)?
+post := posts_repo.find_by_id(1)?
+```
+
+## 并发（Concurrency）
+
+并发模型与Go非常相似。要同时运行`foo（）`，只需使用`go foo（）`调用它。现在，它在一个新的系统线程中启动该函数。
+很快将实现协同路由和调度程序。
+
+## JSON 编码和解码
+
+V 生成用于 JSON 编码和解码的代码。不使用运行时反射。这会带来更好的性能。
+
+```vlang
+Decoding JSON
+
+import json
+
+struct User {
+	name string
+	age  int
+
+	// Use the `skip` attribute to skip certain fields
+	foo Foo [skip]  
+
+	// 字段名跟 JSON 中的key 不一致，可以自定义
+	last_name string [json:lastName]  
+}
+
+data := '{ "name": "Frodo", "lastName": "Baggins", "age": 25 }'
+user := json.decode(User, data) or {
+	eprintln('Failed to decode json')
+	return
+}
+println(user.name)
+println(user.last_name)
+println(user.age)
+```
+
+## 延迟处理（Defer）
+
+`defer` 语句将语句块的执行推迟到作用域结束或周围函数返回。
+
+## ORM
+
+V 有一个支持 Postgres 的内置 ORM，很快就会支持MySQL和SQLite。
+
+```vlang
+struct Customer { // struct name has to be the same as the table name for now
+	id int // an integer id must be the first field
+	name string
+	nr_orders int
+	country string
+}
+
+db := pg.connect(db_name, db_user)
+
+// select count(*) from Customer
+nr_customers := db.select count from Customer
+println('number of all customers: $nr_customers')
+
+// V syntax can be used to build queries
+// db.select returns an array
+uk_customers := db.select from Customer where country == 'uk' && nr_orders > 0
+println(uk_customers.len)
+for customer in uk_customers {
+	println('$customer.id - $customer.name')
+}
+
+// by adding `limit 1` we tell V that there will be only one object
+customer := db.select from Customer where id == 1 limit 1
+println('$customer.id - $customer.name')
+
+// insert a new customer
+new_customer := Customer{name: 'Bob', nr_orders: 10}
+db.insert(new_customer)
+```
+
+## 格式化 vfmt
+
+```shell
+v fmt file.v
+```
+
+## 文档
+每个函数/类型/常量的文档必须放在声明之前：
+```vlang
+// clearall clears all bits in the array
+fn clearall() {
+}
+```
+生成
+```shell
+v doc path/to/module
 ```
 
 ## 调用 C 函数（Calling C functions from V）
