@@ -399,7 +399,33 @@ func main() {
 make 跟 new都可以用于内存分配。
 
 - new 用于各种类型的内存分配，返回了一个指针，指向新分配的类型 T 的零值。
+new 可以用来初始化泛型，并且返回储存位址。所以通常我们会用指标变数来接 new 过后的型别。特别要注意的是，new 会自动用 zeroed value 来初始化型别，也就是字串会是""，number 会是 0，channel, func, map, slice 等等则会是 nil。
+
 - make 只能用于给slice、map和channel类型的内存分配，并且返回一个有初始值(非零)的 T 类型，而不是指针 T。
+
+
+使用new来创建map时，返回的内容是一个指针，需要初始化后才能使用，而使用make来创建map时，返回的内容是一个引用：
+
+```go
+//使用new创建一个map指针
+ma := new(map[string]int)                                                                                                                                          
+//第一种初始化方法
+*ma = map[string]int{}
+(*ma)["a"] = 44
+fmt.Println(*ma)
+
+//第二种初始化方法
+*ma = make(map[string]int, 0)
+(*ma)["b"] = 55
+fmt.Println(*ma)
+
+//第三种初始化方法
+mb := make(map[string]int, 0)
+mb["c"] = 66
+*ma = mb
+(*ma)["d"] = 77
+fmt.Println(*ma)
+```
 
 
 ## `for` 循环
