@@ -13,19 +13,31 @@ curl https://sh.rustup.rs -sSf | sh
 
 在 Rust 开发环境中，所有工具都安装到 ~/.cargo/bin 目录， 并且您能够在这里找到 Rust 工具链，包括 rustc、cargo 及 rustup。
 
-## 导入环境变量
+* 导入环境变量
 
 ```shell
 source ~/.cargo/env
 ```
 
-## 卸载
+* 更新
+
+```shell
+rustup update
+```
+
+* 卸载
 
 ```shell
 rustup self uninstall
 ```
 
-## 显示版本号
+Ubuntu 使用 apt 安装
+
+```shell
+sudo apt install rustc
+```
+
+* 显示版本号
 
 ```shell
 rustc --version
@@ -41,7 +53,7 @@ fn main() {
 
 Rust是一门面向表达式的语言，也就是说大部分语句都是表达式。`;`表示一个表达式的结束，另一个新表达式的开始。大部分 Rust 代码行以`;`结尾。
 
-### 编译 `hello_world.rs`
+* 编译 `hello_world.rs`
 
 ```shell
 rustc hello_world.rs
@@ -51,13 +63,195 @@ rustc -g hello_world.rs
 
 会生成一个可执行文件 `hello_world`
 
-### 运行
+* 运行
 
 ```shell
 ./hello_world
 ```
 
-## 设定环境变量获取 backtrace
+## 编译器参数
+
+```bash
+$ rustc [OPTIONS] INPUT
+```
+
+`[OPTIONS]` 表示编译选项，有以下可选：
+
+* `-h, --help` - 输出帮助信息到标准输出；
+* `--cfg SPEC` - 传入自定义的条件编译参数（类似预定义宏），使用方法如
+
+```rust
+fn main() {
+	if cfg!(hello) {
+		println!("world!");
+	}
+}
+```
+
+如上例所示，若`cfg!(hello)`成立，则运行程序就会输出`"world"`到标准输出。我们把这个文件保存为`hello.rs`然后编译它
+
+```bash
+$ rustc --cfg hello hello.rs
+```
+
+运行它就会看到屏幕中输出了`world!`。
+
+* `-L [KIND=]PATH` - 往链接路径中加入一个文件夹，并且可以指定这个路径的类型（Kind），这些类型包括
+	- `dependency` - 在这个路径下找依赖的文件，比如说`mod`；
+	- `crate` - 只在这个路径下找使用`extern crate`链接的库；
+	- `native` - 只在这个路径下找Native库；
+	- `framework` - 只在OS X下有用，只在这个路径下找Framework；
+	- `all` - 支持所有类型，默认选项。
+
+* `-l [KIND=]NAME` - 链接一个库，这个库可以指定类型（Kind）
+	- `static` - 静态库；
+	- `dylib` - 动态库，默认选项；
+	- `framework` - OS X的Framework。
+
+* 创建静态库
+
+此处举一个例子如何手动链接一个库，我们先创建一个文件叫`myhello.rs`，在里面写一个函数
+
+```rust
+pub fn print_hello() {
+	println!("Hello World!");
+}
+```
+
+然后把这个文件编译成一个静态库，`libmyhello.a`
+
+```bash
+$ rustc --crate-type staticlib myhello.rs
+```
+
+然后再创建一个`main.rs`，链接这个库并打印出"Hello World!"
+
+```rust
+// 使用 crate 指定链接库 myhello
+extern crate myhello;
+
+fn main() {
+	myhello::print_hello();
+}
+```
+
+编译`main.rs`
+
+```bash
+$ rustc -L. -lmyhello main.rs
+```
+
+运行`main`，就会看到屏幕输出"Hello World!"啦。
+
+* `--crate-type` - 指定编译输出类型，它的参数包括
+	- `bin` - 二进行可执行文件
+	- `lib` - 编译为库
+	- `rlib` - Rust库
+	- `dylib` - 动态链接库
+	- `staticlib` - 静态链接库
+
+* `--crate-name` - 指定这个Crate的名字，默认是文件名，如`main.rs`编译成可执行文件时默认是`main`，但你可以指定它为`foo`
+
+```bash
+$ rustc --crate-name foo main.rs
+```
+
+则会输出`foo`可执行文件。
+
+* `--emit` - 指定编译器的输出。编译器默认是输出一个可执行文件或库文件，但你可以选择输出一些其它的东西用于Debug
+
+	- `asm` - 输出汇编
+	- `llvm-bc` - [LLVM Bitcode](http://llvm.org/docs/BitCodeFormat.html)；
+	- `llvm-ir` - [LLVM IR](http://llvm.org/docs/LangRef.html)，即LLVM中间码（LLVM Intermediate Representation）；
+	- `obj` - Object File（就是`*.o`文件）；
+	- `link` - 这个是要结合其它`--emit`参数使用，会执行Linker再输出结果；
+	- `dep-info` - 文件依赖关系（Debug用，类似于Makefile一样的依赖）。
+
+以上参数可以同时使用，使用逗号分割，如
+
+```bash
+$ rustc --emit asm,llvm-ir,obj main.rs
+```
+
+同时，在最后可以加一个`=PATH`来指定输出到一个特定文件，如
+
+```bash
+$ rustc --emit asm=output.S,llvm-ir=output.ir main.rs
+```
+
+这样会把汇编生成到`output.S`文件中，把LLVM中间码输出到`output.ir`中。
+
+* `--print` - 打印一些信息，参数有
+	- `crate-name` - 编译目标名；
+	- `file-names` - 编译的文件名；
+	- `sysroot` - 打印Rust工具链的根目录地址。
+
+* `-g` - 在目标文件中保存符号，这个参数等同于`-C debuginfo=2`。
+* `-O` - 开启优化，这个参数等同于`-C opt-level=2`。
+* `-o FILENAME` - 指定输出文件名，同样适用于`--emit`的输出。
+
+* `--out-dir DIR` - 指定输出的文件夹，默认是当前文件夹，且会忽略`-o`配置。
+* `--explain OPT` - 解释某一个编译错误，比如
+
+若你写了一个`main.rs`，使用了一个未定义变量`f`
+
+```rust
+fn main() {
+	f
+}
+```
+
+编译它时编译器会报错：
+
+```
+main.rs:2:5: 2:6 error: unresolved name `f` [E0425]
+main.rs:2     f
+	^
+main.rs:2:5: 2:6 help: run `rustc --explain E0425` to see a detailed explanation
+error: aborting due to previous error
+```
+
+虽然错误已经很明显，但是你也可以让编译器解释一下，什么是`E0425`错误：
+
+```bash
+$ rustc --explain E0425
+// 编译器打印的说明
+```
+
+* `--test` - 编译成一个单元测试可执行文件
+* `--target TRIPLE` - 指定目标平台，基本格式是`cpu-manufacturer-kernel[-os]`，例如
+
+```bash
+## 64位OS X
+$ rustc --target x86_64-apple-darwin
+```
+
+* `-W help` - 打印Linter的所有可配置选项和默认值。
+
+* `-W OPT, --warn OPT` - 设置某一个Linter选项为Warning。
+* `-A OPT, --allow OPT` - 设置某一个Linter选项为Allow。
+* `-D OPT, --deny OPT` - 设置某一个Linter选项为Deny。
+* `-F OPT, --forbit OPT` - 设置某一个Linter选项为Forbit。
+
+* `-C FLAG[=VAL], --codegen FLAG[=VAL]` - 目标代码生成的的相关参数，可以用`-C help`来查看配置，值得关注的几个是
+	- `linker=val` - 指定链接器；
+	- `linker-args=val` - 指定链接器的参数；
+	- `prefer-dynamic` - 默认Rust编译是静态链接，选择这个配置将改为动态链接；
+	- `debug-info=level` - Debug信息级数，`0` = 不生成，`1` = 只生成文件行号表，`2` = 全部生成；
+	- `opt-level=val` - 优化级数，可选`0-3`；
+	- `debug_assertion` - 显式开启`cfg(debug_assertion)`条件。
+
+* `-V, --version` - 打印编译器版本号。
+* `-v, --verbose` - 开启啰嗦模式（打印编译器执行的日志）。
+* `--extern NAME=PATH` - 用来指定外部的Rust库（`*.rlib`）名字和路径，名字应该与`extern crate`中指定的一样。
+* `--sysroot PATH` - 指定工具链根目录。
+* `-Z flag` - 编译器Debug用的参数，可以用`-Z help`来查看可用参数。
+* `--color auto|always|never` - 输出时对日志加颜色
+	- `auto` - 自动选择加还是不加，如果输出目标是虚拟终端（TTY）的话就加，否则就不加；
+	- `always` - 给我加！
+	- `never` - 你敢加？
+
+* 跟踪调试，设定环境变量获取 backtrace
 
 ```shell
 export RUST_BACKTRACE=1
@@ -66,8 +260,131 @@ RUST_BACKTRACE=1 ./hello_world
 RUST_BACKTRACE=1 cargo run
 ```
 
-# 使用 Cargo
 
+## Crate 包
+
+`crate` 是 Rust 的基本编译单元。当调用 `rustc some_file.rs` 时，`some_file.rs` 被当作 crate 文件。
+模块不会单独被编译，如果 `some_file.rs` 里面含有 `mod` 声明，那么模块文件的内容将在编译之前被插入相应声明处。
+
+crate` 可以编译成二进制可执行文件（binary）或库文件（library）。这种行为可以通过 `rustc` 的选项 `--crate-type` 重载。
+
+## 模块
+
+Rust 提供了一套强大的模块（module）系统，可以将代码按层次分成多个逻辑 单元（模块），并管理这些模块之间的可见性（公有（public）或私有（private））。
+默认情况下，模块中的项拥有私有的可见性（private visibility），不过可以加上 pub 修饰语来重载这一行为。模块中只有公有的（public）项可以从模块外的作用域 访问。
+模块是项（item）的集合，项可以是：函数，结构体，trait，impl 块，甚至其它模块。
+
+```rust
+// 一个名为 `my_mod` 的模块
+mod my_mod {
+    // 模块中的项默认具有私有的可见性
+    fn private_function() {
+        println!("called `my_mod::private_function()`");
+    }
+
+    // 使用 `pub` 修饰语来改变默认可见性。
+    pub fn function() {
+        println!("called `my_mod::function()`");
+    }
+
+    // 在同一模块中，项可以访问其它项，即使它是私有的。
+    pub fn indirect_access() {
+        print!("called `my_mod::indirect_access()`, that\n> ");
+        private_function();
+    }
+
+    // 模块也可以嵌套
+    pub mod nested {
+        pub fn function() {
+            println!("called `my_mod::nested::function()`");
+        }
+
+        #[allow(dead_code)]
+        fn private_function() {
+            println!("called `my_mod::nested::private_function()`");
+        }
+
+        // 使用 `pub(in path)` 语法定义的函数只在给定的路径中可见。
+        // `path` 必须是父模块（parent module）或祖先模块（ancestor module）
+        pub(in my_mod) fn public_function_in_my_mod() {
+            print!("called `my_mod::nested::public_function_in_my_mod()`, that\n > ");
+            public_function_in_nested()
+        }
+
+        // 使用 `pub(self)` 语法定义的函数则只在当前模块中可见。
+        pub(self) fn public_function_in_nested() {
+            println!("called `my_mod::nested::public_function_in_nested");
+        }
+
+        // 使用 `pub(super)` 语法定义的函数只在父模块中可见。
+        pub(super) fn public_function_in_super_mod() {
+            println!("called my_mod::nested::public_function_in_super_mod");
+        }
+    }
+
+    pub fn call_public_function_in_my_mod() {
+        print!("called `my_mod::call_public_funcion_in_my_mod()`, that\n> ");
+        nested::public_function_in_my_mod();
+        print!("> ");
+        nested::public_function_in_super_mod();
+    }
+
+    // `pub(crate)` 使得函数只在当前 crate 中可见
+    pub(crate) fn public_function_in_crate() {
+        println!("called `my_mod::public_function_in_crate()");
+    }
+
+    // 嵌套模块的可见性遵循相同的规则
+    mod private_nested {
+        #[allow(dead_code)]
+        pub fn function() {
+            println!("called `my_mod::private_nested::function()`");
+        }
+    }
+}
+
+fn function() {
+    println!("called `function()`");
+}
+
+fn main() {
+    // 模块机制消除了相同名字的项之间的歧义。
+    function();
+    my_mod::function();
+
+    // 公有项，包括嵌套模块内的，都可以在父模块外部访问。
+    my_mod::indirect_access();
+    my_mod::nested::function();
+    my_mod::call_public_function_in_my_mod();
+
+    // pub(crate) 项可以在同一个 crate 中的任何地方访问
+    my_mod::public_function_in_crate();
+
+    // pub(in path) 项只能在指定的模块中访问
+    // 报错！函数 `public_function_in_my_mod` 是私有的
+    //my_mod::nested::public_function_in_my_mod();
+    // 试一试 ^ 取消该行的注释
+
+    // 模块的私有项不能直接访问，即便它是嵌套在公有模块内部的
+
+    // 报错！`private_function` 是私有的
+    //my_mod::private_function();
+    // 试一试 ^ 取消此行注释
+
+    // 报错！`private_function` 是私有的
+    //my_mod::nested::private_function();
+    // 试一试 ^ 取消此行的注释
+
+    // Error! `private_nested` is a private module
+    //my_mod::private_nested::function();
+}
+```
+
+在 cargo 使用中，会详细介绍模块的使用。
+
+## 使用 Cargo
+
+Cargo 是 Rust 的构建系统和包管理器。
 仅仅使用 rustc 编译简单程序是没问题的，不过随着你的项目的增长，你将想要能够控制你项目拥有的所有选项，并易于分享你的代码给别人或别的项目。
 
 Cargo 是 Rust 的构建系统和包管理工具，Cargo 负责三个工作：
@@ -75,13 +392,13 @@ Cargo 是 Rust 的构建系统和包管理工具，Cargo 负责三个工作：
 - 下载代码依赖库，我们把你代码需要的库叫做“依赖（dependencies）”因为你的代码依赖他们。
 - 编译库
 
-## 查看 Cargo 版本号
+* 查看 Cargo 版本号
 
 ```shell
 cargo --version
 ```
 
-## Cargo 包管理
+* Cargo 包管理
 
 Rust 包管理使用 crate 格式的压缩包存储和发布库，官方有一个集中式的仓库。
 我们可以使用国内的仓库镜像地址，使用镜像只需要在项目根目录下新建一个 `.cargo/config` 文件，并在其中加入以下内容：
@@ -91,21 +408,21 @@ Rust 包管理使用 crate 格式的压缩包存储和发布库，官方有一�
 index = "git://crates.mirrors.ustc.edu.cn/index"
 ```
 
-## 将之前项目转换到 Cargo
+* 将项目转换到 Cargo
 
-让我们将 Hello World 程序迁移至 Cargo，现在需要做三件事：
+让我们将 Hello World 程序迁移至 Cargo：
 
 - 将源文件放到正确的目录
 - 创建一个 Cargo 配置文件
 
-### 源文件目录
+* 创建源文件目录
 
 ```shell
 mkdir hello_world2/src
 cp hello_world.rs hello_world2/src/
 ```
 
-### 创建配置文件 `Cargo.toml`
+* 创建配置文件 `Cargo.toml`
 
 ```toml
 [package]
@@ -122,9 +439,7 @@ path = "src/hello_world.rs
 另外三行设置了 Cargo 编译你的程序所需要知道的三个配置：包的名字，版本，和作者。
 如果源文件名为 `main.rs` 则 `[[bin]]` 不需要配置。
 
-### 构建并运行一个 Cargo 项目
-
-当Cargo.toml文件位于项目的根目录时，我们就准备好可以构建并运行 Hello World 程序了！
+* 构建并运行一个 Cargo 项目
 
 ```shell
 cd hello_world2/
@@ -134,7 +449,7 @@ cargo build
 第一次构建会下载依赖库，存放在目录 `~/.cargo/registry/`。
 执行成功后，会生成文件 `./target/debug/hello_world`
 
-### 发布构建（Building for Release）
+* 发布构建（Building for Release）
 
 当你的项目准备好发布了，可以使用以下命令来优化编译项目。
 
@@ -144,13 +459,13 @@ cargo build --release
 
 这些优化可以让 Rust 代码运行的更快，不过启用他们会让程序花更长的时间编译。这也是为何这是两种不同的配置，一个为了开发，另一个构建提供给用户的最终程序。
 
-### 运行
+* 运行
 
 ```shell
 cargo run
 ```
 
-### 创建新 Cargo 项目的简单方法
+* 创建新 Cargo 项目的简单方法
 
 ```shell
 cargo new hello_world --bin
@@ -159,13 +474,13 @@ cargo new hello_world --bin
 这个命令传递了`--bin`参数因为我们的目标是直接创建一个可执行程序，而不是一个库。
 Cargo 为我们创建了两个文件和一个目录：一个Cargo.toml和一个包含了 `main.rs` 文件的 `src` 目录。
 
-### 清理
+* 清理
 
 ```shell
 cargo clean
 ```
 
-### 发布配置
+* 发布配置
 
 Cargo 支持四种配置：
 
@@ -188,7 +503,7 @@ opt-level = 3
 
 更多查看文档 http://doc.crates.io/
 
-### 将 crate 发布到 Crates.io
+* 将 crate 发布到 Crates.io
 
 我们创建了一个库art，其包含一个kinds模块，模块中包含枚举Color和包含函数mix的模块utils：
 ```rust
@@ -2370,11 +2685,11 @@ if let Some(3) = some_u8_value {
 - 默认所有内容都是私有的（包括模块自身）。可以使用pub关键字将其变成公有并在其命名空间外可见。
 - use关键字允许引入模块、或模块中的定义到作用域中以便于引用他们。
 
-### mod和文件系统
+* mod和文件系统
 
-#### 创建一个项目
+* 创建一个`communicator`项目
 
-这个项目叫做communicator。Cargo 默认会创建一个库（crate） 除非指定其他项目类型（加--bin参数则项目将会是一个执行程序）：
+Cargo 默认会创建一个库（crate） 除非指定其他项目类型（加--bin参数则项目将会是一个执行程序）：
 
 ```shell
 cargo new communicator
@@ -2391,7 +2706,7 @@ mod tests {
 }
 ```
 
-#### 模块定义
+* 模块定义
 
 Rust 中所有模块的定义以关键字 mod 开始。对于communicator网络库，首先要定义一个叫做network的模块，它包含一个叫做connect的函数定义。
 在 src/lib.rs 文件的开头在测试代码的上面增加这些代码：
@@ -2427,7 +2742,7 @@ mod network {
 ```
 现在我们有了 `network::connect和network::client::connect` 函数。
 
-#### 将模块移动到其他文件
+* 将模块移动到其他文件
 
 我们可以利用 Rust 的模块系统连同多个文件一起分解 Rust 项目，这样就不是所有的内容都落到 src/lib.rs 中了。作为例子，我们将下面代码分解：
 
@@ -2491,14 +2806,14 @@ fn connect() {
 
 `network.rs` 改成了 `mod.rs`。
 
-### 模块文件系统的规则
+* 模块文件系统的规则
 
 与文件系统相关的模块规则总结如下：
 
 - 如果一个叫做foo的模块没有子模块，应该将foo的声明放入叫做 foo.rs 的文件中。
 - 如果一个叫做foo的模块有子模块，应该将foo的声明放入叫做 foo/mod.rs 的文件中。
 
-## 使用pub控制可见性
+* 使用pub控制可见性
 
 Rust 所有代码的默认状态是私有的：除了自己之外别人不允许使用这些代码。如果不在自己的项目中使用一个私有函数，因为程序自身是唯一允许使用这个函数的代码，Rust 会警告说函数未被使用。
 
@@ -2515,7 +2830,7 @@ fn main() {
 Rust 中的独立编译单位是crate：rustc每次编译一个crate，生成一个库或者可执行文件。
 当编译单个`.rs`文件时，文件自身充当 crate。编译时可以通过开关 --lib 来创建共享库，或者没有用--lib开关，若文件中包含fn main函数，则生成可执行文件。
 
-### 标记函数为公有
+* 标记函数为公有
 
 为了告诉 Rust 某项为公有，在想要标记为公有的项的声明开头加上pub关键字。修改 `src/lib.rs` 使client模块公有：
 
@@ -2558,9 +2873,9 @@ rustc -A dead_code main.rs
 RUSTFLAGS="$RUSTFLAGS -A dead_code" cargo build
 ```
 
-### 使用 use
+* 使用 use
 
-use关键字只将指定的模块引入作用域；它并不会将其子模块也引入。
+use 关键字只将指定的模块引入作用域；它并不会将其子模块也引入。
 
 ```rust
 pub mod a {
@@ -2634,7 +2949,40 @@ fn main() {
 }
 ```
 
-### 使用super访问父模块
+use 声明可以将一个完整的路径绑定到一个新的名字，从而更容易访问：
+```rust
+use deeply::nested::function as other_function;
+
+fn function() {
+    println!("called `function()`");
+}
+
+mod deeply {
+    pub mod nested {
+        pub fn function() {
+            println!("called `deeply::nested::function()`")
+        }
+    }
+}
+
+fn main() {
+    // 更容易访问 `deeply::nested::funcion`
+    other_function();
+
+    println!("Entering block");
+    {
+        use deeply::nested::function;
+        function();
+
+        // `use` 绑定拥有局部作用域。在这个例子中，`function()` 的掩蔽只存在在这个代码块中。
+        println!("Leaving block");
+    }
+
+    function();
+}
+```
+
+* 使用 super 访问父模块
 
 正如我们已经知道的，当创建一个库 crate 时，Cargo 会生成一个tests模块。现在让我们来深入了解一下。在communicator项目中，打开 src/lib.rs。
 
