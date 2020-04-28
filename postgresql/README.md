@@ -604,3 +604,17 @@ alter table test set (parallel_workers=0);
 # 重置参数，那么在create_plain_partial_paths中会通过表的pages计算出一个合理的并行度
 alter table test reset (parallel_workers);
 ```
+
+## 单用户模式
+
+如果忘记用户密码或者误删用户之后，可以进入单用户模式进行修复。
+
+```shell
+sudo -upostgres postgres --single -D /usr/xxx/pgsql/data
+```
+
+```shell
+postgres --single -D $HG_HOME/data
+PostgreSQL stand-alone backend 9.4.7
+backend> ALTER role postgres WITH SUPPERUSER;
+```
