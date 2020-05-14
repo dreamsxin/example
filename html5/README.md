@@ -1,3 +1,8 @@
+## Canvas
+
+https://github.com/fabricjs/fabric.js
+
+```js
 //页面等比缩放
 function zoomin () {
 	var orBkgWidth = 1920;
@@ -65,3 +70,4 @@ window.addEventListener(evt, function ()
 {
 	zoomin();
 });
+```
