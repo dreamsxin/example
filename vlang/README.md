@@ -1,6 +1,7 @@
 # vlang
 
 See https://vlang.io/docs
+https://github.com/vlang/v/blob/master/doc/docs.md
 
 * 性能（Performance）
 
@@ -145,6 +146,8 @@ v test code/modules/mytext
 ```shell
 v -shared -prod code/modules/mytext/mytext.v
 ```
+
+导出函数名 `mytext__hello` 没有模块时名为 `main__fib`。
 
 ## 注释范例（Comments）
 
