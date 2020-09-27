@@ -15,6 +15,10 @@ Apophenia fills a space between traditional C libraries and stats packages.
 
 能方便的把数据库中的数据导入到数据集。
 
+代码规则：
+- 宏定义
+第一个字母大写
+
 ## 实例
 
 * apop_text_to_db
@@ -95,9 +99,145 @@ double *scalar = apop_data_ptr(v); // 行列号默认都为0
 数据集结构包含了7个部分：
 - 向量 a vector,
 - 矩阵 a matrix,
-- 原始数据网格a grid of text elements,
+- 文本数据网格a grid of text elements,
 - 权重的向量值 a vector of weights,
 - 名称: row names, a vector name, matrix column names, text names,
-- 下一页数据链接
+- 下一页数据链接 more
 - 错误标记 an error marker
 
+* 现实世界中数据集（加权OLS回归 a weighted OLS regression）
+
+<table frame=box>
+<tr>
+<td>Rowname</td><td>Vector</td><td> Matrix</td><td> Text</td><td>Weights</td>
+</tr><tr valign=bottom>
+<td align=center>
+<table frame=box>
+<tr><td> </td></tr>
+<tr>
+<td>"Steven"</td>
+</tr><tr>
+<td>"Sandra"</td>
+</tr><tr>
+<td>"Joe"</td><td>
+</tr> 
+</table>
+</td><td align=center>
+<table frame=box>
+<tr>
+<th>Outcome</th>
+</tr> <tr>
+<td align=center>1</td>
+</tr><tr>
+<td align=center>0</td>
+</tr><tr>
+<td align=center>1</td>
+</tr> 
+</table>
+</td><td align=center>
+<table frame=box>
+<tr>
+<th> Age</th><th> Weight (kg)</th><th> Height (cm)</th>
+</tr> <tr>
+<td> 32</td><td> 65</td><td> 175</td>
+</tr><tr>
+<td> 41</td><td> 61</td><td> 165</td>
+</tr><tr>
+<td> 40</td><td> 73</td><td> 181</td>
+</tr> 
+</table>
+</td><td align=center>
+<table frame=box>
+<tr>
+<th> Sex</th><th> State</th>
+</tr>
+<tr>
+<td> Male</td><td> Alaska</td><td>
+</tr><tr>
+<td> Female</td><td> Alabama</td>
+</tr><tr>
+<td> Male</td><td> Alabama</td>
+</tr> 
+</table>
+</td><td align=center>
+<table frame=box>
+<tr><td> </td></tr>
+<tr>
+<td>1</td>
+</tr><tr>
+<td>3.2</td>
+</tr><tr>
+<td>2.4</td>
+</tr> 
+</table>
+</td></tr>
+</table>
+
+数据集中向量vector在-1列：
+`apop_data_get(sample_set, .row=0, .col=-1) == 1`
+
+### 子集 Subsets
+
+数据：
+```text
+Y, X_1, X_2, X_3
+2,3,4,5
+1,2,9,3
+4,7,9,0
+2,4,8,16
+1,4,2,9
+9,8,7,6
+```
+
+```c
+#ifdef Datadir
+#define DATADIR Datadir
+#else
+#define DATADIR "."
+#endif
+#include <apop.h>
+int main(){
+    apop_table_exists( DATADIR "/" "data" , 'd');
+    apop_data *d = apop_text_to_data( DATADIR "/" "data" );
+    //tally row zero of the data set's matrix by viewing it as a vector:
+    gsl_vector *one_row = Apop_rv(d, 0);
+    double sigma = apop_vector_sum(one_row);
+    printf("Sum of row zero: %g\n", sigma);
+    assert(sigma==14);
+    //view column zero as a vector; take its mean
+    double mu = apop_vector_mean(Apop_cv(d, 0));
+    printf("Mean of col zero: %g\n", mu);
+    assert(fabs(mu - 19./6)<1e-5);
+    //get a sub-data set (with names) of two rows beginning at row 3; print to screen
+    apop_data *six_elmts = Apop_rs(d, 3, 2);
+    apop_data_print(six_elmts);
+}
+```
+
+### 基本操作 Basic manipulations
+
+- apop_data_listwise_delete
+Quick-and-dirty removal of observations with NaNs
+
+- apop_data_split / apop_data_stack
+- apop_data_sort
+Sort all elements by a single column.
+
+### Apply and map
+
+如果要对数据集中每个元素进行操作，使用该方法(多核使用OpenMP's，调用 `omp_set_num_threads`)。
+
+### text grid
+
+数据集中的 `your_data->textsize[0]` 表示文本网格的行数， `your_data->textsize[1]` 表示列数，读取元素 `your_data->text[i][j]`。
+
+- apop_text_alloc 调整 `apop_data` 中 text grid 大小。
+- apop_text_set
+
+### Errors
+
+当函数调用出现错误时，会设置 `your_data->error`，您可以通过该属性判断停止程序或采取纠正措施：
+```c
+apop_data *the_data = apop_query_to_data("select * from d");
+Apop_stopif(!the_data || the_data->error, exit(1), 0, "Trouble querying the data");
+```
