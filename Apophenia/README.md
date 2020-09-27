@@ -95,7 +95,7 @@ double *scalar = apop_data_ptr(v); // 行列号默认都为0
 数据集结构包含了7个部分：
 - 向量 a vector,
 - 矩阵 a matrix,
-- 文本元素网格a grid of text elements,
+- 原始数据网格a grid of text elements,
 - 权重的向量值 a vector of weights,
 - 名称: row names, a vector name, matrix column names, text names,
 - 下一页数据链接
