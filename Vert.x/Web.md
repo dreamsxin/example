@@ -138,6 +138,8 @@ tree
 package vertx.web;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerResponse;
 
 public class MainVerticle extends AbstractVerticle {
 	@Override
