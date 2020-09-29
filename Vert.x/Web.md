@@ -167,7 +167,7 @@ public class MainVerticle extends AbstractVerticle {
 ```
 
 编辑文件 `build.gradle.kts`，添加 Vert.x plugin。
-可以添加 shadow 插件将所有依赖一起打包，也可以使用 `gradle shadowJar` 进行构建所有依赖包。
+可以添加 shadow 插件将所有依赖一起打包。
 ```gradle
 plugins {
   java
