@@ -259,3 +259,4 @@ tasks {
 ```shell
 gradle run
 ```
+参数 `--redeploy` 配合 `--on-redeploy` 实现代码更新后自动部署。
