@@ -1,21 +1,21 @@
 # 环境配置
 
-C:\Users\Administrator\AppData\Local\Android
+`C:\Users\Administrator\AppData\Local\Android`
 
-JAVA_HOME C:\Program Files\Android\Android Studio\jre
-PATH %JAVA_HOME%\bin;%JAVA_HOME%\bin\jre\bin;
+`JAVA_HOME C:\Program Files\Android\Android Studio\jre`
+`PATH %JAVA_HOME%\bin;%JAVA_HOME%\bin\jre\bin;`
 
 `gradle\wrapper\gradle-wrapper.properties`
 
-
+```shell
 cocos new popstar -p com.brianbaek.popstar -l cpp
 cocos run -p android
-
-C:\Users\Administrator\AppData\Local\Android\Sdk\cmake\3.18.1\bin
-C:\Users\Administrator\AppData\Local\Android\Sdk\cmake\3.10.2\bin
+```
 
 `cmake` version
 
+`C:\Users\Administrator\AppData\Local\Android\Sdk\cmake\3.18.1\bin`
+`C:\Users\Administrator\AppData\Local\Android\Sdk\cmake\3.10.2\bin`
 ```gradle
     externalNativeBuild {
         cmake {
