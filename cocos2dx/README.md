@@ -1,7 +1,6 @@
 # 环境配置
 
-`C:\Users\Administrator\AppData\Local\Android`
-
+`ANDROID_SDK_ROOT C:\Users\Administrator\AppData\Local\Android`
 `JAVA_HOME C:\Program Files\Android\Android Studio\jre`
 `PATH %JAVA_HOME%\bin;%JAVA_HOME%\bin\jre\bin;`
 
