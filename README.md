@@ -68,6 +68,14 @@ https://github.com/nvie/gitflow
 Java 使用 PMD 进行代码分析，获得圈复杂度。
 PHP 使用 PHPMD 进行代码分析，获得圈复杂度。
 
+* onefetch
+在终端上显示有关 Git 项目的信息。
+```shell
+sudo add-apt-repository ppa:o2sh/onefetch
+sudo apt-get update
+sudo apt-get install onefetch
+```
+
 * cloc / tokei / git_stats
 代码统计
 
