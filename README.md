@@ -68,6 +68,42 @@ https://github.com/nvie/gitflow
 Java 使用 PMD 进行代码分析，获得圈复杂度。
 PHP 使用 PHPMD 进行代码分析，获得圈复杂度。
 
+* cloc / tokei / git_stats
+代码统计
+
+```shell
+cloc --exclude-dir="env,docs," .
+git_stats generate
+```
+
+* gcov
+测试代码覆盖率
+
+```shell
+gcc -fprofile-arcs -ftest-coverage -o test test.c  
+./test  
+gcov test.c  
+```
+
+* splint
+代码静态测试
+
+```shell
+splint test.c 
+```
+
+* valgrind
+内存泄漏测试
+
+```shell
+valgrind --tool=memcheck --leak-check=yes ./test 
+```
+
+* gprof
+```shell
+gprof test gmon.out -p性能测试
+```
+
 ## 性能测试工具
 
 - LoadRunner
