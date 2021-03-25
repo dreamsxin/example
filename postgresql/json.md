@@ -194,3 +194,36 @@ CREATE INDEX idx_btree_hobbies ON jsonTbl USING GIN (jsb jsonb_path_ops);
 SELECT count(*) FROM jsonTbl WHERE jsb @> '{“hobbies” :“snowboarding”};
 SELECT count(*) FROM jsonTbl WHERE jsb @> '{“hobbies”:”snowboarding”}' OR jsb @> '{“hobbies”:”varenie”}';
 ```
+
+## 检查约束
+
+```sql
+ALTER TABLE books ADD CONSTRAINT books_doc_is_object CHECK (jsonb_typeof(doc) = 'object'); 
+
+ALTER TABLE books ADD CONSTRAINT books_isbn_is_positive_13_digit_number CHECK ( 
+	(doc->'ISBN') is not null 
+	AND jsonb_typeof(doc->'ISBN') = 'number' 
+	AND (doc->>'ISBN')::bigint > 0 
+	AND LENGTH(((doc->>'ISBN')::bigint)::text) = 13 
+); 
+
+CREATE FUNCTION top_level_keys_ok(json_obj in jsonb) RETURNS boolean LANGUAGE plpgsql as $body$ 
+	DECLARE 
+	key text;
+	legal_keys constant varchar(10)[] := array[ 'ISBN', 'title', 'year', 'genre', 'author', 'editors'];
+	
+	BEGIN
+		FOR key IN ( 
+			select jsonb_object_keys(json_obj)
+		) 
+		LOOP 
+			IF not (key = any (legal_keys)) THEN 
+				RETURN FALSE; 
+			END IF;
+		END LOOP; 
+		RETURN true; 
+	END;
+$body$; 
+
+ALTER TABLE books ADD CONSTRAINT books_doc_keys_OK CHECK (top_level_keys_ok(doc)); 
+```
