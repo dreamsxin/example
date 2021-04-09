@@ -1,16 +1,11 @@
-# go-kit 入门
+# go-ki
 
-为了了解 [go-kit](https://github.com/go-kit/kit) 的用法及以后的源码解析做准备，先从最简单的实例开始。
+https://github.com/go-kit/kit
 
-## 简单使用
+## Demo
 
-微服务是为了让开发人员能更专注业务的实现及系统解耦合（自己的见解）。[go-kit](https://github.com/go-kit/kit) 是怎么做的呢？
-- 专注业务服务实现
-- 通过组合把业务服务发布出去
+* 定义业务服务接口
 
-### 业务实现
-
-#### 定义业务服务接口
 ```go
 // StringService provides operations on strings.
 type StringService interface {
@@ -18,7 +13,7 @@ type StringService interface {
 	Count(string) int
 }
 ```
-#### 实现业务服务接口
+* 实现业务服务接口
 ```go
 // stringService is a concrete implementation of StringService
 type stringService struct{}
@@ -35,9 +30,7 @@ func (stringService) Count(s string) int {
 }
 ```
 
-### 通过组合把业务服务发布出去
-
-#### 实现 Endpoint
+* 实现 Endpoint
 
 ```go
 // Endpoints are a primary abstraction in go-kit. An endpoint represents a single RPC (method in our service interface)
@@ -60,7 +53,7 @@ func makeCountEndpoint(svc StringService) endpoint.Endpoint {
 	}
 }
 ```
-#### 执行（这里通过 HTTP 发布业务服务）
+* 启动服务
 ```go
 // Transports expose the service to the network. In this first example we utilize JSON over HTTP.
 func main() {
@@ -84,11 +77,4 @@ func main() {
 }
 ```
 
-## 小结
-
-使用 [go-kit](https://github.com/go-kit/kit) 写代码很有函数式编程的感觉，分离关注点，并通过组合方式把整个流程组合起来。
-
-## 参考
-
-https://github.com/go-kit/kit/blob/master/examples/stringsvc1/main.go
 
