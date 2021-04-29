@@ -19,6 +19,60 @@ Prometheus 所有采集的监控数据均以指标（metric）的形式保存在
 - value
 样本值一个 folat64 的浮点型数据表示当前样本的值。
 
+## 安装
+
+* 检查配置文件语法
+
+要在不启动Prometheus服务器的情况下快速检查规则文件在语法上是否正确，请安装并运行Prometheus的promtool命令行实用工具：
+
+```shell
+go get github.com/prometheus/prometheus/cmd/promtool
+promtool check rules /path/to/example.rules.yml
+```
+
+* 安装运行
+```shell
+wget http://labfile.oss.aliyuncs.com/courses/980/05/assets/prometheus-2.2.1.linux-amd64.tar.gz
+tar xvfz prometheus-2.2.1.linux-amd64.tar.gz
+cd prometheus-2.2.1.linux-amd64
+./prometheus
+```
+
+## 配置
+
+配置 Prometheus 监控其自身
+
+Prometheus 服务本身也通过路径 /metrics 暴露了其内部的各项度量指标，我们只需要把它加入到监控目标里就可以。
+```yaml
+global:
+  # 全局默认抓取间隔
+  scrape_interval: 15s
+
+scrape_configs:
+  # 任务名
+  - job_name: 'prometheus'
+
+    # 本任务的抓取间隔，覆盖全局配置
+    scrape_interval: 5s
+
+    static_configs:
+      # 抓取地址同 Prometheus 服务地址，路径为默认的 /metrics
+      - targets: ['localhost:9090']
+```
+Prometheus支持两种类型的规则，这些规则可以定期配置，然后定期评估：记录规则和警报规则。
+要在Prometheus中包含规则，请创建包含必要规则语句的文件，并让Prometheus通过Prometheus配置中的rule_files字段加载文件， 规则文件使用YAML。
+
+通过将SIGHUP发送到Prometheus进程，可以在运行时重新加载规则文件。 仅当所有规则文件格式正确时才会应用更改。
+
+* 简单的示例规则文件： 
+```yaml
+groups:
+  - name: example
+    rules:
+    - record: job:http_inprogress_requests:sum
+      expr: sum(http_inprogress_requests) by (job)
+```
+
 ## metric 指标类型
 
 - Counter 只增不减的累加指标
