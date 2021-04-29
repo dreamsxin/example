@@ -21,6 +21,32 @@ Prometheus 所有采集的监控数据均以指标（metric）的形式保存在
 
 ## 安装
 
+```shell
+sudo useradd --no-create-home --shell /bin/false prometheus
+sudo useradd --no-create-home --shell /bin/false node_exporter
+sudo mkdir /etc/prometheus
+sudo mkdir /var/lib/prometheus
+sudo chown prometheus:prometheus /etc/prometheus
+sudo chown prometheus:prometheus /var/lib/prometheus
+# 下载
+curl -LO https://github.com/prometheus/prometheus/releases/download/v2.0.0/prometheus-2.0.0.linux-amd64.tar.gz
+# 校检
+sha256sum prometheus-2.0.0.linux-amd64.tar.gz
+tar xvf prometheus-2.0.0.linux-amd64.tar.gz
+sudo cp prometheus-2.0.0.linux-amd64/prometheus /usr/local/bin/
+sudo cp prometheus-2.0.0.linux-amd64/promtool /usr/local/bin/
+sudo chown prometheus:prometheus /usr/local/bin/prometheus
+sudo chown prometheus:prometheus /usr/local/bin/promtool
+sudo cp -r prometheus-2.0.0.linux-amd64/consoles /etc/prometheus
+sudo cp -r prometheus-2.0.0.linux-amd64/console_libraries /etc/prometheus
+sudo chown -R prometheus:prometheus /etc/prometheus/consoles
+sudo chown -R prometheus:prometheus /etc/prometheus/console_libraries
+# 从主目录中删除剩余文件
+rm -rf prometheus-2.0.0.linux-amd64.tar.gz prometheus-2.0.0.linux-amd64
+# 修改配置文件
+sudo nano /etc/prometheus/prometheus.yml
+```
+
 * 检查配置文件语法
 
 要在不启动Prometheus服务器的情况下快速检查规则文件在语法上是否正确，请安装并运行Prometheus的promtool命令行实用工具：
@@ -51,14 +77,59 @@ global:
 scrape_configs:
   # 任务名
   - job_name: 'prometheus'
-
     # 本任务的抓取间隔，覆盖全局配置
     scrape_interval: 5s
-
     static_configs:
       # 抓取地址同 Prometheus 服务地址，路径为默认的 /metrics
       - targets: ['localhost:9090']
 ```
+在global设置中，定义抓取指标的默认时间间隔。请注意，除非单个导出器自己的设置覆盖全局变量，否则Prometheus会将这些设置应用于每个导出器。
+Prometheus 使用`job_name`在标签和图表上标记出口商，因此请务必在此处选择描述性内容。
+由于Prometheus会导出可用于监控性能和调试的重要数据，因此我们将全局scrape_interval指令从15秒重写为5秒，以便更频繁地进行更新。
+
+* 运行
+
+```shell
+sudo -u prometheus /usr/local/bin/prometheus \
+    --config.file /etc/prometheus/prometheus.yml \
+    --storage.tsdb.path /var/lib/prometheus/ \
+    --web.console.templates=/etc/prometheus/consoles \
+    --web.console.libraries=/etc/prometheus/console_libraries
+```
+
+* 自启动服务
+```shell
+sudo nano /etc/systemd/system/prometheus.service
+# 重新加载systemd
+sudo systemctl daemon-reload
+# 启动服务
+sudo systemctl start prometheus
+# 查看服务状态
+sudo systemctl status prometheus
+# 启动开机服务
+sudo systemctl enable prometheus
+```
+`prometheus.service` 内容
+```conf
+[Unit]
+Description=Prometheus
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=prometheus
+Group=prometheus
+Type=simple
+ExecStart=/usr/local/bin/prometheus \
+    --config.file /etc/prometheus/prometheus.yml \
+    --storage.tsdb.path /var/lib/prometheus/ \
+    --web.console.templates=/etc/prometheus/consoles \
+    --web.console.libraries=/etc/prometheus/console_libraries
+
+[Install]
+WantedBy=multi-user.target
+```
+
 Prometheus支持两种类型的规则，这些规则可以定期配置，然后定期评估：记录规则和警报规则。
 要在Prometheus中包含规则，请创建包含必要规则语句的文件，并让Prometheus通过Prometheus配置中的rule_files字段加载文件， 规则文件使用YAML。
 
@@ -71,6 +142,56 @@ groups:
     rules:
     - record: job:http_inprogress_requests:sum
       expr: sum(http_inprogress_requests) by (job)
+```
+
+## 安装Node Exporter
+
+使用节点导出器生成有关我们服务器资源的指标，提供有关系统的详细信息，包括CPU，磁盘和内存使用情况。
+```shell
+curl -LO https://github.com/prometheus/node_exporter/releases/download/v0.15.1/node_exporter-0.15.1.linux-amd64.tar.gz
+tar xvf node_exporter-0.15.1.linux-amd64.tar.gz
+sudo cp node_exporter-0.15.1.linux-amd64/node_exporter /usr/local/bin
+sudo chown node_exporter:node_exporter /usr/local/bin/node_exporter
+rm -rf node_exporter-0.15.1.linux-amd64.tar.gz node_exporter-0.15.1.linux-amd64
+sudo nano /etc/systemd/system/node_exporter.service
+```
+`node_exporter.service`
+```conf
+[Unit]
+Description=Node Exporter
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=node_exporter
+Group=node_exporter
+Type=simple
+ExecStart=/usr/local/bin/node_exporter
+
+[Install]
+WantedBy=multi-user.target
+```
+默认的收集器列表 https://github.com/prometheus/node_exporter/blob/master/README.md#enabled-by-default
+如果您需要覆盖默认的收集器列表，可以使用--collectors.enabled标志，如：
+`ExecStart=/usr/local/bin/node_exporter --collectors.enabled meminfo,loadavg,filesystem`
+
+* 配置 Prometheus 获取节点导出器信息
+
+在`scrape_configs`块的末尾，添加一个名为`node_exporter`的新条目。
+
+```yml
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9090']
+  - job_name: 'node_exporter'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9100']  
 ```
 
 ## metric 指标类型
