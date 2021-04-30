@@ -84,5 +84,6 @@ go-callvis -format=svg -file=travis -minlen 3 -nostd -group type,pkg -focus work
 
 ```shell
 cd /go/src/github.com/go-kit/kit/examples/apigateway
-go-callvis -include github.com/go-kit/kit -group pkg,type main.go
+go-callvis -include github.com/go-kit/kit -group pkg,type -skipbrowser main.go
+go-callvis -format=png -include github.com/go-kit/kit -group pkg -skipbrowser main.go
 ```
