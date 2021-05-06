@@ -1416,3 +1416,7 @@ echo "PATH:$PATH"
  
 echo "*** 服务器重启完成！ ***"
 ```
+
+## 问题
+
+https://www.educative.io/blog/50-golang-interview-questions
