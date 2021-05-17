@@ -31,3 +31,11 @@ atomic.AddUint32(&b, -3 & math.MaxUint32)
 - uint64
 - uintptr
 - unsafe.Pointer
+
+## atomic.Value
+
+可以不依赖于不保证兼容性的unsafe.Pointer类型，同时又能将任意数据类型的读写操作封装成原子性操作(让中间状态对外不可见)。
+- v.Store(c)
+写操作，将原始的变量c存放到一个atomic.Value类型的v里面。
+- c = v.load()
+读操作，从线程安全的v中读取上一步存放的内容。
