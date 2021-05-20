@@ -8,6 +8,13 @@ nsg易于配置和部署，所有参考都通过命令行指定，编译好的�
 
 https://github.com/bitly/nsq
 
+## nsq 的组成
+
+- nsqd：一个负责接收、排队、转发消息到客户端的守护进程
+- nsqlookupd：管理拓扑信息并提供最终一致性的发现服务的守护进程
+- nsqadmin：一套Web用户界面，可实时查看集群的统计数据和执行各种各样的管理任务
+- utilities：常见基础功能、数据流处理工具，如nsq_stat、nsq_tail、nsq_to_file、nsq_to_http、nsq_to_nsq、to_nsq
+
 ## 安装 nsq
 
 ```shell
@@ -348,5 +355,73 @@ func (w *WaitGroupWrapper) Wrap(cb func()) {
         cb()
         w.Done()
     }()
+}
+```
+
+## golang 使用 nsq
+
+### 生产者
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+	"time"
+
+	nsq "github.com/nsqio/go-nsq"
+)
+
+func main() {
+	cfg := nsq.NewConfig()
+	// 连接 nsqd 的 tcp 连接
+	producer, err := nsq.NewProducer("127.0.0.1:4150", cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 发布消息
+	var count int
+	for {
+		count++
+		body := fmt.Sprintf("test %d", count)
+		if err := producer.Publish("test", []byte(body)); err != nil {
+			log.Fatal("publish error: " + err.Error())
+		}
+		time.Sleep(1 * time.Second)
+	}
+}
+```
+
+## 消费者
+
+```go
+package main
+
+import (
+	"log"
+
+	"github.com/nsqio/go-nsq"
+)
+
+func main() {
+	cfg := nsq.NewConfig()
+	consumer, err := nsq.NewConsumer("test", "levonfly", cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// 处理信息
+	consumer.AddHandler(nsq.HandlerFunc(func(message *nsq.Message) error {
+		log.Println(string(message.Body))
+		return nil
+	}))
+
+	// 连接 nsqd 的 tcp 连接
+	if err := consumer.ConnectToNSQD("127.0.0.1:4150"); err != nil {
+		log.Fatal(err)
+	}
+	<-consumer.StopChan
 }
 ```
