@@ -15,6 +15,14 @@ https://github.com/bitly/nsq
 - nsqadmin：一套Web用户界面，可实时查看集群的统计数据和执行各种各样的管理任务
 - utilities：常见基础功能、数据流处理工具，如nsq_stat、nsq_tail、nsq_to_file、nsq_to_http、nsq_to_nsq、to_nsq
 
+如果客户端收到该消息，可以使用如下三个命令对此进行回复：
+
+- FIN: Finish a message，表示成功处理完成。
+- REQ: Re-queue a message，表示消息处理失败，需要重新入队再次进行处理。
+- TOUCH: Reset the timeout for an in-flight message，表示需要重置消息的timeout时间。
+
+如果客户端没有收到消息或是收到消息后没有进行任何的回复，则随着到达消息的超时时间，NSQD会将超时的消息重新入队，再次发送给客户端。
+
 ## 安装 nsq
 
 ```shell
