@@ -350,3 +350,49 @@ while ($channel->is_consuming()) {
     echo '*' . PHP_EOL;
 }
 ```
+
+## Golang
+
+tag是一个64位的long值，最大值是 9223372036854775807
+
+- channel.basicReject(deliveryTag, true);
+basic.reject 方法拒绝 deliveryTag对应的消息，第二个参数是否`requeue`，`true`则重新入队列，否则丢弃或者进入死信队列。重新入队后，该消费者还是会消费到该条被reject的消息。
+
+- channel.basicNack(deliveryTag, false, true);
+basic.nack方法为不确认deliveryTag对应的消息，第二个参数是否应用于多消息，第三个参数是否requeue，与basic.reject区别就是同时支持多个消息，可以nack该消费者先前接收未ack的所有消息。nack后的消息也会被自己消费到。
+
+- channel.basicRecover(true);
+basic.recover是否恢复消息到队列，参数是是否`requeue`，`true`则重新入队列，并且尽可能的将之前recover的消息投递给其他消费者消费，而不是自己再次消费。`false`则消息会重新被投递给自己。
+	
+```go
+connection = factory.newConnection();
+
+final Channel channel = connection.createChannel();
+channel.queueDeclare("队列名", true, false, false, null);
+
+//第二个参数设为true为自动应答，false为手动ack
+channel.basicConsume("队列名", true, new DefaultConsumer(channel){
+	  @Override
+	public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+		   try {
+			    Thread.sleep(10000);
+			    System.out.println(new String(body, "UTF-8"));
+				//模拟异常
+				int i = 1/0;
+				//手动ack
+				//channel.basicAck(envelope.getDeliveryTag(), false); 
+			} catch (Exception e) {
+				
+				//重新放入队列
+				//channel.basicNack(envelope.getDeliveryTag(), false, true);
+				//抛弃此条消息
+				//channel.basicNack(envelope.getDeliveryTag(), false, false);
+				e.printStackTrace();
+
+			}finally {
+				
+			}
+	    
+	}
+});
+```
