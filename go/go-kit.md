@@ -302,3 +302,48 @@ func main() {
     level.Error(logger).Log("exit", <-errs)
 }
 ```
+
+## kitgen
+
+生成代码
+
+* 安装
+
+```shell
+go get github.com/nyarly/inlinefiles
+cd $GOPATH/src/github.com/go-kit/kit/cmd/kitgen
+go install
+
+# Check installation by running:
+kitgen -h
+```
+
+* 定义服务接口
+
+```go
+// service.go
+package profilesvc // don't forget to name your package
+
+type Service interface {
+    PostProfile(ctx context.Context, p Profile) error
+    // ...
+}
+type Profile struct {
+    ID        string    `json:"id"`
+    Name      string    `json:"name,omitempty"`
+    // ...
+}
+```
+
+* 生成代码
+
+```shell
+kitgen ./service.go
+# kitgen has a couple of flags that you may find useful
+
+# keep all code in the root directory
+kitgen -repo-layout flat ./service.go
+
+# put generated code elsewhere
+kitgen -target-dir ~/go/src/myleft.org/kitchenservice/brewcoffee
+```
