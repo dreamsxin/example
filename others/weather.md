@@ -7,4 +7,4 @@
 - http://m.weather.com.cn/data/101010100.html
 六天预报
 
-https://lbs.amap.com/api/webservice/guide/api/weatherinfo#weatherinfo
+- https://lbs.amap.com/api/webservice/guide/api/weatherinfo#weatherinfo
