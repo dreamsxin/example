@@ -285,3 +285,9 @@ git cvsimport -o origin -v -d :pserver:anonymous@cvs.schmorp.de/schmorpforge lib
  git submodule foreach git pull
 
  ```
+
+## git pull 更新忽略某个文件或目录
+
+```shell
+git update-index --assume-unchanged common/common.go
+```
