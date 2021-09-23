@@ -79,3 +79,27 @@ host    all             all             ::1/128                 ident
 ```shell
 sudo -u postgres psql
 ```
+
+## reject
+无条件地拒绝连接。这有助于从一个组中"过滤出"特定主机，例如一个reject行可以阻塞一个特定的主机连接，而后面一行允许一个特定网络中的其余主机进行连接。
+
+## gss
+用 GSSAPI 认证用户。只对TCP/IP 连接可用。
+
+## sspi
+用 SSPI 来认证用户。只在Windows 上可用。
+
+## ldap
+使用LDAP服务器认证。
+
+## radius
+用 RADIUS 服务器认证。
+
+## cert
+使用 SSL 客户端证书认证。
+
+## pam
+使用操作系统提供的可插入认证模块服务（PAM）认证。
+
+## bsd
+使用由操作系统提供的 BSD 认证服务进行认证。
