@@ -1,4 +1,12 @@
-# go-ki
+# go-kit
+
+* 认证 - Basic 认证和 JWT 认证
+* 传输 - HTTP、Nats、gRPC 等等。
+* 日志记录 - 用于结构化服务日志记录的通用接口。
+* 指标 - CloudWatch、Statsd、Graphite 等。
+* 追踪 - Zipkin 和 Opentracing。
+* 服务发现 - Consul、Etcd、Eureka 等等。
+* 断路器 - Hystrix 的 Go 实现。
 
 https://github.com/go-kit/kit
 
