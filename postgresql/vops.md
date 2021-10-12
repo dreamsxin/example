@@ -10,6 +10,87 @@ https://github.com/postgrespro/vops
 2. 调用VOPS提供的转换函数，将基础表的数据转移到VOPS表（即转换、规整为瓦片存储的过程）。
 3. 使用正常的SQL，访问VOPS表即可，但是需要注意，使用VOPS提供的操作符哦。
 
+* 操作符
+
+因为是瓦片类型，VOPS重写了对应的操作符来支持向量计算。
+
+1. `+、-、/、*`保持原样不变。
+2. 比较操作符`=、<>、>、>=、<、<=`保持原样不变。
+3. 逻辑操作符`and, or, not`是SQL PARSER部分，没有开放重写，VOPS定义了`&、|、!`来对应他们的功能（注意优先级）。
+4. 由于BETWEEN AND无法重写，使用`betwixt(x, a , b)`函数来代替这个语法。
+5. 逻辑操作返回的是`vops_boolean`，所以使用`filter`函数来处理断言 `where filter( (x=1) | (x=2) )`，filter()会对传入参数的内容设置`filter_mask`，任何情况下都返回`boolean:true`
+6. 除了函数调用，所有的向量化计算操作符，在传入字符串常量时，必须显示转换。
+```sql
+select sum(price) from trades where filter(day >= '2017-01-01'::date);  
+select sum(price) from trades where filter(betwixt(day, '2017-01-01', '2017-02-01')); 
+```
+7. 对于char, int2, int4类型，VOPS提供了一个连接符||，用于如下合并`(char || char) -> int2, (int2 || int2) -> int4, (int4 || int4) -> int8`
+8. 以及 `is_null`、`is_not_null`、`ifnull`
+
+* 聚合函数
+
+1. 目前VOPS只支持INT类型的聚合操作（int2, int4, int8）
+2. 由于map函数是vardic参数函数，所以末尾的所有expr类型必须一致，所有的expr类型必须一致，即 `sum(expr1),avg(expr2),...`，这些expr类型必须一致。
+3. 
+`count, min, max, sum, avg`
+
+聚合分为两种，一种是非分组聚合，一种是分组聚合。
+
+* 非分组聚合和原有用法一样
+```sql
+select sum(l_extendedpricel_discount) as revenue  
+from vops_lineitem  
+where filter(betwixt(l_shipdate, '1996-01-01', '1997-01-01')  
+        & betwixt(l_discount, 0.08, 0.1)  
+        & (l_quantity < 24));
+```
+
+* 带有group by的分组聚合稍微复杂一些，需要用到map和reduce函数
+`map`函数实现聚合操作，并且返回一个`hash table`，`reduce`函数则将`hash table`的数据一条条解析并返回。
+`map`函数是运算，`reduce`函数是返回结果。
+- map(group_by_expression, aggregate_list, expr {, expr })
+`expr`的数据类型必须一致，`map(c1||c2, 'count,max,avg,max', c3, c4, c5, c6)` 表示  `count(*),  count(c3),  max(c4).  avg(c5),  max(c6)  group by c1, c2; 
+- reduce(map(...))
+
+```sql
+select   
+    sum(l_quantity),  
+    sum(l_extendedprice),  
+    sum(l_extendedprice(1-l_discount)),  
+    sum(l_extendedprice(1-l_discount)(1+l_tax)),  
+    avg(l_quantity),  
+    avg(l_extendedprice),  
+    avg(l_discount)  
+  from vops_lineitem   
+  where l_shipdate <= '1998-12-01'::date  
+  group by l_returnflag, l_linestatus;  
+ 
+-- 改写为  
+ 
+select reduce(map(l_returnflag||l_linestatus, 'sum,sum,sum,sum,avg,avg,avg',  
+    l_quantity,  
+    l_extendedprice,  
+    l_extendedprice(1-l_discount),  
+    l_extendedprice(1-l_discount)(1+l_tax),  
+    l_quantity,  
+    l_extendedprice,  
+    l_discount))   
+  from vops_lineitem   
+  where filter(l_shipdate <= '1998-12-01'::date);
+```
+
+* 索引
+
+```sql
+create index low_boundary on trades using brin(first(day)); -- trades table is ordered by day  
+create index high_boundary on trades using brin(last(day)); -- trades table is ordered by day 
+
+-- first, last, high, low返回的是PostgreSQL原生boolean，而不是vops_boolean，所以不需要加filter，可以直接写在where表达式中。
+-- 那么下面这个QUERY可以用到以上索引
+
+select sum(price) from trades where first(day) >= '2015-01-01' and last(day) <= '2016-01-01' and filter(betwixt(day, '2015-01-01', '2016-01-01'));
+```
+
 * 创建普通表
 ```sql
 create table t(c1 int,c2 int);
@@ -50,6 +131,11 @@ select unnest(l.*) from t_vops l limit 5;
 ## VOPS瓦片式存储表10亿
 
 使用 dblink 实现并发查询。
+已使用DBLINK异步调用，防止再度并行，设置参数
+```sql
+alter role postgres set max_parallel_workers_per_gather=0;
+alter role postgres set work_mem='2GB';
+```
 
 ```sql
 -- 连接函数
