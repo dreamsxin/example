@@ -221,3 +221,10 @@ Google 和 Baidu 都支持这个指令。
 把这些指令混合起来使用则更强大。
 例如：inurl:gov 减肥
 返回的就是url 中包含gov，页面中有“减肥”这个词的页面。
+
+## GeoIP
+
+https://github.com/Loyalsoldier/geoip
+
+## CellId
+https://location.services.mozilla.com/downloads
