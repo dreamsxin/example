@@ -52,3 +52,18 @@ journalctl -b -2 只显示错误、冲突和重要告警信息
 显示更多输出方案：
 
 # journalctl -o short|short-iso|short-percise|short-monotonic|verbose|export|json|json-pretty|json-sse|cat
+
+##
+
+`/usr/lib/systemd/system/tomcat9.service`
+
+```txt
+StandardOutput=syslog
+StandardError=syslog
+```
+
+```shell
+sudo systemctl edit --full tomcat9.service
+
+tail -f /var/log/syslog
+```
