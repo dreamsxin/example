@@ -1,5 +1,37 @@
+## 漏桶算法
 
-# 限制请求数和连接数
+Nginx按请求速率限速模块使用的是漏桶算法，算法思想：
+
+- 水（请求）从上方倒入水桶，从水桶下方流出（被处理）；
+- 来不及流出的水存在水桶中（缓冲），以固定速率流出；
+- 水桶满后水溢出（丢弃）。
+- 这个算法的核心是：缓存请求、匀速处理、多余的请求直接丢弃。
+- 相比漏桶算法，令牌桶算法不同之处在于它不但有一只“桶”，还有个队列，这个桶是用来存放令牌的，队列才是用来存放请求的。
+
+## 限制请求数和连接数
+
+- limit_req_zone 用来限制单位时间内单个标识客户端的请求数，即速率限制,采用的漏桶算法 "leaky bucket"。
+- limit_req_conn 用来限制单个标识客户端同一时间连接数，即并发限制。
+
+	*标识客户端可以是针对客户端，也可以针对请求的地址。*
+
+## imit_req_zone 参数配置
+
+* limit_req_zone $binary_remote_addr zone=one:10m rate=1r/s;
+
+- $binary_remote_addr 表示通过remote_addr这个标识来做限制，“binary_”的目的是缩写内存占用量，是限制同一客户端ip地址。
+- zone=one:10m 表示生成一个大小为10M，名字为one的内存区域，用来存储访问的频次信息。
+- rate=1r/s 表示允许相同标识的客户端的访问频次，这里限制的是每秒1次，还可以有比如30r/m的。
+
+* limit_req zone=one burst=5 nodelay;
+
+- zone=one 设置使用哪个配置区域来做限制，与上面limit_req_zone 里的name对应。
+- burst=5 重点说明一下这个配置，burst爆发的意思，这个配置的意思是设置一个大小为5的缓冲区当有大量请求（爆发）过来时，超过了访问频次限制的请求可以先放到这个缓冲区内。
+- nodelay 如果设置，超过访问频次而且缓冲区也满了的时候就会直接返回503，如果没有设置，则所有请求会等待排队。
+
+* limit_req_log_level error;
+
+当服务器由于limit被限速或缓存时，配置写入日志。延迟的记录比拒绝的记录低一个级别。例子：limit_req_log_level notice延迟的的基本是info。
 
 ```conf
 http {
@@ -9,21 +41,34 @@ http {
         limit_req_zone $binary_remote_addr zone=qps2:1m  rate=2r/s;
         limit_req_zone $binary_remote_addr zone=qps3:1m  rate=4r/s;
 
-		limit_req_zone $server_name zone=perserver:10m rate=10r/s;
-		limit_req_zone $request_uri zone=perrequesturi:10m rate=500r/s;
-		limit_req_zone $uri zone=peruri:10m rate=100r/s;
-		limit_req_zone "$binary_remote_addr$request_uri" zone=req_dev:10m rate=2r/s;
+        limit_req_zone $server_name zone=perserver:10m rate=10r/s;
+        limit_req_zone $request_uri zone=perrequesturi:10m rate=500r/s;
+        limit_req_zone $uri zone=peruri:10m rate=100r/s;
+        limit_req_zone "$binary_remote_addr$request_uri" zone=req_dev:10m rate=2r/s;
 
         limit_req_zone global zone=apiqps:1k rate=200/s;
         limit_req_zone global zone=apiqps2:1k rate=500/s;
 }
 ```
 
-## 限制带宽
+## 根据请求url限制
+
+- limit_req_zone $binary_remote_addr $uri zone=two:3m rate=1r/s;               # $uri:不带客户端请求参数
+- limit_req_zone $binary_remote_addr $request_uri zone=thre:3m rate=1r/s;      # $request_uri:带客户端请求参数
+
+## limit_conn_zone 参数配置
+
+* limit_conn_zone $binary_remote_addr zone=addr:10m;
+
+参数与 imit_req_zone 雷同
 
 ```conf
+limit_conn_zone $binary_remote_addr zone=perip:10m; ## 每个ip连接数
+limit_conn_zone $server_name zone=perserver:10m; ## 每个服务连接数
+
 server {
-        limit_conn perip 15;
+        limit_conn perip 5;
+	limit_conn perserver 100;
         # 限制下载速度
         limit_rate 100k;
 
@@ -33,6 +78,7 @@ server {
         }
 }
 ```
+
 如何设置能限制某个IP某一时间段的访问次数是一个让人头疼的问题，特别面对恶意的ddos攻击的时候。
 其中 CC 攻击（Challenge Collapsar）是 DDOS（分布式拒绝服务）的一种，也是一种常见的网站攻击方法，攻击者通过代理服务器或者肉鸡向向受害主机不停地发大量数据包，造成对方服务器资源耗尽，一直到宕机崩溃。
 
