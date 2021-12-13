@@ -46,8 +46,8 @@ http {
         limit_req_zone $uri zone=peruri:10m rate=100r/s;
         limit_req_zone "$binary_remote_addr$request_uri" zone=req_dev:10m rate=2r/s;
 
-        limit_req_zone global zone=apiqps:1k rate=200/s;
-        limit_req_zone global zone=apiqps2:1k rate=500/s;
+        limit_req_zone global zone=apiqps:1k rate=200r/s;
+        limit_req_zone global zone=apiqps2:1k rate=500r/s;
 }
 ```
 
