@@ -99,6 +99,26 @@ gccgo ./hello.go
 ./a.out
 ```
 
+
+go build 的时候会选择性地编译以系统名结尾的文件(linux、darwin、windows、freebsd)。例如Linux(Unix)系统下编译只会选择array_linux.go文件，其它系统命名后缀文件全部忽略。
+
+在xxx.go文件的文件头上添加 `// + build !windows (tags)`，可以选择在windows系统下面不编译 
+
+```go
+// +build !windows
+
+package main
+```
+
+## 静态分析工具
+
+```shell
+go vet xxx.go
+go fmt xxx.go
+# 检测 HTTP 响应主体是否关闭
+go vet -vettool=$(which bodyclose) xxx.go
+```
+
 ## 函数
 
 函数也是值。
