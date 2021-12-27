@@ -23,6 +23,54 @@ https://github.com/bitly/nsq
 
 如果客户端没有收到消息或是收到消息后没有进行任何的回复，则随着到达消息的超时时间，NSQD会将超时的消息重新入队，再次发送给客户端。
 
+* 服务端对发送中的消息处理逻辑
+服务端会定时检查client端的连接状态，读取客户端发过来的各种命令，发送心跳等。在发送给客户端之前，会调用`subChannel.StartInFlightTimeout(msg, client.ID, msgTimeout)`改变这个消息的状态。如果处理成功就把这个消息从`InFlight`的状态中去掉，如果在规定的时间内没有收到客户端的反馈，则认为这个消息超时，然后重新归队，两次进行处理。
+
+* 客户端对消息的处理和响应
+客户端要消费消息，需要实现接口
+```go
+type Handler interface {
+	HandleMessage(message *Message) error
+}
+```
+在服务端发送消息给客户端后，如果在处理业务逻辑时，如果发生错误则给服务器发送Requeue命令告诉服务器，重新发送消息进处理。如果处理成功，则发送`Finish`命令。客户端可以调用 `message.DisableAutoResponse` 取消自动提交。
+```go
+func (r *Consumer) handlerLoop(handler Handler) {
+	r.log(LogLevelDebug, "starting Handler")
+
+	for {
+		message, ok := <-r.incomingMessages
+		if !ok {
+			goto exit
+		}
+
+		if r.shouldFailMessage(message, handler) {
+			message.Finish()
+			continue
+		}
+
+		err := handler.HandleMessage(message)
+		if err != nil {
+			r.log(LogLevelError, "Handler returned error (%s) for msg %s", err, message.ID)
+			if !message.IsAutoResponseDisabled() {
+				message.Requeue(-1)
+			}
+			continue
+		}
+
+		if !message.IsAutoResponseDisabled() {
+			message.Finish()
+		}
+	}
+
+exit:
+	r.log(LogLevelDebug, "stopping Handler")
+	if atomic.AddInt32(&r.runningHandlers, -1) == 0 {
+		r.exit()
+	}
+}
+```
+
 ## 安装 nsq
 
 ```shell
