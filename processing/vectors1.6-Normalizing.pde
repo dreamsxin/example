@@ -35,6 +35,12 @@ class PVector {
     float m = mag();
     if (m != 0) {
       div(m);
+    } else {
+      if (x == 0) {
+        y = 1;
+      } else {
+        x = 1;
+      }
     }
   }
 
