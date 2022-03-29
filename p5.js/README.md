@@ -34,3 +34,43 @@ function draw() {
   ellipse(x,y,16,16); //Display the ball at the location (x,y).
 }
 ```
+
+## Class
+
+```js
+class PVector {
+  constructor(x_, y_) {
+    this.x = x_;
+    this.y = y_;
+  }
+
+  Add(v) {
+    this.y = this.y + v.y;
+    this.x = this.x + v.x;
+  }
+}
+
+let loc, velocity;
+
+function setup() {
+  createCanvas(400, 400);
+  loc = new PVector(100,100);
+  velocity = new PVector(1,3.3);
+}
+
+function draw() {
+  background(220);
+
+  loc.Add(velocity);
+  
+  if ((loc.x > width) || (loc.x < 0)) { //Check for bouncing.
+    velocity.x = velocity.x * -1;
+  }
+  if ((loc.y > height) || (loc.y < 0)) {
+    velocity.y = velocity.y * -1;
+  }
+  stroke(0);
+  fill(175);
+  ellipse(loc.x,loc.y,16,16); //Display the ball at the location (x,y).
+}
+```
