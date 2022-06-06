@@ -1,4 +1,4 @@
-# NSQ 源码解读
+# NSQ
 
 NSQ是由知名短链接服务商bitly用Go语言开发的实时消息处理系统，具有高性能、高可靠、无视单点故障等优点，是一个非常不错的新兴的消息队列解决方案。
 
@@ -7,6 +7,27 @@ nsg易于配置和部署，所有参考都通过命令行指定，编译好的�
 源码下载地址：
 
 https://github.com/bitly/nsq
+
+## 安装
+
+```shell
+git clone https://github.com/nsqio/nsq
+cd nsq
+make && sudo make install
+```
+
+## 运行
+```shell
+nslookup
+nsqd --lookupd-tcp-address=127.0.0.1:4160
+nsqadmin --lookupd-http-address=127.0.0.1:4161
+curl -d 'hello world 1' 'http://127.0.0.1:4151/pub?topic=test'
+nsq_to_file --topic=test --output-dir=/tmp --lookupd-http-address=127.0.0.1:4161
+curl -d 'hello world 2' 'http://127.0.0.1:4151/pub?topic=test'
+curl -d 'hello world 3' 'http://127.0.0.1:4151/pub?topic=test'
+```
+
+运行之后，`/tmp/test.*.log` 文件中，会有消息 `hello world 2` 和 `hello world 3`，没有 `hello word 1`，因为通道还没有建立，通道建立之后，客户端重启，消息也不会丢失。
 
 ## nsq 的组成
 
