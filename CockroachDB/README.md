@@ -39,6 +39,17 @@ cockroach init --certs-dir=/data/certs01 --host=node1ip
 sudo cockroach node status --certs-dir=/data/certs01 --host=node1ip
 ```
 
+## 登录web后台
+
+* 创建web登录用户
+```shell
+cockroach sql --certs-dir=/data/certs01 --host=node1ip
+> CREATE USER root WITH PASSWORD '123456';
+> GRANT admin TO dreamsxin;
+> SHOW USERS;
+> SHOW DATABASES;
+```
+
 ## 备份恢复
 
 ```sql
