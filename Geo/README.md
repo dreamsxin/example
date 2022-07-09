@@ -1,2 +1,3 @@
 - github.com/oschwald/geoip2-golang
 - https://github.com/P3TERX/GeoLite.mmdb
+- https://mailfud.org/geoip-legacy/
