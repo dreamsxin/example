@@ -51,5 +51,12 @@ cd yugabyte-2.15.0.1/
 ./bin/yugabyted status
 ```
 
-## 多节点
+## 单机多节点
 
+```shell
+mkdir -p /data/yugabytedb/{node1,node2,node3}
+
+/bin/yugabyted start --base_dir=/data/yugabytedb/node1 --listen=127.0.0.1
+./bin/yugabyted start --base_dir=/data/yugabytedb/node2 --listen=127.0.0.2 --join=127.0.0.1
+./bin/yugabyted start --base_dir=/data/yugabytedb/node3 --listen=127.0.0.3 --join=127.0.0.1
+```
