@@ -16,11 +16,12 @@ https://github.com/go-kit/kit
 定义服务接口，以及实现服务处理逻辑。
 
 - endpoint
-定义 `endpoints` 集合 `set`， 实现服务接口，调用 `Endpoint`。
+定义 `endpoints` 集合 `set`， 实现服务接口，调用 `Endpoint`。`MakeXXXXEndpoint returns an endpoint that invokes XXXX on the service.`
+定义Request、Response格式，并可以使用装饰器包装函数，依次来实现各个中间件的嵌套。比如在请求的时候添加日志。
 
 - transport
 `gprc`: 
-	调用 `NewGRPCClient` 传递 `endpoint` 定义的 `set`，通过 `grpctransport.NewClient().Endpoint()` 创建 `Endpoint` 赋值给 `set`。
+	调用 `NewGRPCClient` 传递 `conn`， 构建并返回 `endpoint` 定义的 `set`，通过 `grpctransport.NewClient().Endpoint()` 创建 `Endpoint` 赋值给 `set`。
 	调用 `NewGRPCServer` 传递 `service` 目录定义的服务实例。
 	
 `http`: 实现 `NewHTTPHandler`，传递 `endpoints` 集合 `set`。
