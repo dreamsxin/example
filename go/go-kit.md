@@ -10,21 +10,35 @@
 
 https://github.com/go-kit/kit
 
+## 几个重要的数据类型
+
+```go
+type Endpoint func(ctx context.Context, request interface{}) (response interface{}, err error)
+type Middleware func(Endpoint) Endpoint
+
+type Endpointer interface {
+	Endpoints() ([]endpoint.Endpoint, error)
+}
+
+type FixedEndpointer []endpoint.Endpoint
+```
+
 ## 使用说明
 
 - service
-定义服务接口，以及实现服务处理逻辑。
+定义服务接口，以及实现服务处理逻辑，提供给 `Endpoint` 使用。
 
 - endpoint
-定义 `endpoints` 集合 `set`， 实现服务接口，调用 `Endpoint`。`MakeXXXXEndpoint returns an endpoint that invokes XXXX on the service.`
+实现 `Endpoint` 调用 `service` 方法。
+定义 `endpoints` 集合 `set`， 实现服务接口，调用 `Endpoint`。
 定义Request、Response格式，并可以使用装饰器包装函数，依次来实现各个中间件的嵌套。比如在请求的时候添加日志。
 
 - transport
 `gprc`: 
-	调用 `NewGRPCClient` 传递 `conn`， 构建并返回 `endpoint` 定义的 `set`，通过 `grpctransport.NewClient().Endpoint()` 创建 `Endpoint` 赋值给 `set`。
-	调用 `NewGRPCServer` 传递 `service` 目录定义的服务实例。
+	调用 `NewGRPCClient` 传递 `conn`， 构建并返回 `endpoint` 定义的 `set`，通过 `grpctransport.NewClient().Endpoint()` 创建 `Endpoint` 赋值给 `set`，提供给 client 使用。
+	调用 `NewGRPCServer` 传递 `service` 目录定义的服务实例，提供给外层 `ServerGRPC` 服务使用。
 	
-`http`: 实现 `NewHTTPHandler`，传递 `endpoints` 集合 `set`。
+`http`: 实现 `NewHTTPHandler`，传递 `endpoints` 集合 `set`，提供给外层 `ServerHttp` 服务使用。
 
 * 注册中心
 
