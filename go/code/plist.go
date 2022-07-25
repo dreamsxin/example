@@ -8,6 +8,7 @@ import (
     "path"
     "encoding/base64"
     "encoding/xml"
+    "encoding/hex"
 )
 
 type PList struct {
@@ -51,7 +52,9 @@ func main() {
                     if plist.Dict.Value != "" {
                         fileBytes, err := base64.StdEncoding.DecodeString(plist.Dict.Value)
                         fileBytes = fileBytes[15:]
-                        fmt.Println(string(fileBytes))
+                        //fmt.Println(string(fileBytes))
+                        fmt.Println(hex.EncodeToString(fileBytes[0:16]))
+
                         if err != nil {
                             fmt.Println(v.Name() + "base64", err.Error())
                             continue
