@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>html5 Hello World test</title>
+
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1, minimum-scale=1,maximum-scale=1"/>
+
+</head>
+<body>
+<video controls width="480" height="320"></video>
+
+<script>
+console.log(navigator.mediaDevices.getSupportedConstraints());
+navigator.mediaDevices.getUserMedia({audio: true, video: true}).then((mediaStream) => {
+
+  console.log(mediaStream);
+  document.querySelector('video').srcObject = mediaStream;
+  // 5s后，停止播放第一个音频轨道
+  setTimeout(() => {
+    const tracks = mediaStream.getAudioTracks();
+    console.log(tracks.length);
+    if (tracks.length > 0) {
+      tracks[0].stop();
+    }
+
+    const track = mediaStream.getVideoTracks()[0];
+    console.log(track);
+    // 截取图片
+    const imageCapture = new ImageCapture(track);
+    track.stop();
+  }, 5000);
+}).catch(function(err) {
+  /* 处理error */
+  console.log(err);
+});
+</script>
+</body>
+</html>
