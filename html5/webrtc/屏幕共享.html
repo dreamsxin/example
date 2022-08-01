@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>html5 Hello World test</title>
+
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1, minimum-scale=1,maximum-scale=1"/>
+
+</head>
+<body>
+<video controls width="480" height="320"></video>
+
+<script>
+console.log(navigator.mediaDevices.getSupportedConstraints());
+navigator.mediaDevices.getDisplayMedia().then((mediaStream) => {
+
+  console.log(mediaStream);
+  document.querySelector('video').srcObject = mediaStream;
+}).catch(function(err) {
+  /* 处理error */
+  console.log(err);
+});
+</script>
+</body>
+</html>
