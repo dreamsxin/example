@@ -1,4 +1,4 @@
 - https://github.com/wongkuin/Run
 - https://github.com/quannadev/sgame-client
 - https://github.com/dreamsxin/cocos-redvip_v2
-- https://github.com/dreamsxin/cocos-rummy
+- https://gitee.com/konno/RummyChinaBlue
