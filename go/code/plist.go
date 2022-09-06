@@ -4,11 +4,13 @@ import (
     "fmt"
     "os"
     "strings"
+    "bytes"
     "io/ioutil"
     "path"
     "encoding/base64"
     "encoding/xml"
     "encoding/hex"
+    "compress/gzip"
 )
 
 type PList struct {
@@ -17,6 +19,17 @@ type PList struct {
 type Dict struct{
 	Key    string `xml:"key"`
 	Value string `xml:"string"`
+}
+
+//gzip解密
+func GzipDecode(in []byte) ([]byte, error) {
+    reader, err := gzip.NewReader(bytes.NewReader(in))
+    if err != nil {
+         var out []byte
+        return out, err
+    }
+    defer reader.Close()
+    return ioutil.ReadAll(reader)
 }
 
 func main() {
@@ -50,15 +63,33 @@ func main() {
                     }
 
                     if plist.Dict.Value != "" {
+                        //fmt.Println(plist.Dict.Value)
                         fileBytes, err := base64.StdEncoding.DecodeString(plist.Dict.Value)
-                        fileBytes = fileBytes[15:]
-                        //fmt.Println(string(fileBytes))
-                        fmt.Println(hex.EncodeToString(fileBytes[0:16]))
-
                         if err != nil {
                             fmt.Println(v.Name() + "base64", err.Error())
                             continue
                         }
+
+                        if len(fileBytes) < 16 {
+                            continue
+                        }
+                        fmt.Println(hex.EncodeToString(fileBytes))
+
+                        //fileBytes = fileBytes[15:]
+                        //fmt.Println(string(fileBytes))
+                        //fmt.Println(hex.EncodeToString(fileBytes[0:16]))
+
+                        //判断压缩算法
+                        //gzip [1F 8B 0B] [H4sl]
+                        //lzma xz [FD 37 7A] [/Td6]
+                        //lzma alone [5D 00 00] [XQAA]
+                        //zlib alone [78 9C] [eJwr]
+                        fileBytes, err = GzipDecode(fileBytes)
+                        if err != nil {
+                            fmt.Println(v.Name() + "GzipDecode", err.Error())
+                            continue
+                        }
+
 
                         //获取文件名称(不带后缀)
                         fileNameOnly := strings.TrimSuffix(fileNameWithSuffix, fileType)
