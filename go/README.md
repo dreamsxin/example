@@ -1440,3 +1440,13 @@ echo "*** 服务器重启完成！ ***"
 ## 问题
 
 https://www.educative.io/blog/50-golang-interview-questions
+
+## 生成依赖图
+
+* 安装 modv 工具
+
+`go get github.com/poloxue/modv`
+
+* 生成png/svg
+
+`go mod graph | modv | dot -Tpng | open -f -a /Applications/Preview.app git:(refactor_usersvc) ✗ go mod graph | modv | dot -Tsvg > deps.svg`
