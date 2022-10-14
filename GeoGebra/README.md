@@ -1,3 +1,6 @@
+
+dreamsxin@qq.com
+
 ## GeoGebra中英文指令对照表
 
 ```output
