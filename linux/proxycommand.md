@@ -12,3 +12,14 @@ scp -o "ProxyJump <User>@<Proxy-Server>" <File-Name> <User>@<Destination-Server>
 ##ProxyJump 指令还支持多跳(神奇):
 ssh -J jumpuser1@jumphost1,jumpuser2@jumphost2,...,jumpuserN@jumphostN user@host
 ```
+
+```conf
+stream {
+  server {
+      listen     2222;
+      proxy_pass xxxx:2222;
+      proxy_connect_timeout 1h;
+      proxy_timeout 1h;
+  }
+}
+```
