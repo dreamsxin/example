@@ -3,6 +3,7 @@
 以启动管理员身份运行CMD或PowerShell。
 输入命令bcdedit /copy {current} /d "Windows10 No Hyper-V"；输入回车后会出现一串序列号，将序列号复制。
 输入命令bcdedit /set {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} hypervisorlaunchtype OFF将第2步复制的序列替换成该步骤的XXX。
+输入命令bcdedit /delete {current} /f
 
 ## Powershell ExecutionPolicy 执行策略
 
