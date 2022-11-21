@@ -1,3 +1,62 @@
+## 集群前提条件
+
+1、部署Kafka集群搭建需要服务器至少3台，奇数台
+
+2、Kafka的安装需要java环境，jdk1.8
+
+3、Kafka安装包版本：kafka_2.12-3.3.1.tgz
+
+4、假设3台服务器分别为：kafka1、kafka2、kafka3
+
+## Kafka with KRaft
+
+```shell
+wget https://www.apache.org/dyn/closer.cgi?path=/kafka/3.3.1/kafka_2.13-3.3.1.tgz
+tar -xzf kafka_2.13-3.3.1.tgz
+cd kafka_2.13-3.3.1
+
+#生成集群ID
+KAFKA_CLUSTER_ID="$(bin/kafka-storage.sh random-uuid)"
+
+#格式化存储目录，需要在每个节点上执行格式化命令，并确保每个节点使用的集群ID是相同的。
+bin/kafka-storage.sh format -t $KAFKA_CLUSTER_ID -c config/kraft/server.properties
+
+#启动Kafka服务
+bin/kafka-server-start.sh config/kraft/server.properties
+```
+
+## CREATE A TOPIC TO STORE YOUR EVENTS
+
+```shell
+bin/kafka-topics.sh --create --topic quickstart-events --bootstrap-server localhost:9092
+
+bin/kafka-topics.sh --describe --topic quickstart-events --bootstrap-server localhost:9092
+Topic: quickstart-events        TopicId: NPmZHyhbR9y00wMglMH2sg PartitionCount: 1       ReplicationFactor: 1	Configs:
+    Topic: quickstart-events Partition: 0    Leader: 0   Replicas: 0 Isr: 0
+```
+
+## WRITE SOME EVENTS INTO THE TOPIC
+
+```shell
+bin/kafka-console-producer.sh --topic quickstart-events --bootstrap-server localhost:9092
+This is my first event
+This is my second event
+```
+
+## READ THE EVENTS
+
+```shell
+bin/kafka-console-consumer.sh --topic quickstart-events --from-beginning --bootstrap-server localhost:9092
+This is my first event
+This is my second event
+```
+
+## IMPORT/EXPORT YOUR DATA AS STREAMS OF EVENTS WITH KAFKA CONNECT
+
+```shell
+echo "plugin.path=libs/connect-file-3.3.1.jar"
+```
+
 ## kraft
 
 https://github.com/apache/kafka/blob/trunk/config/kraft/README.md
