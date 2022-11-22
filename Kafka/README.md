@@ -15,6 +15,28 @@
 - 数据限流：流量高峰期，可通过消息队列来控制流量，避免流量过大而引起应用系统崩溃；
 - 消息通信：实现点对点消息队列或聊天室等。
 
+## docker
+```shell
+docker pull wurstmeister/kafka
+```
+git
+```shell
+git clone https://github.com/wurstmeister/kafka-docker
+cd kafka-docker
+```
+Start a cluster:
+```shell
+docker-compose up -d
+```
+Add more brokers:
+```shell
+docker-compose scale kafka=3
+```
+Destroy a cluster:
+```shell
+docker-compose stop
+```
+
 ## 安装ZooKeeper，并设置dataDir
 
 ```shell
