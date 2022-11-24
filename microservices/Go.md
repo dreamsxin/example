@@ -4,3 +4,5 @@
 - https://github.com/cloudwego/kitex
 - https://github.com/lonng/nano
 - https://github.com/savsgio/atreugo
+- https://github.com/crypto-zero/go-micro
+- https://github.com/go-kit/kit
