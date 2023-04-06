@@ -1,6 +1,23 @@
 
 dreamsxin@qq.com
 
+## 常用命令
+
+滑动条（Slider）、圆（Circle）、描点（Point）。
+序列（Sequence）、均匀分布随机数（RandomUniform）、元素（Element）、长度（Length）、随机元素（RandomElement）、复制自由对象（CopyFreeObject）、旋转（Rotate）、角度（Angle）、向量（Vector）。
+
+## 文本格式
+
+### LaTeX 语法
+标题框里必须以美元符号$开头和结尾。`%n`表示名称（name），`%v`表示数值（value）。
+
+- 换行 两个反斜杠 `\\`
+- 空格 反斜杠后跟一个空格，稍大点的空格可以用`\quad`，再大点空格用`\qquad`
+- 颜色 要使文本变为红色，可输入`\textcolor{red}{}`，在最后一个花括号`{}`里面输入需要改变颜色的文字。可以是一个颜色码，比如`\textcolor{#006633}{}`。
+- 背景色 `\bgcolor{yellow}{}`或`\colorbox{yellow}{}`
+- 字形 斜体`\it`，直体`\rm`，粗体`\bf`。
+- 字号大小 常用的有`\Huge`，`\huge`，`\Large`，`\large`，\scalebox{n}，如果想限定范围，必须写成{\huge A}
+- 
 ## GeoGebra中英文指令对照表
 
 ```output
