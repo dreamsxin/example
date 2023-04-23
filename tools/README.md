@@ -160,3 +160,8 @@ siege -c 200 -r 100 http://www.google.com
         其可对网页服务器进行全面的多种扫描，包含超过6400 种有潜在危险的文件/CGIs；超过1200 种服务器版本；超过270种特定服务器问题, 且扫描项和插件可以自动更新。
         可运行在任何有Perl环境的平台上, 但工具较老，最新版本发布时间是2011年2月
         网站：https://cirt.net/nikto2/
+
+## AI
+
+- https://convert.leiapix.com/
+- https://studio.d-id.com/editor
