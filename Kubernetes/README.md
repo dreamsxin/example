@@ -85,3 +85,40 @@ $ kube-proxy \
 --api_servers=http://kube-master:8080 \
 >> /var/log/kube-proxy.log 2>&1 &
 ```
+
+## 运行Kubernetes Node组件
+需要运行以下组件：
+
++ Docker
++ Kubelet
++ Kubernetes Proxy
+
+安装Docker
+Docker官方社区提供各个平台的安装方法（可参考http://docs.docker.com/installation/），很多Linux发行版都陆续对Docker进行了支持，可以使用以下方式快速安装Docker：
+```shell
+$ curl -sSL https://get.docker.com/ | sh
+```
+启动Docker：
+```shell
+$ docker -d \
+-H unix:///var/run/docker.sock -H 0.0.0.0:2375 \
+>> /var/log/docker.log 2>&1 &
+```
+
+运行Kubelet：
+```shell
+$ kubelet \
+--logtostderr=true --v=0 \
+--config=/etc/kubernetes/manifests \
+--address=0.0.0.0 \
+--api-servers=http://kube-master:8080 \
+>> /var/log/kubelet.log 2>&1 &
+```
+
+运行Kubelet Proxy：
+```shell
+$ kube-proxy \
+--logtostderr=true --v=0 \
+--api_servers=http://kube-master:8080 \
+>> /var/log/kube-proxy.log 2>&1 &
+```
