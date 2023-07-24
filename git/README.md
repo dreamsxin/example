@@ -291,3 +291,43 @@ git cvsimport -o origin -v -d :pserver:anonymous@cvs.schmorp.de/schmorpforge lib
 ```shell
 git update-index --assume-unchanged common/common.go
 ```
+## 强制覆盖本地
+
+```shell
+git reset --hard origin/master
+```
+
+## 新命令：switch、restore
+
+每个命令只做`git checkout`的一部分工作。
+
+`git checkout <tree-ish> -- <pathspec>`
+
+`<tree-ish>` 代表很多不同的东西，但最常见的是代表提交哈希和分支名。默认为当前分支，但也可以是任意分支、任意提交。
+
+`git checkout` 经常用来切换本地分支，即切换 `HEAD` 指向的分支。例如：
+```shell
+git checkout -b develop
+git checkout develop
+```
+也可以让 `HEAD` 指针指向指定的提交，而非一个分支。此时，会进入分离分支状态（detached HEAD state）。
+```shell
+git checkout commit-id
+```
+
+当为`git checkout`参数添加文件时，它会舍弃本地修改，使用分支状态替换，恢复文件修改，即恢复到指定提交中的状态。
+```shell
+git checkout -- test.txt
+# 将test.txt文件改变为main分支的版本
+git checkout main -- test.txt
+```
+
+`git switch`用来切换分支或提交。
+```shell
+git switch dev
+git switch -d commit-id
+git switch -c new_branch
+```
+```shell
+git restore -- test.txt
+```
