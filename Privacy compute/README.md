@@ -1,0 +1,4 @@
+- https://gitee.com/primihub/primihub
+- https://gitee.com/mirrors/PrivacyGo
+- https://gitee.com/secretflow/secretflow
+- https://gitee.com/mirrors/fides
