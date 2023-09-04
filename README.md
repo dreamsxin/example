@@ -1,3 +1,10 @@
+- https://github.com/dreamsxin/AllView
+- https://github.com/dreamsxin/MyleftCenter
+- https://github.com/dreamsxin/MyleftBrowser
+- https://github.com/dreamsxin/as3chat
+- https://github.com/dreamsxin/ARPGClient
+- https://github.com/dreamsxin/cphalcon7
+
 团队管理
 ========
 
