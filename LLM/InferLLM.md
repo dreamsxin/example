@@ -1,6 +1,6 @@
 ## 编译 InferLLM
 ```shell
-git clone https://github.com/dreamsxin/InferLLM.git
+git clone https://github.com/MegEngine/InferLLM.git
 cd InferLLM
 mkdir build
 cd build
