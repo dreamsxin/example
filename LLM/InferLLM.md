@@ -11,11 +11,12 @@ make
 ## 下载模型
 
 https://huggingface.co/kewin4933/InferLLM-Model/tree/main
-
-- chatglm2-q4.bin
+- chinese-alpaca-7b-q4.bin
+- chatglm-q4.bin
 
 ## 运行
 
 ```shell
-./alpaca -m chatglm2-q4.bin -t 4
+./alpaca -m chinese-alpaca-7b-q4.bin -t 4
+./chatglm -m chatglm-q4.bin -t 4
 ```
