@@ -12,6 +12,8 @@
 变形、丑陋、残缺、毁容、文本、额外的四肢、面部切割、头部切割、额外的手指、额外的手臂、绘制不佳的脸、突变、比例不良、头部裁剪、四肢畸形、手突变、融合手指、长脖子
 (Negative prompts for people portraits: deformed, ugly, mutilated, disfigured, text, extra limbs, face cut, head cut, extra fingers, extra arms, poorly drawn face, mutation, bad proportions, cropped head, malformed limbs, mutated hands, fused fingers, long neck)
 
+提示词助手：
+https://github.com/wfjsw/danbooru-diffusion-prompt-builder
 
 ## 采样迭代步数（Steps）
 一般情况下，我们使用的默认值是20个步骤，这其实已经足以生成任何类型的图像。
