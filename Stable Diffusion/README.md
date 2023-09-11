@@ -13,7 +13,8 @@
 (Negative prompts for people portraits: deformed, ugly, mutilated, disfigured, text, extra limbs, face cut, head cut, extra fingers, extra arms, poorly drawn face, mutation, bad proportions, cropped head, malformed limbs, mutated hands, fused fingers, long neck)
 
 提示词助手：
-https://github.com/wfjsw/danbooru-diffusion-prompt-builder
+- https://github.com/tinygeeker/autocue
+- https://github.com/wfjsw/danbooru-diffusion-prompt-builder
 
 ## 采样迭代步数（Steps）
 一般情况下，我们使用的默认值是20个步骤，这其实已经足以生成任何类型的图像。
