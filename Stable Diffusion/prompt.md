@@ -15,6 +15,71 @@
 - upper body上半身
 - full body全身
 
+再配合其他prompt 可以更稳定地控制距离。
+extreme close-up，close-up跟 medium close-up 都是放大眼睛/面部为主，但有时extreme close-up会放大更多。
+medium shot，long shot，medium full shot  跟full shot 看起来差不多，medium shot有时候会比full shot 更近一点，都是显示臀部以上到头顶的位置，因应场景这几个prompt 的距离可能会有些变化。
+establishing shot的背景会比较明显，如果主体是建筑时人物可能会更细。
+point-of-view角度会因应人物有点转变，背景通常比较wide，角度跟主体未必是同一水平视角。
+cowboy shot受cowboy 污染变了牛仔装，距离跟medium full shot 差不多但距离比较稳定，一定会显示臀部以上到头顶。可以使用half body shot替代。
+upper body会显示人身上半身，范围可能由臀部以上到胸以上。
+full body是唯一可以见到全身的距离。
+经测试后由近至远可用的镜头- extreme close-up> close-up> medium close-up> upper body> medium shot> medium full shot> full body。 而 point-of-view 跟 establishing shot 会环境有所影响所以不适合控制距离。
+
+## 镜头角度
+
+掌握距离然后就是角度，由最基本的前后左右再加一些摄影角度，一样加上1.5 权重，因为角度比较多我分成两张。
+
+- front view正面
+- bilaterally symmetrical左右对称
+- side view侧面
+- back view后面
+- from above从上拍摄
+- from below从下拍摄
+- from behind后拍
+- wide angle view广角镜
+- fisheyes view鱼眼镜
+- macro view微距
+- overhead shot俯视
+- top down由上向下
+- bird's eye view鸟瞰
+- high angle高角度
+- slightly above微高角度
+- straight on水平拍摄
+- hero view英雄视角
+- low view低视角
+- worm's eye view仰视
+- selfie自拍
+
+出来的结果跟字面表示的角度差不多，也有些角度其实是重复的，也有一些受字面影响而受到污染。
+
+- front view  straight on就是正面，但不一定是绝对正面，straight on因为水平拍摄的角度所以背景也不会歪。
+- bilateral symmetry正面兼左右对称，比正面更准确。
+- side view向左/向右都是随机的。
+- back view跟 from behind 都是背面，back view会近一点，而且通常露背。
+- from above overhead shot  high angle slightly above都是由高角度影向主体，overhead shot角度较高，high angle会背景比较阔一些。
+- from below由下方偷拍(?) 的视角，天空通常会筒状变形。
+- wide angle背景会有一些筒状变形fisheyes view 的变形效果会更强，但fisheyes view 受到污染，总会拿着相机。
+- macro view变了拍花或微细的物件。
+- bird's eye view从高角度影高去同时会见到广阔的背景，但会有雀鸟出现。
+- top down的角度很糟糕(?)，变成正上方被女生抱住的视角。
+- hero view角度不对，人物也受污染穿上了英雄战衣。
+- low view角度不算很低，有点怀疑没有效果。
+- worm's eye view完全错了，有很多虫及怪眼，跟角度完全没关系。
+- selfie人物会伸手自拍而且不会太远。
+
+其中fisheyes view 虽然会污染但因为视角比较特别还是有用的，但hero view 跟worm's eye view 及  macro view受污染角度又不明显可以放弃。
+
+## 距离＋角度＝取景
+```txt
+1girl, beautiful, solo, (top down:1.5), (close-up1.5), lying in car
+
+1girl, beautiful, solo, (from below:1.5), (full body:1.5), night, street
+
+1girl, beautiful, solo, (establishing shot:1.5), (side view:1.5), in a bus, reading
+
+1girl, beautiful, solo, (from above:1.5), (selfie:1.5), (close-up:1.5), in swimming pool
+```
+
 ## 1、提升画面质量的提示词：
 HDR, HD，UHD, 64K (HDR、UHD、4K、8K和64K)
 
