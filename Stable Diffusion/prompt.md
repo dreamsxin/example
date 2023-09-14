@@ -1,5 +1,20 @@
 # 提示词
 
+## 镜头距离
+我们把可以使用的视角prompt 放进X/Y/Z plot 比较一下，为了突出效果要提高权重，尽量不要加入面部描述eg beautiful face，否则多数都会变成半身照。以下prompts 会加上 1.5 权重。
+- extreme close-up超近镜
+- close-up近镜
+- medium close-up中近镜
+- medium shot中景镜
+- long shot远镜
+- establishing shot场景镜
+- point-of-view主观视角
+- cowboy shot西部牛仔常用的镜头，见到上半身以及大腿（为了见到拔枪），可以使用half body shot替代。
+- medium full shot中风全景镜
+- full shot全景镜
+- upper body上半身
+- full body全身
+
 ## 1、提升画面质量的提示词：
 HDR, HD，UHD, 64K (HDR、UHD、4K、8K和64K)
 
