@@ -101,6 +101,11 @@ HDR, HD，UHD, 64K (HDR、UHD、4K、8K和64K)
 - highres
 - 8k wallpaper
 
+反向提示
+- worst quality
+- low quality
+- bad quality
+
 ### 示例
 
 正向提示词:
