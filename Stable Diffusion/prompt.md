@@ -1,5 +1,21 @@
 # 提示词
 
+## 概述
+
+### 一、画质区：用来提升整个图片的画质，图片的质量与风格。8k, best quality（8K，最佳品质）, masterpiece（杰作），ultra highres(超高分辨率)，RAW photo，（RAW照片）等等这些提示词用到10个以内可以明显提升画出的质感。
+
+### 二、人物的写实的画质描述：1 girl,（1个女孩）detailed beautiful skin,（细致美丽的肌肤）kind smile,（亲切的微笑）absurdres,（夸张）detailed-beautiful-face,（精致美丽的容颜）petite figure,（身材娇小）detailed skin texture,（细致的皮肤纹理）pale skin,（白皙肌肤）detailed hair,（细致的头发） random hair style,（随意发型，）detailed eyes,（细致的眼睛）glistening skin,（晶莹剔透肌肤）。clean face,pretty face,sexy, cool, naughty face,((twintails)),这些我就不翻译大家可以自行百度。其中twintails用了两个括弧是权重加强。正常的情况下必出两个辫子。
+
+### 三、角色描述区：衣服、发型、肤色、表情都可以放在这个区。short sleeve shirts,（短袖衬衫）uniform,（制服）pantyhose,（连裤袜）pleated skirt,（百褶裙）ear rings,（耳环）futuristic,（未来派）studio,（工作室）white background,（白色背景）这些都可以进行细划。耳环你可以更具体的描术。这样Ai出的图会更接你想要的效果。
+
+### 四、用L ora的模型来控制人物的脸型。如果只想用到基础的模型的话也可以不用。要用到Lora的模型时总的权重不能超过1.超过来就会出来奇怪的画出。<lora:koreanDollLikeness_v15:0.4><lora:TaiwanDollLikiness_v10:0.1><rola:japaneseDollLikness_v10:0.1>.0.4+0.1+0.1=0.6三个Lora模型的权重相加没超过1是没有问题的。
+
+提示词的描术越是靠前越得到Ai的重视，在整个出图的时候会得到优先的考虑。当然后面的提示词也可以用权重来加强。上面的（（twintails））是一个例子。还有用指定倍数的方法来加强权重。（8，best quality:1.5）8K,最佳品质1.5倍。
+
+负面提示词比较简单，就是把一些不想出现的东西加进去就可以了。
+
+EasyNegative,Paintings, sketches, (worst quality:2), (low quality:2), (normal quality:2),lowers, normal quality, ((monochrome)), ((grayscales)), skin spots, acnes, skin blemishes,age spot, glans, (6 more fingers on one hand),(deformity), multiple breasts,(mutated hands and fingers:1.5 ), (long body :1.3), (mutation, poorly drawn :1.2) ,bad anatomy, liquid body, liquid tongue, disfigured, malformed, mutated,anatomical nonsense, text font ui, error, malformed hands, long neck, blurred, lowers,lowres, bad anatomy, bad proportions, bad shadow, uncoordinated body, unnatural body,fused breasts, bad breasts, huge breasts, poorly drawn breasts, extra breasts, liquid breasts,heavy breasts, missing breasts, huge haunch, huge thighs, huge calf, bad hands, fused hand,missing hand, disappearing arms, disappearing thigh, disappearing calf, disappearing legs,fused ears, bad ears, poorly drawn ears, extra ears, liquid ears, heavy ears, missing ears,fused animal ears, bad animal ears, poorly drawn animal ears, extra animal ears, liquid animal ears,heavy animal ears, missing animal ears, text, ui, error, missing fingers, missing limb, fused fingers,one hand with more than 5 fingers, one hand with less than 5 fingers, one hand with more than 5 digit,one hand with less than 5 digit, extra digit, fewer digits, fused digit, missing digit, bad digit, liquid digit,colorful tongue, black tongue, cropped, watermark, username, blurry, JPEG artifacts,
+
 ## 镜头距离
 我们把可以使用的视角prompt 放进X/Y/Z plot 比较一下，为了突出效果要提高权重，尽量不要加入面部描述eg beautiful face，否则多数都会变成半身照。以下prompts 会加上 1.5 权重。
 - extreme close-up超近镜
