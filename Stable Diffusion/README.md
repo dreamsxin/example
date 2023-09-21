@@ -1,3 +1,5 @@
+目前免费的AI绘画工具：Disco Diffusion、Stable Diffusion 和 Imagen。
+
 ## 提示词（Prompt）
 提示词内输入的东西就是你想要画的东西。
 
