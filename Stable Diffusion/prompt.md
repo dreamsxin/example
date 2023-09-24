@@ -55,6 +55,8 @@ full body是唯一可以见到全身的距离。
 
 掌握距离然后就是角度，由最基本的前后左右再加一些摄影角度，一样加上1.5 权重，因为角度比较多我分成两张。
 
+- from side：从侧面
+- from down：貌似是正面
 - front view正面
 - bilaterally symmetrical左右对称
 - side view侧面
