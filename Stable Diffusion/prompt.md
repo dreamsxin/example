@@ -31,16 +31,17 @@ EasyNegative,Paintings, sketches, (worst quality:2), (low quality:2), (normal qu
 - extreme close-up超近镜
 - close-up近镜
 - cowboy shot 七分身镜头
-- medium close-up中近镜
-- medium shot中景镜
-- long shot远镜
-- establishing shot场景镜
-- point-of-view主观视角
-- cowboy shot西部牛仔常用的镜头，见到上半身以及大腿（为了见到拔枪），可以使用half body shot替代。
-- medium full shot中风全景镜
-- full shot全景镜
-- upper body上半身
-- full body全身
+- medium close-up 中近镜
+- medium shot 中景镜
+- long shot 远镜
+- establishing shot 场景镜
+- point-of-view 主观视角
+- cowboy shot 西部牛仔常用的镜头，见到上半身以及大腿（为了见到拔枪），可以使用half body shot替代。
+- medium full shot 中风全景镜
+- full shot 全景镜
+- upper body 上半身
+- full body 全身
+- depth of field 背景虚化
 
 再配合其他prompt 可以更稳定地控制距离。
 extreme close-up，close-up跟 medium close-up 都是放大眼睛/面部为主，但有时extreme close-up会放大更多。
@@ -56,28 +57,28 @@ full body是唯一可以见到全身的距离。
 
 掌握距离然后就是角度，由最基本的前后左右再加一些摄影角度，一样加上1.5 权重，因为角度比较多我分成两张。
 
-- from side：从侧面
-- from down：貌似是正面
+- from side 从侧面
+- from down 貌似是正面
 - front view正面
 - bilaterally symmetrical左右对称
-- side view侧面
-- back view后面
-- from above从上拍摄
-- from below从下拍摄
-- from behind后拍
-- wide angle view广角镜
-- fisheyes view鱼眼镜
-- macro view微距
-- overhead shot俯视
-- top down由上向下
-- bird's eye view鸟瞰
-- high angle高角度
-- slightly above微高角度
-- straight on水平拍摄
-- hero view英雄视角
-- low view低视角
-- worm's eye view仰视
-- selfie自拍
+- side view 侧面
+- back view 后面
+- from above 从上拍摄
+- from below 从下拍摄
+- from behind 后拍
+- wide angle view 广角镜
+- fisheyes view 鱼眼镜
+- macro view 微距
+- overhead shot 俯视
+- top down 由上向下
+- bird's eye view 鸟瞰
+- high angle 高角度
+- slightly above 微高角度
+- straight on 水平拍摄
+- hero view 英雄视角
+- low view 低视角
+- worm's eye view 仰视
+- selfie 自拍
 
 出来的结果跟字面表示的角度差不多，也有些角度其实是重复的，也有一些受字面影响而受到污染。
 
