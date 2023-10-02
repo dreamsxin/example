@@ -39,6 +39,7 @@ EasyNegative,Paintings, sketches, (worst quality:2), (low quality:2), (normal qu
 - cowboy shot 西部牛仔常用的镜头，见到上半身以及大腿（为了见到拔枪），可以使用half body shot替代。
 - medium full shot 中风全景镜
 - full shot 全景镜
+- portrait 肖像
 - upper body 上半身
 - full body 全身
 - depth of field 背景虚化
