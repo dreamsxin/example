@@ -30,6 +30,7 @@ EasyNegative,Paintings, sketches, (worst quality:2), (low quality:2), (normal qu
 我们把可以使用的视角prompt 放进X/Y/Z plot 比较一下，为了突出效果要提高权重，尽量不要加入面部描述eg beautiful face，否则多数都会变成半身照。以下prompts 会加上 1.5 权重。
 - extreme close-up超近镜
 - close-up近镜
+- cowboy shot 七分身镜头
 - medium close-up中近镜
 - medium shot中景镜
 - long shot远镜
