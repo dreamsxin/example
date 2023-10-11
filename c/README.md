@@ -1,5 +1,6 @@
 
-* label
+函数调用原理 https://github.com/acodercat/function-call-principle
+朴素linux https://github.com/1184893257/simplelinux/blob/master/README.md
 
 ```c
 int main() 
