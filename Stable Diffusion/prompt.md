@@ -263,6 +263,38 @@ CrownCorolla|Hairpin|Bowknot，long blond hair, beautiful girl, gothic dress, cl
 
 然后你还能通过输入BREAK来快速分组，BREAK必须为大写。
 
+## 3D渲染
+
+unreal engine（虚幻引擎）, octane render（Octane 渲染器）, bokeh（浅景深效果）, vray（VRay 渲染器）, houdini render（Houdini 渲染器）, quixel megascans（Quixel Megascans 材质库）, arnold render（Arnold 渲染器）, 8k uhd（8K 超高清分辨率）, raytracing（光线追踪技术）, cgi（计算机生成图像）, lumen reflections（Lumen 反射光技术）, cgsociety（CGSociety 数字艺术社区）, ultra realistic（超逼真效果）, 100mm（100 毫米焦距），film photography（胶片摄影），dslr（数码单反相机），cinema4d（Cinema 4D 三维建模软件），studio quality（工作室级别的质量），film grain（胶片颗粒感）。
+
+## 特殊效果
+
+analog photo（胶片摄影），polaroid（拍立得相机），macro photography（微距摄影），overglaze（高光效果），volumetric fog（体积雾效果），depth of field (or dof)（景深），silhouette（轮廓效果），motion lines（动感线条），motion blur（动态模糊效果），fisheye（鱼眼镜头），ultra-wide angle（超广角镜头）。
+
+## 2d
+
+digital art（数字艺术），digital painting（数字绘画），trending on artstation（在 Artstation 上流行的趋势），golden ratio（黄金分割比例），evocative（引人回忆的），award winning（获奖的），shiny（闪闪发光的），smooth（光滑的），surreal（超现实主义的），divine（神圣的），celestial（天体的），elegant（优雅的），oil painting (helps improve multiple styles)（油画（有助于提高多种风格）），soft（柔和的），fascinating（迷人的），fine art（艺术品），official art（官方艺术），keyvisual（关键视觉）。
+
+## 特殊效果
+
+color page（彩页），halftone（半色调），character design（角色设计），concept art（概念艺术），symmetry（对称性），pixiv fanbox (for anime/manga)（Pixiv Fanbox（用于动漫 / 漫画）），trending on dribbble (for vector graphics)（在 Dribbble 上流行的趋势（用于矢量图形）），precise lineart（精确线稿），tarot card（塔罗牌）。
+
+## 环境
+
+Environments（环境），stunning environment（令人惊叹的环境），wide-angle（广角），aerial view（鸟瞰视角），landscape painting（山水画），aerial photography（航拍摄影），massive scale（大规模的），street level view（街头视角），landscape（风景），panoramic（全景），lush vegetation（繁茂的植被），idyllic（田园诗般的），overhead shot（俯拍）。
+
+## 细节
+
+wallpaper（墙纸），poster（海报），sharp focus（锐利对焦），hyperrealism（超现实主义），insanely detailed（极度详细），lush detail（丰富的细节），filigree（金银丝细工），intricate（复杂的），crystalline（晶莹剔透的），perfectionism（完美主义），max detail（最大化细节），4k uhd（4K 超高清分辨率），spirals（螺旋形），tendrils（卷须形），ornate（华丽的），HQ（高清晰度），angelic（天使的），decorations（装饰），embellishments（装饰物），masterpiece（杰作），hard edge（硬边线条），breathtaking（惊人的），embroidery（刺绣）。
+
+## 光照
+
+bloom（光晕效果），god rays（神光效果），hard shadows（硬阴影），studio lighting（工作室灯光），soft lighting（柔和灯光），diffused lighting（漫射光），rim lighting（边缘光），volumetric lighting（体积光），specular lighting（高光），cinematic lighting（电影级灯光），luminescence（发光），translucency（半透明效果），subsurface scattering（次表面散射），global illumination（全局光照），indirect light（间接光），radiant light rays（光辐射线），bioluminescent details（生物发光效果），ektachrome（电影胶片效果），glowing（发光的），shimmering light（闪烁的光线），halo（光环效果），iridescent（虹彩色效果），backlighting（逆光），caustics（光线折射效果）。
+
+## 色彩
+
+vibrant（鲜艳的），muted colors（暗淡的颜色），vivid color（鲜明的颜色），post-processing（后期处理），colorgrading（调色），tone mapping（色调映射），lush（丰富的），low contrast（低对比度），vintage（复古的），aesthetic（美学的），psychedelic（迷幻的），monochrome（单色的）。
+
 ## 其他示例：
 
 正向提示词：
