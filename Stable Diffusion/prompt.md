@@ -177,6 +177,7 @@ HDR, HD，UHD, 64K (HDR、UHD、4K、8K和64K)
 注意：一般小括号用的比较多，可以用数字表示权重，这样就不需要中括号和大括号，比如Exquisite Crown：1.331）=(((Exquisite Crown)))
 
 ## 6、元素的融合：
+
 ### 方法一：中括号表示法
 
 `[pink|blond]long hair，beautiful girl, gothic dress, clear details, Gothic architecture interior`
@@ -193,12 +194,26 @@ HDR, HD，UHD, 64K (HDR、UHD、4K、8K和64K)
 
 举个例子，输入提示词“Oil painting portrait of [Joe Biden: Donald Trump: 0.5]”，采样步数设置为30。这里指的是，第1~15步，提示词为“Oil painting portrait of Joe Biden”；第16~30步，提示词为“Oil painting portrait of Donald Trump”。解释一下，factor值决定了关键词的切换节点，设置为0.5时指的是在30*0.5 = 15步时切换。
 
-## 7、元素的精细控制：
-使用[keyword:number]方式表示
+### 采用注释
+采用注释可以有效的仿制颜色污染的情况，示例：
+`1girl\( (yellow hair), black eyes, smile,blue hat,white skin, (pink Sweaters:1.3)\),upper body,open hands`
+对 `1girl` 进行注释。
 
-[flower:5],long blond hair, beautiful girl, gothic dress, clear details, Gothic architecture interior
+## 7、元素的精细控制（分步描绘）：
 
-[flower:5]的意思是从第5步开始画花花，直到结束，以降低画的步数来达到弱化的效果。
+
+有时候为了更好的控制画面，我们可能会要求在渲染步骤中，描绘的重点不同，以形成我们心目中的画面。
+
+### 1.语法格式
+- `[To:when] 意思是：在经过指定数量的步骤后，将位于 to 处的提示词添加到提示中。
+- `[From::when]` 意思是：在经过指定数量的步骤后，从提示中删除位于 from 处的提示词。
+- `[From:to:when]` 意思是：在经过指定数量的步骤后，将位于 from 处的提示词替换为 to 处的提示词。
+
+**使用[keyword:number]方式表示**
+
+`[flower:5],long blond hair, beautiful girl, gothic dress, clear details, Gothic architecture interior`
+
+`[flower:5]`的意思是从第5步开始画花花，直到结束，以降低画的步数来达到弱化的效果。
 
 但是这也有个局限，在我们画画步数本来就不高的情况下，很容易画不出来，它没办法只用10步或15步给画出来的时候，往往不理你。
 
@@ -206,13 +221,25 @@ HDR, HD，UHD, 64K (HDR、UHD、4K、8K和64K)
 
 小黑板：
 
-[flower:5] 代表从第5步开始直到结束
+`[flower:5]` 代表从第5步开始直到结束
 
-[flower::10] 代表从开始就一起画，但是画到第10步就不画了
+`[flower::10]` 代表从开始就一起画，但是画到第10步就不画了
 
-[[flower::30]:5] 代表从第5步开始画，到30步结束
+`[[flower::30]:5]` 代表从第5步开始画，到30步结束
 
 长呼一口浊气，试想一下，如果我们在画画的时候，写tag能够这样精细控制，熟练掌握各个元素出现的轻重，出来的画面能多细致。
+
+### 语法详解
+
+我来举个例子，我采用的提示词是："a [handsome:strong:15] boy", 共采用25步。Stable Diffusion在一开始的时候运行的时候，他理解的提示词是 "a handsome boy"，经过 15 步之后，Stable Diffusion理解的提示词将被替换为 "a strong boy"。它将基于之前已经生成的第15步的"a handsome boy"的图像上进行继续计算。
+
+接下来，我们来测试下更为复杂的用法，例如我采用提示词是： "a handsome boy wear[Medieval boots:Neon lights :0.25] and [Mechanical armor:cyberpunk clothes:0.75][ in foreground::0.6][ in background:0.25][shoddy:masterful:0.5]，"，进行 100 步的采样。
+
+1. 一开始的提示词是 "a handsome boy wear Medieval boots and Mechanical armor in foreground shoddy"。可以看到生成了一个穿着中世纪长靴和铠甲的人，质量不佳。
+2. 经过 25 步之后，提示词变为 "a handsome boy wear Neon lights and Mechanical armor in foreground in background shoddy "。提示词将中世纪长靴替换成了霓虹灯，质量不佳。
+3. 经过 50 步之后，提示词变为" a handsome boy wear Neon lights and Mechanical armor in foreground in background Masterful "。可以看到中世纪长靴已经变了，加入了霓虹灯元素，画质改善的作用也出来了。
+4. 经过 60 步之后，提示词变为 " a handsome boy wear Neon lights and Mechanical armor in background Masterful "。将霓虹灯元素转移至背景。
+5. 经过 75 步之后，提示词变为 " a handsome boy wear Neon lights and cyberpunk clothes in background Masterful "。最终加入的赛博朋克风的衣物展示了完整的效果，背景也顺利了加入了霓虹灯元素。
 
 ## 8、画面的比重控制：
 上面是控制某一个东西的比重，下面来扒画面的比重。
