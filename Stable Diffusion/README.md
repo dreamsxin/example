@@ -2,6 +2,12 @@
 
 ## web ui启动参数
 
+关于这个问题，在`stable-diffusion-webui/venv/Scripts`目录下进入`terminal`，输入`./activate`激活`stable diffusion`创建的虚拟环境，然后使用：
+```shell
+pip install xformers==0.0.16
+```
+就基本可以了，最后在webui-user.bat文件上右击，点击“编辑”，在set COMMANDLINE_ARGS=后面加上--xformers，保存，正常运行，就能使用xformers进行加速了
+
 ### 环境变量
 PYTHON：设置 Python 可执行文件的自定义路径
 
