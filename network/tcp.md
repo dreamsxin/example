@@ -106,3 +106,132 @@ Payload Length位占用了可选的7bit或者7 + 16bit 或者 7 + 64bit
 读取9-15位 (包括9和15位本身)，并转换为无符号整数。如果值小于或等于125，这个值就是长度；如果是 126，请转到步骤 2。如果它是 127，请转到步骤 3。
 读取接下来的 16 位并转换为无符号整数，并作为长度。
 读取接下来的 64 位并转换为无符号整数，并作为长度。
+```php
+  //判断是否是经过掩码处理的帧
+  function isMasked($byte) {
+    return (ord($byte) & 0x80) > 0;
+  }：
+
+  //获取负载的长度
+  //首字节如果小于126，则长度为首字节的值
+  //首字节如果等于126，则长度为后面紧跟的两个字节表示的字节数
+  //如果首字节是127，则长度为后面紧跟8字节表示的字节数
+  function getPayloadLen($data) {
+    $first = ord($data[0]) & 0x7F;
+    $second = (ord($data[1]) << 8) + ord($data[2]);
+    $third = (ord($data[3]) << 40) + (ord($data[4]) << 32) + (ord($data[5]) << 24) + (ord($data[6]) << 16) + (ord($data[7]) << 8) + ord($data[8]);
+    if ($first < 126) {
+      return $first;
+    } else if ($first === 126) {
+      return $second;
+    } else {
+      return ($second << 48) + $third;
+    }
+  }
+
+  //获取负载的内容，根据帧的结构
+  //第0字节为结束标记及帧类型
+  //第1字节是否掩码标识位及负载长度的首字节
+  //根据协议要求，浏览器发送的数据必须经过掩码处理，所以偏移量至少是1字节的帧首字节+4字节的掩码长度
+  //根据帧长度的不同，表示长度的字节数可能为1、3或9
+  //所以根据不同的情况截取不同长度的数据即为负载内容
+  function getPayload($data, $len) {
+    $offset = 5;
+    if ($len < 126) {
+      return substr($data, $offset + 1, $len);
+    } else if ($len < 65536) {
+      return substr($data, $offset + 3, $len);
+    } else {
+      return substr($data, $offset + 9, $len);
+    }
+  }
+
+  //获取掩码的值
+  //仍然是根据不同的偏移位置截取
+  function getMask($data, $len) {
+    $offset = 1;
+    if ($len < 126) {
+      return substr($data, $offset + 1, 4);
+    } else if ($len < 65536) {
+      return substr($data, $offset + 3, 4);
+    } else {
+      return substr($data, $offset + 9, 4);
+    }
+  }
+
+  //获取帧类型
+  function getFrameType($byte) {
+    return ord($byte) & 0x0F;
+  }
+
+  //判断是否为结束帧
+  function isFin($byte) {
+    return (ord($byte[0]) & 0x80) > 0;
+  }
+
+  //判断是否为控制帧，控制帧包含关闭帧、PING帧和PONG帧
+  function isControlFrame($frameType) {
+    return $frameType === self::FRAME_CLOSE || $frameType === self::FRAME_PING || $frameType === self::FRAME_PONG;
+  }
+
+  //处理负载的掩码，将其还原
+  function parseRawFrame($payload, $mask) {
+    $payloadLen = strlen($payload);
+    $dest = '';
+    $maskArr = array();
+    for ($i = 0; $i < 4; $i++) {
+      $maskArr[$i] = ord($mask[$i]);
+    }
+    for ($i = 0; $i < $payloadLen; $i++) {
+      $dest .= chr(ord($payload[$i]) ^ $maskArr[$i % 4]);
+    }
+    return $dest;
+  }
+
+  function parseTextFrame($payload, $mask) {
+    return $this->parseRawFrame($payload, $mask);
+  }
+
+  function parseBinaryFrame($payload, $mask) {
+    return $this->parseRawFrame($payload, $mask);
+  }
+
+  //创建并发送关闭帧
+  function closeFrame($socketId, $closeCode = 1000, $closeMsg = 'goodbye') {
+    $closeCode = chr(intval($closeCode / 256)) . chr($closeCode % 256);
+    $frame = $this->createFrame($closeCode . $closeMsg, self::FRAME_CLOSE);
+    $this->socketSend($socketId, $frame);
+    $this->disconnect($socketId);
+  }
+
+  function sendPing($socketId, $data = 'ping') {
+    $frame = $this->createFrame($data, self::FRAME_PING);
+    $this->socketSend($socketId, $frame);
+  }
+
+  function sendPong($socketId, $data = 'pong') {
+    $frame = $this->createFrame($data, self::FRAME_PONG);
+    $this->socketSend($socketId, $frame);
+  }
+
+  //封装帧头的相关标识位、长度等信息
+  function createFrame($data, $type, $fin = 0x01) {
+    $dataLen = strlen($data);
+    $frame = chr(($fin << 7) + $type);
+    if ($dataLen < 126) {
+      $frame .= chr($dataLen);
+    } else if ($dataLen < 65536) {
+      $frame .= chr(126);
+      $frame .= chr(intval($dataLen / 256));
+      $frame .= chr(intval($dataLen % 256));
+    } else {
+      $frame .= chr(127);
+      $hexLen = str_pad(base_convert($dataLen, 10, 16), 16, '0', STR_PAD_LEFT);
+      for ($i = 0; $i < 15; $i += 2) {
+        $frame .= chr((intval($hexLen[$i], 16) << 8) + intval($hexLen[$i + 1], 16));
+      }
+    }
+    $frame .= $data;
+    return $frame;
+  }
+```
