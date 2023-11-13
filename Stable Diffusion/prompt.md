@@ -142,6 +142,8 @@ HDR, HD，UHD, 64K (HDR、UHD、4K、8K和64K)
 提示语范例二：
 `Illustrate a semi-transparent glass armor with intricate details and a structured design. Let the armor emit a soft inner glow, with a delicate pink tone visible through its translucency. Employ the stable diffusion technique to capture the subtle interplay between the glass and the inner pink hue.`
 
+`generate a semi-transparent armor using stable diffusion, revealing a vibrant red bodysuit within. The armor should appear ethereal and luminescent, with intricate details that subtlety highlight the inner red layer. Through the translucency of the armor, the red bodysuit should be visible, adding a touch of mystery and allure to the overall appearance. In the final rendering, the contrast between the solid red bodysuit and the semi-transparent armor should create a captivating and dynamic visual effect.`
+
 正向提示词:
 
 `(8k, best quality, masterpiece, ultra highres:1.2) Photo of Pretty Japanese woman in the (style of paul rubens and rebecca guay:1.1) (melancholy winter snow:1.4)`
