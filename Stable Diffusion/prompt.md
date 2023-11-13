@@ -24,8 +24,6 @@ VIBRANT COLORS（鲜亮色调）,VIVID COLORS（鲜艳色彩）。
 
 EasyNegative,Paintings, sketches, (worst quality:2), (low quality:2), (normal quality:2),lowers, normal quality, ((monochrome)), ((grayscales)), skin spots, acnes, skin blemishes,age spot, glans, (6 more fingers on one hand),(deformity), multiple breasts,(mutated hands and fingers:1.5 ), (long body :1.3), (mutation, poorly drawn :1.2) ,bad anatomy, liquid body, liquid tongue, disfigured, malformed, mutated,anatomical nonsense, text font ui, error, malformed hands, long neck, blurred, lowers,lowres, bad anatomy, bad proportions, bad shadow, uncoordinated body, unnatural body,fused breasts, bad breasts, huge breasts, poorly drawn breasts, extra breasts, liquid breasts,heavy breasts, missing breasts, huge haunch, huge thighs, huge calf, bad hands, fused hand,missing hand, disappearing arms, disappearing thigh, disappearing calf, disappearing legs,fused ears, bad ears, poorly drawn ears, extra ears, liquid ears, heavy ears, missing ears,fused animal ears, bad animal ears, poorly drawn animal ears, extra animal ears, liquid animal ears,heavy animal ears, missing animal ears, text, ui, error, missing fingers, missing limb, fused fingers,one hand with more than 5 fingers, one hand with less than 5 fingers, one hand with more than 5 digit,one hand with less than 5 digit, extra digit, fewer digits, fused digit, missing digit, bad digit, liquid digit,colorful tongue, black tongue, cropped, watermark, username, blurry, JPEG artifacts,
 
-
-
 ## 镜头距离
 我们把可以使用的视角prompt 放进X/Y/Z plot 比较一下，为了突出效果要提高权重，尽量不要加入面部描述eg beautiful face，否则多数都会变成半身照。以下prompts 会加上 1.5 权重。
 - extreme close-up超近镜
@@ -138,6 +136,11 @@ HDR, HD，UHD, 64K (HDR、UHD、4K、8K和64K)
 - bad quality
 
 ### 示例
+
+提示语范例一：
+`Draw a glass-made bodysuit that perfectly contours the human form. The surface should be sleek and transparent, revealing a vibrant blue hue within. Utilize the stable diffusion algorithm to seamlessly blend the glass texture with the interior color.`
+提示语范例二：
+`Illustrate a semi-transparent glass armor with intricate details and a structured design. Let the armor emit a soft inner glow, with a delicate pink tone visible through its translucency. Employ the stable diffusion technique to capture the subtle interplay between the glass and the inner pink hue.`
 
 正向提示词:
 
