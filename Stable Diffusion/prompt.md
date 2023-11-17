@@ -58,7 +58,7 @@ full body是唯一可以见到全身的距离。
 
 - from side 从侧面
 - from down 貌似是正面
-- front view正面
+- front view正面 (looking at viewer,)
 - bilaterally symmetrical左右对称
 - side view 侧面
 - back view 后面
