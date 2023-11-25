@@ -122,3 +122,25 @@ $ kube-proxy \
 --api_servers=http://kube-master:8080 \
 >> /var/log/kube-proxy.log 2>&1 &
 ```
+
+## 查询Kubernetes的健康状态
+
+在部署运行各个组件以后，可以通过Kubernetes命令行kubectl查询Kubernetes Master各组件的健康状态：
+```shell
+$ kubectl -s http://kube-master:8080 get componentstatus
+NAME                  STATUS    MESSAGE                ERROR 
+controller-manager    Healthy   ok                     nil 
+scheduler             Healthy   ok                     nil 
+etcd-0                Healthy   {"health": "true"}     nil
+```
+以及Kubernetes Node的健康状态：
+```shell
+$ kubectl -s http://kube-master:8080 get node
+NAME          LABELS                               STATUS     AGE 
+kube-node-1   kubernetes.io/hostname=kube-node-1   Ready      19m 
+kube-node-2   kubernetes.io/hostname=kube-node-2   Ready      18m 
+kube-node-3   kubernetes.io/hostname=kube-node-3   Ready      18m 
+```
+
+## 创建Kubernetes覆盖网络
+Kubernetes 的网络模型要求每一个 `Pod` 都拥有一个扁平化共享网络命名空间的IP，称为`PodIP`，Pod能够直接通过PodIP跨网络与其他物理机和`Pod`进行通信。要实现Kubernetes的网络模型，需要在 Kubernetes 集群中创建一个覆盖网络（Overlay Network），联通各个节点，目前可以通过第三方网络插件来创建覆盖网络，比如`Flannel`和`Open vSwitch`。
