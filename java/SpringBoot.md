@@ -4,7 +4,10 @@
 
 `File | Import Project | From ZIP`
 
-
+## 
+- hystrix 实现了断路器模式
+- guava RateLimiter
+- sentinel 面向分布式服务架构的高可用流量防护组件
 ## REST
 
 ### 将 Spring Data REST 添加到 Spring Boot 项目
