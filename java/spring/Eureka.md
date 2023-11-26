@@ -66,8 +66,82 @@ public class EurekaServerApplication {
 }
 ```
 
-### 访问eureka服务
+### 访问 eureka 服务
 启动微服务，然后在浏览器访问：http://127.0.0.1:10086
+
+### 配置双节点高可用 eureka 服务
+`pom.xml` 添加依赖
+```xml
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+</dependency>
+```
+在 Eureka Server 集群时，需要部署多个节点，则需要同一个项目，使用不同的配置。
+`application.yml` 配置：
+```yml
+# 多环境配置
+spring:
+  profiles:
+    active: eureka-server1
+  application:
+    name: eureka-server
+```
+`application-eureka-server1.yml`（启动参数添加 --spring.profiles.active=eureka-server1）
+```yml
+server:
+  port: 10086
+
+spring:
+  application:
+    name: eureka-server
+eureka:
+  instance:
+    hostname: 127.0.0.1
+    
+  client:
+    service-url:
+      defaultZone: http://127.0.0.2:10086/eureka
+```
+
+`application-eureka-server2.yml`（启动参数添加 --spring.profiles.active=eureka-server2）
+```yml
+server:
+  port: 10086
+
+spring:
+  application:
+    name: eureka-server
+eureka:
+  instance:
+    hostname: 127.0.0.2
+    
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:10086/eureka
+```
+修改启动类：
+```java
+package com.xcbeyond.springcloud.eurekacluster;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
+
+/**
+ * Eureka集群启动类
+ */
+@SpringBootApplication
+@EnableEurekaServer
+//开启作为Eureka Server的客户端的支持
+@EnableDiscoveryClient
+public class EurekaClusterApplication {
+	public static void main(String[] args) {
+		SpringApplication.run(EurekaClusterApplication.class, args);
+	}
+}
+```
 
 ## 新建微服务 user-service
 下面，我们将 `user-service` 注册到 `eureka-server` 中去。
@@ -131,7 +205,7 @@ spring:
 eureka:
   client:
     service-url: 
-      # 注册中心地址
+      # 注册中心地址 多个地址逗号隔开
       defaultZone: http://localhost:10086/eureka
 ```
 
