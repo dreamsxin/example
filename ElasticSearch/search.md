@@ -29,7 +29,115 @@
     }
 ```
 
+## _source
+就相当于mysql数据库中的【select 字段1,字段2】形式。
+- _source=false，表示所有字段都不返回。
+- _source: ["username", "age"]，只返回指定的字段。
+```txt
+# 查询数据，不返回字段
+GET /idx_20221124/_search
+{
+  "query": {
+    "match": {
+      "age": 20
+    }
+  },
+  "_source": false
+}
+ 
+# 查询数据，返回指定字段
+GET /idx_20221124/_search
+{
+  "query": {
+    "match": {
+      "age": 20
+    }
+  },
+  "_source": ["username", "age"]
+}
+```
+
+### match
+相当于mysql数据库中的like查询，match查询的字段如果是text类型，那么text会被分词，match就会匹配分词，查询所有包含分词的doc文档，如果不是text类型的，那就是精确查询。
+- match：查询指定条件的数据，match会将查询的条件进行分词操作，然后只有doc文档中包含分词，就都会查询出来。
+- match_all：查询所有数据。
+- match_phrase：匹配短语，match是会查询所有包含分词的doc文档，而match_phrase则是匹配整个短语，才会返回对应的doc文档。
+- match_phrase_prefix：匹配短语的前缀部分，这个只能使用在text类型字段。
+
+### must
+和mysql数据库中的【and】是相同作用，【must】接收一个数组，数组中的所有条件都成立，这个时候才会查询对应数据。
+```txt
+# 查询数据
+GET /idx_20221124/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "nickname": "java"
+          }
+        },
+        {
+          "match": {
+            "age": 25
+          }
+        }
+      ]
+    }
+  }
+```
+### must_not
+
+### should
+相当于mysql数据库中的【or】连接符。
+```txt
+# 查询数据
+GET /idx_20221124/_search
+{
+  "query": {
+    "bool": {
+      "should": [
+        {
+          "match": {
+            "nickname": "java"
+          }
+        },
+        {
+          "match": {
+            "age": 31
+          }
+        }
+      ]
+    }
+  }
+}
+```
+### filter
+在filter里面可以使用多种查询条件，例如：range、term、terms、exists、ids几种常见的查询
+```txt
+
+# 查询数据
+GET /idx_20221124/_search
+{
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "range": {
+            "age": {
+              "gt": 20,
+              "lt": 30
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+```
 ## 基本查询操作
+
 
 ### 查询所有数据并进行排序
 ```txt
@@ -81,6 +189,33 @@ GET person/_search
   }
 }
 ```
+### bool 查询
+```txt
+GET /blogs_index/_search
+{
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "term": {
+            "author": "方才兄"
+          }
+        },
+        {
+          "term": {
+            "tag": "2"
+          }
+        },
+        {
+          "match": {
+            "title": "es"
+          }
+        }
+      ]
+    }
+  }
+}
+```
 
 ### 多条件 bool 查询
 ```txt
@@ -100,6 +235,73 @@ GET person/_search
   }
 }
 ```
+
+### minimum_should_match
+最小匹配度
+```josn
+GET /_search
+{
+  "size": 20,
+  "query": {
+    "bool": {
+      "minimum_should_match": 1,
+      "should": [
+        {
+          "bool": {
+            "must": [
+              {
+                "term": {
+                  "_index": {
+                    "value": "索引一"
+                  }
+                }
+              },
+              {
+                "term": {
+                  "索引一字段": {
+                    "value": "少年歌行"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "bool": {
+            "must": [
+              {
+                "term": {
+                  "_index": {
+                    "value": "索引二"
+                  }
+                }
+              }
+            ],
+            "filter": {
+              "term": {
+                "索引而字段": "少年歌行"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "sort": [
+    {
+      "_index": {
+        "order": "desc"
+      }
+    },
+    {
+      "_score": {
+        "order": "desc"
+      }
+    }
+  ]
+}
+```
+
 ### query_string
 ```txt
 GET person/_search
@@ -469,69 +671,3 @@ GET person/_search?size=0
   }
 ```
 目前就简单介绍了这些查询，其实在es官网可以看到很多不同的查询，包括管道啥之类的，但是我们以后使用的时候要知道大致的查询分为哪几类，然后每种查询得能在官网快速定位，然后通过例子学会使用并理解。
-
-## 同时查询多个索引
-
-```josn
-GET /_search
-{
-  "size": 20,
-  "query": {
-    "bool": {
-      "minimum_should_match": 1,
-      "should": [
-        {
-          "bool": {
-            "must": [
-              {
-                "term": {
-                  "_index": {
-                    "value": "索引一"
-                  }
-                }
-              },
-              {
-                "term": {
-                  "索引一字段": {
-                    "value": "少年歌行"
-                  }
-                }
-              }
-            ]
-          }
-        },
-        {
-          "bool": {
-            "must": [
-              {
-                "term": {
-                  "_index": {
-                    "value": "索引二"
-                  }
-                }
-              }
-            ],
-            "filter": {
-              "term": {
-                "索引而字段": "少年歌行"
-              }
-            }
-          }
-        }
-      ]
-    }
-  },
-  "sort": [
-    {
-      "_index": {
-        "order": "desc"
-      }
-    },
-    {
-      "_score": {
-        "order": "desc"
-      }
-    }
-  ]
-}
-```
