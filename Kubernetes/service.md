@@ -11,6 +11,11 @@ k8s 以 Pod 应用部署的最小单位。k8s 根据调度算法为 Pod 分配�
 - ExternalName：将服务映射到 DNS 名称，把集群外部的服务引入到集群内部来使用
 - LoadBalancer：使用云提供商的负载均衡器向外部暴露服务。 将来自外部负载均衡器的流量路由到后端的 pod 上，不再需要内部的负载均衡。
 
+## 直接暴露服务
+
+```shell
+kubectl expose deployment nginx --port=80 --target-port=80 --name=nginx-service --type=NodePort
+```
 ## 创建 Service
 微服务暴露端口：443, 80, 6379，k8s 为其分配一个集群 ip: ClusterIP。
 ```yml
