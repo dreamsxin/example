@@ -27,6 +27,7 @@ kubectl explain quota
 - kind 是表示此对象所代表的 REST 资源的字符串值。服务器可以根据客户端提交请求的端点来推断它。不能更新。采用驼峰命名法
 - metadata 对象的元数据
 - spec 定义所需的配额。它指定了命名空间中资源使用的限制
+
 `nginx_quota.yaml`
 ```yml
 apiVersion: v1
@@ -44,6 +45,14 @@ spec:
 #创建的ResourceQuota对象将在test名字空间中添加以下限制：
 #每个容器必须设置内存请求（memory request），内存限额（memory limit），cpu请求（cpu request）和cpu限额（cpu limit）。
 #ResouceQuota 对象是在我们的名称空间中创建的，并准备好控制该名称空间中的所有容器的总请求和限制.
+```
+### 应用 namespace
+```shell
+kubectl apply -f nginx_quota.yaml #--namespace=test
+```
+### 查看 namespace
+```shell
+kubectl get resourcequota cpu-mem-quota --namespace=test --output=yaml
 ```
 创建一个nginx pod来验证限制
 ```yml
