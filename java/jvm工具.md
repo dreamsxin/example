@@ -92,4 +92,155 @@ jstat -gcutil
 ```
 `jstat -gcnew` 与 `jstat -gcold` 是用来排查年轻代和年老代的内存占用情况
 
-stack命令用于打印指定Java进程、核心文件或远程调试服务器的Java线程的Java堆栈跟踪信息。
+## jstack 
+命令用于打印指定Java进程、核心文件或远程调试服务器的Java线程的Java堆栈跟踪信息。
+
+### 语法
+- jstack [ options ] pid
+pid：Java进程的ID，可以通过jps命令查询到。
+
+- jstack [ options ] executable core
+executable： 产生core dump的Java可执行程序
+
+core：要打印的堆栈跟踪的核心文件
+
+- jstack [ options ] [ server-id@ ] remote-hostname-or-IP
+server-id：当多个DEBUG服务器在同一远程主机上运行时，可使用的可选唯一ID。
+remote-hostname-or-IP：远程DEBUG的服务器主机名或IP地址
+
+### options 参数说明
+- -F
+当 jstack [-l] pid 没有响应时，强制打印一个堆栈转储。
+
+- -l
+打印关于锁的其他信息，比如拥有的java.util.concurrent ownable同步器的列表。
+
+- -m
+打印包含Java和本机C/ C++帧的混合模式堆栈跟踪。
+
+- -h
+打印帮助信息
+
+- -help
+打印帮助信息
+
+### 例子
+
+```shell
+jstack pid
+jstack -F pid
+jstack -l pid
+jstack -m pid
+jstack -h pid
+jstack -H pid
+```
+
+### 日志文件分析
+
+```shell
+jstack [options] pid >> /xxx/xx/x/dump.log
+```
+**Deadlock（死锁）**
+```java
+package com.example;
+
+public class Test {
+
+    public static void main(String[] args) {
+        Thread a = new MyThreadA();
+        Thread b = new MyThreadB();
+        a.setName("线程A");
+        a.start();
+        b.setName("线程B");
+        b.start();
+
+    }
+
+}
+
+class MyThreadA extends Thread {
+    @Override
+    public void run() {
+        System.out.println("================B===================");
+        synchronized (A.A) {
+            System.out.println("线程【" + Thread.currentThread().getName() + "】开始执行");
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            synchronized (B.B) {
+            }
+            System.out.println("线程【" + Thread.currentThread().getName() + "】执行结束。B.B = " + B.B + "; A.A = " + A.A);
+        }
+    }
+}
+
+class MyThreadB extends Thread {
+    @Override
+    public void run() {
+        System.out.println("================B===================");
+        synchronized (B.B) {
+            System.out.println("线程【" + Thread.currentThread().getName() + "】开始执行");
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            synchronized (A.A) {
+            }
+            System.out.println("线程【" + Thread.currentThread().getName() + "】执行结束。B.B = " + B.B + "; A.A = " + A.A);
+        }
+    }
+}
+
+class A {
+    static Integer A = new Integer(1);
+}
+
+class B {
+    static Integer B = new Integer(1);
+}
+```
+日志会出现：
+```txt
+Deadlock Detection:
+
+Found one Java-level deadlock:
+```
+**Blocked（阻塞）**
+```java
+public class Test {
+
+    public static void main(String[] args) throws InterruptedException {
+        final Thread myThread = new Thread() {
+            @SneakyThrows
+            @Override
+            public void run() {
+                synchronized (this) {
+                    System.out.println(Thread.currentThread());
+                    TimeUnit.SECONDS.sleep(60);
+                }
+            }
+        }; // 到这一步，线程的状态是NEW
+        // 给线程起个名字，方便排查问题
+        myThread.setName("测试线程");
+        // 到这一步，线程的状态是RUNNABLE
+        myThread.start();
+
+        synchronized (myThread) {
+            System.out.println(Thread.currentThread());
+            TimeUnit.SECONDS.sleep(60);
+        }
+    }
+
+}
+```
+日志：
+```txt
+"测试线程" #12 prio=5 os_prio=0 tid=0x000000001b27b000 nid=0x1d68 waiting for monitor entry [0x000000001bbcf000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+
+"main" #1 prio=5 os_prio=0 tid=0x0000000003595800 nid=0x42d4 waiting on condition [0x000000000342f000]
+   java.lang.Thread.State: TIMED_WAITING (sleeping)
+```
