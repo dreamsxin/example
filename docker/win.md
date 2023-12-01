@@ -1,0 +1,5 @@
+#
+
+```shell
+netsh winsock reset
+```
