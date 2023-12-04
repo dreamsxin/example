@@ -1,5 +1,6 @@
 # Wireshark 安装
 
+抓取本地回环，需要安装 `npcap loopback adapter`
 ##
 
 ```shell
