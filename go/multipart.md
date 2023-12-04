@@ -1,3 +1,10 @@
+```shell
+curl --location --request POST ':8080/upload' \
+--form 'name="tony bai"' \
+--form 'age="23"' \
+--form 'file1=@"/your_local_path/part1.txt"' \
+--form 'file3=@"/your_local_path/part3.json"'
+```
 ```go
 package main
 
