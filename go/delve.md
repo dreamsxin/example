@@ -1,7 +1,7 @@
 # Delve
 
 Delve 是一个 Go 语言的调试器，目标是给 Go 提供一个简单和特性齐全的调试工具，并且是容易调用和使用的。
-
+ 使用方法 跟 gdb 相同
 ## 安装
 ```shell
 go get -u github.com/go-delve/delve/cmd/dlv
@@ -48,4 +48,19 @@ skip over 只在当前代码块-非常关键，不进入具体跳入函数中，
 skip into 调入函数执行细节中
 restart 重新再次执行（丢弃本次）
 stop 停止调试
+
+## 实例
+
+```shell
+#查看占用cpu高的进程pid
+top -d 1
+#查看进城对应的线程
+top -d 1 -p pid -H
+#中断进程并附加进程
+dlv attach pid
+#通过线程id找到对应的协程编号，然后切换到协程goroutine命令 序号
+grs gid
+#然后打印堆栈信息
+bt
+```
 
