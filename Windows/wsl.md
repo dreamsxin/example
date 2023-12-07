@@ -87,6 +87,20 @@ If the download is taking a long time, turn off the progress bar by setting $Pro
 
 You also have the option to use the curl command-line utility for downloading. To download Ubuntu 20.04 with curl:
 
+Ubuntu默认发行版 https://aka.ms/wslubuntu
+
+Ubuntu 22.04 LTS https://aka.ms/wslubuntu2204
+
+Ubuntu 20.04 https://aka.ms/wslubuntu2004
+
+Ubuntu 20.04 ARM https://aka.ms/wslubuntu2004arm
+
+Ubuntu 18.04 https://aka.ms/wsl-ubuntu-1804
+
+Ubuntu 18.04 ARM https://aka.ms/wsl-ubuntu-1804-arm
+
+Ubuntu 16.04 https://aka.ms/wsl-ubuntu-1604
+
 ConsoleCopy
 
 curl.exe -L -o ubuntu-2004.appx https://aka.ms/wsl-ubuntu-2004
