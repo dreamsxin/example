@@ -1,4 +1,14 @@
 ```shell
+git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+vim ~/.bashrc
+# .bashrc添加如下一行
+export PATH="$PATH://home/zzx/depot_tools"
+source ~/.bashrc
+
+mkdir ~/crashpad
+cd ~/crashpad
+fetch crashpad
+
 git clone https://chromium.googlesource.com/crashpad/crashpad
 https://github.com/TheAssemblyArmada/crashpad-cmake.git
 
