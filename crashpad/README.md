@@ -1,3 +1,5 @@
+https://github.com/backtrace-labs/crashpad/blob/backtrace/doc/developing.md
+
 ```shell
 git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
 vim ~/.bashrc
@@ -8,6 +10,13 @@ source ~/.bashrc
 mkdir ~/crashpad
 cd ~/crashpad
 fetch crashpad
+cd ~/crashpad/crashpad
+git pull -r
+gclient sync
+
+cd ~/crashpad/crashpad
+gn gen out/Default
+ninja -C out/Default
 
 git clone https://chromium.googlesource.com/crashpad/crashpad
 https://github.com/TheAssemblyArmada/crashpad-cmake.git
