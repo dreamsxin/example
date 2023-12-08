@@ -9,6 +9,8 @@ sudo apt-get install zlib1g-dev
 cp ../linux-syscall-support/linux_syscall_support.h src/third_party/lss/
 ./configure
 make -j4
+
+./src/processor/minidump_stackwalk xxx.dmp /mnt/d/pdb/x64/xxx.pdb
 ```
 
 
