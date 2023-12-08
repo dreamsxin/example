@@ -14,9 +14,22 @@ make -j4
 ```
 
 
+
 ## windows VC运行库
 
 https://learn.microsoft.com/zh-cn/cpp/windows/latest-supported-vc-redist?view=msvc-170#visual-studio-2010-vc-100-sp1-no-longer-supported
+
+### win10
+`regsvr32 msdia120.dll`
+```shell
+.\dump_syms.exe .\test.exe > .\test.sym
+.\dump_syms.exe .\test.pdb > .\test.sym
+```
+得到
+`MODULE windows x86_64 530B0CABE8E149C2A831A8C676B4B0641 test.pdb`
+
+新建目录 
+`530B0CABE8E149C2A831A8C676B4B0641`
 
 ### VC2008运行库，版本号数字90，大致包含下面dll。
 
