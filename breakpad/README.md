@@ -16,7 +16,13 @@ make -j4
 
 
 ## windows VC运行库
-
+```shell
+git clone https://chromium.googlesource.com/external/gyp
+cd gyp
+python setup.py install
+./gyp.bat --no-circular-check "../breakpad/src/client/windows/breakpad_client.gyp"
+./gyp.bat --no-circular-check "..\breakpad\src\tools\tools.gyp"
+```
 https://learn.microsoft.com/zh-cn/cpp/windows/latest-supported-vc-redist?view=msvc-170#visual-studio-2010-vc-100-sp1-no-longer-supported
 
 ### win10
