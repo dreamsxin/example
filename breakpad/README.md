@@ -23,6 +23,7 @@ cd gyp
 python setup.py install
 ./gyp.bat --no-circular-check "../breakpad/src/client/windows/breakpad_client.gyp"
 ./gyp.bat --no-circular-check "..\breakpad\src\tools\tools.gyp"
+./gyp.bat --no-circular-check "..\breakpad\src\processor\processor.gyp"
 ```
 创建testing 目录（breakpad/src/testing），并将goolgletest 目录下的两个文件拷贝进去
 
