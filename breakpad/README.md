@@ -17,6 +17,7 @@ make -j4
 
 ## windows VC运行库
 ```shell
+git clone https://github.com/google/googletest.git
 git clone https://chromium.googlesource.com/external/gyp
 cd gyp
 python setup.py install
