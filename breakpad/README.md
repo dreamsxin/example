@@ -29,6 +29,7 @@ python setup.py install
 ./gyp.bat --no-circular-check "..\breakpad\src\processor\processor.gyp"
 ```
 创建testing 目录（breakpad/src/testing），并将goolgletest 目录下的两个文件拷贝进去
+breakpad修改文件`\src/build/common.gypi` `WarnAsError': 'false',`
 
 https://learn.microsoft.com/zh-cn/cpp/windows/latest-supported-vc-redist?view=msvc-170#visual-studio-2010-vc-100-sp1-no-longer-supported
 
