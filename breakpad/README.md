@@ -11,6 +11,9 @@ cp ../linux-syscall-support/linux_syscall_support.h src/third_party/lss/
 make -j4
 
 ./src/processor/minidump_stackwalk xxx.dmp /mnt/d/pdb/x64/xxx.pdb
+# 将屏显输出到文件
+script -f output.txt
+exit
 ```
 
 
