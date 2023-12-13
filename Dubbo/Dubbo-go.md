@@ -50,3 +50,13 @@ $ protoc --go_out=. --go-triple_out=. ./samples_api.proto
 ```out
 config/root_config.go:150       [Config Center] Config center doesn't start
 ```
+
+## 日志配置
+
+https://cn.dubbo.apache.org/zh-cn/docs/languages/golang/dubbo-go-3.0/samples/custom-logger/
+```yml
+dubbo:
+  logger:
+    zap-config:
+      level: debug # 日志级别
+```
