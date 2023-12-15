@@ -501,3 +501,17 @@ declare cur cursor for with recursive skip as (
 )   
 select (t.r).c2, (t.r).c3 from skip t where t.* is not null; 
 ```
+
+## windows 安装
+
+**下载软件**
+- postgresql-16.1-1-windows-x64.exe
+- timescaledb-postgresql-16-windows-amd64.zip
+
+**环境变量**环境
+`D:\Program Files\PostgreSQL\16\bin`
+
+运行 timescaledb `setup.exe`
+输入配置文件路径，然后一路 yes
+`D:\Program Files\PostgreSQL\16\data\postgresql.conf`
+
