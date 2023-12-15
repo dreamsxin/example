@@ -525,7 +525,7 @@ CREATE DATABASE logs;
 CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
 
 -- We start by creating a regular SQL table
-CREATE TABLE app_reports (
+CREATE TABLE conditions (
   time        TIMESTAMPTZ       NOT NULL,
   location    varchar(255)      NOT NULL,
   temperature DOUBLE PRECISION  NULL,
