@@ -534,6 +534,13 @@ CREATE TABLE conditions (
 
 -- Then we convert it into a hypertable that is partitioned by time
 SELECT create_hypertable('conditions', 'time');
+SELECT create_hypertable('conditions', 'time', 'location', 4);
+SELECT create_hypertable(
+  'conditions',
+  by_range('time', INTERVAL '1 day')
+);
+SELECT set_chunk_time_interval('conditions', INTERVAL '24 hours');
+SELECT * FROM add_dimension('hypertable_example', by_hash('device_id', 4));
 
 INSERT INTO conditions(time, location, temperature, humidity)
   VALUES (NOW(), 'office', 70.0, 50.0);
@@ -548,4 +555,49 @@ SELECT time_bucket('15 minutes', time) AS fifteen_min,
   WHERE time > NOW() - interval '3 hours'
   GROUP BY fifteen_min, location
   ORDER BY fifteen_min DESC, max_temp DESC;
+```
+
+### 压缩策略（暂时不需要使用）
+
+设置压缩分组
+```sql
+ALTER TABLE example SET (
+  timescaledb.compress,
+  timescaledb.compress_segmentby = 'device_id'
+);
+```
+超过7天进行压缩处理
+```sql
+SELECT add_compression_policy('example', INTERVAL '7 days');
+```
+### 数据保留策略
+
+保留24H数据
+```sql
+SELECT add_retention_policy('conditions', INTERVAL '24 hours');
+
+//清除数据保留策略
+SELECT remove_retention_policy('conditions');
+
+// 查看计划作业
+SELECT * FROM timescaledb_information.job_stats;
+```
+
+```sql
+// 查看超表
+select show_chunks('tablename');
+SELECT drop_chunks('tablename', older_than >= id); 删除当前id之前的块
+
+// 若要重建策略，先删除原来的策略
+SELECT remove_retention_policy('cigarette_single');
+// 查看策略任务详细信息
+select * from timescaledb_information.jobs
+// 查看策略任务执行情况
+SELECT * FROM timescaledb_information.job_stats
+// 修改策略执行时间
+SELECT alter_job(1015, schedule_interval => INTERVAL '6 minutes');
+// 注：1015是策略任务信息中的 job_id，schedule_interval 表示任务执行周期
+// 其他：开启dbug调试，并查看任务运行情况
+SET client_min_messages TO DEBUG1;
+CALL run_job(1015);
 ```
