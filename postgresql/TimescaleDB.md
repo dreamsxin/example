@@ -515,3 +515,37 @@ select (t.r).c2, (t.r).c3 from skip t where t.* is not null;
 输入配置文件路径，然后一路 yes
 `D:\Program Files\PostgreSQL\16\data\postgresql.conf`
 
+打开服务管理器，重启服务 `services.msc`
+
+### 创建数据库
+
+```sql
+CREATE DATABASE logs;
+\c 
+CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
+
+-- We start by creating a regular SQL table
+CREATE TABLE app_reports (
+  time        TIMESTAMPTZ       NOT NULL,
+  location    varchar(255)      NOT NULL,
+  temperature DOUBLE PRECISION  NULL,
+  humidity    DOUBLE PRECISION  NULL
+);
+
+-- Then we convert it into a hypertable that is partitioned by time
+SELECT create_hypertable('conditions', 'time');
+
+INSERT INTO conditions(time, location, temperature, humidity)
+  VALUES (NOW(), 'office', 70.0, 50.0);
+
+SELECT * FROM conditions ORDER BY time DESC LIMIT 100;
+
+SELECT time_bucket('15 minutes', time) AS fifteen_min,
+    location, COUNT(*),
+    MAX(temperature) AS max_temp,
+    MAX(humidity) AS max_hum
+  FROM conditions
+  WHERE time > NOW() - interval '3 hours'
+  GROUP BY fifteen_min, location
+  ORDER BY fifteen_min DESC, max_temp DESC;
+```
