@@ -601,3 +601,54 @@ SELECT alter_job(1015, schedule_interval => INTERVAL '6 minutes');
 SET client_min_messages TO DEBUG1;
 CALL run_job(1015);
 ```
+
+## 搭建集群
+
+### 节点划分
+访问节点AN、数据节点DN
+
+### 访问节点AN 配置
+`/var/lib/pgsql/14/data/postgresql.conf`
+```
+# 访问节点AN
+max_prepared_transactions = 500
+enable_partitionwise_aggregate = on
+jit = off
+```
+### 数据节点DN 配置
+
+```conf
+# 数据节点DN
+max_prepared_transactions = 500
+wal_level = logical
+```
+
+### 添加数据节点
+# 连接访问节点数据库
+psql -U postgres -h localhost -d mydatabase
+ 
+### 添加数据节点
+```sql
+SELECT add_data_node('dn1','xxx.xx.xx.xx1','mydatabase',5432,false,true,'postgres');
+SELECT add_data_node('dn2','xxx.xx.xx.xx2','mydatabase',5432,false,true,'postgres');
+```
+此时Timescaledb集群就搭建成功了
+
+### 创建分布式超表（AN访问节点）
+```sql
+# 创建表
+CREATE TABLE test2 (
+                       time        TIMESTAMPTZ       NOT NULL,
+                       location    TEXT              NOT NULL,
+                       temperature DOUBLE PRECISION  NULL,
+                       humidity    DOUBLE PRECISION  NULL
+);
+# 创建分布式超表，默认使用所有数据节点
+SELECT create_distributed_hypertable('test2', 'time', 'location');
+ 
+# 插入数据
+INSERT INTO test2 VALUES ('2020-12-14 13:45', 1, '1.2');
+ 
+#给表增加数据节点
+SELECT detach_data_node('dn1', 'test2');
+```
