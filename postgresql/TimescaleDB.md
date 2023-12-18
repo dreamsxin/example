@@ -748,3 +748,19 @@ GROUP BY day, symbol;
 ```sql
 SELECT * FROM stock_candlestick_daily ORDER BY day DESC, symbol LIMIT 10;
 ```
+## add_retention_policy()
+
+对 `stocks_real_time` 表进行自动保留策略：
+
+`SELECT add_retention_policy('stocks_real_time', INTERVAL '3 weeks');`
+运行此命令后，所有超过 3 周的数据都将从中删除 stocks_real_time，并创建定期保留策略。不会从您的连续聚合中删除任何数据.
+
+查看创建保留策略后的任务
+```sql
+SELECT * FROM timescaledb_information.jobs;
+SELECT * FROM timescaledb_information.job_stats;
+```
+
+### `timescaledb.ignore_invalidation_older_than`
+该参数接受时间间隔（例如 1 个月），如果设置，它将限制处理无效的时间。因此，如果为 `timescaledb.ignore_invalidation_older_than = '1 month'`，则对自修改时间到当前时间戳的 1 个月以上的数据的任何修改都不会导致连续聚合被更新。
+
