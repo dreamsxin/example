@@ -84,3 +84,9 @@ make
 ## Wireshark 连接远程抓包服务
 
 在 InterFace 中选择 Remote，在弹出的框中输入IP地址点击确定。
+
+## 过滤 http 请求
+
+```shell
+http and http.request.uri contains "/api/v2"
+```
