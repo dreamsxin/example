@@ -652,3 +652,99 @@ INSERT INTO test2 VALUES ('2020-12-14 13:45', 1, '1.2');
 #给表增加数据节点
 SELECT detach_data_node('dn1', 'test2');
 ```
+
+
+## 股票数据
+
+创建普通表
+```sql
+CREATE TABLE stocks_real_time (
+  time TIMESTAMPTZ NOT NULL,
+  symbol TEXT NOT NULL,
+  price DOUBLE PRECISION NULL,
+  day_volume INT NULL
+);
+```
+创建超表
+```sql
+SELECT create_hypertable('stocks_real_time','time');
+```
+
+查看子表 `\d+ stocks_real_time`
+
+创建索引
+```sql
+CREATE INDEX ix_symbol_time ON stocks_real_time (symbol, time DESC);
+```
+添加一个普通表来存储股票交易数据的公司名称和代码
+```sql
+CREATE TABLE company (
+  symbol TEXT NOT NULL,
+  name TEXT NOT NULL
+);
+```
+psql 里输入 `\dt` 可以看到目前已有的表。
+下载数据
+`https://assets.timescale.com/docs/downloads/get-started/real_time_stock_data.zip`
+
+psql 命令下，将数据导入
+```sql
+\COPY stocks_real_time from './tutorial_sample_tick.csv' DELIMITER ',' CSV HEADER;
+\COPY company from './tutorial_sample_company.csv' DELIMITER ',' CSV HEADER;
+```
+
+使用简单查询语句检索一下刚导入的数据
+```sql
+SELECT * FROM stocks_real_time srt WHERE symbol='TSLA' and day_volume is not null ORDER BY time DESC, day_volume desc LIMIT 10;
+```
+
+TimescaleDB 也具有自定义SQL函数，可以帮助简化和快速地进行时间序列分析。
+
+### `first()`和`last()`函数
+可以检索一列的第一个和最后一个值。例如，股票数据有一个时间戳列time和一个数字列price。可以使用first(price, time)来获取价格列中随着时间列的增加而排序的第一个值。
+
+在这个查询中，首先选择`stocks_real_time srt`表中每只股票最近四天的`first()`和`last()`交易价格:
+```sql
+SELECT symbol, first(price,time), last(price, time) FROM stocks_real_time srt WHERE time > now() - INTERVAL '4 days' GROUP BY symbol ORDER BY symbol LIMIT 10;
+```
+
+### `time_bucket`函数
+
+时间桶用于对数据进行分组，以便可以在不同的时间段内执行计算。时间桶代表特定的时间点，因此单个时间桶中的数据的所有时间戳都使用桶的时间戳。我们使用与上述相同的查询来查找第一个和最后一个值，但首先将数据组织成1小时的时间桶。之前检索了列的第一个和最后一个值，而这次将检索1小时时间桶的第一个和最后一个值。
+```sql
+SELECT time_bucket('1 hour', time) AS bucket, first(price,time), last(price, time) FROM stocks_real_time srt WHERE time > now() - INTERVAL '4 days' GROUP BY bucket;
+```
+
+### 连续聚合
+
+连续聚合是一种特殊的超级表，它会自动在后台刷新，随着新数据的添加或旧数据的修改。对数据集的更改会被跟踪，并且在连续聚合背后的超级表会在后台自动更新。用户不需要手动刷新连续聚合，它们会在后台持续和增量更新。与常规的PostgreSQL物化视图相比，连续聚合的维护负担要小得多，因为不必在每次刷新时从头开始创建整个视图。这意味着可以继续处理数据，而不必维护数据库。
+由于连续聚合基于超级表，你可以以与其他表完全相同的方式查询它们，并在连续聚合上启用压缩或数据分层，甚至可以在连续聚合之上创建连续聚合。默认情况下，查询连续聚合可以为你提供实时数据，物化视图中的预先聚合数据与尚未进行聚合的最新数据相结合，这使你可以在每次查询时获取最新的结果。
+
+简化聚合有三种主要方法：物化视图、连续聚合和实时聚合。
+
+### 创建连续聚合
+
+先试下聚合查询，我们使用SELECT语句查找min和max函数的最高值和最低值，以及first和last函数的打开值和关闭值。然后将数据汇总到1天的桶中，如下所示:
+```sql
+SELECT time_bucket('1 day', time) AS bucket, symbol, max(price) AS high, first(price, time) AS open, last(price, time) AS close,  min(price) AS low FROM stocks_real_time srt WHERE time > now() - INTERVAL '1 week' GROUP BY bucket, symbol ORDER BY bucket, symbol LIMIT 10;
+```
+有了聚合查询，就可以使用它来创建连续聚合。
+
+首先创建一个名为 `stock_candlestick_daily` 的实体化视图，使用 `WITH (timescaledb.continuous)` 然后将其转换为一个连续聚合：
+```sql
+CREATE MATERIALIZED VIEW stock_candlestick_daily
+WITH (timescaledb.continuous) AS
+SELECT
+  time_bucket('1 day', "time") AS day,
+  symbol,
+  max(price) AS high,
+  first(price, time) AS open,
+  last(price, time) AS close,
+  min(price) AS low
+FROM stocks_real_time srt
+GROUP BY day, symbol;
+```
+使用联合聚合来查询聚合结果
+```sql
+SELECT * FROM stock_candlestick_daily ORDER BY day DESC, symbol LIMIT 10;
+```
