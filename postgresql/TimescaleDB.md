@@ -761,6 +761,73 @@ SELECT * FROM timescaledb_information.jobs;
 SELECT * FROM timescaledb_information.job_stats;
 ```
 
+### drop_chunks
+`SELECT drop_chunks('stocks_real_time', INTERVAL '3 weeks');`
+要删除超过两周但新于三周的所有数据：
+```sql
+SELECT drop_chunks(
+  'stocks_real_time',
+  older_than => INTERVAL '2 weeks',
+  newer_than => INTERVAL '3 weeks'
+)
+```
+
+### 修改聚合
+
+```sql
+--修改视图参数
+ALTER VIEW device_summary SET (timescaledb.refresh_interval = '10 min');
+
+--删除视图
+DROP VIEW device_summary CASCADE;
+
+ALTER VIEW conditions_summary_hourly SET (  
+  timescaledb.refresh_lag = '1 hour'  
+);  
+  
+  
+ALTER VIEW conditions_summary_daily SET (  
+  timescaledb.ignore_invalidation_older_than = '30 days'  
+);  
+
+```
 ### `timescaledb.ignore_invalidation_older_than`
 该参数接受时间间隔（例如 1 个月），如果设置，它将限制处理无效的时间。因此，如果为 `timescaledb.ignore_invalidation_older_than = '1 month'`，则对自修改时间到当前时间戳的 1 个月以上的数据的任何修改都不会导致连续聚合被更新。
 
+```sql
+--timescaledb.refresh_interval参数控制视图的刷新时间，间隔越短，后台进程越频繁，当然进程是需要消耗资源的。
+--默认情况下，查询该聚合视图的数据中，包含了已经聚合的数据以及基础表中未聚合的数据，如果你想要的结果只是聚合后的数据，不需要基础表中最新的数据，那么可以设置timescaledb.materialized_only改参数为true
+
+ALTER VIEW conditions_summary_hourly SET (
+    timescaledb.materialized_only = true
+);
+
+
+-- 可以查询timescaledb_information.continuous_aggregates获取所有的聚合视图，如果要查询相关聚合处理进程的处理状态，可以查询 timescaledb_information.continuous_aggregate_stats视图。
+
+SELECT view_name, materialization_hypertable
+    FROM timescaledb_information.continuous_aggregates;
+         view_name         |            materialization_hypertable             
+---------------------------+---------------------------------------------------
+ conditions_summary_hourly | _timescaledb_internal._materialized_hypertable_30
+ conditions_summary_daily  | _timescaledb_internal._materialized_hypertable_31
+(2 rows)
+
+--timescaledb.refresh_lag参数控制延迟聚合的时间，如下，conditions_summary_hourly视图的bucket_width为1小时，如果设置timescaledb.refresh_lag为1小时，那么就是bucket_width+timescaledb.refresh_lag=2，也就是雾化时间比当前时间晚了两个小时，也就是聚合的是2小时之前的数据。
+
+ALTER VIEW conditions_summary_hourly SET (
+  timescaledb.refresh_lag = '1 hour'
+);
+--越低的refresh_lag值，表示聚合的数据和基础数据的时间更接近，但是可能会导致写放大，导致插入性能变差。一般情况下，该参数不需要修改。
+
+--timescaledb.max_interval_per_job参数决定一个job聚合的最大量，当一个job处理的数据后，还有剩下要处理的数据时，会自己启动一个新的job进行处理。
+
+--timescaledb.ignore_invalidation_older_than参数控制修改（插入，更新和删除）如何触发连续聚合的更新。如果对基础表进行了修改，则它将使聚合中已计算的部分无效，并且必须更新聚合。默认情况下，所有数据的改变都会触发聚合的更新，如果设置了改参数，则改时间段之前的数据更改将不会触发聚合更新。
+--一个常用的实例，删除基础表中30天以外的数据，但是保留持续聚合的数据在视图中。
+ALTER VIEW device_readings SET (
+  timescaledb.ignore_invalidation_older_than = '30 days'
+);
+SELECT drop_chunks(INTERVAL '30 days', 'device_readings')
+```
+
+从上面得知，删除基础表的数据可以使用drop_chunks函数，cascade_to_materializations参数可以控制是否在聚合的视图中保留在基础表中删除的数据，如果为true,则聚合视图中的数据也将删除，如果为false,则只删除基础表中的数据，保留聚合视图中的历史聚合数据。另外需要注意的是drop_chunks函数中的older_than参数应该长于timescaledb.ignore_invalidation_older_than，因为基础数据备删除了，无法处理删除区域的数据。
