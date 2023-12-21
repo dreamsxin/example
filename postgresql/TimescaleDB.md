@@ -831,3 +831,118 @@ SELECT drop_chunks(INTERVAL '30 days', 'device_readings')
 ```
 
 从上面得知，删除基础表的数据可以使用drop_chunks函数，cascade_to_materializations参数可以控制是否在聚合的视图中保留在基础表中删除的数据，如果为true,则聚合视图中的数据也将删除，如果为false,则只删除基础表中的数据，保留聚合视图中的历史聚合数据。另外需要注意的是drop_chunks函数中的older_than参数应该长于timescaledb.ignore_invalidation_older_than，因为基础数据备删除了，无法处理删除区域的数据。
+
+```sql
+-- 创建普通数据表
+CREATE TABLE stocks_real_time (
+  time TIMESTAMPTZ NOT NULL,
+  symbol TEXT NOT NULL,
+  price DOUBLE PRECISION NULL,
+  day_volume INT NULL
+);
+
+-- 通过 time 进行分区将普通表转换为超表
+SELECT create_hypertable('stocks_real_time','time');
+
+-- 创建索引以高效查询 symbol 和 time 列
+CREATE INDEX ix_symbol_time ON stocks_real_time (symbol, time DESC);
+
+-- timescaleDB 仍然是一个 postgrepSQL 库，可以新建普通的数据表
+CREATE TABLE company (
+  symbol TEXT NOT NULL,
+  name TEXT NOT NULL
+);
+
+-- 执行两个文件数据的插入
+-- 若无交易数量人为补充
+UPDATE stocks_real_time SET day_volume=(random()*(100000-1)+1)
+-- 查询近 4 天的股票数据
+SELECT * FROM stocks_real_time srt
+WHERE time > now() - INTERVAL '4 days';
+
+-- 查询 Amazon 公司最近 10 条股票交易信息
+SELECT * FROM stocks_real_time srt
+WHERE symbol = 'AMZN'
+ORDER BY time DESC, day_volume desc
+LIMIT 10;
+
+-- 计算近 4 天 Apple 公司的股票平均交易价格
+SELECT
+    avg(price)
+FROM stocks_real_time srt
+JOIN company c ON c.symbol = srt.symbol
+WHERE c.name = 'Apple' AND time > now() - INTERVAL '4 days';
+
+-- first() and last()
+-- 获取所有公司近三天来的第一笔成交价和最后一笔成交价
+SELECT symbol, first(price,time), last(price, time)
+FROM stocks_real_time srt
+WHERE time > now() - INTERVAL '3 days'
+GROUP BY symbol
+ORDER BY symbol;
+
+-- 查询一周内每个公司每天的股票平均交易额
+SELECT
+  time_bucket('1 day', time) AS bucket,
+  symbol,
+  avg(price)
+FROM stocks_real_time srt
+WHERE time > now() - INTERVAL '1 week'
+GROUP BY bucket, symbol
+ORDER BY bucket, symbol;
+
+-- 普通聚合查询：查询各个股票每天的开盘价格、闭盘价格、以及最高、最低交易价格
+SELECT
+  time_bucket('1 day', "time") AS day,
+  symbol,
+  max(price) AS high,
+  first(price, time) AS open,
+  last(price, time) AS close,
+  min(price) AS low
+FROM stocks_real_time srt
+GROUP BY day, symbol
+ORDER BY day DESC, symbol;
+
+-- 连续聚合查询
+CREATE MATERIALIZED VIEW stock_candlestick_daily
+WITH (timescaledb.continuous) AS
+SELECT
+  time_bucket('1 day', "time") AS day,
+  symbol,
+  max(price) AS high,
+  first(price, time) AS open,
+  last(price, time) AS close,
+  min(price) AS low
+FROM stocks_real_time srt
+GROUP BY day, symbol;
+
+-- 注意：当连续聚合被创建时，其默认开启实时聚合功能，即未被聚合到视图中的数据将被实时聚合并记录到视图当中。若实时插入的数据量非常庞大，则会影响查询的性能
+-- 可以通过下列语句关闭实时聚合功能
+ALTER MATERIALIZED VIEW stock_candlestick_daily SET (timescaledb.materialized_only = true);
+
+-- 查询聚合结果
+SELECT * FROM stock_candlestick_daily
+  ORDER BY day DESC, symbol;
+
+-- 设置自动更新策略
+-- 时间段为 3天前 到 1小时前，以当前时间为基准
+-- 策略每天执行 1 次，由 schedule_interval 设置
+-- 策略执行的查询是连续聚合 stock_candlestick_daily 中定义的查询
+SELECT add_continuous_aggregate_policy('stock_candlestick_daily',
+  start_offset => INTERVAL '3 days',
+  end_offset => INTERVAL '1 hour',
+  schedule_interval => INTERVAL '1 days');
+	
+-- 设置手动更新策略
+-- 用于更新自动更新时间范围外的聚合数据，如掉线重连后发送的历史数据
+-- 下列策略将更新 1周前 到 现在 的连续聚合
+-- 手动刷新仅会更新一次连续聚合
+CALL refresh_continuous_aggregate(
+  'stock_candlestick_daily',
+  now() - INTERVAL '1 week',
+  now()
+);
+
+-- 连续聚合的详细信息查询
+SELECT * FROM timescaledb_information.continuous_aggregate
+```
