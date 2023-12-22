@@ -72,6 +72,47 @@ CREATE database tutorial;
 CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
 ```
 
+## 性能测试
+
+https://github.com/timescale/tsbs.git
+```shell
+# Fetch TSBS and its dependencies
+#go get github.com/timescale/tsbs
+git clone https://github.com/timescale/tsbs.git
+
+cd tsbs/cmd/tsbs_generate_data
+go install
+cd $GOPATH/src/github.com/timescale/tsbs
+make
+
+```
+
+### 数据生成
+
+生成超过100M行（1B指标）
+```shell
+tsbs_generate_data --use-case="cpu-only" --seed=123 --scale=4000 --timestamp-start="2016-01-01T00:00:00Z" --timestamp-end="2016-01-07T00:00:00Z" --log-interval="10s" --format="timescaledb" | gzip > ./timescaledb-data.gz
+```
+插入测试
+```shell
+#tsbs_load config --target=timescaledb --data-source=FILE
+./scripts/load/load_timescaledb.sh
+
+# 使用 tsbs_load_timescaledb 工具向远程数据库实例写入数据
+$ cat /tmp/timescaledb-data.gz | gunzip | tsbs_load_timescaledb \
+--postgres="sslmode=require" --host="my.tsdb.host" --port=5432 --pass="password" \
+--user="benchmarkuser" --admin-db-name=defaultdb --workers=8  \
+--in-table-partition-tag=true --chunk-time=8h --write-profile= \
+--field-index-count=1 --do-create-db=true --force-text-format=false \
+--do-abort-on-exist=false
+
+# 使用 load_timescaledb.sh 脚本向本地 timescaledb 实例写入数据
+$ cd /home/randy/go/src/github.com/timescale/tsbs
+$ NUM_WORKERS=2 BATCH_SIZE=10000 BULK_DATA_DIR=/tmp DATABASE_PORT=port \
+DATABASE_USER=user DATABASE_NAME=dbname DATABASE_PWD=passwd \
+    scripts/load/load_timescaledb.sh
+```
+
 ## 创建新表 Creating a (Hyper)table
 
 ```sql
