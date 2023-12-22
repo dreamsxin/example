@@ -87,6 +87,16 @@ host    all         all         ::1/128               md5
 listen_addresses = 'localhost,192.168.1.100'
 ```
 
+## 时区
+修改配置
+```conf
+log_timezone = 'Asia/Shanghai'
+timezone = 'Asia/Shanghai'
+```
+客户端连接时带上
+```go
+dsn := fmt.Sprintf("user=%s password=%s host=%s port=%d dbname=%s sslmode=disable TimeZone=Asia/Shanghai", UserName, Password, Host, Port, DBName)
+```
 # 使用 pg_dump
 
 ## 明文 导出指定表数据
