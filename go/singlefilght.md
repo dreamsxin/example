@@ -75,3 +75,25 @@ func callFuncBySF(key string, i int) (int, error) {
 ## gin
 
 see https://github.com/janartist/api-cache
+
+## 数据库查询防止击穿缓存
+
+```go
+var singleFlight singleflight.Group
+sql := db.ToSQL(func(tx *gorm.DB) *gorm.DB {
+		return tx.Model(&news.Helps{}).Where("type = ?", _type).Find([]news.Helps{})
+	})
+	log.Println(sql)
+	value, err, _ := singleFlight.Do("sqlkey:"+sql, func() (v interface{}, e error) {
+
+		statement := db.Model(&news.Helps{})
+
+		items := []news.Helps{}
+
+		err := statement.Where("type = ?", _type).Find(&items).Error
+
+		return items, err
+	})
+
+	ret, _ := value.([]news.Helps)
+```
