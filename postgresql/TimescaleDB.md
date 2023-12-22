@@ -99,6 +99,35 @@ tsbs_generate_data --use-case="cpu-only" --seed=123 --scale=4000 --timestamp-sta
 ./scripts/load/load_timescaledb.sh
 
 # 使用 tsbs_load_timescaledb 工具向远程数据库实例写入数据
+
+#会自动创建一个名为 benchmark 的新数据库
+tsbs_load_timescaledb --postgres="sslmode=disable" --host=localhost --port=5432 --pass="123456" --user="postgres" --admin-db-name=postgres --workers=1 --in-table-partition-tag=false --field-index-count=0 --do-create-db=true --force-text-format=false --do-abort-on-exist=false --file="timescaledb-data" --partitions=1 --use-insert=true --batch-size=8000
+
+tsbs_load_timescaledb --postgres="sslmode=disable" \
+                                --db-name=${DATABASE_NAME} \
+                                --host=${DATABASE_HOST} \
+                                --port=${DATABASE_PORT} \
+                                --pass=${DATABASE_PWD} \
+                                --user=${DATABASE_USER} \
+                                --workers=${NUM_WORKERS} \
+                                --batch-size=${BATCH_SIZE} \
+                                --reporting-period=${REPORTING_PERIOD} \
+                                --use-hypertable=${USE_HYPERTABLE} \
+                                --use-jsonb-tags=${JSON_TAGS} \
+                                --in-table-partition-tag=${IN_TABLE_PARTITION_TAG} \
+                                --hash-workers=${HASH_WORKERS} \
+                                --time-partition-index=${TIME_PARTITION_INDEX} \
+                                --partition-on-hostname=${PARTITION_ON_HOSTNAME} \
+                                --partitions=${PARTITIONS} \
+                                --chunk-time=${CHUNK_TIME} \
+                                --write-profile=${PERF_OUTPUT} \
+                                --field-index-count=1 \
+                                --do-create-db=${DO_CREATE_DB} \
+                                --force-text-format=${FORCE_TEXT_FORMAT} \
+                                --use-copy=${USE_COPY} \
+                                --replication-factor=${REPLICATION_FACTOR} \
+                                --create-metrics-table=${CREATE_METRICS_TABLE}
+
 $ cat /tmp/timescaledb-data.gz | gunzip | tsbs_load_timescaledb \
 --postgres="sslmode=require" --host="my.tsdb.host" --port=5432 --pass="password" \
 --user="benchmarkuser" --admin-db-name=defaultdb --workers=8  \
