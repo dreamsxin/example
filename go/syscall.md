@@ -34,6 +34,27 @@ func prttostr(vcode uintptr) string {
 ```shell
 g++ -shared main.cpp -o test.dll
 ```
+命令
+`go build -buildmode=c-shared -o exportgo.dll main.go`
+导出的 DLL文件会导出 Go 语言所有 package 中的 public 函数，这通常是不合适的。如有必要，我们可以利用DEF文件导出指定的函数。
+
+首先生成main.a静态链接库：
+
+`go build -buildmode=c-archive main.go`
+然后编写DEF文件：
+
+```
+EXPORTS
+    PrintBye
+    Sum
+```
+DEF文件以EXPORTS开头，第二行开始每行一个导出函数名称，与Go源文件中带有//export注释的导出函数相对应。
+然后用GCC生成DLL文件：
+```shell
+gcc test.def main.a -shared -lwinmm -lWs2_32 -o test.dll -Wl,--out-implib,test.lib
+```
+
+执行成功后会在当前目录生成test.dll和test.lib文件。此时，再次使用dumpbin查看，会发现DLL文件仅导出了指定的函数
 ```go
 package main
 
