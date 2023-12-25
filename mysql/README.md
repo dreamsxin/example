@@ -6,6 +6,23 @@
 sudo apt-get install mysql-server
 ```
 
+## 修改 root 验证方式
+
+```shell
+# 查看密码
+sudo cat /etc/mysql/debian.cnf
+mysql -udebian-sys-maint -p
+#查看root验证方式
+use mysql;
+select user,plugin from user;
+#修改验证方式
+update user set plugin='mysql_native_password' where user='root'; # 修改其密码格式
+select user,plugin from user;
+#修改密码
+alter user 'root'@'localhost' identified by 'lgl000820';
+flush privileges;
+```
+
 ## 命令行
 
 ### 登录
