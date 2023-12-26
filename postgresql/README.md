@@ -93,6 +93,9 @@ listen_addresses = 'localhost,192.168.1.100'
 log_timezone = 'Asia/Shanghai'
 timezone = 'Asia/Shanghai'
 ```
+```psql
+SHOW timezone;
+```
 客户端连接时带上
 ```go
 dsn := fmt.Sprintf("user=%s password=%s host=%s port=%d dbname=%s sslmode=disable TimeZone=Asia/Shanghai", UserName, Password, Host, Port, DBName)
