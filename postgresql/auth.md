@@ -103,3 +103,118 @@ sudo -u postgres psql
 
 ## bsd
 使用由操作系统提供的 BSD 认证服务进行认证。
+
+## 用户管理
+
+```psql
+-- 查看当前连接的用户名： 
+select * from current_user;
+select user;
+-- 查看所有用户名： 
+\du
+create user dev with password '123456';
+
+CREATE USER/ROLE name [ [ WITH ] option [ ... ] ]  : 关键词 USER,ROLE； name 用户或角色名； 
+
+-- 创建使用 trust 方式登陆的用户：
+CREATE ROLE loginuser LOGIN;
+-- 修改 pg_hba.conf
+-- 本地登陆：local   all    all    trust
+-- 远程登陆：host   all    all    192.168.163.132/32     trust
+
+-- 创建需要密码登陆的用户：
+CREATE USER loginuser WITH PASSWORD '123456';
+-- 和 CREATE ROLE的区别是：USER 自带 LOGIN属性。也需要修改 pg_hba.conf 文件（后面会对该文件进行说明），加入：
+-- host    all     all     192.168.163.132/32    md5
+
+-- 创建有时间限制的用户
+CREATE ROLE loginuser WITH LOGIN PASSWORD '123456' VALID UNTIL '2019-05-30';
+
+-- 创建有创建数据库和管理角色权限的用户admin：
+CREATE ROLE admin WITH CREATEDB CREATEROLE;
+
+-- 创建具有超级权限的用户：admin
+CREATE ROLE admin WITH SUPERUSER LOGIN PASSWORD 'admin';
+
+-- 创建复制账号：repl 
+postgres=# CREATE USER repl REPLICATION LOGIN ENCRYPTED PASSWORD 'repl';
+
+where option can be:
+
+      SUPERUSER | NOSUPERUSER      :超级权限，拥有所有权限，默认nosuperuser。
+    | CREATEDB | NOCREATEDB        :建库权限，默认nocreatedb。
+    | CREATEROLE | NOCREATEROLE    :建角色权限，拥有创建、修改、删除角色，默认nocreaterole。
+    | INHERIT | NOINHERIT          :继承权限，可以把除superuser权限继承给其他用户/角色，默认inherit。
+    | LOGIN | NOLOGIN              :登录权限，作为连接的用户，默认nologin，除非是create user（默认登录）。
+    | REPLICATION | NOREPLICATION  :复制权限，用于物理或则逻辑复制（复制和删除slots），默认是noreplication。
+    | BYPASSRLS | NOBYPASSRLS      :安全策略RLS权限，默认nobypassrls。
+    | CONNECTION LIMIT connlimit   :限制用户并发数，默认-1，不限制。正常连接会受限制，后台连接和prepared事务不受限制。
+    | [ ENCRYPTED ] PASSWORD 'password' | PASSWORD NULL :设置密码，密码仅用于有login属性的用户，不使用密码身份验证，则可以省略此选项。可以选择将空密码显式写为PASSWORD NULL。
+                                                         加密方法由配置参数password_encryption确定，密码始终以加密方式存储在系统目录中。
+    | VALID UNTIL 'timestamp'      :密码有效期时间，不设置则用不失效。
+    | IN ROLE role_name [, ...]    :新角色将立即添加为新成员。
+    | IN GROUP role_name [, ...]   :同上
+    | ROLE role_name [, ...]       :ROLE子句列出一个或多个现有角色，这些角色自动添加为新角色的成员。 （这实际上使新角色成为“组”）。
+    | ADMIN role_name [, ...]      :与ROLE类似，但命名角色将添加到新角色WITH ADMIN OPTION，使他们有权将此角色的成员资格授予其他人。
+    | USER role_name [, ...]       :同上
+    | SYSID uid                    :被忽略，但是为向后兼容性而存在。
+
+
+-- 示例
+-- 创建复制用户
+CREATE USER abc REPLICATION LOGIN ENCRYPTED PASSWORD '';
+CREATE USER abc REPLICATION LOGIN ENCRYPTED PASSWORD 'abc';
+ALTER USER work WITH ENCRYPTED password '';
+
+-- 创建scheme 角色
+CREATE ROLE abc;
+CREATE DATABASE abc WITH OWNER abc ENCODING UTF8 TEMPLATE template0;
+\c abc
+
+-- 创建schema
+CREATE SCHEMA abc;
+ALTER SCHEMA abc OWNER to abc;
+revoke create on schema public from public;
+
+-- 创建用户
+create user abc with ENCRYPTED password '';
+GRANT abc to abc;
+ALTER ROLE abc WITH abc;
+
+-- 创建读写账号
+CREATE ROLE abc_rw;
+CREATE ROLE abc_rr;
+
+-- 赋予访问数据库权限，schema权限
+grant connect ON DATABASE abc to abc_rw;
+GRANT USAGE ON SCHEMA abc TO abc_rw;
+
+-- 赋予读写权限
+grant select,insert,update,delete ON  ALL TABLES IN SCHEMA abc to abc;
+
+-- 赋予序列权限
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA abc to abc;
+
+-- 赋予默认权限
+ALTER DEFAULT PRIVILEGES IN SCHEMA abc GRANT select,insert,update,delete ON TABLES TO abc;
+
+-- 赋予序列权限
+ALTER DEFAULT PRIVILEGES IN SCHEMA abc GRANT ALL PRIVILEGES ON SEQUENCES TO abc;
+
+
+-- 用户对db要有连接权限
+grant connect ON DATABASE abc to abc;
+
+-- 用户要对schema usage 权限，不然要select * from schema_name.table ,不能用搜索路径
+GRANT USAGE ON SCHEMA abc TO abc;
+grant select ON ALL TABLES IN SCHEMA abc to abc;
+ALTER DEFAULT PRIVILEGES IN SCHEMA abc GRANT select ON TABLES TO abc;
+
+create user abc_w with ENCRYPTED password '';
+create user abc_r with ENCRYPTED password '';
+
+GRANT abc_rw to abc_w；
+
+GRANT abc_rr to abc_r;
+
+```
