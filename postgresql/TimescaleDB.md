@@ -1029,3 +1029,8 @@ WITH (timescaledb.continuous) AS
 #默认实时聚合，如果插入数据非常多，将影响查询性能，改成定时聚合，聚合7天前到1天前的数据，每天聚合一次
 SELECT add_continuous_aggregate_policy('conditions_summary_daily', '7 days', '1 day', '1 day');
 ```
+
+### 查看计划作业
+```sql
+SELECT * FROM timescaledb_information.job_stats;
+```
