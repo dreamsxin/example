@@ -38,3 +38,10 @@ sudo rm -rf /var/lib/dpkg/info
 ```shell
 sudo mv /var/lib/dpkg/info.bk /var/lib/dpkg/info
 ```
+
+```shell
+journalctl -u jenkins -f
+systemctl status jenkins.service
+sudo dpkg --configure -a
+```
+
