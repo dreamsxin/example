@@ -90,3 +90,8 @@ make
 ```shell
 http and http.request.uri contains "/api/v2"
 ```
+
+```shell
+ip.dst == xxx.xxx.xxx.xxx
+tcp.stream eq 125
+```
