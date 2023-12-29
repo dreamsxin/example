@@ -59,9 +59,9 @@ x-match = any，表示只要有键值对匹配就能接受到消息。
 
 ## 属性
 
-Name：交换机名称；就是一个字符串
-Type：交换机类型，direct, topic, fanout, headers四种
-Durability：持久化，声明交换机是否持久化，代表交换机在服务器重启后是否还存在；
-Auto delete：是否自动删除，曾经有队列绑定到该交换机，后来解绑了，那就会自动删除该交换机；
-Internal：内部使用的，如果是yes，客户端无法直接发消息到此交换机，它只能用于交换机与交换机的绑定。
-Arguments：只有一个取值alternate-exchange，表示备用交换机；
+- Name：交换机名称；就是一个字符串
+- Type：交换机类型，direct, topic, fanout, headers四种
+- Durability：持久化，声明交换机是否持久化，代表交换机在服务器重启后是否还存在；
+- Auto delete：是否自动删除，曾经有队列绑定到该交换机，后来解绑了，那就会自动删除该交换机；
+- Internal：内部使用的，如果是yes，客户端无法直接发消息到此交换机，它只能用于交换机与交换机的绑定。
+- Arguments：只有一个取值alternate-exchange，表示备用交换机；
