@@ -8,7 +8,16 @@ Queue（队列）是消息的缓冲区，用于存储待处理的消息。它是
     队列是可配置的：队列可以通过设置不同的属性进行配置，例如队列的名称、是否持久化、是否自动删除等。
 
 ## 类型
-
+```go
+const (
+	QueueTypeClassic              = "classic"
+	QueueTypeQuorum               = "quorum"
+	QueueTypeStream               = "stream"
+	QueueOverflowDropHead         = "drop-head"
+	QueueOverflowRejectPublish    = "reject-publish"
+	QueueOverflowRejectPublishDLX = "reject-publish-dlx"
+)
+```
 ### 简单一对一
 
 简单队列的生产者和消费者关系一对一
