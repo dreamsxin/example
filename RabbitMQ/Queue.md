@@ -18,6 +18,22 @@ const (
 	QueueOverflowRejectPublishDLX = "reject-publish-dlx"
 )
 ```
+RabbitMQ提供了三种类型的队列：
+
+- Classic
+- Quorum
+- Stream
+
+官方文档 对于 Stream 流队列的描述是：高性能、可持久化、可复制、非破坏性消费、只追加写入的日志
+
+使用场景：
+
+- 一个队列将同一条消息分发给不同消费者
+- 可重复消费消息
+- 更高的性能
+- 存储大量消息而不影响性能
+- 更高的吞吐
+
 ### 简单一对一
 
 简单队列的生产者和消费者关系一对一
