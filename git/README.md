@@ -274,7 +274,9 @@ git cvsimport -o origin -v -d :pserver:anonymous@cvs.schmorp.de/schmorpforge lib
 
 修改 `.gitmodules` 然后同步 url 到 `.git/config`
 ```shell
+ git submodule add https://github.com/dreamsxin/go-now now
  git submodule sync
+git submodule update --init --recursive
  ```
 
 遍历子项目
