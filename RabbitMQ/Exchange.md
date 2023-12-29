@@ -3,6 +3,13 @@
 
 ## 类型
 
+```go
+	ExchangeDirect  = "direct"
+	ExchangeFanout  = "fanout"
+	ExchangeTopic   = "topic"
+	ExchangeHeaders = "headers"
+```
+
 ### 直连交换机
 直连交换机是一种带路由功能的交换机，一个队列会和一个交换机绑定，除此之外再绑定一个routing_key，当消息被发送的时候，需要指定一个binding_key，这个消息被送达交换机的时候，就会被这个交换机送到指定的队列里面去。同样的一个binding_key也是支持应用到多个队列中的。
 
