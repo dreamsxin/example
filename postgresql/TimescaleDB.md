@@ -30,6 +30,16 @@ TimescaleDB 是一款针对快速获取和复杂查询而优化的开源时间�
 
 ## 安装
 
+https://docs.timescale.com/self-hosted/latest/install/installation-linux/
+```shell
+echo "deb https://packagecloud.io/timescale/timescaledb/ubuntu/ $(lsb_release -c -s) main" | sudo tee /etc/apt/sources.list.d/timescaledb.list
+wget --quiet -O - https://packagecloud.io/timescale/timescaledb/gpgkey | sudo apt-key add -
+# ubuntu 21
+wget --quiet -O - https://packagecloud.io/timescale/timescaledb/gpgkey | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/timescaledb.gpg
+apt update
+apt install timescaledb-2-postgresql-16
+```
+
 http://docs.timescale.com/latest/getting-started/installation/linux/installation-apt
 
 ```shell
