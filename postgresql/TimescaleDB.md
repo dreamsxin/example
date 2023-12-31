@@ -297,6 +297,12 @@ SELECT drop_chunks(interval '24 hours', 'conditions');
 
 ```sql
 CREATE INDEX ON conditions (location, time DESC);
+CREATE UNIQUE INDEX ON conditions(time, device_id); 
+-- 分区索引
+CREATE INDEX ON conditions(time, device_id)
+    WITH (timescaledb.transaction_per_chunk);
+CREATE UNIQUE INDEX ON conditions(time, device_id)
+    WITH (timescaledb.transaction_per_chunk); 
 ```
 
 * 索引建议
