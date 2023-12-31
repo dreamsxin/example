@@ -29,7 +29,7 @@ TimescaleDB 是一款针对快速获取和复杂查询而优化的开源时间�
 本节的其余部分描述了TimescaleDB架构的设计和动机,包括为什么时间序列数据不同，以及在构建 TimescaleDB 时如何利用其特性。
 
 ## 安装
-
+方法一
 https://docs.timescale.com/self-hosted/latest/install/installation-linux/
 ```shell
 echo "deb https://packagecloud.io/timescale/timescaledb/ubuntu/ $(lsb_release -c -s) main" | sudo tee /etc/apt/sources.list.d/timescaledb.list
@@ -39,7 +39,7 @@ wget --quiet -O - https://packagecloud.io/timescale/timescaledb/gpgkey | sudo gp
 apt update
 apt install timescaledb-2-postgresql-16
 ```
-
+方法二
 http://docs.timescale.com/latest/getting-started/installation/linux/installation-apt
 
 ```shell
@@ -49,7 +49,7 @@ sudo apt-get update
 # To install
 sudo apt install timescaledb-postgresql-10
 ```
-
+### 配置扩展
 `postgresql.conf`
 
 ```conf
@@ -64,7 +64,7 @@ sudo service postgresql restart
 createuser postgres -s
 ```
 
-## 配置
+## 创建库
 
 ```shell
 # Connect to PostgreSQL, using a superuser named 'postgres'
@@ -1049,4 +1049,247 @@ SELECT add_continuous_aggregate_policy('conditions_summary_daily', '7 days', '1 
 ### 查看计划作业
 ```sql
 SELECT * FROM timescaledb_information.job_stats;
+```
+
+## 高可用 High availability
+
+### 配置主库 Configuring the primary database
+
+默认密码加密级别，如需设置
+```shell
+SET password_encryption = 'scram-sha-256';
+```
+**创建新用户**
+```shell
+CREATE ROLE repuser WITH REPLICATION PASSWORD '<PASSWORD>' LOGIN;
+```
+**配置复制参数**
+- synchronous_commit 设置为off
+用来控制事务提交的方式。如果此参数设置为 ON，则所有事务的提交将会等待数据同步到磁盘上才会返回完成结果，这样可以保证提交的数据不会丢失。如果此参数设置为 OFF，则事务提交后不会等待数据同步到磁盘上，这样速度会更快，但可能会导致数据丢失。
+- max_wal_senders 设置为副本总数
+每一个 slot 要使用一个 `wal sender`，每一个流式物理复制也要使用一个 `wal sender`。
+- wal_level 默认值即可
+wal_level = replica （pg13默认已经开启replica） 该参数的可选的值有minimal，replica和logical，wal的级别依次增高
+- max_replication_slots 可以支持的复制插槽总数
+每一个订阅需要消耗一个slot，每一个指定了slot的流式物理复制也要消耗一个slot。
+- listen_addresses
+
+```conf
+listen_addresses = '*'
+wal_level = replica
+max_wal_senders = 2
+max_replication_slots = 2
+synchronous_commit = off
+```
+
+**配置认证**
+将前面创建的用户配置上认证方式
+`pg_hba.conf`
+```conf
+TYPE  DATABASE    USER    ADDRESS METHOD            AUTH_METHOD
+host  replication repuser <REPLICATION_HOST_IP>/32  scram-sha-256
+```
+配置完参数后，重启服务
+**创建复制插槽 Create replication slots**
+创建名为 `replica_1_slot` 插槽
+`SELECT * FROM pg_create_physical_replication_slot('replica_1_slot');`
+
+### 配置从库 Create a base backup on the replica
+
+**停止从库服务**
+如果已经有数据，删除数据
+```shell
+rm -rf <DATA_DIRECTORY>/*
+```
+数据目录可以通过下令命令查看
+```shell
+psql
+-- 查看配置文件
+show config_file;
+-- 查看数据目录
+show data_directory;
+-- 查看日志目录
+show log_directory;
+```
+**使用主数据库基本备份恢复**
+可以使用 `-W` 手动输入密码，也可以配置 `pgpass` 实现命令行免输口令登陆 (Linux:/home/username/.pgpass, Windows:%APPDATA%\postgresql\pgpass.conf，通过设置 PGPASSFILE 环境变量来指定 .pgpass 文件的位置。)
+```shell
+pg_basebackup -h <PRIMARY_IP> \
+-D <DATA_DIRECTORY> \
+-U repuser -vP -W
+```
+
+**恢复模式启动**
+备份完成后，在数据目录中创建一个备用.signal文件。当PostgreSQL在其数据目录中找到一个 `standby.signal` 文件时，它会以恢复模式启动，并通过复制协议流式传输WAL：
+```shell
+touch <DATA_DIRECTORY>/standby.signal
+```
+**配置复制和恢复设置**
+添加与主服务器通信的详细信息，以及插槽名
+`postgresql.conf`
+```conf
+primary_conninfo = 'host=<PRIMARY_IP> port=5432 user=repuser password=<POSTGRES_USER_PASSWORD> application_name=r1'
+primary_slot_name = 'replica_1_slot'
+
+hot_standby = on # 必须设置为on，才能允许对复制副本进行只读查询。在PostgreSQL 10及更高版本中，默认情况下会启用此设置。
+wal_level = replica
+max_wal_senders = 2
+max_replication_slots = 2
+synchronous_commit = off
+```
+重启从库
+
+### 主库上查看复制状态
+```psql
+SELECT * FROM pg_stat_replication;
+```
+
+## 故障转移 Failover
+
+### patroni
+https://github.com/zalando/patroni
+### 主要特点：
+1. 自动故障检测和恢复：Patroni 监视 PostgreSQL 集群的健康状态，一旦检测到主节点故障，它将自动执行故障恢复操作，将其中一个从节点晋升为主节点。
+2. 自动故障转移：一旦 Patroni 定义了新的主节点，它将协调所有从节点和客户端，以确保它们正确地切换到新的主节点，从而实现快速、无缝的故障转移。
+3. 一致性和数据完整性：Patroni 高度关注数据一致性和完整性。在故障切换过程中，它会确保在新主节点接管之前，数据不会丢失或受损。
+4. 外部共享配置存储：Patroni 使用外部键值存储（如 ZooKeeper、etcd 或 Consul）来存储配置和集群状态信息。这确保了配置的一致性和可访问性，并支持多个 Patroni 实例之间的协作。
+5. 支持多种云环境和物理硬件：Patroni 不仅可以在云环境中运行，还可以部署在物理硬件上，提供了广泛的部署选项。
+
+### 使用
+```text
+postgres:5432
+patroni:8008
+etcd:2379/2380
+
+# PostgreSQL
+node1：192.168.234.201
+node2：192.168.234.202
+node3：192.168.234.203
+
+# etcd
+node4：192.168.234.204
+
+# VIP
+读写VIP：192.168.234.2
+只读VIP：192.168.234.211
+```
+时钟同步
+```shell
+yum install -y ntpdate
+ntpdate time.windows.com && hwclock -w
+```
+**安装**
+```shell
+yum install -y gcc epel-release
+yum install -y python-pip python-psycopg2 python-devel
+ 
+pip install --upgrade pip
+pip install --upgrade setuptools
+pip install patroni[etcd]
+```
+**配置**
+```yml
+scope: pgsql
+namespace: /service/
+name: pg1 # 根据不同节点设置不同名字pg1-pg3
+ 
+restapi:
+  listen: 0.0.0.0:8008
+  connect_address: 192.168.234.201:8008 # 根据各自节点IP设置
+ 
+etcd:
+  host: 192.168.234.204:2379
+ 
+bootstrap:
+  dcs:
+    ttl: 30
+    loop_wait: 10
+    retry_timeout: 10
+    maximum_lag_on_failover: 1048576
+    master_start_timeout: 300
+    synchronous_mode: false
+    postgresql:
+      use_pg_rewind: true
+      use_slots: true
+      parameters:
+        listen_addresses: "0.0.0.0"
+        port: 5432
+        wal_level: logical
+        hot_standby: "on"
+        wal_keep_segments: 100
+        max_wal_senders: 10
+        max_replication_slots: 10
+        wal_log_hints: "on"
+ 
+  initdb:
+  - encoding: UTF8
+  - locale: C
+  - lc-ctype: zh_CN.UTF-8
+  - data-checksums
+ 
+  pg_hba:
+  - host replication repl 0.0.0.0/0 md5
+  - host all all 0.0.0.0/0 md5
+ 
+postgresql:
+  listen: 0.0.0.0:5432
+  connect_address: 192.168.234.201:5432 # 根据各自节点IP设置
+  data_dir: /pgsql/data
+  bin_dir: /usr/pgsql-12/bin
+ 
+  authentication:
+    replication:
+      username: repl
+      password: "123456"
+    superuser:
+      username: postgres
+      password: "123456"
+ 
+  basebackup:
+    max-rate: 100M
+    checkpoint: fast
+ 
+tags:
+    nofailover: false
+    noloadbalance: false
+    clonefrom: false
+    nosync: false
+```
+
+## 查看集群状态
+
+`patronictl -c /etc/patroni.yml list`
+
+### 老的方式
+当主库 crush 时，备库就需要启动 failover，此时备库就成为新主库。pg 没有提供可以识别failure的方法，但是pg提供了激活主库的方法。
+pg 提供了2种方法将备库激活为主库：
+- trigger_file文件(pg 12以后trigger_file变成promote_trigger_file）
+- pg_ctl promote命令
+
+**trigger_file**
+`cat recovery.conf|grep trigger`
+找到 trigger 配置，指定文件
+`trigger_file = '/pg/pg96data_sla/trigger.kenyon'`
+
+**备库修改配置**
+postgres.conf 
+```conf
+max_wal_senders = 6
+```
+查看从库是否从主库接收了所有 wal 日志
+```psql
+SELECT pg_last_xlog_receive_location() AS last_wal_received;
+```
+```shell
+psql -c "SHOW replication;"
+cd pg_xlog
+cd pg_wal
+# 查看日志里是否可以看到主库 关键词shutdown
+ls -ltr|tail -n 1 |awk '{print $NF}'|while read xlog;do pg_xlogdump $xlog;done
+```
+**激活从库**
+```shell
+pg_ctl promote -D /pg/pg96data_sla
+#or
+touch /pg/pg96data_sla/trigger.kenyon
 ```
