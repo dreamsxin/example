@@ -118,3 +118,13 @@ adb devices
 
 gmtool device install xxx.apk
 ```
+
+## ARM
+
+https://github.com/niizam/Genymotion_A11_libhoudini/tree/main
+
+```shell
+adb shell
+getprop ro.product.cpu.abilist
+logcat -v time *:W
+```
