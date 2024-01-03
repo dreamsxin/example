@@ -1293,3 +1293,30 @@ pg_ctl promote -D /pg/pg96data_sla
 #or
 touch /pg/pg96data_sla/trigger.kenyon
 ```
+
+
+## 超函数 Hyperfunctions
+
+https://docs.timescale.com/use-timescale/latest/hyperfunctions/
+
+### 与前一行的差
+```sql
+SELECT device id, sum(abs_delta) as volatility FROM (
+ SELECT device_id, abs(val - lag(val) OVER last_day) as abs_delta FROM measurements WHERE ts >= now()-'1 day'::interval
+
+) calc_delta
+GROUP BY device_id;
+```
+TimescaleDB 写法（timevector 会一次性载入所有数据，不建议在大数据表使用）
+```sql
+
+SELECT device_id,
+    toolkit_experimental.timevector(ts, val)
+        -> toolkit_experimental.sort()
+        -> toolkit_experimental.delta()
+        -> toolkit_experimental.abs()
+        -> toolkit_experimental.sum() as volatility
+FROM measurements
+WHERE ts >= now()-'1 day'::interval
+GROUP BY device_id;
+```
