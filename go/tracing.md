@@ -85,3 +85,39 @@ go test -trace trace.out ./...
 
 $go tool trace trace.out
 go tool trace会解析并验证Tracer输出的数据文件，如果数据无误，它接下来会在默认浏览器中建立新的页面并加载和渲染这些数据，如下图所示：
+
+## User annotation
+
+```go
+trace.WithRegion(ctx, "makeCappuccino", func() {
+
+   // orderID allows to identify a specific order
+   // among many cappuccino order region records.
+   trace.Log(ctx, "orderID", orderID)
+
+   trace.WithRegion(ctx, "steamMilk", steamMilk)
+   trace.WithRegion(ctx, "extractCoffee", extractCoffee)
+   trace.WithRegion(ctx, "mixMilkCoffee", mixMilkCoffee)
+})
+
+ctx, task := trace.NewTask(ctx, "makeCappuccino")
+trace.Log(ctx, "orderID", orderID)
+
+milk := make(chan bool)
+espresso := make(chan bool)
+
+go func() {
+        trace.WithRegion(ctx, "steamMilk", steamMilk)
+        milk <- true
+}()
+go func() {
+        trace.WithRegion(ctx, "extractCoffee", extractCoffee)
+        espresso <- true
+}()
+go func() {
+        defer task.End() // When assemble is done, the order is complete.
+        <-espresso
+        <-milk
+        trace.WithRegion(ctx, "mixMilkCoffee", mixMilkCoffee)
+}()
+```
