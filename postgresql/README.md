@@ -202,6 +202,8 @@ sudo apt-get install pgagent
 
 ## 在库中创建扩展
 ```shell
+#系统视图查看可用扩展
+SELECT * FROM pg_available_extensions;
 CREATE EXTENSION pgagent;
 #sudo -u postgres psql -U postgres -d ads < /usr/share/pgadmin3/pgagent.sql
 ```
