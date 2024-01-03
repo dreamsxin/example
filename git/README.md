@@ -336,3 +336,10 @@ git switch -c new_branch
 ```shell
 git restore -- test.txt
 ```
+
+## 
+```shell
+git remote set-url origin <新的远程仓库地址>
+git remote remove origin
+git remote add origin <新的远程仓库地址>
+```
