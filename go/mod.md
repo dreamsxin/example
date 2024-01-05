@@ -20,3 +20,7 @@ git config --unset "http://xxx.com:9000/".insteadof
 [url "ssh://git@xxx"]
     insteadOf = http://xxx
 ```
+## 查看拉取详细信息
+```shell
+go get -v xxx
+```
