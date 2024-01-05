@@ -280,7 +280,10 @@ git submodule add -b master https://github.com/dreamsxin/go-now now
 #获取submodule的url
 git config --get submodule.now.url
 git submodule init
+git submodule update
+# 只会影响 .git/config 已经有 url 的条目，将 .gitmodules 同步到 .git/config
 git submodule sync
+# 递归更新
 git submodule update --init --recursive
  ```
 
