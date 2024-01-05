@@ -5,10 +5,14 @@ go env -w GOPRIVATE=xxx.com
 go env -w GONOPROXY=xxx.com
 # 私有库 https 转 http
 go env -w GOINSECURE=xxx.com
+
+git config http.sslVerify false
 # 替换端口
-git config --global url."http://xxx.com:9000/".insteadof "https://xxx.com/"
+git config url."http://xxx.com:9000/".insteadof "https://xxx.com/"
+git config url."http://xxx.com:9000/".insteadof "http://xxx.com/"
+git config --global url."http://xxx.com:9000/".insteadof "git://xxx.com/"
 # 取消
-git config --global --unset "http://xxx.com:9000/".insteadof
+git config --unset "http://xxx.com:9000/".insteadof
 ```
 
 ```config
