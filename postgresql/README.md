@@ -59,6 +59,7 @@ apt-get install postgresql-9.5
 - 查看所有库：\l
 - 查看所有表：\dt
 - 查看某个表的结构： \d 表名
+- 查看搜索路径下所有函数：\df
 
 # 设置默认密码
 ```shell
