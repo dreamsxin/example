@@ -145,3 +145,10 @@ do
   mysql -uroot  --password=123456 -e 'use prestashop2; drop table if exists $table_name '
 done
 ```
+
+## windows
+
+```shell
+net start mysql
+net stop mysql
+```
