@@ -151,4 +151,6 @@ done
 ```shell
 net start mysql
 net stop mysql
+
+services.msc
 ```
