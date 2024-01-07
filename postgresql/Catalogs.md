@@ -19,6 +19,14 @@ https://www.postgresql.org/docs/15/information-schema.html
 
 ## 使用
 
+```psql
+\?
+-- 查看模式
+\dn
+-- 设置默认搜索模式
+SET search_path TO myschema, public;
+```
+
 通过 pgAdmin4，可以在每个数据库下看到一个名叫 `catalogs` 的对象，目录结构如下。
 - Catalogs
   - ANSI (information_schema)
