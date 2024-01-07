@@ -35,3 +35,9 @@ SET search_path TO myschema, public;
 ```sql
 select table_schema from information_schema.tables group by table_schema;
 ```
+### 查出所有字段注释
+```shell
+SELECT col.*, pgd.description AS comment FROM information_schema.columns AS col
+LEFT JOIN pg_catalog.pg_description AS pgd ON (col.table_name::regclass = pgd.objoid AND col.ordinal_position = pgd.objsubid)
+WHERE table_name = 'tg_event_reports' ORDER BY ordinal_position;
+```
