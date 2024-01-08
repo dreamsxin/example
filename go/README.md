@@ -10,6 +10,7 @@ sudo apt-get install golang-go gccgo
 
 在当前用户文件 `~/.bashrc` 末尾加入（当bash shell被打开时，该文件被读取执行）：
 ```shell
+go env -w GOPROXY=https://goproxy.cn,direct
 export GOPATH=/usr/local/go
 export PATH=$PATH:$GOPATH/bin
 # or
