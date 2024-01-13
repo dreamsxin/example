@@ -15,6 +15,11 @@ git config --global user.email "gitlab留得邮箱地址"
 ```shell
 git config --global core.quotepath false
 ```
+## 自动转换换行符
+
+```shell
+git config --global core.autocrlf true
+```
 
 ## 忽略权限修改
 
