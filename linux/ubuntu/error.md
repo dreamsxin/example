@@ -18,3 +18,14 @@ mount /dev/sda8 /media/tmp
 grub-install --root-directory=/media/tmp /dev/sda
 sudo update-grub2
 ```
+
+## 
+
+`/etc/default/grub`修改
+`GRUB_CMDLINE_LINUX_DEFAULT=quiet" splash"`
+#修改为：
+GRUB`_CMDLINE_LINUX_DEFAULT="quiet splash nomodeset"`
+
+"quite splash"
+输入`xforcevesa`
+或输入`radeon.modeset=0 xforcevesa`
