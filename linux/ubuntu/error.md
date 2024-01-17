@@ -19,13 +19,17 @@ grub-install --root-directory=/media/tmp /dev/sda
 sudo update-grub2
 ```
 
-## 
+## 显卡驱动黑屏
 
 `/etc/default/grub`修改
 `GRUB_CMDLINE_LINUX_DEFAULT=quiet" splash"`
 #修改为：
 GRUB`_CMDLINE_LINUX_DEFAULT="quiet splash nomodeset"`
 
-"quite splash"
-输入`xforcevesa`
-或输入`radeon.modeset=0 xforcevesa`
+1.Intel 82852/82855或8系列显示晶片
+i915.modeset=1 或 i915.modeset=0
+
+2.Nvidia：nomodeset
+
+3.其它厂牌(如ATI，技嘉)
+xforcevesa 或 radeon.modeset=0 xforcevesa
