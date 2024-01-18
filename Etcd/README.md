@@ -61,3 +61,88 @@ etcdctl member update ade526d28b1f92f7 --peer-urls=http://192.168.3.111:2380
 etcdctl member remove ade526d28b1f92f7
 ```
 
+## 数据库操作命令
+## put
+添加一个键值，基本用法如下所示：
+
+`etcdctl put [options] <key> <value> [flags]`
+
+常用参数如下所示：
+- --prev-kv	输出修改前的键值
+
+注意事项如下所示：
+
+其中value接受从stdin的输入内容
+如果value是以横线-开始，将会被视为flag，如果不希望出现这种情况，可以使用两个横线代替--
+若键已经存在，则进行更新并覆盖原有值，若不存在，则进行添加
+
+### get
+查询键值，基本用法如下所示：
+
+`etcdctl get [options] <key> [range_end] [flags]`
+
+常用参数如下所示：
+
+参数	功能描述
+- --hex	以十六进制形式输出
+- --limit number	设置输出结果的最大值
+- --prefix	根据prefix进行匹配key
+- --order	对输出结果进行排序，ASCEND 或 DESCEND
+- --sort-by	按给定字段排序，CREATE, KEY, MODIFY, VALUE, VERSION
+- --print-value-only	仅输出value值
+- --from-key	按byte进行比较，获取大于等于指定key的结果
+- --keys-only	仅获取keys
+
+### del
+删除键值，基本用法如下所示：
+
+`etcdctl del [options] <key> [range_end] [flags]`
+常用参数如下所示：
+
+参数	功能描述
+- --prefix	根据prefix进行匹配删除
+- --prev-kv	输出删除的键值
+- --from-key	按byte进行比较，删除大于等于指定key的结果
+
+## 租约相关命令
+
+租约具有生命周期，需要为租约授予一个TTL(time to live)，将租约绑定到一个key上，则key的生命周期与租约一致，可续租，可撤销租约。其主要用法如下所示：
+
+`etcdctl lease <subcommand> [flags]`
+
+### 添加租约
+主要用法如下所示：
+
+`etcdctl lease grant <ttl> [flags]`
+示例如下所示：
+
+`etcdctl lease grant 600`
+
+### 列出租约
+主要用法如下所示：
+
+`etcdctl lease list [flags]`
+示例如下所示：
+
+`etcdctl lease list`
+### 删除租约
+主要用法如下所示：
+
+`etcdctl lease revoke <leaseID> [flags]`
+示例如下所示：
+
+`etcdctl lease revoke 694d81417acd4754`
+### 查看租约详情
+主要用法如下所示：
+
+`etcdctl lease timetolive <leaseID> [options] [flags]`
+示例如下所示：
+
+`etcdctl lease timetolive 694d81417acd4759`
+### 租约续约
+主要用法如下所示：
+
+`etcdctl lease keep-alive [options] <leaseID> [flags]`
+示例如下所示：
+
+`etcdctl lease keep-alive 694d81417acd4757`
