@@ -146,3 +146,151 @@ etcdctl member remove ade526d28b1f92f7
 示例如下所示：
 
 `etcdctl lease keep-alive 694d81417acd4757`
+
+## 备份和恢复
+主要用于管理节点的快照，其主要用法如下所示：
+
+`etcdctl snapshot <subcommand> [flags]`
+### 生成快照
+其主要用法如下所示：
+
+`etcdctl snapshot save <filename> [flags]`
+示例如下所示：
+
+`etcdctl snapshot save Surpass.db`
+### 查看快照
+其主要用法如下所示：
+
+`etcdctl snapshot status <filename> [flags]`
+示例如下所示：
+
+`etcdctl snapshot status Surpass.db -w table`
+
+### 恢复快照
+其主要用法如下所示：
+
+`etcdctl snapshot restore <filename> [options] [flags]`
+示例如下所示：
+
+`etcdctl snapshot restore Surpass.db \
+--name=default \
+--data-dir=/home/etcd_db \
+--initial-advertise-peer-urls=http://localhost:2380`
+
+## 查看告警
+
+如果内部出现问题，会触发告警，可以通过命令查看告警引起原因，命令如下所示：
+
+`etcdctl alarm <subcommand> [flags]`
+常用的子命令主要有两个：
+```shell
+# 查看所有告警
+etcdctl alarm list
+# 解除所有告警
+etcdctl alarm disarm
+```
+
+## 用户权限
+    etcd默认是没有开启访问控制的，如果开启外网访问etcd的话就需要考虑访问控制的问题，etcd提供了两种访问控制的方式：
+
+### 基于身份验证的访问控制
+基于证书的访问控制
+    etcd有一个特殊用户root和一个特殊角色root：
+
+root用户：root用户是etcd的超级管理员，拥有etcd的所有权限，在开启角色认证之前为们必须要先建立好root用户
+root角色：具有该root角色的用户既具有全局读写访问权限，具有更新集群的身份验证配置的权限。此外，该root角色还授予常规集群维护的特权，包括修改集群成员资格，对存储进行碎片整理以及拍摄快照。
+    etcd的权限资源：
+
+Users: user用来设置身份认证(user:passwd)，一个用户可以拥有多个角色，每个角色被分配一定的权限(只读、只写、可读写)，用户分为root用户和非root用户。
+Roles: 角色用来关联权限，角色主要三类：
+ root角色:默认创建root用户时即创建了root角色，该角色拥有所有权限；
+ guest角色:默认自动创建，主要用于非认证使用。普通角色，
+ 由root用户创建角色，并分配指定权限。
+Permissions: 权限分为只读、只写、可读写三种权限，权限即对指定目录或key的读写权限。
+如果没有指定任何验证方式，即未显示指定以什么用户进行访问，那么默认会设定为 guest 角色。默认情况下 guest 也是具有全局访问权限的
+
+### 用户管理
+其主要用法如下所示：
+
+`etcdctl user <subcommand> [flags]`
+
+其主要子命etcdctl：
+
+子命令	常用用法	功能描述
+add	etcdctl user add < user name or user:password > [options] [flags]
+
+### 添加新用户
+delete	etcdctl user delete < user name > [flags]	删除用户
+list	etcdctl user list [flags]	列出所有用户
+get	etcdctl user get < user name > [options] [flags]	获取用户详细信息
+passwd	etcdctl user passwd < user name > [options] [flags]	修改密码
+grant-role	etcdctl user grant-role < user name > < role name > [flags]	赋予用户角色
+revoke-role	etcdctl user revoke-role < user name > < role name > [flags]	删除用户角色
+
+### 角色管理
+其主要用法如下所示：
+
+etcdctl role <subcommand> [flags]
+    其主要子命令主要如下所示：
+
+子命令	常用用法	功能描述
+add	etcdctl role add < role name > [flags]	添加角色
+delete	etcdctl role delete <role name > [flags]	删除角色
+list	etcdctl role list [flags]	列出所有角色
+get	etcdctl role get <role name > [flags]	获取角色详情
+grant-permission	etcdctl role grant-permission [options] < role name > < permission type > < key > [endkey] [flags]	把key操作权限授予给一个角色
+revoke-permission	etcdctl role revoke-permission < role name > < key > [endkey] [flags]	从角色中撤销key操作权限
+
+### 开启root身份验证
+在开启身份验证后，注意事项如下所示：
+
+#### 开启身份验证：
+所有etcdctl命令操作都需要指定用户参数--user，参数值为用户名:密码
+
+#### 开启证书验证：
+所有etcdctl命令操作都需要添加证书参数--cacert
+
+开启root身份验证的步骤如下所示：
+```shell
+# 添加root 用户，密码为surpass
+etcdctl user add root:surpass
+# 开启身份验证，开启为enable，取消为disable
+etcdctl auth enable
+# 在开启身份验证后，需要带user相关信息
+etcdctl get name --user=root:surpass
+3.8.4 角色授权
+    在开启了root身份验证后，就可以对普通用户和角色操作了。
+
+1.用户增删改查
+# 增加普通用户
+etcdctl user add surpass:surpass --user=root:surpass
+# 获取用户信息
+etcdctl user get surpass --user=root:surpass
+# 查看所有用户
+etcdctl user list --user=root:surpass
+# 修改用户密码
+etcdctl user passwd surpass --user=root:surpass
+# 删除用户
+etcdctl user delete surpass --user=root:surpass
+2.角色增删改查
+# 添加角色
+etcdctl role add etcd-test --user=root:surpass
+# 获取角色详细信息
+etcdctl role get etcd-test --user=root:surpass
+# 获取所有角色
+etcdctl role list --user=root:surpass
+# 删除角色
+etcdctl role delete etcd-test --user=root:surpass
+3.绑定和授权
+# 授权角色只读（read）、只写(write)和读写(readwrite)权限
+# 按key进行授权
+etcdctl role grant-permission etcd-test readwrite name  --user=root:surpass
+# 按key的prefix进行授权
+etcdctl role grant-permission etcd-test readwrite name --prefix=true --user=root:surpass
+# 将授权绑定给指定用户
+etcdctl user grant-role test etcd-test --user=root:surpass
+# 撤消角色授权
+etcdctl role revoke-permission etcd-test name --user=root:surpass
+# 撤消绑定授权
+etcdctl user revoke-role test etcd-test --user=root:surpass
+```
