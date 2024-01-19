@@ -34,6 +34,8 @@ https://github.com/cruvie/kk_etcd_ui
 
 https://github.com/cruvie/kk_etcd_go
 
+https://github.com/gtamas/etcdmanager
+
 ### 添加成员
 主要用法如下所示：
 
