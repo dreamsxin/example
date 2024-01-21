@@ -28,13 +28,11 @@ ETCD是一个高可靠的KV存储系统，支持PUT/GET/DELETE接口；
 
 ## 管理命令
 
-https://github.com/gohutool/boot4go-etcdv3-browser
-
-https://github.com/cruvie/kk_etcd_ui
-
-https://github.com/cruvie/kk_etcd_go
-
-https://github.com/gtamas/etcdmanager
+- https://github.com/gohutool/boot4go-etcdv3-browser
+- https://github.com/cruvie/kk_etcd_ui
+- https://github.com/cruvie/kk_etcd_go
+- https://github.com/gtamas/etcdmanager
+- https://gitee.com/andrewgithub/EtcdKeeperFyne
 
 ### 添加成员
 主要用法如下所示：
