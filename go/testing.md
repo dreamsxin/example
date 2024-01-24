@@ -97,3 +97,8 @@ format (printf 类似）
 ## testing.M
 
 可以在测试函数执行之前做一些其他操作
+
+## 禁用缓存
+
+要禁用测试缓存，可以通过 -count=1 标志来实现。
+`go test -v -count=1 -run ^TestStartSeo$`
