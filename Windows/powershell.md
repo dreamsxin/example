@@ -1,0 +1,6 @@
+- Cmdlet	Alias	说明
+- Get-History	h	获取命令历史记录。
+- Invoke-History	r	运行命令历史记录中的命令。
+- Add-History		将命令添加到命令历史记录。
+- Clear-History	clhy	从命令历史记录中删除命令。
+- Get-PSReadLineOption 查找Powershell历史记录存放位置
