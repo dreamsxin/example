@@ -1,5 +1,23 @@
 package main
 
+/**
+## NewCipher
+`func NewCipher(key []byte) (cipher.Block, error)`
+创建一个cipher.Block接口。参数key为密钥，长度只能是16、24、32字节，用以选择AES-128、AES-192、AES-256。
+
+## NewCTR
+`func NewCTR(block Block, iv []byte) Stream`
+返回一个计数器模式的、底层采用block生成key流的Stream接口，初始向量iv的长度必须等于block的块尺寸。
+
+## stream 接口的方法
+`func XORKeyStream(dst, src []byte)`
+从加密器的key流和src中依次取出字节二者xor后写入dst，src和dst可指向同一内存地址
+
+## 加密/解密
+使用aes.NewCipher获取块
+使用cipher.CTR转为CTR模式流
+使用stearm.XORKeyStream进行加解密
+*/
 import (
 	"bytes"
 	"crypto/aes"
