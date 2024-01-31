@@ -1,3 +1,26 @@
+# 使用
+
+```shell
+命令	说明
+apt-get update	更新源
+apt-get upgrade	更新所有已安装的包
+apt-get install <pkg>	安装软件包<pkg>，多个软件包用空格隔开
+apt-get install –reinstall <pkg>	重新安装软件包<pkg>
+apt-get install -f <pkg>	修复安装（破损的依赖关系）软件<pkg>
+apt-get remove <pkg>	删除软件包<pkg>（不包括配置文件）
+apt-get purge <pkg>	删除软件包<pkg>（包括配置文件）
+apt-get clean	清除缓存(/var/cache/apt/archives/{,partial}下)
+中所有已下载的包
+apt-cache stats	显示系统软件包的统计信息
+apt-cache search <pkg>	使用关键字pkg搜索软件包
+apt-cache show	显示软件包pkg_name的详细信息
+apt-cache depends <pkg>	查看pkg所依赖的软件包
+apt-cache rdepends <pkg>	查看pkg被那些软件包所依赖
+apt-get build-dep <pkg>	构建pkg源码包的编译依赖
+(这条命令很神奇，一步搞定所有编译依赖)
+```
+
+
 ## E: Sub-process /usr/bin/dpkg returned an error code (1)
 
 解决方法：
