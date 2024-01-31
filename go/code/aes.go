@@ -8,22 +8,47 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"runtime"
 )
 
 func main() {
 
-	plaintext := []byte("TTyt!123@")
+	plaintext := []byte("test")
 
 	md5 := md5.New()
 	md5.Write(plaintext)
 	md5str := hex.EncodeToString(md5.Sum(nil))
 	log.Println("md5", md5str)
 
-	key := []byte("ee76c7b38982190e")
-	iv := []byte("27d27d78b45e7fae")
+	key := []byte("xxxxxxxxxxxxxxxx")
+	iv := []byte("xxxxxxxxxxxxxxxx")
 
-	ret, err := AesEncrypt([]byte(md5str), key, iv)
+	ret, err := AesEncryptCTR([]byte(md5str), key, iv)
 	log.Println("ret", hex.EncodeToString(ret), err)
+	ret, err = AesEncrypt([]byte(md5str), key, iv)
+	log.Println("ret", hex.EncodeToString(ret), err)
+}
+
+// plainText：明文
+// iv： 初始化向量
+// key：密钥
+// 返回密文/明文，以及错误
+func AesEncryptCTR(plainText, key, iv []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		_, file, line, _ := runtime.Caller(0)
+		return nil, fmt.Errorf("file:%s,line:%d, err %s", file, line+1, err.Error())
+	}
+	if len(iv) != block.BlockSize() {
+		_, file, line, _ := runtime.Caller(0)
+		return nil, fmt.Errorf("file:%s,line:%d, err %s", file, line+1, err.Error())
+	}
+	// create a CTR interface
+	stream := cipher.NewCTR(block, iv)
+	cipherText := make([]byte, len(plainText))
+	// encrypt or decrypt
+	stream.XORKeyStream(cipherText, plainText)
+	return cipherText, nil
 }
 
 // AesEncrypt 加密函数
