@@ -73,10 +73,11 @@ func (b *FireWall) Check(ip string) bool {
 }
 ```
 执行以上代码，输出
-
+```txt
 127.0.0.1 true
 192.0.2.10 true
 192.0.3.10 false
 2001:db8::1 true
 2001:db9::1 false
-以上就是ip防火墙的实现了，在gin框架里也是这么实现的
+```
+以上就是ip防火墙的实现了，在gin框架里`SetTrustedProxies`也是这么实现的
