@@ -1,3 +1,9 @@
+```shell
+Dism /Online /Cleanup-Image /CheckHealth  是检查映像以查看是否有检测到损坏
+Dism /Online /Cleanup-Image /ScanHealth   是扫描你全部系统文件并和官方系统文件对比
+DISM /Online /Cleanup-image /RestoreHealth 修复
+```
+
 ## Step 1 - Enable the Windows Subsystem for Linux
 You must first enable the "Windows Subsystem for Linux" optional feature before installing any Linux distributions on Windows.
 
