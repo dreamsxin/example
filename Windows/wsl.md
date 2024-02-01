@@ -1,4 +1,5 @@
 ```shell
+sfc /SCANNOW
 Dism /Online /Cleanup-Image /CheckHealth  是检查映像以查看是否有检测到损坏
 Dism /Online /Cleanup-Image /ScanHealth   是扫描你全部系统文件并和官方系统文件对比
 DISM /Online /Cleanup-image /RestoreHealth 修复
