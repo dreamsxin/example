@@ -26,6 +26,7 @@ bootstrap_expect=1
 ```
 
 ```shell
+systemctl status consul.service
 sudo systemctl stop consul
 lsof -i:8500
 ```
