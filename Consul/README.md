@@ -1,5 +1,20 @@
 #
 
+## 安装
+https://www.hashicorp.com/official-packaging-guide
+```shell
+# Download the signing key to a new keyring
+sudo apt update && sudo apt install gpg
+# Verify the key's fingerprint
+wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+# Add the HashiCorp repo
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+# see all available packages
+grep ^Package: /var/lib/apt/lists/apt.releases.hashicorp.com*Packages | sort -u
+
+sudo apt install consul
+```
+
 ## consul 常用命令
 ### consul agent
 - -bind=0.0.0.0 指定 consul所在机器的 IP地址。 默认值：0.0.0.0
