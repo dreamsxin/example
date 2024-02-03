@@ -14,6 +14,14 @@ grep ^Package: /var/lib/apt/lists/apt.releases.hashicorp.com*Packages | sort -u
 
 sudo apt install consul
 ```
+`sudo nano /etc/consul.d/consul.hcl`
+```conf
+ui_config{
+enabled = true
+}
+
+server = true
+```
 
 ## consul 常用命令
 ### consul agent
