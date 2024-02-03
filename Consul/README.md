@@ -21,8 +21,14 @@ enabled = true
 }
 
 server = true
+
+bootstrap_expect=1
 ```
 
+```shell
+sudo systemctl stop consul
+lsof -i:8500
+```
 ## consul 常用命令
 ### consul agent
 - -bind=0.0.0.0 指定 consul所在机器的 IP地址。 默认值：0.0.0.0
