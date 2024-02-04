@@ -108,3 +108,16 @@ d. generate_series 生成序列
   3 | 192.168.3.120
 (15 rows)
 ```
+
+## 补齐时间
+
+```sql
+SELECT lt.label, (case when rt.num is null then 0 else rt.num end) AS num
+	FROM   (
+	   SELECT d::TIMESTAMPTZ AS label FROM generate_series(?::timestamp, ?::timestamp, interval '1 hour') d
+	) lt
+	LEFT JOIN (
+		SELECT time_bucket('1 hour', "time") AS label, COUNT(id) AS num FROM "event_reports" 
+		WHERE event_reports.time >= ?::timestamp AND event_reports.time <= ?::timestamp GROUP BY time_bucket('1 hour', "time") ORDER BY time_bucket('1 hour', "time") DESC
+	) rt ON (lt.label = rt.label)
+```
