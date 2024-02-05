@@ -207,3 +207,12 @@ testdb=# SELECT * FROM COMPANY1;
   6 | Kim   |  22 | South-Hall  |  45000
 (3 rows)
 ```
+
+## 取最新数据，去重
+```sql
+
+with cte as
+(
+    SELECT *,row_number() over(PARTITION by user_id order by trace_time desc) rn FROM public.tg_user_event_reports t1 
+) SELECT * FROM cte WHERE rn=1 limit 100 ;
+```
