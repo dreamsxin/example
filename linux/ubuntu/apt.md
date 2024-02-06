@@ -68,3 +68,21 @@ systemctl status jenkins.service
 sudo dpkg --configure -a
 ```
 
+## 代理
+
+```shell
+sudo apt -o Acquire::http::proxy="http://127.0.0.1:1090/" install xxx
+
+cho -e "Acquire::http::Proxy \"http://127.0.0.1:1090\";" | sudo tee -a /etc/apt/apt.conf > /dev/null
+echo -e "Acquire::https::Proxy \"http://127.0.0.1:1090\";" | sudo tee -a /etc/apt/apt.conf > /dev/null
+
+export ALL_PROXY="socks5://127.0.0.1080"
+export all_proxy="socks5://127.0.0.1080"
+
+git config --global http.proxy "socks5://127.0.0.1080"
+git config --global https.proxy "socks5://127.0.0.1080"
+npm config set proxy "http://127.0.0.1090"
+npm config set https-proxy "http://127.0.0.1090"
+yarn config set proxy "http://127.0.0.1090"
+yarn config set https-proxy "http://127.0.0.1090"
+```
