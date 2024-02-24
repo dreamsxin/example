@@ -10,7 +10,7 @@ start nginx
 ## 停止
 
 ```shell
-tasklist |findstr “nginx”
+tasklist |findstr "nginx"
 taskkill /f /t /pid xxxx
 taskkill /f /t /im nginx.exe
 ```
