@@ -208,7 +208,7 @@ testdb=# SELECT * FROM COMPANY1;
 (3 rows)
 ```
 
-## 取最新数据，去重
+## 取最新数据，去重唯一
 ```sql
 
 with cte as
