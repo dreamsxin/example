@@ -31,3 +31,4 @@ http://yann.lecun.com/exdb/mnist/
 
 https://github.com/cazala/mnist
 
+https://github.com/dreamsxin/mlnotebook.github.io
