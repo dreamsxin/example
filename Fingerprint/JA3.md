@@ -1,3 +1,6 @@
+- https://github.com/phuslu/nginx-ssl-fingerprint
+- https://github.com/cnlnn/ja3-server
+
 ## JA3 指纹
 
 JA3指纹（JA3 fingerprint）是一种用于网络流量分析的技术，旨在识别和分类不同的TLS（Transport Layer Security）客户端。TLS是一种常用于加密互联网通信的协议，它提供了安全的数据传输和身份验证机制。
@@ -22,7 +25,7 @@ JA3_CipherSuites：这是客户端支持的加密套件列表。加密套件指�
 
 JA3_Extensions：这是客户端在TLS握手消息中发送的TLS扩展列表。TLS扩展提供了额外的功能和安全性选项。常见的扩展包括Server Name Indication (SNI)、Supported Elliptic Curves、Supported Point Formats等。在JA3指纹中，多个扩展由逗号分隔。
 
-格式
+### 格式
 以下是一个示例JA3指纹的格式：
 
 eb6f49e8db7ad1809f885d12232f4855,0x0303,0xc02c,c02b,c02f,c00a,c009,c013,c014,0xff01,0x0000
