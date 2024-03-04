@@ -1,0 +1,2 @@
+- https://github.com/phuslu/nginx-ssl-fingerprint
+- https://github.com/fooinha/nginx-ssl-ja3
