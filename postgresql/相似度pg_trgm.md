@@ -132,3 +132,12 @@ COMMENT ON COLUMN public.tg_fingerprints.ua IS 'User-Agent';
 
 -- SELECT similarity(fingerprints::text, '{"ip": "ut exercitation aliqua esse incididxxx", "intl": "eiusmod xxx", "math": "veniam sint xxx", "audio": "nulla voluptate xxx", "fonts": "mollit voluptatexxx", "webGL": "ut xxx", "canvas": "", "screen": "voluptate esse xxx", "domRect": "Duis veniam mollit xxx", "svgRect": "eiusmod ea fugiat", "timezone": "enim ex proxxx", "userAgent": "sunt"}') FROM tg_fingerprints ORDER BY created LIMIT 100;
 ```
+
+## 索引
+
+```pgsql
+CREATE EXTENSION btree_gist;
+CREATE INDEX tg_fingerprints_fingerprints_trgm_idx ON tg_fingerprints USING gist (fingerprints gist_trgm_ops);
+```
+
+
