@@ -137,7 +137,7 @@ COMMENT ON COLUMN public.tg_fingerprints.ua IS 'User-Agent';
 
 ```pgsql
 CREATE EXTENSION btree_gist;
-CREATE INDEX tg_fingerprints_fingerprints_trgm_idx ON tg_fingerprints USING gist (fingerprints gist_trgm_ops);
+CREATE INDEX tg_fingerprints_fingerprints_trgm_idx ON tg_fingerprints USING gist (fingerprints::text gist_trgm_ops);
 ```
 
 
