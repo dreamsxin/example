@@ -5,6 +5,7 @@
 - show_trgm(text)	text[]	返回一个给定字符串中所有的 trigram 的数组（实际上除了调试很少有用）。
 - show_limit()	real	返回%操作符使用的当前相似度阈值。例如， 这将两个单词之间的最小相似性设置为被认为足够相似以致彼此拼写错误。
 - set_limit(real)	real	设定%操作符使用的当前相似度阈值。该阈值必须介于 0 和 1 之间 （默认为 0.3）。返回传递进来的相同值。
+`SET pg_trgm.similarity_threshold = 0.6; select show_limit();`
 
 **表 F-24. pg_trgm 操作符**
 
