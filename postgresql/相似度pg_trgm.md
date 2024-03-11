@@ -1,3 +1,17 @@
+**表 F-23. pg_trgm 函数**
+
+函数	返回	描述
+- similarity(text, text)	real	返回一个数字指示两个参数有多相似。该结果的范围是 0（指示两个字符串完全不相似） 到 1（指示两个字符串完全一样）。
+- show_trgm(text)	text[]	返回一个给定字符串中所有的 trigram 的数组（实际上除了调试很少有用）。
+- show_limit()	real	返回%操作符使用的当前相似度阈值。例如， 这将两个单词之间的最小相似性设置为被认为足够相似以致彼此拼写错误。
+- set_limit(real)	real	设定%操作符使用的当前相似度阈值。该阈值必须介于 0 和 1 之间 （默认为 0.3）。返回传递进来的相同值。
+
+**表 F-24. pg_trgm 操作符**
+
+操作符	返回	描述
+- text % text	boolean	如果它的参数的相似度高于set_limit设置的当前相似度阈值， 则返回true。
+- text <-> text	real	返回参数之间的"距离"，即 1 减去similarity()值。
+
 ### 类别1 : 元素重叠度相似
 类似倒排，以元素重叠度为基准的相似计算。广泛应用于数组、全文检索、字符串、文本特征值、多列任意组合查询的相似搜索。
 
@@ -137,7 +151,7 @@ COMMENT ON COLUMN public.tg_fingerprints.ua IS 'User-Agent';
 
 ```pgsql
 CREATE EXTENSION btree_gist;
-CREATE INDEX tg_fingerprints_fingerprints_trgm_idx ON tg_fingerprints USING gist (fingerprints::text gist_trgm_ops);
+CREATE INDEX tg_fingerprints_fingerprints_trgm_idx ON tg_fingerprints USING gist (text(fingerprints) gist_trgm_ops);
 ```
 
 
