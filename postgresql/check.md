@@ -34,6 +34,11 @@ ADD CONSTRAINT users_age_check CHECK(age > 0);
 ```
 在查询向表中插入一条记录之前，CHECK约束会评估CHECK约束定义中指定的条件。如果条件评估为TRUE，那么查询中指定的值将被插入或更新到表中。如果条件评估为FALSE，那么查询将返回一个违反检查条件的错误并终止查询。
 
+通过以下 \d 命令查看表 users 上的约束：
+
+```sql
+\d users
+```
 ## CHECK 约束实例
 通过下面的例子，你会很容易理解 PostgreSQL CHECK 约束的用法和作用。
 
