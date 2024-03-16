@@ -437,3 +437,42 @@ id  | array_agg
 5   | {4,5}
 (5 rows)
 ```
+- rank 和 dense_rank 函数
+rank 列将会对那些行编号。有可能会有相等的。如果想避免这样的事情，可以使用 dense_rank 函数。
+- ntile 函数
+一些应用要求把数据划分成完美相等的分组，ntile 函数可以做到这一点。
+下面的例子展示了把数据划分成 4 个分组：
+```psql
+SELECT year, production, ntile(4) OVER (ORDER BY production) FROM t_oil WHERE country = 'Iraq' AND year BETWEEN 2000 AND 2006;
+year  | production | ntile
+------+------------+-------
+2003  | 1344       | 1
+2005  | 1833       | 1
+2006  | 1999       | 2
+2004  | 2030       | 2
+2002  | 2116       | 3
+2001  | 2522       | 3
+2000  | 2613       | 4
+(7 rows)
+```
+- lead 和 lag 函数
+lead 和 lag 函数可以在结果集内移动行。一种典型的用例是计算一年和接下来一年的产量差：
+```sql
+SELECT year, production, lag(production, 1) OVER (ORDER BY year) FROM t_oil WHERE country = 'Mexico' LIMIT 5;
+year  | production | lag
+------+------------+-----
+1965  | 362        |
+1966  | 370        | 362
+1967  | 411        | 370
+1968  | 439        | 411
+1969  | 461        | 439
+(5 rows)
+
+SELECT year, production, production - lag(production, 1) OVER (ORDER BY year) FROM t_oil WHERE country = 'Mexico' LIMIT 3;
+year  | production | ?column?
+------+------------+----------
+1965  | 362        |
+1966  | 370        | 8
+1967  | 411        | 41
+(3 rows)
+```
