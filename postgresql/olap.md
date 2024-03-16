@@ -280,3 +280,53 @@ North America  |         | 5632.2826086956521739
 (7 rows)
 ```
 在这里，我们得到了 3 个分组集：总体均值、GROUP BY region 和 GROUP BY country。如果读者想要组合 region 和 country，可以使用(region, country)。
+
+**FILTER 子句**
+```psql
+SELECT region, avg(production) AS all, avg(production) FILTER (WHERE year < 1990) AS old, avg(production) FILTER (WHERE year >= 1990) AS new FROM t_oil GROUP BY ROLLUP (region);
+region         | all            | old            | new
+---------------+----------------+----------------+----------------
+Middle East    | 1992.603686635 | 1747.325892857 | 2254.233333333
+North America  | 4541.362318840 | 4471.653333333 | 4624.349206349
+               | 2607.513986013 | 2430.685618729 | 2801.183150183
+(3 rows)
+```
+
+**有序集WITHIN GROUP**
+percentile_disc 将跳过该组的 50% 并且返回想要的值。
+percentile_cont 将在找不到精确匹配时插值。
+
+```psql
+SELECT region, percentile_disc(0.5) WITHIN GROUP (ORDER BY production) FROM t_oil GROUP BY 1;
+region         | percentile_disc
+---------------+-----------------
+Middle East    | 1082
+North America  | 3054
+(2 rows)
+
+SELECT region,
+percentile_disc(0.5) WITHIN GROUP (ORDER BY production) FROM t_oil GROUP BY ROLLUP (1);
+region         | percentile_disc
+---------------+-----------------
+Middle East    | 1082
+North America  | 3054
+               | 1696
+(3 rows)
+```
+查询最经常出现的产量：
+```psql
+SELECT country, mode() WITHIN GROUP (ORDER BY production) FROM t_oil WHERE country = 'Other Middle East' GROUP BY 1;
+country            | mode
+-------------------+------
+Other Middle East  | 48
+```
+假想产量为 9000 数据排名：
+```psql
+SELECT region, rank(9000) WITHIN GROUP (ORDER BY production DESC NULLS LAST) FROM t_oil GROUP BY ROLLUP (1);
+region         | rank
+---------------+------
+Middle East    | 21
+North America  | 27
+               | 47
+(3 rows)
+```
