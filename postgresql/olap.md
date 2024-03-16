@@ -476,3 +476,161 @@ year  | production | ?column?
 1967  | 411        | 41
 (3 rows)
 ```
+
+**编写聚集 CREATE AGGREGATE**
+```psql
+CREATE AGGREGATE name ( input_data_type [ , ... ] ) (
+    SFUNC = sfunc,
+    STYPE = state_data_type
+    [ , FINALFUNC = ffunc ]
+    [ , INITCOND = initial_condition ]
+    [ , SORTOP = sort_operator ]
+)
+
+or the old syntax
+
+CREATE AGGREGATE name (
+    BASETYPE = base_type,
+    SFUNC = sfunc,
+    STYPE = state_data_type
+    [ , FINALFUNC = ffunc ]
+    [ , INITCOND = initial_condition ]
+    [ , SORTOP = sort_operator ]
+)
+```
+参数
+- name
+要创建的聚合函数名(可以有模式修饰) 。
+
+- input_data_type
+该聚合函数要处理的输入数据类型。要创建一个零参数聚合函数，可以使用*代替输入数据类型列表。 （count(*)就是这种聚合函数的一个实例。 ）
+
+- base_type
+在以前的CREATE AGGREGATE语法中，输入数据类型是通过basetype参数指定的，而不是写在聚合的名称之后。 需要注意的是这种以前语法仅允许一个输入参数。 要创建一个零参数聚合函数，可以将basetype指定为"ANY"(而不是*)。
+
+- sfunc
+将在每一个输入行上调用的状态转换函数的名称。 对于有N个参数的聚合函数，sfunc必须有 +1 个参数，其中的第一个参数类型为state_data_type，其余的匹配已声明的输入数据类型。 函数必须返回一个state_data_type类型的值。 这个函数接受当前状态值和当前输入数据，并返回下个状态值。
+
+- state_data_type
+聚合的状态值的数据类型。
+
+- ffunc
+在转换完所有输入行后调用的最终处理函数，它计算聚合的结果。 此函数必须接受一个类型为state_data_type的参数。 聚合的输出数据 类型被定义为此函数的返回类型。 如果没有声明ffunc则使用聚合结果的状态值作为聚合的结果，且输出类型为state_data_type。
+
+- initial_condition
+状态值的初始设置(值)。 它必须是一个state_data_type类型可以接受的文本常量值。 如果没有声明，状态值初始为 NULL 。
+
+- sort_operator
+用于MIN或MAX类型聚合的排序操作符。 这个只是一个操作符名 (可以有模式修饰)。这个操作符假设接受和聚合一样的输入数据类型。
+
+编写一个聚集所需要的第一个部分是一个函数，每一行都会调用它。该函数将接受一个中间值和取自被处理行的数据。这里是一个例子：
+```psql
+CREATE FUNCTION taxi_per_line (numeric, numeric)
+RETURNS numeric AS
+$$
+BEGIN
+    RAISE NOTICE 'intermediate: %, per row: %', $1, $2;
+    RETURN $1 + $2*2.2;
+END;
+$$ LANGUAGE 'plpgsql';
+
+CREATE AGGREGATE taxi_price (numeric)
+(
+    INITCOND = 2.5,
+    SFUNC = taxi_per_line,
+    STYPE = numeric
+);
+```
+每一次行程从踏进出租车开始价格就是 2.50 欧元，这由 INITCOND（初始条件）定义，它表示每个分组的起始值。然后对分组中的每一行都调用一个函数，在笔者的例子中这个函数是已经定义好的 taxi_per_line。如你所见，它需要两个参数。第一个参数是一个中间值。那些额外的参数（可能有很多）是用户传递给函数的。
+
+avg(平均)是聚合更复杂一点的例子。它需要两个运行时状态： 输入的总和以及输入的数量。最终结果是通过把两者相除得到的。 平均的典型实现是用一个数组做状态值。比如，内建的avg(float8)实现是这样的：
+```psql
+CREATE AGGREGATE avg (float8)
+(
+    sfunc = float8_accum,
+    stype = float8[],
+    finalfunc = float8_avg,
+    initcond = '{0,0,0}'
+);
+```
+float8_accum 要求一个三元素数组，而不是两元素， 因为它累积平方和和输入的总和和计数。这样它就可以在一些除了avg 之外的聚合中使用了。
+```psql
+SELECT a.aggfnoid::regprocedure AS aggregate,
+       a.agginitval AS initial_value,
+       a.aggtransfn::regprocedure AS state_transition_function,
+       a.aggfinalfn::regprocedure AS final_function
+FROM pg_aggregate AS a
+   JOIN pg_proc AS p
+      ON a.aggfnoid = p.oid
+WHERE p.prokind = 'a'
+  AND p.proname = 'stddev_pop';
+
+          aggregate           │ initial_value │             state_transition_function             │            final_function             
+══════════════════════════════╪═══════════════╪═══════════════════════════════════════════════════╪═══════════════════════════════════════
+ stddev_pop(bigint)           │ ∅             │ int8_accum(internal,bigint)                       │ numeric_stddev_pop(internal)
+ stddev_pop(integer)          │ ∅             │ int4_accum(internal,integer)                      │ numeric_poly_stddev_pop(internal)
+ stddev_pop(smallint)         │ ∅             │ int2_accum(internal,smallint)                     │ numeric_poly_stddev_pop(internal)
+ stddev_pop(real)             │ {0,0,0}       │ float4_accum(double precision[],real)             │ float8_stddev_pop(double precision[])
+ stddev_pop(double precision) │ {0,0,0}       │ float8_accum(double precision[],double precision) │ float8_stddev_pop(double precision[])
+ stddev_pop(numeric)          │ ∅             │ numeric_accum(internal,numeric)                   │ numeric_stddev_pop(internal)
+(6 rows)
+
+select rank() over (partition by 1 order by aggtransfn,agginitval),
+           row_number() over (partition by aggtransfn,agginitval order by aggfnoid) rn,
+           aggfnoid,aggtransfn,agginitval from pg_aggregate ;
+```
+```c
+Datum
+float8_stddev_pop(PG_FUNCTION_ARGS)
+{
+    ArrayType  *transarray = PG_GETARG_ARRAYTYPE_P(0);
+    float8     *transvalues;
+    float8      N,
+                Sxx;
+
+    transvalues = check_float8_array(transarray, "float8_stddev_pop", 3);
+    N = transvalues[0];
+    /* ignore Sx */
+    Sxx = transvalues[2];
+
+    /* Population stddev is undefined when N is 0, so return NULL */
+    if (N == 0.0)
+        PG_RETURN_NULL();
+
+    /* Note that Sxx is guaranteed to be non-negative */
+
+    PG_RETURN_FLOAT8(sqrt(Sxx / N));
+}
+```
+**滑动窗口聚集的改进**
+```psql
+-- msfunc 函数将把窗口中的下一行加入中间结果上：
+CREATE FUNCTION taxi_msfunc(numeric, numeric)
+RETURNS numeric AS
+$$
+BEGIN
+    RAISE NOTICE 'taxi_msfunc called with % and %', $1, $2;
+    RETURN $1 + $2;
+END;
+$$ LANGUAGE 'plpgsql' STRICT;
+
+-- minvfunc 函数将从中间结果中去掉刚移出窗口之外的值：
+CREATE FUNCTION taxi_minvfunc(numeric, numeric)
+RETURNS numeric AS
+$$
+BEGIN
+    RAISE NOTICE 'taxi_minvfunc called with % and %', $1, $2;
+    RETURN $1 - $2;
+END;
+$$ LANGUAGE 'plpgsql' STRICT;
+
+CREATE AGGREGATE taxi_price (numeric)
+(
+    INITCOND = 0,
+    STYPE = numeric,
+    SFUNC = taxi_per_line,
+    MSFUNC = taxi_msfunc,
+    MINVFUNC = taxi_minvfunc,
+    MSTYPE = numeric
+);
+```
