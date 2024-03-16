@@ -86,3 +86,118 @@ MPP（Massively Parallel Processing）：MPP是一种并行计算架构，用于
 MapReduce：MapReduce是一种编程模型和分布式计算框架，用于处理大规模数据集。它由两个主要阶段组成：Map阶段和Reduce阶段。在Map阶段，数据被分割成多个小块，每个小块由独立的计算节点进行处理，并生成中间结果。在Reduce阶段，中间结果被合并和聚合，生成最终的结果。MapReduce适用于批量处理大规模数据，如日志分析、离线数据处理等。
 
 MPPDB（Massively Parallel Processing Database）：MPPDB是一种基于MPP架构的分布式数据库系统。它将数据分割成多个分片存储在不同的节点上，并利用并行计算能力进行查询和分析。MPPDB具有高度可扩展性和并行处理能力，可以处理大规模数据集，并提供高性能的查询和分析功能。
+
+## 使用 PostgreSQL 做 OLAP
+
+### 聚簇表
+### 在建立索引时允许添加数据
+```sql
+CREATE INDEX CONCURRENTLY idx_name2 ON t_test (name);
+```
+### 操作符类
+一个操作符类将会告诉一个索引应该怎么运转。让我们看一个标准的二叉树。它可以执行 5 种操作：<、<=、=、>=、>。
+```pgsql
+\h CREATE OPERATOR
+Command: CREATE OPERATOR
+Description: define a new operator
+Syntax:
+CREATE OPERATOR name (
+PROCEDURE = function_name
+    [, LEFTARG = left_type ] [, RIGHTARG = right_type ]
+    [, COMMUTATOR = com_op ] [, NEGATOR = neg_op ]
+    [, RESTRICT = res_proc ] [, JOIN = join_proc ]
+    [, HASHES ] [, MERGES ]
+)
+```
+基本上，其中的概念是这样的：一个操作符调用一个函数，函数会得到一个或者两个参数，一个是操作符的左参数而另一个是操作符的右参数。
+
+对于一些特殊数组，需要固定排序顺序，就需要自定义操作符。
+```pgsql
+CREATE TABLE t_sva (sva text);
+INSERT INTO t_sva VALUES ('1118090878');
+INSERT INTO t_sva VALUES ('2345010477');
+
+CREATE OR REPLACE FUNCTION normalize_si(text) RETURNS text AS $$
+    BEGIN
+        RETURN substring($1, 9, 2) ||
+        substring($1, 7, 2) ||
+        substring($1, 5, 2) ||
+        substring($1, 1, 4);
+    END; $$
+LANGUAGE 'plpgsql' IMMUTABLE;
+
+SELECT normalize_si('1118090878');
+normalize_si
+--------------
+7808091118
+(1 row)
+
+-- lower equals
+CREATE OR REPLACE FUNCTION si_le(text, text) RETURNS boolean AS $$
+    BEGIN
+        RETURN normalize_si($1) <= normalize_si($2);
+    END;
+$$ LANGUAGE 'plpgsql' IMMUTABLE;
+
+-- greater equal
+CREATE OR REPLACE FUNCTION si_ge(text, text) RETURNS boolean AS $$
+    BEGIN
+        RETURN normalize_si($1) >= normalize_si($2);
+    END;
+$$ LANGUAGE 'plpgsql' IMMUTABLE;
+
+-- greater
+CREATE OR REPLACE FUNCTION si_gt(text, text) RETURNS boolean AS $$
+    BEGIN
+        RETURN normalize_si($1) > normalize_si($2);
+    END;
+$$ LANGUAGE 'plpgsql' IMMUTABLE;
+
+-- define operators
+CREATE OPERATOR <# ( PROCEDURE=si_lt, LEFTARG=text, RIGHTARG=text);
+CREATE OPERATOR <=# ( PROCEDURE=si_le, LEFTARG=text, RIGHTARG=text);
+CREATE OPERATOR >=# ( PROCEDURE=si_ge, LEFTARG=text, RIGHTARG=text);
+CREATE OPERATOR ># ( PROCEDURE=si_gt, LEFTARG=text, RIGHTARG=text);
+
+CREATE OR REPLACE FUNCTION si_same(text, text) RETURNS int AS $$
+    BEGIN
+        IF normalize_si($1) < normalize_si($2) THEN
+            RETURN -1;
+        ELSIF normalize_si($1) > normalize_si($2) THEN
+            RETURN +1;
+        ELSE
+            RETURN 0;
+    END IF;
+END;
+$$ LANGUAGE 'plpgsql' IMMUTABLE;
+
+-- define class
+CREATE OPERATOR CLASS sva_special_ops
+FOR TYPE text USING btree
+AS
+    OPERATOR 1 <# ,
+    OPERATOR 2 <=# ,
+    OPERATOR 3 = ,
+    OPERATOR 4 >=# ,
+    OPERATOR 5 ># ,
+
+    FUNCTION 1 si_same(text, text);
+CREATE INDEX idx_special ON t_sva (sva sva_special_ops);
+```
+上面的代码所做的也不过是交换了一些数位，现在就可以使用普通的字符串排序顺序了。
+
+### 高级 SQL
+
+```sql
+CREATE TABLE t_oil (
+region
+text,
+country
+text,
+year
+int,
+production
+int,
+consumption int
+);
+```
