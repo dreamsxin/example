@@ -330,3 +330,76 @@ North America  | 27
                | 47
 (3 rows)
 ```
+
+### 窗口函数 OVER
+OVER 子句定义我们正在查看的窗口。
+**总体均值**
+```psql
+SELECT country, year, production, consumption, avg(production) OVER() FROM t_oil LIMIT 4;
+country  | year | production | consumption | avg
+---------+------+------------+-------------+----------
+USA      | 1965 | 9014       | 11522       | 2607.5139
+USA      | 1966 | 9579       | 12100       | 2607.5139
+USA      | 1967 | 10219      | 12567       | 2607.5139
+USA      | 1968 | 10600      | 13405       | 2607.5139
+(4 rows)
+```
+**划分数据**
+在这个例子中窗口是行所属的国家，就是按照国家来划分数据。换句话说，该查询返回行与其所在国家的所有行的对比。
+```psql
+SELECT country, year, production, consumption, avg(production) OVER (PARTITION BY country) FROM t_oil;
+country          | year | production | consumption | avg
+-----------------+------+------------+-------------+-----------
+Canada           | 1965 | 920        | 1108        | 2123.2173
+Canada           | 2010 | 3332       | 2316        | 2123.2173
+Canada           | 2009 | 3202       | 2190        | 2123.2173
+...
+Iran             | 1966 | 2132       | 148         | 3631.6956
+Iran             | 2010 | 4352       | 1874        | 3631.6956
+Iran             | 2009 | 4249       | 2012        | 3631.6956
+```
+PARTITION BY 子句可以接受任何表达式。通常大部分人会使用一个列来划分数据，例如按照 year < 1990 划分为两种值：true 和 false：
+```psql
+SELECT year, production, avg(production) OVER (PARTITION BY year < 1990) FROM t_oil WHERE country = 'Canada' ORDER BY year;
+year  | production | avg
+------+------------+-----------------------
+1965  | 920        | 1631.6000000000000000
+1966  | 1012       | 1631.6000000000000000
+...
+1990  | 1967       | 2708.4761904761904762
+1991  | 1983       | 2708.4761904761904762
+1992  | 2065       | 2708.4761904761904762
+...
+从这里可以看到 PostgreSQL 确实很灵活。使用函数来判断分组成员关系在实际应用中并不鲜见。
+
+**在窗口中排序数据**
+```psql
+SELECT country, year, production, min(production) OVER (PARTITION BY country ORDER BY year) FROM t_oil WHERE year BETWEEN 1978 AND 1983 AND country IN ('Iran', 'Oman');
+country | year | production | min
+---------+------+------------+------
+Iran     | 1978 | 5302       | 5302
+Iran     | 1979 | 3218       | 3218
+Iran     | 1980 | 1479       | 1479
+Iran     | 1981 | 1321       | 1321
+Iran     | 1982 | 2397       | 1321
+Iran     | 1983 | 2454       | 1321
+Oman     | 1978 | 314        | 314
+Oman     | 1979 | 295        | 295
+Oman     | 1980 | 285        | 285
+Oman     | 1981 | 330        | 285
+```
+如果使用的聚集不带 ORDER BY，它将自动地取窗口中整个数据集的最小值。而有ORDER BY 时就不是这样：它将总是给定顺序中到目前为止的最小值。
+
+```psql
+SELECT country, year, production, min(production) OVER (), min(production) OVER (ORDER BY year) FROM t_oil WHERE year BETWEEN 1978 AND 1983 AND country = 'Iran';
+country  | year | production | min  | min
+---------+------+------------+------+------
+Iran     | 1978 | 5302       | 1321 | 5302
+Iran     | 1979 | 3218       | 1321 | 3218
+Iran     | 1980 | 1479       | 1321 | 1479
+Iran     | 1981 | 1321       | 1321 | 1321
+Iran     | 1982 | 2397       | 1321 | 1321
+Iran     | 1983 | 2454       | 1321 | 1321
+(6 rows)
+```
+**滑动窗口**
