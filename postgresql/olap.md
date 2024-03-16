@@ -332,7 +332,9 @@ North America  | 27
 (3 rows)
 ```
 
-### 窗口函数 OVER
+### 窗口函数
+特点必带开窗函数 OVER，在结果集中为每个行添加一个聚合结果。
+
 OVER 子句定义我们正在查看的窗口。
 **总体均值**
 ```psql
@@ -359,7 +361,8 @@ Iran             | 1966 | 2132       | 148         | 3631.6956
 Iran             | 2010 | 4352       | 1874        | 3631.6956
 Iran             | 2009 | 4249       | 2012        | 3631.6956
 ```
-PARTITION BY 子句可以接受任何表达式。通常大部分人会使用一个列来划分数据，例如按照 year < 1990 划分为两种值：true 和 false：
+PARTITION BY 子句可以接受任何表达式。`partition by` 有分组统计的功能，`partition by` 统计时的每一条记录都存在，而 `group by` 将所有的记录汇总成一条记录。
+通常大部分人会使用一个列来划分数据，例如按照 year < 1990 划分为两种值：true 和 false：
 ```psql
 SELECT year, production, avg(production) OVER (PARTITION BY year < 1990) FROM t_oil WHERE country = 'Canada' ORDER BY year;
 year  | production | avg
@@ -374,6 +377,7 @@ year  | production | avg
 从这里可以看到 PostgreSQL 确实很灵活。使用函数来判断分组成员关系在实际应用中并不鲜见。
 
 **在窗口中排序数据**
+加上 `order by` 后，该聚合将变成“运行计数”
 ```psql
 SELECT country, year, production, min(production) OVER (PARTITION BY country ORDER BY year) FROM t_oil WHERE year BETWEEN 1978 AND 1983 AND country IN ('Iran', 'Oman');
 country | year | production | min
@@ -389,7 +393,7 @@ Oman     | 1979 | 295        | 295
 Oman     | 1980 | 285        | 285
 Oman     | 1981 | 330        | 285
 ```
-如果使用的聚集不带 ORDER BY，它将自动地取窗口中整个数据集的最小值。而有ORDER BY 时就不是这样：它将总是给定顺序中到目前为止的最小值。
+如果使用的聚集不带 `ORDER BY`，它将自动地取窗口中整个数据集的最小值。而有ORDER BY 时就不是这样：它将总是给定顺序中到目前为止的最小值。
 
 ```psql
 SELECT country, year, production, min(production) OVER (), min(production) OVER (ORDER BY year) FROM t_oil WHERE year BETWEEN 1978 AND 1983 AND country = 'Iran';
