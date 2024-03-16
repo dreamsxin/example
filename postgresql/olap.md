@@ -403,3 +403,37 @@ Iran     | 1983 | 2454       | 1321 | 1321
 (6 rows)
 ```
 **滑动窗口**
+到目前为止，我们所使用的窗口都是静态的。然而，对于移动平均这类计算来说这还不够。移动聚集需要一个滑动窗口，滑动窗口会随着数据的处理而移动。
+最重要的事情是移动窗口应该与 ORDER BY 子句一起使用，否则就会有大量问题。
+PostgreSQL 实际上会接受那样的查询，但是其结果会是彻头彻尾的垃圾。记住，将事先没有排序的数据交给一个滑动窗口只会导致随机数据。
+“ROWS BETWEEN 1 PRECEDING and 1 FOLLOWING 1”定义了窗口。在笔者的例子中，被使用的最多有 3 行：当前行、当前行的前一行以及当前行的后一行。
+```psql
+SELECT country, year, production, min(production) OVER (PARTITION BY country ORDER BY year ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) FROM t_oil WHERE year BETWEEN 1978 AND 1983 AND country IN ('Iran', 'Oman');
+country  | year | production | min
+---------+------+------------+------
+Iran     | 1978 | 5302       | 3218
+Iran     | 1979 | 3218       | 1479
+Iran     | 1980 | 1479       | 1321
+Iran     | 1981 | 1321       | 1321
+Iran     | 1982 | 2397       | 1321
+Iran     | 1983 | 2454       | 2397
+Oman     | 1978 | 314        | 295
+Oman     | 1979 | 295        | 285
+Oman     | 1980 | 285        | 285
+Oman     | 1981 | 330        | 285
+Oman     | 1982 | 338        | 330
+Oman     | 1983 | 391        | 338
+(12 rows)
+```
+为了展示滑动窗口如何工作，试试下面的例子：
+```psql
+SELECT *, array_agg(id) OVER (ORDER BY id ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) FROM generate_series(1, 5) AS id;
+id  | array_agg
+----+-----------
+1   | {1,2}
+2   | {1,2,3}
+3   | {2,3,4}
+4   | {3,4,5}
+5   | {4,5}
+(5 rows)
+```
