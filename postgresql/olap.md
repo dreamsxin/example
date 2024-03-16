@@ -188,16 +188,95 @@ CREATE INDEX idx_special ON t_sva (sva sva_special_ops);
 
 ### 高级 SQL
 
+**装载一些案例数据**
 ```sql
 CREATE TABLE t_oil (
-region
-text,
-country
-text,
-year
-int,
-production
-int,
-consumption int
+    region text,
+    country text,
+    year int,
+    production int,
+    consumption int
 );
 ```
+
+用 curl 可以直接从我们的网站下载这一测试数据：
+```psql
+COPY t_oil FROM PROGRAM ' curl www.cybertec.at/secret/oil_ext.txt ';
+```
+
+**应用分组集 GROUP BY**
+这份数据中包含世界上两个地区共计 14 个国家在 1965 年到 2010 年间的数据：
+```psql
+SELECT region, avg(production) FROM t_oil GROUP BY region;
+region | avg
+---------------+-----------------------
+Middle East   | 1992.6036866359447005
+North America | 4541.3623188405797101
+(2 rows)
+```
+`GROUP BY` 子句将把很多行转变成每一组一行。
+
+**附加总体的平均值 ROLLUP**
+不过，如果是在做现实生活中的报表，用户可能还对总体的平均值感兴趣。因此有时可能需要一个附加的行。
+可以这样来做：
+```psql
+SELECT region, avg(production) FROM t_oil GROUP BY ROLLUP (region);
+region         | avg
+---------------+-----------------------
+Middle East    | 1992.6036866359447005
+North America  | 4541.3623188405797101
+               | 2607.5139860139860140      -- 总体的平均值
+(3 rows)
+
+SELECT region, country, avg(production) FROM t_oil WHERE country
+IN ('USA', 'Canada', 'Iran', 'Oman') GROUP BY ROLLUP (region, country);
+region | country | avg
+---------------+---------+-----------------------
+Middle East    | Iran   | 3631.6956521739130435
+Middle East    | Oman   | 586.4545454545454545
+Middle East    |        | 2142.9111111111111111      -- 针对 Middle East 总体的平均值
+North America  | Canada | 2123.2173913043478261
+North America  | USA    | 9141.3478260869565217
+North America  |        | 5632.2826086956521739      -- 针对 North America 总体的平均值
+               |        | 3906.7692307692307692      -- 总体的平均值
+(7 rows)
+```
+
+**附加总体的平均值 CUBE**
+CUBE 创建的数据是：GROUP BY region, country + GROUP BY region + GROUP BY country + 总体均值。
+```psql
+SELECT region, country, avg(production) FROM t_oil WHERE country IN ('USA', 'Canada', 'Iran', 'Oman') GROUP BY CUBE (region, country);
+region         | country | avg
+---------------+---------+-----------------------
+Middle East    | Iran    | 3631.6956521739130435
+Middle East    | Oman    | 586.4545454545454545
+Middle East    |         | 2142.9111111111111111      -- 针对 Middle East 总体的平均值
+North America  | Canada  | 2123.2173913043478261
+North America  | USA     | 9141.3478260869565217
+North America  |         | 5632.2826086956521739      -- 针对 North America 总体的平均值
+               |         | 3906.7692307692307692      -- 总体的平均值
+               | Canada  | 2123.2173913043478261      -- 针对 Canada 总体的平均值
+               | Iran    | 3631.6956521739130435      -- 针对 Iran 总体的平均值
+               | Oman    | 586.4545454545454545       -- 针对 Oman 总体的平均值
+               | USA     | 9141.3478260869565217      -- 针对 USA 总体的平均值
+(11 rows)
+```
+
+**GROUPING SETS**
+ROLLUP 和 CUBE 实际只是在 `GROUPING SETS` 子句之上的便利特性。
+
+通过 `GROUPING SETS` 子句，读者可以明确地列出想要的聚集：
+```psql
+SELECT region, country, avg(production) FROM t_oil WHERE country IN ('USA', 'Canada', 'Iran', 'Oman') GROUP BY GROUPING SETS ( (), region, country);
+region         | country | avg
+---------------+---------+-----------------------
+Middle East    |         | 2142.9111111111111111
+North America  |         | 5632.2826086956521739
+               |         | 3906.7692307692307692
+               | Canada  | 2123.2173913043478261
+               | Iran    | 3631.6956521739130435
+               | Oman    | 586.4545454545454545
+               | USA     | 9141.3478260869565217
+(7 rows)
+```
+在这里，我们得到了 3 个分组集：总体均值、GROUP BY region 和 GROUP BY country。如果读者想要组合 region 和 country，可以使用(region, country)。
