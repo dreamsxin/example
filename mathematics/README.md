@@ -3,3 +3,5 @@
 - GeoGebra
 
 - Mathematica
+- Maxima
+- gnuplot
