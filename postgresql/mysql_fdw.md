@@ -29,3 +29,9 @@ CREATE FOREIGN TABLE warehouse
 	SERVER mysql_server
 	OPTIONS (dbname 'db', table_name 'warehouse');
 ```
+
+## 授权
+
+```psql
+GRANT USAGE ON FOREIGN TABLE warehouse TO postgres;
+```
