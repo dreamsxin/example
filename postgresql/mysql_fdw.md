@@ -14,6 +14,7 @@ CREATE EXTENSION mysql_fdw;
 CREATE SERVER mysql_server FOREIGN DATA WRAPPER mysql_fdw OPTIONS (host '127.0.0.1', port '3306');
 
 -- create user mapping
+DROP USER MAPPING IF EXISTS FOR postgres SERVER mysql_server;
 CREATE USER MAPPING FOR postgres
 	SERVER mysql_server
 	OPTIONS (username 'foo', password 'bar');
