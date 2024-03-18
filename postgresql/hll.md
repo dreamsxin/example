@@ -88,7 +88,7 @@ CREATE TABLE facts (
 
 CREATE TABLE daily_uniques (
     date            date UNIQUE,
-    users           hll
+    users           hll  NOT NULL DEFAULT hll_empty()
 );
 ```
 然后给网站访问表中插入过去1000天的访问数据(此处由于没有实际的数据，只能模拟过去1000天的数据)
