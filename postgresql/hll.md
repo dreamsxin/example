@@ -1,6 +1,12 @@
 #
 HLL是 HyperLogLog数据结构的简称。PostgresSQL通过插件的方式引入了这种新的数据类型hll。HyperLogLog是一个具有固定大小，类似于集合结构，用于可调精度的不同值计数。例如，在1280字节的hll数据结构中，它可以在很小的误差范围内估算出数百亿的不同值计数。
 
+## 安装
+```shell
+sudo apt-get install postgresql-16-hll
+CREATE EXTENSION IF NOT EXISTS hll CASCADE;
+```
+
 ##
 
 构建数据
