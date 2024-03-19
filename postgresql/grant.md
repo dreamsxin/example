@@ -1,3 +1,3 @@
 ```psql
-GRANT SELECT ON TABLE public.pay_order TO "yunloginStats";
+GRANT SELECT ON TABLE public.pay_order TO "test";
 ```
