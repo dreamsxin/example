@@ -1320,3 +1320,45 @@ FROM measurements
 WHERE ts >= now()-'1 day'::interval
 GROUP BY device_id;
 ```
+## Fill gaps in time-series data
+
+```psql
+SELECT
+  time_bucket_gapfill('1 day', time) AS date,
+  sum(volume) AS volume
+FROM trades
+WHERE asset_code = 'TIMS'
+  AND time >= '2021-09-01' AND time < '2021-10-01'
+GROUP BY date
+ORDER BY date DESC;
+```
+```txt
+btime          | volume
+------------------------+----------
+ 2021-03-09 17:28:00+00 |  1085.25
+ 2021-03-09 17:46:40+00 |  1020.42
+ 2021-03-09 18:05:20+00 |
+ 2021-03-09 18:24:00+00 |  1031.25
+ 2021-03-09 18:42:40+00 |  1049.09
+ 2021-03-09 19:01:20+00 |  1083.80
+ 2021-03-09 19:20:00+00 |  1092.66
+ 2021-03-09 19:38:40+00 |
+ 2021-03-09 19:57:20+00 |  1048.42
+ 2021-03-09 20:16:00+00 |  1063.17
+ 2021-03-09 20:34:40+00 |  1054.10
+ 2021-03-09 20:53:20+00 |  1037.78
+```
+### Fill gaps by carrying the last observation forward
+```pgsql
+
+SELECT
+  time_bucket_gapfill(INTERVAL '5 min', time, now() - INTERVAL '2 weeks', now()) as 5min,
+  meter_id,
+  locf(avg(data_value)) AS data_value
+FROM my_hypertable
+WHERE
+  time > now() - INTERVAL '2 weeks'
+  AND meter_id IN (1,2,3,4)
+GROUP BY 5min, meter_id
+```
+
