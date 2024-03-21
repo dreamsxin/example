@@ -24,3 +24,9 @@ git config --unset "http://xxx.com:9000/".insteadof
 ```shell
 go get -v xxx
 ```
+
+## 清理缓存
+```shell
+go clean -r github.com/dreamsxin/gota
+go clean --modcache
+```
