@@ -49,6 +49,7 @@ sudo apt-get update
 # To install
 sudo apt install timescaledb-postgresql-10
 ```
+
 ### 配置扩展
 `postgresql.conf`
 
@@ -62,6 +63,12 @@ sudo service postgresql restart
 
 # Add a superuser postgres:
 createuser postgres -s
+```
+
+**查看授权协议**
+```sql
+show timescaledb.license;
+ALTER SYSTEM SET timescaledb.license = 'timescale';
 ```
 
 ## 创建库
