@@ -30,6 +30,14 @@ Common Name (eg, YOUR name) []:　← 输入主机名（域名）
 Email Address []:　←输入电子邮箱地址  
 ```
 
+```shell
+openssl genrsa -des3 -out ssl.key 4096
+# 消除密码
+openssl rsa -in ssl.key -out ssl2.key
+openssl req -new -key ssl2.key -out ssl2.csr
+openssl x509 -req -days 365 -in ssl2.csr -signkey ssl2.key -out ssl2.crt
+```
+
 ## 配置
 
 ```shell
