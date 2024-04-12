@@ -6,7 +6,63 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"encoding/binary"
 )
+
+// ip 地址转 二进制
+func ipToBinary(ipStr string) (string, error) {
+    ip := net.ParseIP(ipStr).To4()
+    if ip == nil {
+        return "", fmt.Errorf("invalid IP address: %s", ipStr)
+    }
+ 
+    // 转换为大端序uint32
+    uint32IP := binary.BigEndian.Uint32(ip)
+ 
+    // 转换为二进制字符串
+    return strconv.FormatUint(uint64(uint32IP), 2), nil
+}
+
+func ipAddrToInt(ipAddr string) int64 {
+	bits := strings.Split(ipAddr, ".")
+	b0, _ := strconv.Atoi(bits[0])
+	b1, _ := strconv.Atoi(bits[1])
+	b2, _ := strconv.Atoi(bits[2])
+	b3, _ := strconv.Atoi(bits[3])
+	var sum int64
+	sum += int64(b0) << 24
+	sum += int64(b1) << 16
+	sum += int64(b2) << 8
+	sum += int64(b3)
+
+	return sum
+}
+
+// 二进制 转 ip
+func binaryToIP(binaryIP string) (string, error) {
+    // 将二进制字符串转换为[]byte
+    ipBytes, err := hex.DecodeString(binaryIP)
+    if err != nil {
+        return "", err
+    }
+ 
+    // 将[]byte转换为net.IP
+    ip := net.IP(ipBytes)
+ 
+    // 将net.IP转换为字符串
+    return ip.String(), nil
+}
+
+func UInt32ToIP(intIP uint32) net.IP {
+	var bytes [4]byte
+	bytes[0] = byte(intIP & 0xFF)
+	bytes[1] = byte((intIP >> 8) & 0xFF)
+	bytes[2] = byte((intIP >> 16) & 0xFF)
+	bytes[3] = byte((intIP >> 24) & 0xFF)
+
+	return net.IPv4(bytes[3], bytes[2], bytes[1], bytes[0])
+}
+
 
 // 如 255.255.255.0 对应的网络位长度为 24
 func SubNetMaskToLen(netmask string) (int, error) {
