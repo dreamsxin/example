@@ -13,3 +13,9 @@ https://www.postgresql.org/docs/current/functions-net.html
 ```psql
 CREATE INDEX test_inet_index ON public.test USING BTREE (family(clientip::inet)) WHERE clientip<>'';
 ```
+
+## cidr vs inet
+
+cidr 在子网掩码区分网络标识和主机标识时，网络标识结束不能位0
+
+`https://github.com/dreamsxin/example/blob/master/go/code/SubNetMask.go`
