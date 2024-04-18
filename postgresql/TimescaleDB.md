@@ -1369,3 +1369,22 @@ WHERE
 GROUP BY 5min, meter_id
 ```
 
+## job
+
+https://docs.timescale.com/api/latest/actions/add_job/
+
+任务信息存在 模式 `timescaledb_information` 下的 `jobs` 表
+```sql
+SELECT * FROM timescaledb_information.jobs;
+
+CREATE OR REPLACE PROCEDURE user_defined_action(job_id int, config jsonb) LANGUAGE PLPGSQL AS
+$$
+BEGIN
+  RAISE NOTICE 'Executing action % with config %', job_id, config;
+END
+$$;
+
+SELECT add_job('user_defined_action','1h');
+SELECT add_job('user_defined_action','1h', fixed_schedule => false);
+
+```
