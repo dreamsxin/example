@@ -120,3 +120,31 @@ func New() *Engine {
 }
 ```
 
+### 模板调试实时渲染
+
+```go
+	r.FuncMap = template.FuncMap{
+		"html": func(s string) template.HTML {
+			return template.HTML(s)
+		},
+		"upper": strings.ToUpper,
+		"lower": strings.ToLower,
+		"strip": func(str string) string {
+			return strings.ReplaceAll(strip.StripTags(str), "&nbsp;", "")
+		},
+	}
+
+	filenames := []string{}
+	filenames1, err := filepath.Glob("./includes/*.html")
+	if err == nil {
+		filenames = append(filenames, filenames1...)
+	}
+	filenames2, err := filepath.Glob("./*.html")
+
+	if err == nil {
+		filenames = append(filenames, filenames2...)
+	}
+	if cfg.Server.Mode == "debug" {
+		gin.SetMode(gin.DebugMode)
+	}
+```
