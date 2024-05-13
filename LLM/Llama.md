@@ -192,7 +192,12 @@ Llama.cpp提供的 main工具允许你以简单有效的方式使用各种 LLaMA
 
 Llama.cpp的工具 main提供简单的 C/C++ 实现，具有可选的 4 位量化支持，可实现更快、更低的内存推理，并针对桌面 CPU 进行了优化。 该程序可用于使用 LLaMA 模型执行各种推理任务，包括根据用户提供的提示生成文本以及使用反向提示进行类似聊天的交互。
 
+```shell
+.\main.exe -m .\Llama3-xxx.GGUF --interactive-first
+```
+
 ### 1、快速开始
+
 要立即开始，请运行以下命令，确保使用你拥有的模型的正确路径：
 
 基于 Unix 的系统（Linux、macOS 等）：
