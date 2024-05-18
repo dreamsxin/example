@@ -1,5 +1,9 @@
 # Cache组件
 
+## bytestorage
+
+https://github.com/kiriklo/bytestorage
+
 ## ccache
 
 https://github.com/karlseguin/ccache
