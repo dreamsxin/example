@@ -28,3 +28,7 @@ results = collection.query(
 )
 print(results)
 ```
+output:
+```output
+{'ids': [['id3', 'id1']], 'distances': [[0.2729957103729248, 1.0404009819030762]], 'metadatas': [[{'chapter': '3', 'verse': '5'}, {'chapter': '1', 'verse': '16'}]], 'embeddings': None, 'documents': [['This is a document about hawaii system', 'This is a document about pineapple']], 'uris': None, 'data': None}
+```
