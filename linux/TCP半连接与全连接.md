@@ -170,7 +170,7 @@ LISTEN     0      128         :::58803                   :::*
 减少syn + ack重传次数（echo 1 > /proc/sys/net/ipv4/tcp_synack_retries ）
 
 ## c
-
+每一个 Listener 都保存着自己的半连接计数，用其listen_sock的qlen字段计数。
 在系统压力很大时，遍历所有的socket不现实， 但是LISTEN socket的数量是固定的 ，你见过系统的Listener超过1万的吗？不超过1万，遍历开销就不是事儿。
 
 ```c
