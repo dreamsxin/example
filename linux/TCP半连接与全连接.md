@@ -1,15 +1,36 @@
-netstat -n | awk '/^tcp/ {++state[$NF]} END {for(key in state) print key,"\t",state[key]}'
+## ss 
+一条 Linux 命令，用于查看当前系统的网络连接状态。其中，-lnt 参数是 ss 命令的选项之一，表示列出当前所有的 TCP 连接，并以数字形式显示端口号（Port）、协议（Proto）和本地地址（Local Address）等信息。具体解释如下：
 
+- -l: 仅列出正在监听（listening）状态的连接。
+- -n: 不将连接中的地址和端口号转换为域名和服务名称，而是直接输出数字格式的 IP 地址和端口号。
+- -t: 仅列出 TCP 连接。
+因此，ss -lnt 命令会列出当前所有正在监听 TCP 端口的连接，并以数字形式显示其本地地址、远程地址、状态、PID 等详细信息。
+
+例如，以下是 ss -lnt 命令输出的结果示例：
+```txt
+State       Recv-Q     Send-Q           ...            Local Address:Port       Peer Address:Port      
+LISTEN      0          128                       127.0.0.1:22                 0.0.0.0:*          
+LISTEN      0          128                        0.0.0.0:80                0.0.0.0:*
+```
+以上结果中，
+“State” 列显示每个连接的状态（例如 LISTEN 表示该连接处于监听状态），
+“Recv-Q” 和 “Send-Q” 分别表示接收队列和发送队列的大小，
+本地地址和端口号（Local Address:Port）、
+对端地址和端口号（Peer Address:Port）分别表示本地监听的地址和端口，对方连接的地址和端口。
+
+```shell
+netstat -n | awk '/^tcp/ {++state[$NF]} END {for(key in state) print key,"\t",state[key]}'
+```
 会得到类似下面的结果，具体数字会有所不同：
 
-LAST_ACK 1
-SYN_RECV 14
-ESTABLISHED 79
-FIN_WAIT1 28
-FIN_WAIT2 3
-CLOSING 5
-TIME_WAIT 1669
-
+- LAST_ACK 1
+- SYN_RECV 14
+- ESTABLISHED 79
+- FIN_WAIT1 28
+- FIN_WAIT2 3
+- CLOSING 5
+- TIME_WAIT 1669
+```txt
 状态：描述
 CLOSED：无连接是活动的或正在进行
 LISTEN：服务器在等待进入呼叫
@@ -22,7 +43,7 @@ ITMED_WAIT：等待所有分组死掉
 CLOSING：两边同时尝试关闭
 TIME_WAIT：另一边已初始化一个释放
 LAST_ACK：等待所有分组死掉
-
+```
 ## 全连接队列大小和半连接队列大小如何设置？
 全连接大小：全连接队列大小取决于backlog 和somaxconn 的最小值，也就是 min(backlog,somaxconn)
 
