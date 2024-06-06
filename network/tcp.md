@@ -235,3 +235,169 @@ Payload Length位占用了可选的7bit或者7 + 16bit 或者 7 + 64bit
     return $frame;
   }
 ```
+
+## TIME_WAIT问题
+linux系统下，TCP连接断开后，会以TIME_WAIT状态保留一定时间，然后才会释放端口。当并发请求过多的时候，就会产生大量的TIME_WAIT状态的连接。如果没有及时断开，会有大量的端口资源的服务器资源被占用。对此我们有必要调整下linux的TCP内核参数，让系统更快地释放TIME_WAIT连接。
+
+统计TCP各种状态的数量
+```shell
+netstat -n | awk '/^tcp/ {++S[$NF]} END {for(a in S) print a, S[a]}'
+```
+编辑配置文件/etc/sysctl.conf，加入以下内容：
+```conf
+net.ipv4.tcp_syncookies= 1
+net.ipv4.tcp_tw_reuse= 1
+net.ipv4.tcp_tw_recycle= 1
+net.ipv4.tcp_fin_timeout= 30
+```
+生效：
+```shell
+sysctl -p
+```
+如果编辑的文件在 /etc/sysctl.d/ 目录下, 需要改成使用以下命令
+```shell
+sysctl --system
+```
+
+## 高并发下端口配置优化
+```conf
+net.ipv4.tcp_keepalive_time= 1200
+net.ipv4.ip_local_port_range= 1024 65535
+net.ipv4.tcp_max_syn_backlog= 8192
+net.ipv4.tcp_max_tw_buckets= 5000
+···
+
+## tcp_keepalive_time
+
+- net.ipv4.tcp_keepalive_time：这个参数定义了TCP发送keepalive探测消息的间隔时间。默认值是7200秒（2小时）。
+
+```shell
+sysctl net.ipv4.tcp_keepalive_time
+```
+
+## tcp_fin_timeout
+
+- net.ipv4.tcp_fin_timeout：这个参数定义了在服务器端关闭连接时，socket保持在FIN-WAIT-2状态的时间。默认值通常是60秒。
+
+查看
+```shell
+sysctl net.ipv4.tcp_fin_timeout
+```
+
+## 参数说明
+对于不同的linux发行版，默认值可能不一样。
+
+net.core.somaxconn
+一般情况下默认值是128，不同linux发行版可能会有区别。
+
+该参数用于控制处于监听状态的套接字的最大连接队列长度，对于高并发的nginx服务器而言要注意调大该参数值，比如16384，32768。
+
+net.core.xmem_default和net.core.xmem_max
+参数	说明	默认值
+net.core.rmem_default	系统范围接收数据的内核缓冲区初始大小	262144byte，即256KB
+net.core.wmem_default	系统范围发送数据的内核缓冲区初始大小	262144byte，即256KB
+net.core.rmem_max	系统范围接收数据的内核缓冲区最大大小	262144byte，即256KB
+net.core.wmem_max	系统范围发送数据的内核缓冲区最大大小	262144byte，即256KB
+默认值在不同的linux发行版可能会有所不同。
+
+网络环境良好和内存资源充足的情况下，增大上述四个参数的值有助于提高并发能力，减少丢包和延迟。
+
+网络环境较差或内存资源不足的情况下，可以考虑减小上述四个参数的值。
+
+如果xmem_default的值大于xmem_max的值，将以xmem_max为准，且超出的部分内存将被浪费。
+
+net.ipv4.ip_local_port_range
+一般情况下默认值为32768 60999，表示本地端口范围为32768到60999，不同linux发行版可能会有所不同。
+
+常见优化配置：net.ipv4.ip_local_port_range = 1024 65535
+
+通过将本地端口号限制在指定的范围内，可以避免与系统或其它应用程序使用的端口号发生冲突。如果服务器上还运行了后端应用程序，注意要错开后端服务的端口号。
+
+net.ipv4.tcp_fastopen
+该参数用于启用或禁用 TCP 的快速打开（TCP Fast Open）功能。TCP 快速打开是一种优化的 TCP 握手过程，旨在减少客户端与服务器之间的往返延迟时间，从而加速连接的建立。传统的 TCP 握手过程需要三次往返（3-way handshake）才能建立连接。而 TCP 快速打开通过在初始 SYN 数据包中携带客户端发送的应用层数据，使服务器可以在接收到 SYN 数据包后直接发送 SYN+ACK 数据包，从而减少了一个往返的延迟。
+
+net.ipv4.tcp_fastopen 参数有以下几个取值：
+
+0：表示禁用 TCP 快速打开功能。
+1：表示启用 TCP 快速打开功能。
+2：表示启用 TCP 快速打开功能，并允许客户端在第一次握手时发送数据包。
+需要注意的是，启用 TCP 快速打开功能需要支持该功能的客户端和服务器。如果客户端或服务器不支持 TCP 快速打开，即使在内核中启用了该功能，TCP 连接仍然会回退到传统的三次握手过程。对于linux服务器，内核版本应高于3.7。
+
+net.ipv4.tcp_fin_timeout
+一般情况下默认值为60，单位秒，不同linux发行版可能会有所不同。
+
+用于控制TCP/IP协议栈中的FIN-WAIT-2状态的超时时间。
+
+在TCP协议中，当一段的连接主动关闭后，会进入FIN-WAIT-2状态，等待对方的确认，以确保双方都完成了连接关闭。当FIN-WAIT-2状态持续超过该参数值是，连接会被内核强制关闭，这对于释放系统资源，提高连接处理能力非常重要。
+
+较小的参数值可以更快地释放系统资源，但可能导致一些连接在网络不稳定的情况下被错误地关闭。
+
+net.ipv4.tcp_keepalive_time
+一般情况下默认值为7200，单位秒，不同linux发行版可能会有所不同。
+
+该参数用于控制TCP/IP协议栈中的 TCP keepalive 检测时间间隔。TCP keepalive是一种机制，用于检测处于空闲状态的连接是否仍然有效。当一段时间内没有数据传输时，TCP Keepalive会发送一些特定的探测报文到对方，以确认连接的状态。这对于检测死连接、清理空闲连接和提高连接可靠性很重要。
+
+如果该参数值默认2小时，如果修改为很小的值，将会带来频繁的keepalive检测，这会增加网络流量和系统负载，不必要的连接也可能被中断。同时也会增加系统安全问题，攻击者可以利用Keepalive探测报文进行DoS攻击或网络扫描。
+
+net.ipv4.tcp_max_tw_buckets
+不同linux发行版可能会有所不同，可能是65536或180000。
+
+该参数用于控制 TIME_WAIT 状态的 TCP 连接的最大数量。当TIME_WAIT数超过该参数值，新的连接请求可能会被丢弃或拒绝。
+
+较小的值会加快清理TIME_WAIT，但可能会有连接异常。一般情况下默认即可，根据实际情况可以考虑减少或增多。
+
+net.ipv4.tcp_max_syn_backlog
+一般情况下默认值为1024，不同linux发行版可能会有所不同。
+
+该参数用于控制TCP/IP协议栈中SYN队列的最大长度。在 TCP 握手过程中，当客户端发送 SYN 报文请求建立连接时，服务器端会将这些 SYN 请求放入 SYN 队列中等待处理。net.ipv4.tcp_max_syn_backlog 参数指定了 SYN 队列的最大长度，即能够同时等待处理的 SYN 请求的最大数量。较小的 net.ipv4.tcp_max_syn_backlog 值可能会导致 SYN 队列溢出，从而无法处理所有的连接请求。这可能会导致客户端无法成功建立连接，出现连接超时或连接被拒绝的情况。
+
+net.ipv4.tcp_syncookies
+一般情况下默认为0，表示关闭，不同linux发行版可能会有所不同。置为1表示开启。
+
+表示开启SYNCookies。当出现SYN等待队列溢出时，启用cookies来处理，可防范少量SYN攻击。
+
+当系统遭受SYN Flood攻击时，攻击者会发送大量的TCP SYN请求，消耗服务器资源并导致服务不可用。
+
+启用SYN Cookie机制后，当服务器接收到一个新的 TCP SYN 请求时，会根据该请求生成一个 SYN Cookie，并将 SYN Cookie 发送回给客户端。客户端在后续的请求中需要携带该 SYN Cookie。服务器在收到后续请求时，会验证 SYN Cookie 的合法性，并根据其中的信息还原出原始的 SYN 请求。
+
+通过使用 SYN Cookie 机制，服务器可以在不消耗太多资源的情况下抵御 SYN Flood 攻击，确保系统的稳定性和可用性。
+
+启用 SYN Cookie 机制也可能带来一些问题，一些网络设备可能无法正确处理SYN Cookie的连接请求，导致连接无法建立或其它问题。
+
+net.ipv4.tcp_synack_retries
+一般情况下默认为5，不同linux发行版可能会有所不同。
+
+该参数用于设置在连接建立过程中，发送 SYN-ACK（同步应答）包后等待客户端 ACK（确认应答）包的最大重试次数。
+
+在 TCP 连接的三次握手过程中，服务器收到客户端的 SYN（同步）包后，会回复一个 SYN-ACK 包作为应答。然后服务器等待客户端发送 ACK 包来确认连接的建立。如果服务器在等待期间未收到 ACK 包，它将重试发送 SYN-ACK 包，重试次数由 net.ipv4.tcp_synack_retries 参数确定。
+
+网络环境糟糕的情况下可以考虑增加参数值，以允许更多的重试次数，增加连接建立的成功率。
+
+减小参数值有助于快速建立连接和减少资源占用。
+
+net.ipv4.tcp_syn_retries
+一般情况下默认为6，不同linux发行版可能会有所不同。
+
+该参数用于设置在连接建立过程中，发送 SYN（同步）包后等待对方响应的最大重试次数。当客户端发送 SYN 包后，如果没有收到服务器的 SYN-ACK（同步应答）包，客户端会重试发送 SYN 包，重试次数由 net.ipv4.tcp_syn_retries 参数确定。
+
+net.ipv4.tcp_timestamps
+一般情况下默认为1，表示开启，不同linux发行版可能会有所不同。置为0表示关闭。
+
+启用后允许在TCP报文中添加时间戳信息，用于测量报文的往返时间（RTT）和计算报文的时序。
+
+net.ipv4.tcp_tw_reuse
+一般情况下默认为0，表示关闭，不同linux发行版可能会有所不同。置为1表示开启。
+
+允许重用TIME_WAIT Socket，也就是可以重用TIME_WAIT占用的端口。
+
+启用net.ipv4.tcp_tw_reuse也可能带来一些问题。例如，如果处于TIME_WAIT连接上仍然存在未完全处理的数据包，重用该端口可能导致数据包被传递到错误的连接上，从而导致数据错乱或安全问题。
+
+net.ipv4.tcp_tw_recycle
+一般情况下默认为0，表示关闭，不同linux发行版可能会有所不同。置为1表示开启。
+
+启用快速回收TIME_WAIT Socket，内核根据一定规则释放TIME_WAIT的端口资源。具体的回收规则可以根据net.ipv4.tcp_timestamps参数和其它相关参数进行调整。
+
+当多个客户端位于同一个NAT网络后面时，启用快速回收可能导致来自不同客户端的连接被错误服用，导致数据错乱或安全问题。
+
+net.ipv4.tcp_rmem和net.ipv4.tcp_wmem
+用于设置tcp接收缓冲区和发送缓冲区的大小，有三个值组成，分别是最小值、默认值和最大值。类似于net.core.xmem_default和net.core.xmem_max。不过net.core是系统全局参数，适用于所有类型的socket，包括tcp和udp。
