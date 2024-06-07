@@ -12,6 +12,16 @@ go func() {
 ```
 然后就可以在浏览器里输入 `http://localhost:8899/debug/pprof/` 看到相关的性能维度
 
+"_" 执行 init 如下：
+```go
+func init() {
+	http.HandleFunc("/debug/pprof/", Index)
+	http.HandleFunc("/debug/pprof/cmdline", Cmdline)
+	http.HandleFunc("/debug/pprof/profile", Profile)
+	http.HandleFunc("/debug/pprof/symbol", Symbol)
+	http.HandleFunc("/debug/pprof/trace", Trace)
+}
+```
 ## 使用 go tool pprof 分析数据
 
 有两种方式：
@@ -28,4 +38,24 @@ go func() {
 echo "ulimit -c unlimited" >> ~/.profile
 echo "export GOTRACEBACK=crash " >> ~/.profile
 export GOBACTRACE=crash
+```
+
+## Gin
+
+https://github.com/gin-contrib/pprof
+
+下载数据到本地
+```shell
+go tool pprof http://192.168.1.27:8080/debug/pprof/allocs
+go tool pprof http://192.168.1.27:8080/debug/pprof/block
+go tool pprof http://192.168.1.27:8080/debug/pprof/cmdline
+go tool pprof http://192.168.1.27:8080/debug/pprof/heap
+go tool pprof http://192.168.1.27:8080/debug/pprof/mutex
+go tool pprof http://192.168.1.27:8080/debug/pprof/profile
+go tool pprof http://192.168.1.27:8080/debug/pprof/threadcreate
+go tool pprof http://192.168.1.27:8080/debug/pprof/trace
+```
+开启本地服务
+```shell
+ go tool pprof -http=192.168.1.27:8081 pprof.server.alloc_objects.alloc_space.inuse_objects.inuse_space.001.pb.gz
 ```
