@@ -49,7 +49,7 @@ https://github.com/gin-contrib/pprof
 go tool pprof http://192.168.1.27:8080/debug/pprof/allocs
 go tool pprof http://192.168.1.27:8080/debug/pprof/block
 go tool pprof http://192.168.1.27:8080/debug/pprof/cmdline
-go tool pprof http://192.168.1.27:8080/debug/pprof/heap
+go tool pprof -inuse_space --seconds=120 http://192.168.1.27:8080/debug/pprof/heap
 go tool pprof http://192.168.1.27:8080/debug/pprof/mutex
 go tool pprof http://192.168.1.27:8080/debug/pprof/profile
 go tool pprof http://192.168.1.27:8080/debug/pprof/threadcreate
