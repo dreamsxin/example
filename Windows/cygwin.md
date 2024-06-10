@@ -6,4 +6,4 @@ https://cygwin.com/
 
 ### devel
 
-cc-core、gcc-g++、make、gdb、binutils、openssl-devel、crypt
+cc-core、gcc-g++、make、gdb、binutils、libssl-dev、libcrypt-dev
