@@ -4,3 +4,7 @@
 - Add-History		将命令添加到命令历史记录。
 - Clear-History	clhy	从命令历史记录中删除命令。
 - Get-PSReadLineOption 查找Powershell历史记录存放位置
+
+```shell
+cd  $env:APPDATA\Microsoft\Windows\PowerShell\PSReadLine
+```
