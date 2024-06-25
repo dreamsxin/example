@@ -92,3 +92,12 @@ SP是栈指针寄存器，指向当前函数栈的栈顶，通过symbol+offset(S
 在plan9汇编里还可以直接使用的amd64的通用寄存器，应用代码层面会用到的通用寄存器主要是: rax, rbx, rcx, rdx, rdi, rsi, r8~r15这14个寄存器。plan9中使用寄存器不需要带r或e的前缀，例如rax，只要写AX即可:
 
 MOVQ $101, AX
+
+## main 函数调用过程
+
+- `%` 开头的是寄存器:rbx,rsp,rdi和rbp。
+- `$` 开头的是立即数
+
+(1) pushq 将 %rbp 压入栈中,将 %rsp的值赋给%rbp。
+(2)subq减小栈指针从而为局部变量分配空间,然后将%edi和%rsi压入栈中(即传入两个参数)。
+(3)在main函数的最后，leave指令将%rsp和%rbp恢复，随机ret指令返回到调用者。
