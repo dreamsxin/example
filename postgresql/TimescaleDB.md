@@ -1388,3 +1388,22 @@ SELECT add_job('user_defined_action','1h');
 SELECT add_job('user_defined_action','1h', fixed_schedule => false);
 
 ```
+
+## chunk
+
+```psql
+SELECT show_chunks('tablename')
+SELECT hypertable_size('tablename');
+SELECT * FROM timescaledb_information.hypertables WHERE hypertable_name = 'tablename';
+```
+
+## memory
+
+- shared_buffers
+- effective_cache_size
+- work_mem
+- maintenance_work_mem
+- max_connections
+
+- max_locks_per_transaction
+  
