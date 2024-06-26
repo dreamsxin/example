@@ -1,3 +1,5 @@
+# as exit.s -o exit.o && ld exit.o -o exit
+
 # 目的：退出并向linux内核返回一个状态码
 #
 
