@@ -11,9 +11,9 @@
 .globl	_start
 
 _start:
-	pushl	$3		#压入第二个参数
-	pushl	$2		#压入第一个参数
-	call	power
+	pushl	$3		#压入第二个参数，%esp-4
+	pushl	$2		#压入第一个参数，%esp-4
+	call	power           #压入第一个参数，%esp-4
 	addl	$8, %esp	#恢复栈指针
 	pushl	%eax		#在调用下一个函数前，保存第一个答案
 
@@ -45,8 +45,8 @@ _start:
 
 .type	power, @function
 power:
-	pushl	%ebp
-	movl	%esp, %ebp
+	pushl	%ebp            #压入栈基，%esp-4
+	movl	%esp, %ebp      #将此时的栈顶地址赋值给栈基
 	subl	$4, %esp		#为本地存储保留空间
 	movl	8(%ebp), %ebx	#第一个参数放入%eax
 	movl	12(%ebp), %ecx	#第二个参数放入%ecx
