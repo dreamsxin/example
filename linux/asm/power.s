@@ -19,7 +19,7 @@ _start:
 
 	pushl	$2
 	pushl	$5
-	call	power
+	call	power       #jmp 区别，将返回地址入栈
 	addl	$8, %esp
 	
 	popl	%ebx
