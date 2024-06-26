@@ -1395,6 +1395,27 @@ SELECT add_job('user_defined_action','1h', fixed_schedule => false);
 SELECT show_chunks('tablename')
 SELECT hypertable_size('tablename');
 SELECT * FROM timescaledb_information.hypertables WHERE hypertable_name = 'tablename';
+
+# 显示关联表的所有数据块（输出内容见下图）:
+SELECT show_chunks('表名');
+
+# 显示早于3个月的所有数据块：
+SELECT show_chunks('表名', older_than => interval '3 months');
+
+# 显示未来三个月的所有数据块。当时间出错时非常有用：
+SELECT show_chunks('表名', newer_than => now() + interval '3 months');
+
+# 显示指定表 时序元数据表上早于2021-10-06年的数据块:
+SELECT show_chunks('表名', older_than => '2021-10-06'::date);
+
+# 显示新于3个月的数据块：
+SELECT show_chunks('表名', newer_than => interval '3 months');
+
+# 显示早于3个月新于4个月的所有数据块：
+SELECT show_chunks('表名', older_than => interval '3 months', newer_than => interval '4 months');
+
+# 获取超表的大小信息
+SELECT * FROM hypertable_detailed_size('表名') ORDER BY node_name;
 ```
 
 ## memory
