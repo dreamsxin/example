@@ -1393,7 +1393,7 @@ SELECT add_job('user_defined_action','1h', fixed_schedule => false);
 
 ```psql
 SELECT show_chunks('tablename')
-SELECT hypertable_size('tablename');
+SELECT pg_size_pretty(hypertable_size('tablename'));
 SELECT * FROM timescaledb_information.hypertables WHERE hypertable_name = 'tablename';
 
 # 显示关联表的所有数据块（输出内容见下图）:
