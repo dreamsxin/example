@@ -1,6 +1,8 @@
 ## Programming Ground Up 深入理解程序设计使用Linux汇编语言
 
-https://github.com/foomur/programming-ground-up
+- https://github.com/foomur/programming-ground-up
+- https://github.com/swseverance/programming-from-the-ground-up
+- https://github.com/physcat/asm
 
 ## 64-bit和32-bit的差别
 
