@@ -647,3 +647,29 @@ postgres --single -D $HG_HOME/data
 PostgreSQL stand-alone backend 9.4.7
 backend> ALTER role postgres WITH SUPPERUSER;
 ```
+
+## 磁盘空间
+
+### 库
+
+```psql
+SELECT
+	pg_size_pretty ( pg_database_size ( 'your_database_name' ) ) AS db_size;
+```
+
+### 每个表的大小
+```psql
+SELECT
+	relname,
+	pg_size_pretty ( pg_total_relation_size ( relid ) ) AS total_size 
+FROM
+	pg_catalog.pg_statio_user_tables;
+```
+
+### 总表
+```psql
+SELECT
+	pg_size_pretty ( SUM ( pg_total_relation_size ( relid ) ) ) AS total_size 
+FROM
+	pg_catalog.pg_statio_user_tables;
+```
