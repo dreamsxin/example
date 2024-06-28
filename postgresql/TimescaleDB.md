@@ -113,6 +113,17 @@ CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
 \d+ test
 ```
 
+## 查看块
+
+```psql
+SELECT
+    *
+FROM
+    timescaledb_information.chunks
+ORDER BY
+    range_end DESC
+```
+
 ## 性能测试
 
 https://github.com/timescale/tsbs.git
