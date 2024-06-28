@@ -89,6 +89,30 @@ CREATE database tutorial;
 CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
 ```
 
+## 查看新增的 schemas
+
+```psql
+\dn
+             List of schemas
+           Name           |     Owner
+--------------------------+---------------
+ _timescaledb_cache       | test
+ _timescaledb_catalog     | test
+ _timescaledb_config      | test
+ _timescaledb_internal    | test
+ public                   | test
+ timescaledb_experimental | test
+ timescaledb_information  | test
+(7 rows)
+```
+
+## 查看表的结构
+
+```psql
+\d test
+\d+ test
+```
+
 ## 性能测试
 
 https://github.com/timescale/tsbs.git
