@@ -673,3 +673,9 @@ SELECT
 FROM
 	pg_catalog.pg_statio_user_tables;
 ```
+
+### 索引大小
+
+```psql
+select indexrelname, pg_size_pretty(pg_relation_size(relid)) from pg_stat_user_indexes where schemaname='public' order by pg_relation_size(relid) desc;
+```
