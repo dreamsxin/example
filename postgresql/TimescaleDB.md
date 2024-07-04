@@ -698,6 +698,11 @@ ALTER TABLE example SET (
 ```sql
 SELECT add_compression_policy('example', INTERVAL '7 days');
 ```
+
+```sql
+SELECT * FROM timescaledb_information.compressed_chunk_stats;
+```
+
 ### 数据保留策略
 
 保留24H数据
