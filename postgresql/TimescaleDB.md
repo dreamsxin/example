@@ -700,7 +700,9 @@ SELECT add_compression_policy('example', INTERVAL '7 days');
 ```
 
 ```sql
-SELECT * FROM timescaledb_information.compressed_chunk_stats;
+# SELECT * FROM timescaledb_information.compressed_chunk_stats;
+SELECT hypertable_schema, hypertable_name, chunk_schema, chunk_name, compression_status, uncompressed_heap_size, uncompressed_index_size, uncompressed_toast_size, uncompressed_total_size, compressed_heap_size, compressed_index_size, compressed_toast_size, compressed_total_size
+	FROM _timescaledb_internal.compressed_chunk_stats;
 ```
 
 ### 数据保留策略
