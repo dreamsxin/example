@@ -107,6 +107,8 @@ FROM ngrams_idx.search('description:blue');
 'description:keyboard AND is_available:false'
 ```
 
+https://docs.paradedb.com/search/full-text/complex
+
 ### All
 ```sql
 SELECT * FROM search_idx.search(
