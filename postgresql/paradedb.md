@@ -88,6 +88,40 @@ SELECT description, paradedb.highlight(id, field => 'description'), paradedb.ran
 FROM ngrams_idx.search('description:blue');
 ```
 
+## 相似搜索
+
+使用 L2 distance 欧式距离
+```sql
+ALTER TABLE mock_items ADD COLUMN embedding vector(3);
+CREATE INDEX on mock_items
+USING hnsw (embedding vector_l2_ops);
+
+UPDATE mock_items m
+SET embedding = ('[' ||
+    ((m.id + 1) % 10 + 1)::integer || ',' ||
+    ((m.id + 2) % 10 + 1)::integer || ',' ||
+    ((m.id + 3) % 10 + 1)::integer || ']')::vector;
+
+SELECT description, rating, category, embedding
+FROM mock_items
+LIMIT 3;
+
+SELECT description, category, rating, embedding
+FROM mock_items
+ORDER BY embedding <-> '[1,2,3]'
+LIMIT 3;
+```
+
+## 混合搜索 Hybrid Search
+```sql
+SELECT * FROM search_idx.rank_hybrid(
+    bm25_query => 'description:keyboard OR category:electronics',
+    similarity_query => '''[1,2,3]'' <-> embedding',
+    bm25_weight => 0.9,
+    similarity_weight => 0.1
+) LIMIT 5;
+```
+
 ## 搜索类型
 
 ```sql
