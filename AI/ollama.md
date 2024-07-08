@@ -24,3 +24,26 @@ docker run -d --gpus=all -v ollama:/root/.ollama -p 11434:11434 --name ollama ol
 docker exec -it ollama ollama run llama3
 docker exec -it ollama ollama run mistral
 ```
+
+## 查看已有模型
+
+```shell
+ollama list
+```
+
+## REST API
+```shell
+curl http://localhost:11434/api/generate -d '{
+  "model": "qwen:14b",
+  "prompt":"你好"
+}'
+```
+Chat
+```shell
+curl http://localhost:11434/api/chat -d '{
+  "model": "qwen:14b",
+  "messages": [
+    { "role": "user", "content": "你好" }
+  ]
+}'
+```
