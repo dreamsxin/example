@@ -1,5 +1,9 @@
+# Ollama
 
-https://github.com/ollama/ollama
+Ollama 是一个开源的人工智能（AI）和机器学习（ML）工具平台，特别设计用于简化大型语言模型（LLM）的部署和使用流程。
+
+- https://github.com/ollama/ollama
+- https://github.com/ollama/ollama/blob/main/docs/linux.md
 
 ```shell
 docker pull ollama/ollama
@@ -18,4 +22,5 @@ docker run -d --gpus=all -v ollama:/root/.ollama -p 11434:11434 --name ollama ol
 
 ```shell
 docker exec -it ollama ollama run llama3
+docker exec -it ollama ollama run mistral
 ```
