@@ -130,3 +130,21 @@ func main() {
     fmt.Println(string(plaintext))
 }
 ```
+
+## php
+
+```php
+$iv = 't84b334e1ghnw8vg'; //same with JAVA code(16 bytes)
+$key = 't84b334e1ghnw8vg7789ib3y2efd8qzb';//same with JAVA code(32 bytes)
+
+
+$encryptedData = openssl_encrypt($data, 'aes-256-cbc', $key, OPENSSL_RAW_DATA, $iv);
+
+echo bin2hex($encryptedData);
+echo "\n";
+
+$encryptedData = base64_encode($encryptedData);
+
+echo ($encryptedData);
+echo "\n";
+```
