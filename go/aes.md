@@ -1,6 +1,7 @@
 - https://github.com/dreamsxin/cphalcon7/blob/master/ext/crypt.c
 - https://github.com/yanue/aes-cbc-pkcs7/tree/main
 
+## 加密方式
 
 常见的对称加密算法有 AES、SM4、ChaCha20、3DES、Salsa20、DES、Blowfish、IDEA、RC5、RC6、Camellia。
 
@@ -15,7 +16,26 @@
 
 常见的流加密算法如RC4、ChaCha20等等，它们的安全强度主要取决于扩展后密钥的随机性。
 
+
+- CBC(Cipher Block Chaining) CBC (密码块链接)
+在块链接中，每个块都依赖于前一个块并使用初始化向量（IV）。
+- CFB (Cipher FeedBack) 密码反馈
+我们从上一步得到的密文成为算法的输入。该操作产生伪随机输出。我们得到的输出与明文进行异或运算，并为下一个操作生成密文。
+- OFB (Output FeedBack) 输出反馈
+就像CFB一样。除了加密算法输入是前面加密的输出。
+- CTR(Counter) 计数器（只加密）
+每个明文块都与一个加密的计数器进行异或。之后，计数器为每个后续块递增。
+- GCM(Galois/Counter Mode)（只加密）
+GCM 可以被认为是 CTR 模式的改进版本。它计算一个128位长的带有数据加密的身份验证标记。
+
+作者：青Cheng序员石头
+链接：https://juejin.cn/post/6974202818832007182
+来源：稀土掘金
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+
+
 ## 填充算法
+
 使用分组加密算法对明文进行分组时，有时需要事先对明文字节数组进行填充，使其长度变为块长度的整数倍。这就是分组加密的填充算法，或者说填充规则。
 
 但并不是所有的分组加密算法都需要做明文填充，这取决于分组模式，事实上只有ECB、CBC、PCBC等分组模式需要填充明文。
@@ -23,6 +43,16 @@
 目前主流的分组加密填充规则是 PKCS7Padding。
 
 ### 填充方式的区别
+
+填充模式常见的有
+
+- ZeroPadding，需要填充的所有字节都用零填充。
+- Pkcs5Padding，分组大小固定为 64 位（8字节）
+- Pkcs7Padding，而PKCS7的分组大小可以是1到255字节
+- Iso7816Padding， 与位填充方案相同，适用于N字节的纯文本，并不常用
+- Ansix923Padding，是针对块大小为 8 的算法设计的填充模式，该标准已经被撤销。
+- NoPadding，就是不填充，必须保证加密的key和data是8（DES）/16(AES)的整数倍。
+
 ZeroPadding，数据长度不对齐时使用0填充，否则不填充。使用0填充有个缺点，当元数据尾部也存在0时，在unpadding时可能会存在问题。
 
 我们这里主要讨论PKCS7Padding与PKCS5Padding。
