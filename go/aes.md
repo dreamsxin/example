@@ -1,3 +1,5 @@
+https://github.com/yanue/aes-cbc-pkcs7/tree/main
+
 常见的对称加密算法有 AES、SM4、ChaCha20、3DES、Salsa20、DES、Blowfish、IDEA、RC5、RC6、Camellia。
 
 对称加密算法可分为两大类型:
@@ -17,6 +19,23 @@
 但并不是所有的分组加密算法都需要做明文填充，这取决于分组模式，事实上只有ECB、CBC、PCBC等分组模式需要填充明文。
 
 目前主流的分组加密填充规则是 PKCS7Padding。
+
+### 填充方式的区别
+ZeroPadding，数据长度不对齐时使用0填充，否则不填充。使用0填充有个缺点，当元数据尾部也存在0时，在unpadding时可能会存在问题。
+
+我们这里主要讨论PKCS7Padding与PKCS5Padding。
+
+（1）PKCS7Padding，
+
+  假设每个区块大小为blockSize
+
+  <1>已对齐，填充一个长度为blockSize且每个字节均为blockSize的数据。
+
+  <2>未对齐，需要补充的字节个数为n，则填充一个长度为n且每个字节均为n的数据。
+
+（2）PKCS5Padding，PKCS7Padding的子集，只是块大小固定为8字节。
+
+两者的区别在于PKCS5Padding是限制块大小的PKCS7Padding
 
 ## 分组模式
 分组之后，接下来分组加密算法要解决的问题就是: 如何将分组后的各个块组织起来，协同实现明文整体的加解密。这个问题就是分组密码工作模式要解决的问题。常见的分组密码工作模式(简称分组模式或加密模式)有:
