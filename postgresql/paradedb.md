@@ -59,6 +59,19 @@ CALL paradedb.create_bm25(
 );
 ```
 
+### ParadeDB provides the following tokenizer options:
+
+- default: Splits text on whitespace and punctuation, removes long tokens, and converts to lowercase.
+- raw: Does not process or tokenize text.
+- en_stem: Similar to default, but also applies stemming to the tokens.
+- whitespace: Tokenizes text by splitting on whitespaces only.
+- ngram: Creates overlapping substrings based on specified parameters.
+- chinese_compatible: Tokenizes text considering Chinese character nuances.
+- chinese_lindera: Uses the Lindera tokenizer with the CC-CEDICT dictionary for Chinese text.
+- korean_lindera: Uses the Lindera tokenizer with the KoDic dictionary for Korean text.
+- japanese_lindera: Uses the Lindera tokenizer with the IPADIC dictionary for Japanese text.
+- icu: Uses Unicode Text Segmentation, suitable for tokenizing most languages.
+
 ## 搜索
 
 ```shell
