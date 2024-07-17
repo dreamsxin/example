@@ -210,6 +210,8 @@ CREATE FOREIGN TABLE trips (
 SERVER parquet_server
 OPTIONS (files 's3://paradedb-benchmarks/yellow_tripdata_2024-01.parquet');
 
+CREATE TABLE my_trips AS SELECT * FROM trips;
+
 -- Success! Now you can query the remote Parquet file like a regular Postgres table
 SELECT COUNT(*) FROM trips;
   count
