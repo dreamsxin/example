@@ -4,6 +4,15 @@
 select * from mysql.slow_log;
 ```
 
+## IO 的统计公式
+Key_reads  * 2 +  Key_writes * 2 + Key_read_requests + Innodb_data_reads + Innodb_data_writes + Innodb_dblwr_writes + Innodb_log_writes （该公式最早从taobaodba.com这个网上传出，这里学习借鉴）
+
+```sql
+show global status where variable_name in ('com_select');
+show global status where variable_name in('com_select', 'com_commit','com_rollback');
+show global status where variable_name in('Key_reads','Key_writes','Key_read_requests','Innodb_data_reads','Innodb_data_writes','Innodb_dblwr_writes','Innodb_log_writes');
+```
+
 ## IO
 
 ···shell
