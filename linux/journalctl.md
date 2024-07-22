@@ -6,6 +6,12 @@ systemctl status systemd-journald
 journalctl -p err
 ```
 
+##
+
+```shell
+journalctl --since "1 hour ago"
+```
+
 ## 参数
 
 - -f
