@@ -639,6 +639,10 @@ https://github.com/keplerproject/orbit
 
 ## PHP C
 
+https://github.com/zephir-lang/zephir
+
+https://github.com/dreamsxin/cphalcon7
+
 https://github.com/phpsci/phpsci-carray
 
 https://github.com/circonus-labs/fq
@@ -1014,6 +1018,8 @@ https://github.com/thrill/thrill
 https://github.com/onyx-platform/onyx
 
 # GO
+
+https://github.com/philippseith/signalr
 
 https://github.com/go-kit/kit
 
