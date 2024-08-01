@@ -35,3 +35,9 @@ CREATE FOREIGN TABLE warehouse
 ```psql
 GRANT USAGE ON FOREIGN TABLE warehouse TO postgres;
 ```
+
+## 导入外部表
+省的手动创建外部表了
+```sql
+IMPORT FOREIGN SCHEMA 库名 LIMIT TO ( 表名 ) FROM SERVER mysql_server INTO public;
+```
