@@ -60,6 +60,15 @@ apt-get install postgresql-9.5
 - 查看所有表：\dt
 - 查看某个表的结构： \d 表名
 - 查看搜索路径下所有函数：\df
+- 查看函数的定义：\sf 函数名
+
+#系统视图查看可用扩展
+```sql
+SELECT * FROM pg_available_extensions;
+```
+```sql
+select prosrc from pg_proc where proname='jsonb_set'
+```
 
 # 设置默认密码
 ```shell
@@ -203,8 +212,6 @@ sudo apt-get install pgagent
 
 ## 在库中创建扩展
 ```shell
-#系统视图查看可用扩展
-SELECT * FROM pg_available_extensions;
 CREATE EXTENSION pgagent;
 #sudo -u postgres psql -U postgres -d ads < /usr/share/pgadmin3/pgagent.sql
 ```
