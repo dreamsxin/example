@@ -24,6 +24,27 @@ Druid 是一个基于分布式的快速列式存储，也是一个为BI设计的
 
 ## 实战
 
+主流可视化工具：Superset、DataEase、MetaBase
+
+## 部署
+
+https://superset.apache.org/docs/quickstart
+
+```shell
+git clone https://github.com/apache/superset
+# Enter the repository you just cloned
+$ cd superset
+
+# Fire up Superset using Docker Compose
+$ docker compose -f docker-compose-image-tag.yml up
+```
+
+### Log into Superset
+Now head over to http://localhost:8088 and log in with the default created account:
+
+- username: admin
+- password: admin
+
 ### 本地跑Docker
 
 下载镜像：
