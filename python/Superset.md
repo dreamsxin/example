@@ -76,6 +76,7 @@ dev       -        virtualbox   Saved                                         Un
 
 需要注意到，这个 Superset 容器里的默认鉴权配置是：
 ```text
+superset  fab create-admin
 username: admin
 password: Superset_admin
 ```
