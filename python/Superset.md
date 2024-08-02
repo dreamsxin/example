@@ -52,8 +52,9 @@ Now head over to http://localhost:8088 and log in with the default created accou
 `docker pull index.tenxcloud.com/7harryprince/Superset`
 
 跑容器
-`docker run -d -p 8087:8088 -v /opt/docker/superset:/home/superset amancevice/superset`
-`docker run -p 8088:8088 -d index.tenxcloud.com/7harryprince/Superset`
+
+`docker run -e "SECRET_KEY=你生成的随机数" -d -p 8087:8088 -v /opt/docker/superset:/home/superset amancevice/superset`
+`docker run -e "SECRET_KEY=你生成的随机数" -p 8088:8088 -d index.tenxcloud.com/7harryprince/Superset`
 
 查询一下你的docekr ip
 ```text
