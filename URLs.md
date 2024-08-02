@@ -483,6 +483,8 @@ https://github.com/zhuzhong/idleaf
 
 ## Javascript engine
 
+https://github.com/hoppscotch/hoppscotch Open source API development ecosystem
+
 https://github.com/jerryscript-project/jerryscript
 
 https://github.com/GNOME/seed
