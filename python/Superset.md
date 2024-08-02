@@ -58,9 +58,9 @@ python -c "import random; print(random.getrandbits(160))"
 
 跑容器
 
-`docker run -e "SECRET_KEY=你生成的随机数" -d -p 8087:8088 -v /opt/docker/superset:/home/superset amancevice/superset`
+`docker run -e "SUPERSET_SECRET_KEY=你生成的随机数" -d -p 8087:8088 -v /opt/docker/superset:/home/superset amancevice/superset`
 
-`docker run -e "SECRET_KEY=你生成的随机数" -p 8088:8088 -d index.tenxcloud.com/7harryprince/Superset`
+`docker run -e "SUPERSET_SECRET_KEY=你生成的随机数" -p 8088:8088 -d index.tenxcloud.com/7harryprince/Superset`
 
 查询一下你的docekr ip
 ```text
