@@ -58,7 +58,7 @@ python -c "import random; print(random.getrandbits(160))"
 
 跑容器
 
-`docker run -e "SUPERSET_SECRET_KEY=你生成的随机数" -d -p 8087:8088 -v /opt/docker/superset:/home/superset amancevice/superset`
+`docker run -e "SQLALCHEMY_DATABASE_URI = 'sqlite:////home/superset/.superset/superset.db' -e "SUPERSET_SECRET_KEY=你生成的随机数" -d -p 8087:8088 -v /opt/docker/superset:/home/superset amancevice/superset`
 
 `docker run -e "SUPERSET_SECRET_KEY=你生成的随机数" -p 8088:8088 -d index.tenxcloud.com/7harryprince/Superset`
 
@@ -80,6 +80,22 @@ superset  fab create-admin
 username: admin
 password: Superset_admin
 ```
+
+## docker compose
+执行
+```shell
+docker compose -f docker-compose-non-dev.yml pull
+```
+这个过程会需要几分钟
+
+上一步完成后，执行
+```shell
+docker compose -f docker-compose-non-dev.yml up
+```
+等到控制台输出变慢后 就完成了。
+
+此时打开浏览器 输入：http://IP:8088/登录即可。
+默认用户名密码是admin
 
 ## 后端
 
