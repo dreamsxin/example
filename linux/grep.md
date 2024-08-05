@@ -9,3 +9,9 @@ grep -a bin.log
 ```shell
 grep -P "\[[0-9]{3,}\.[0-9]+ms\].*" sql.log
 ```
+
+### 只输出匹配部分
+
+```shell
+grep -oP '(?<=FROM )\w+' sql.log
+```
