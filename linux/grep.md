@@ -15,3 +15,9 @@ grep -P "\[[0-9]{3,}\.[0-9]+ms\].*" sql.log
 ```shell
 grep -oP '(?<=FROM )\w+' sql.log
 ```
+
+### 去重排序
+
+```shell
+grep -a -P "\[[0-9]{2,}\.[0-9]+ms\].*" sql.log  | grep -oP '(?<=FROM )\w+' |sort  |  uniq -c | sort -rn 
+```
