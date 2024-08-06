@@ -1,3 +1,11 @@
+##
+
+```shell
+grep -C 2 xxx filename  # 匹配行上下2行
+grep -A 2 xxx filename  # 匹配行下2行
+grep -B 2 xxx filename  # 显示filename文件中，匹配行上2行
+```
+
 ## 二进制文件
 
 ```shell
