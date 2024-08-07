@@ -44,7 +44,7 @@ Numpy的数组类型为 ndarray， ndarray 的重要属性包括:
 from sqlalchemy import create_engine
 import pandas as pd
 
-engine = create_engine("postgresql://zzx:S^QYpQCZjJ2pY0IH@pgm-bp13402de6174wnwno.pg.rds.aliyuncs.com:5432/yl_stats?sslmode=disable")
+engine = create_engine("postgresql://?sslmode=disable")
 # Connect to an existing database
 # with engine.connect() as conn:
 df = pd.read_sql('select * from business_users limit 10000', engine)
