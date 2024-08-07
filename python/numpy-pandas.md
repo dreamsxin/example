@@ -93,3 +93,15 @@ pd.pivot_table(data,
 pd.pivot_table(df, index='app_id',values='sendemail', aggfunc=sum)
 pd.pivot_table(df, index=['app_id', 'business_id'],values='sendemail', aggfunc=sum)
 ```
+**列columns**
+
+```python
+pd.pivot_table(df, index='app_id',values='sendemail', columns='business_id', aggfunc=sum)
+```
+
+**多维度**
+```python
+import numpy as np
+
+pd.pivot_table(df, index=['app_id', 'business_id'],values=['sendemail', 'sendsms'], aggfunc=[np.sum, np.mean])
+```
