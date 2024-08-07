@@ -59,6 +59,9 @@ engine = create_engine("postgresql://zzx:S^QYpQCZjJ2pY0IH@pgm-bp13402de6174wnwno
 with engine.connect() as conn:
     df = pd.read_sql('select * from business_users limit 10000', conn)
 df
+# melt 列转行
+melt = df.melt(id_vars='app_id',var_name='sendtype', value_vars=['sendemail','sendnotice'])
+pivottable = pd.pivot_table(melt, index='app_id', columns='sendtype',values=['value'], aggfunc=sum)
 ```
 
 ### pivot_table
@@ -119,4 +122,6 @@ plt.show()
 # 或者使用seaborn的barplot
 sns.barplot(data=pivottable)
 bar = sns.barplot(data=pivottable, x=pivottable.index, y="sendemail")
+# 显示 值分类
+sns.barplot(data=pivottable, x=pivottable.index, y="sendemail", hue="sendemail")
 ```
