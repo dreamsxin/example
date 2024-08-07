@@ -117,5 +117,6 @@ pivottable.plot(kind='bar', stacked=True)
 plt.show()
 
 # 或者使用seaborn的barplot
-sns.barplot(data=pivottable, ci=None)
+sns.barplot(data=pivottable)
+bar = sns.barplot(data=pivottable, x=pivottable.index, y="sendemail")
 ```
