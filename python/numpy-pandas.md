@@ -88,3 +88,8 @@ pd.pivot_table(data,
 - dropna -- 如果列的值都为NaN则不计算
 - margins_name -- 汇总行列名称
 - observed -- 是否显示观测值
+
+```python
+pd.pivot_table(df, index='app_id',values='sendemail', aggfunc=sum)
+pd.pivot_table(df, index=['app_id', 'business_id'],values='sendemail', aggfunc=sum)
+```
