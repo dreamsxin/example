@@ -50,3 +50,41 @@ engine = create_engine("postgresql://zzx:S^QYpQCZjJ2pY0IH@pgm-bp13402de6174wnwno
 df = pd.read_sql('select * from business_users limit 10000', engine)
 df
 ```
+```python
+from sqlalchemy import create_engine
+import pandas as pd
+
+engine = create_engine("postgresql://zzx:S^QYpQCZjJ2pY0IH@pgm-bp13402de6174wnwno.pg.rds.aliyuncs.com:5432/yl_stats?sslmode=disable")
+# Connect to an existing database
+with engine.connect() as conn:
+    df = pd.read_sql('select * from business_users limit 10000', conn)
+df
+```
+
+### pivot_table
+使用语法：
+```python
+pd.pivot_table(data,
+                     values=None,
+                     index=None,
+                     columns=None,
+                     aggfunc='mean',
+                     fill_value=None,
+                     margins=False,
+                     dropna=True,
+                     margins_name='All',
+                     observed=False,
+                     sort=True)
+```
+参数解释：
+
+- data -- DataFrame格式数据
+- values -- 需要汇总计算的列
+- index -- 行分组键
+- columns -- 列分组键
+- aggfunc -- 聚合函数，或函数列表，默认为平均值
+- fill_value -- 缺失值填充
+- margins -- 是否添加行列的总计
+- dropna -- 如果列的值都为NaN则不计算
+- margins_name -- 汇总行列名称
+- observed -- 是否显示观测值
