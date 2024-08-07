@@ -105,3 +105,17 @@ import numpy as np
 
 pd.pivot_table(df, index=['app_id', 'business_id'],values=['sendemail', 'sendsms'], aggfunc=[np.sum, np.mean])
 ```
+
+**画图**
+```python
+import matplotlib.pyplot as plt
+import seaborn as sns # 简化操作
+
+# 绘制条形图
+pivottable = pd.pivot_table(df, index=['app_id', 'business_id'],values=['sendemail', 'sendsms'], aggfunc=[np.sum, np.mean])
+pivottable.plot(kind='bar', stacked=True)
+plt.show()
+
+# 或者使用seaborn的barplot
+sns.barplot(data=pivottable, ci=None)
+```
