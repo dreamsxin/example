@@ -59,3 +59,52 @@ func main() {
     time.Sleep(time.Minute)
 }
 ```
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+	"strings"
+
+	"github.com/chromedp/cdproto/cdp"
+	"github.com/chromedp/chromedp"
+)
+
+func init() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+}
+
+func main() {
+
+	opts := chromedp.DefaultExecAllocatorOptions[:]
+	ctx := context.Background()
+	allocCtx, allocCancel := chromedp.NewExecAllocator(ctx, opts...)
+	defer allocCancel()
+
+	ctx, cancel := chromedp.NewContext(allocCtx)
+	defer cancel()
+	var nodes []*cdp.Node
+	if err := chromedp.Run(ctx,
+		chromedp.Navigate("https://github.com/wppconnect-team/wa-version/tree/main/html"),
+		chromedp.WaitReady("body"),
+		//chromedp.Sleep(1*time.Second),
+		chromedp.Nodes("a", &nodes, chromedp.ByQueryAll),
+	); err != nil {
+		log.Fatalln(err)
+		return
+	}
+	lasturl := ""
+	for _, n := range nodes {
+		urlstr := n.AttributeValue("href")
+		//log.Println(urlstr)
+		prefixstr := "/wppconnect-team/wa-version/blob/main/html"
+		if strings.HasPrefix(urlstr, prefixstr) {
+			lasturl = n.AttributeValue("title")
+		}
+	}
+	log.Println(lasturl)
+}
+
+```
