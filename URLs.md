@@ -1079,11 +1079,14 @@ https://github.com/golang/go
 
 # NodeJS
 
-https://github.com/HabitRPG/habitica
+- https://github.com/webdriverio/webdriverio
+Next-gen browser and mobile automation test framework for Node.js
 
-https://github.com/nodejs/node
+- https://github.com/HabitRPG/habitica
 
-https://github.com/expressjs/express
+- https://github.com/nodejs/node
+
+- https://github.com/expressjs/express
 
 ## Browser
 
