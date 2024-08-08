@@ -8,3 +8,14 @@
 ```shell
 cd  $env:APPDATA\Microsoft\Windows\PowerShell\PSReadLine
 ```
+
+## 等待 Loading 效果
+
+```shell
+$spinner = @('-', '\', '|', '/') # 定义旋转字符集合
+for($i=0; $i -lt 100; $i++) { # 循环100次，可以根据需要调整
+    Write-Host -NoNewline "`r $($spinner[$i % 4]) Loading" # 显示旋转字符
+    Start-Sleep -Milliseconds 100 # 等待100毫秒
+}
+Write-Host "`r Done!" # 循环结束后显示完成信息
+```
