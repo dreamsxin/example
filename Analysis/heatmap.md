@@ -15,3 +15,7 @@
 - 链接点击（Link Heatmap），只记录有链接的点击，还有另一种说法叫页面可点击元素的点击，代表产品有Google Analytics、Adobe Analytics等
 - 鼠标点击（Mouse Click Heatmap），记录所有的点击，代表的产品有HotJar、CrazyEgg、Smartlook、Ptengine、Clarity、百度统计、Yandex.Metrica等
 有些工具会提供上述两种或三种类型的热力图。
+
+## 开源工具
+
+https://github.com/microsoft/clarity
