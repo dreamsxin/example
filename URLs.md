@@ -2651,6 +2651,8 @@ https://github.com/openstreetmap/cgimap
 
 # Python
 
+https://github.com/bokeh/bokeh
+
 https://github.com/holoviz/hvplot
 
 https://github.com/ebranlard/pyDatView
