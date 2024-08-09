@@ -2651,6 +2651,10 @@ https://github.com/openstreetmap/cgimap
 
 # Python
 
+https://github.com/holoviz/hvplot
+
+https://github.com/ebranlard/pyDatView
+
 https://github.com/kitao/pyxel
 
 https://github.com/flareteam/flare-game
