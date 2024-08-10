@@ -38,6 +38,17 @@ Numpy的数组类型为 ndarray， ndarray 的重要属性包括:
 
 # pandas
 
+##
+```python
+# 筛选特定日期的数据，例如筛选所有1月1日的数据
+filtered_df = df[df['timestamp'].dt.day == 1]
+print(filtered_df)
+
+# 使用fillna()处理缺失值
+df['day_filled'] = df['day'].fillna(0)  # 将缺失的day替换为0（或其他合适的值）
+print(df)
+```
+
 ## 
 
 ```python
@@ -53,6 +64,49 @@ df = pd.DataFrame(data)
  
 # 按照Category进行汇总，计算Value的总和
 summary = df.groupby('Category').sum()
+ 
+print(summary)
+```
+
+## 
+
+```python
+import pandas as pd
+ 
+# 创建示例数据
+data = {
+    'Date': ['2021-01-01', '2021-01-01', '2021-01-02', '2021-01-02'],
+    'Value': [10, 20, 30, 40]
+}
+ 
+# 创建DataFrame
+df = pd.DataFrame(data)
+ 
+# 将'Date'列转换为datetime类型
+df['Date'] = pd.to_datetime(df['Date'])
+ 
+# 按日期汇总值的和
+summary = df.groupby('Date')['Value'].sum().reset_index()
+ 
+print(summary)
+```
+
+## 
+```python
+import pandas as pd
+ 
+# 示例DataFrame
+df = pd.DataFrame({
+    'datetime': pd.to_datetime(['2021-01-01 01:00', '2021-01-01 02:00', '2021-01-02 01:00', '2021-01-02 02:00']),
+    'value': [10, 20, 30, 40]
+})
+ 
+# 将'datetime'列转为日期和小时
+df['date'] = df['datetime'].dt.date
+df['hour'] = df['datetime'].dt.hour
+ 
+# 按天和小时进行汇总
+summary = df.groupby(['date', 'hour'])['value'].sum()
  
 print(summary)
 ```
