@@ -91,6 +91,25 @@ summary = df.groupby('Date')['Value'].sum().reset_index()
 print(summary)
 ```
 
+```python
+import pandas as pd
+
+# 示例DataFrame
+df = pd.DataFrame({
+    'datetime': pd.to_datetime(['2021-01-01 01:00', '2021-01-01 02:00', '2021-01-02 01:00', '2021-01-02 02:00']),
+    'value': [10, 20, 30, 40]
+})
+ 
+# 将'datetime'列转为日期和小时
+df['date'] = df['datetime'].dt.date
+# df['hour'] = df['datetime'].dt.hour
+df['hour'] = df['datetime'].dt.strftime('%Y-%m-%d %H')
+# 按天和小时进行汇总
+summary = df.groupby('hour')['value'].sum()
+ 
+print(summary)
+```
+
 ## 
 ```python
 import pandas as pd
