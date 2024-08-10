@@ -1023,6 +1023,8 @@ https://github.com/onyx-platform/onyx
 
 # GO
 
+https://github.com/fantonglang/go-mobile-automation
+
 https://github.com/philippseith/signalr
 
 https://github.com/go-kit/kit
