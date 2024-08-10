@@ -1,0 +1,3 @@
+- https://github.com/yzygitzh/Humanoid
+- https://github.com/honeynet/droidbot
+- https://github.com/MobileLLM/AutoDroid
