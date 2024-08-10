@@ -38,6 +38,26 @@ Numpy的数组类型为 ndarray， ndarray 的重要属性包括:
 
 # pandas
 
+## 
+
+```python
+import pandas as pd
+ 
+# 创建示例数据
+data = {
+    'Category': ['A', 'B', 'A', 'B', 'C', 'A', 'C', 'B'],
+    'Value': [10, 20, 15, 25, 35, 40, 45, 50]
+}
+ 
+df = pd.DataFrame(data)
+ 
+# 按照Category进行汇总，计算Value的总和
+summary = df.groupby('Category').sum()
+ 
+print(summary)
+```
+
+## melt
 类似字典，能对行和列重命名
 
 ```python
