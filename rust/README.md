@@ -29,6 +29,19 @@ cargo 是 Rust 的包管理器和构建工具，它简化了 Rust 项目的创�
 - 构建和测试：cargo 提供了构建和测试 Rust 项目的命令。用户可以通过简单的命令来编译项目、运行测试以及生成文档。
 - 发布和分发：cargo 支持将 Rust 项目打包、发布到 crates.io（Rust 的包仓库）以及分发给其他用户。
 
+Cargo 可以做很多事情：
+
+- cargo build 可以构建项目
+- cargo run 可以运行项目
+- cargo test 可以测试项目
+- cargo doc 可以为项目构建文档
+- cargo publish 可以将库发布到 crates.io。
+- 
+要检查您是否安装了 Rust 和 Cargo，可以在终端中运行：
+```shell
+cargo --version
+```
+
 ## 安装
 
 ```shell
