@@ -108,3 +108,43 @@ func main() {
 }
 
 ```
+
+## Tab
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/chromedp/chromedp"
+)
+
+func main() {
+	allocatorContext, cancel := chromedp.NewRemoteAllocator(context.Background())
+	defer cancel()
+	ctx, cancel := chromedp.NewContext(allocatorContext)
+	defer cancel()
+
+	// get the list of the targets
+	infos, err := chromedp.Targets(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(infos) == 0 {
+		log.Println("no targets")
+		return
+	}
+
+	// create context attached to the specified target ID.
+	// this example just uses the first target,
+	// you can search for the one you want.
+	tabCtx, cancel := chromedp.NewContext(ctx, chromedp.WithTargetID(infos[0].TargetID))
+	defer cancel()
+
+	if err := chromedp.Run(tabCtx, chromedp.Navigate("https://www.google.com/")); err != nil {
+		log.Fatal(err)
+	}
+}
+```
