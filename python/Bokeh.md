@@ -134,3 +134,49 @@ p.add_tools(hover)
 # 显示图形
 show(p)
 ```
+
+## 布局
+
+### 工具栏位置
+```python
+from bokeh.plotting import figure, show
+
+p = figure(width=400, height=400,
+           title=None, toolbar_location="below")
+
+p.scatter([1, 2, 3, 4, 5], [2, 5, 8, 2, 7], size=10)
+
+show(p)
+```
+
+### 图例位置
+
+```python
+# 需要在添加图例之后设置图例位置
+p.legend.location = "bottom_left"
+```
+
+## Column layout
+多个图例列式分开显示
+```python
+from bokeh.layouts import column
+from bokeh.plotting import figure, show
+
+x = list(range(11))
+y0 = x
+y1 = [10 - i for i in x]
+y2 = [abs(i - 5) for i in x]
+
+# create three plots
+s1 = figure(width=250, height=250, background_fill_color="#fafafa")
+s1.scatter(x, y0, size=12, color="#53777a", alpha=0.8)
+
+s2 = figure(width=250, height=250, background_fill_color="#fafafa")
+s2.scatter(x, y1, size=12, marker="triangle", color="#c02942", alpha=0.8)
+
+s3 = figure(width=250, height=250, background_fill_color="#fafafa")
+s3.scatter(x, y2, size=12, marker="square", color="#d95b43", alpha=0.8)
+
+# put the results in a column and show
+show(column(s1, s2, s3))
+```
