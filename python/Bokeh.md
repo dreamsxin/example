@@ -149,11 +149,83 @@ p.scatter([1, 2, 3, 4, 5], [2, 5, 8, 2, 7], size=10)
 show(p)
 ```
 
-### 图例位置
-
+### 图例位置互动操作
+https://docs.bokeh.org/en/latest/docs/user_guide/interaction/legends.html
 ```python
 # 需要在添加图例之后设置图例位置
 p.legend.location = "bottom_left"
+```
+```python
+import pandas as pd
+
+from bokeh.palettes import Spectral4
+from bokeh.plotting import figure, show
+from bokeh.sampledata.stocks import AAPL, GOOG, IBM, MSFT
+
+p = figure(width=800, height=250, x_axis_type="datetime")
+p.title.text = 'Click on legend entries to hide the corresponding lines'
+
+for data, name, color in zip([AAPL, IBM, MSFT, GOOG], ["AAPL", "IBM", "MSFT", "GOOG"], Spectral4):
+    df = pd.DataFrame(data)
+    df['date'] = pd.to_datetime(df['date'])
+    p.line(df['date'], df['close'], line_width=2, color=color, alpha=0.8, legend_label=name)
+
+p.legend.location = "top_left"
+# 隐藏
+p.legend.click_policy="hide"
+
+show(p)
+```
+
+```python
+import pandas as pd
+
+from bokeh.palettes import Spectral4
+from bokeh.plotting import figure, show
+from bokeh.sampledata.stocks import AAPL, GOOG, IBM, MSFT
+
+p = figure(width=800, height=250, x_axis_type="datetime")
+p.title.text = 'Click on legend entries to mute the corresponding lines'
+
+for data, name, color in zip([AAPL, IBM, MSFT, GOOG], ["AAPL", "IBM", "MSFT", "GOOG"], Spectral4):
+    df = pd.DataFrame(data)
+    df['date'] = pd.to_datetime(df['date'])
+    p.line(df['date'], df['close'], line_width=2, color=color, alpha=0.8,
+           muted_color=color, muted_alpha=0.2, legend_label=name)
+
+p.legend.location = "top_left"
+# 静音/半透明效果
+p.legend.click_policy="mute"
+
+show(p)
+```
+
+## 坐标轴位置
+`y_axis_location`
+```python
+from bokeh.layouts import gridplot
+from bokeh.models import ColumnDataSource
+from bokeh.plotting import figure, show
+from bokeh.sampledata.penguins import data
+from bokeh.transform import factor_cmap
+
+SPECIES = sorted(data.species.unique())
+
+TOOLS = "box_select,lasso_select,help"
+
+source = ColumnDataSource(data)
+
+left = figure(width=300, height=400, title=None, tools=TOOLS,
+              background_fill_color="#fafafa")
+left.scatter("bill_length_mm", "body_mass_g", source=source,
+             color=factor_cmap('species', 'Category10_3', SPECIES))
+
+right = figure(width=300, height=400, title=None, tools=TOOLS,
+               background_fill_color="#fafafa", y_axis_location="right")
+right.scatter("bill_depth_mm", "body_mass_g", source=source,
+              color=factor_cmap('species', 'Category10_3', SPECIES))
+
+show(gridplot([[left, right]]))
 ```
 
 ## Column layout
@@ -180,3 +252,99 @@ s3.scatter(x, y2, size=12, marker="square", color="#d95b43", alpha=0.8)
 # put the results in a column and show
 show(column(s1, s2, s3))
 ```
+## 多图示链接操作
+
+### 坐标范围
+
+```python
+from bokeh.layouts import gridplot
+from bokeh.plotting import figure, show
+
+x = list(range(21))
+y0 = x
+y1 = [20-xx for xx in x]
+y2 = [abs(xx-10) for xx in x]
+
+# create a new plot
+s1 = figure(width=250, height=250, title=None)
+s1.scatter(x, y0, size=10, color="navy", alpha=0.5)
+
+# create a new plot and share both ranges
+s2 = figure(width=250, height=250, x_range=s1.x_range, y_range=s1.y_range, title=None)
+s2.scatter(x, y1, size=10, marker="triangle", color="firebrick", alpha=0.5)
+
+# create a new plot and share only one range
+s3 = figure(width=250, height=250, x_range=s1.x_range, title=None)
+s3.scatter(x, y2, size=10, marker="square", color="olive", alpha=0.5)
+
+p = gridplot([[s1, s2, s3]], toolbar_location=None)
+
+show(p)
+```
+
+### 工具栏
+```python
+from bokeh.layouts import gridplot
+from bokeh.models import ColumnDataSource
+from bokeh.plotting import figure, show
+from bokeh.sampledata.penguins import data
+from bokeh.transform import factor_cmap
+
+SPECIES = sorted(data.species.unique())
+
+TOOLS = "box_select,lasso_select,help"
+
+source = ColumnDataSource(data)
+
+left = figure(width=300, height=400, title=None, tools=TOOLS,
+              background_fill_color="#fafafa")
+left.scatter("bill_length_mm", "body_mass_g", source=source,
+             color=factor_cmap('species', 'Category10_3', SPECIES))
+
+right = figure(width=300, height=400, title=None, tools=TOOLS,
+               background_fill_color="#fafafa", y_axis_location="right")
+right.scatter("bill_depth_mm", "body_mass_g", source=source,
+              color=factor_cmap('species', 'Category10_3', SPECIES))
+
+show(gridplot([[left, right]]))
+```
+
+## 回调
+### JavaScript callback
+```python
+from bokeh.io import show
+from bokeh.models import Button, SetValue
+
+button = Button(label="Foo", button_type="primary")
+callback = SetValue(obj=button, attr="label", value="Bar")
+button.js_on_event("button_click", callback)
+
+show(button)
+```
+
+### python 回调
+```python
+def my_text_input_handler(attr, old, new):
+    print("Previous label: " + old)
+    print("Updated label: " + new)
+
+text_input = TextInput(value="default", title="Label:")
+text_input.on_change("value", my_text_input_handler)
+```
+
+### Tooltips
+```python
+from bokeh.io import show
+from bokeh.layouts import column
+from bokeh.models import TextInput, Tooltip
+from bokeh.models.dom import HTML
+
+plaintext_tooltip = Tooltip(content="plain text tooltip", position="right")
+html_tooltip = Tooltip(content=HTML("<b>HTML</b> tooltip"), position="right")
+
+input_with_plaintext_tooltip = TextInput(value="default", title="Label:", description=plaintext_tooltip)
+input_with_html_tooltip = TextInput(value="default", title="Label2:", description=html_tooltip)
+
+show(column(input_with_plaintext_tooltip, input_with_html_tooltip))
+```
+
