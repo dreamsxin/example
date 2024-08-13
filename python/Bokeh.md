@@ -633,3 +633,83 @@ p.scatter(
 
 show(p)
 ```
+
+## 交互
+
+https://github.com/bokeh/bokeh/blob/branch-3.6/examples/output/jupyter/push_notebook/Jupyter%20Interactors.ipynb
+
+```python
+from ipywidgets import interact
+import numpy as np
+
+from bokeh.io import push_notebook, show, output_notebook
+from bokeh.plotting import figure
+
+output_notebook()
+
+x = np.linspace(0, 2*np.pi, 2000)
+y = np.sin(x)
+
+p = figure(title="simple line example", height=300, width=600, y_range=(-5,5),
+           background_fill_color='#efefef')
+r = p.line(x, y, color="#8888cc", line_width=1.5, alpha=0.8)
+
+def update(f, w=1, A=1, phi=0):
+    if   f == "sin": func = np.sin
+    elif f == "cos": func = np.cos
+    r.data_source.data['y'] = A * func(w * x + phi)
+    push_notebook()
+
+show(p, notebook_handle=True)
+
+interact(update, f=["sin", "cos"], w=(0,50), A=(1,10), phi=(0, 20, 0.1))
+```
+## 定时更新
+
+```python
+# 实时更新图表
+def update_data():
+    new_data = {'x': [new_x_value], 'y': [new_y_value]}
+    source.stream(new_data)
+
+# 设置定时器，每秒更新一次数据
+curdoc().add_periodic_callback(update_data, 1000)
+```
+
+```python
+
+from bokeh.io import curdoc
+from bokeh.plotting import figure
+from bokeh.models import ColumnDataSource
+import random
+from datetime import datetime
+from functools import partial
+from tornado import gen
+from tornado.ioloop import PeriodicCallback
+ 
+# 准备数据源
+source = ColumnDataSource(data=dict(x=[], y=[]))
+ 
+# 创建图表
+plot = figure(plot_height=300, plot_width=800, title="实时数据可视化",
+              x_axis_type="datetime", y_range=[0, 100])
+ 
+# 添加折线图
+line = plot.line(x='x', y='y', source=source, line_width=2)
+ 
+# 更新数据
+@gen.coroutine
+def update():
+    new_data = dict(
+        x=[datetime.now()],
+        y=[random.randint(0, 100)]
+    )
+    source.stream(new_data)
+ 
+# 定时更新数据
+callback = PeriodicCallback(partial(update), 1000)
+callback.start()
+ 
+# 显示图表
+curdoc().add_root(plot)
+```
