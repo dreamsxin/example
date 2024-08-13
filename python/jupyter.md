@@ -60,4 +60,30 @@ jupyter notebook --generate-config
 - 单元格（Cell）操作
 - 
 
+## 动态
 
+```python
+
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+ 
+fig = plt.figure()
+ax = fig.add_subplot(1, 1, 1)
+ 
+x = np.arange(0, 2*np.pi, 0.01)
+line, = ax.plot(x, np.sin(x))
+ 
+def animate(i):
+    line.set_ydata(np.sin(x + i/10.0))
+    return line,
+ 
+def init():
+    line.set_ydata(np.sin(x))
+    return line,
+ 
+ani = animation.FuncAnimation(fig, animate, init_func=init,
+                              frames=200, interval=20, blit=False)
+ 
+plt.show()
+```
