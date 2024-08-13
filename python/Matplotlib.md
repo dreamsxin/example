@@ -113,3 +113,34 @@ for year in years:
 ani = animation.ArtistAnimation(fig, ims, interval=600)
 ani.save('us_population.gif')
 ```
+
+## 画数学函数图形
+
+```python
+import matplotlib.pyplot as plt
+import numpy as np
+
+# plt.rcParams['font.sans-serif'] = ['SimHei']
+# plt.rcParams['axes.unicode_minus'] = False
+# %matplotlib inline
+
+x = np.linspace(0, 5, 100)
+y1 = 5-np.sqrt(25-x**2)
+y2 = np.sqrt(5*x-x**2)
+
+plt.figure(figsize=(5, 5))
+
+plt.plot(x, y1, label='扇形y=5-$\sqrt{25-x^2}$')
+plt.plot(x, y2, label='圆形y=$\sqrt{5x-x^2}$')
+
+plt.fill_between(x[y1 <= y2], y1[y1 <= y2], y2[y1 <= y2])
+
+plt.xlim(0, 5)
+plt.ylim(0, 5)
+
+plt.axvline(4, ymin=0, ymax=0.4, color="r", ls="--")
+
+plt.legend()
+
+plt.show()
+```
