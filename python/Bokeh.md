@@ -716,6 +716,8 @@ curdoc().add_root(plot)
 
 ## 数学符号
 
+建议在 Jupyter Lab 中使用，Jupyter notebook 中 title 无法正常显示数学符号。
+
 https://docs.bokeh.org/en/latest/docs/user_guide/styling/mathtext.html
 
 ```python
