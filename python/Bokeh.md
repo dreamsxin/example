@@ -534,6 +534,8 @@ https://docs.bokeh.org/en/latest/docs/reference/plotting/figure.html=
 
 默认 `marker = 'circle'`
 
+### 圆形
+
 ```python
 from bokeh.plotting import figure, show
 
@@ -553,4 +555,81 @@ plot = figure(width=400, height=400)
 plot.circle(x=[1, 2, 3, 4, 5], y=[6, 7, 2, 4, 5], size=20, color="navy", alpha=0.5) # radius=0.2 占用数据空间的百分比
 
 show(plot)
+```
+
+### 正方形
+
+```python
+from bokeh.plotting import figure, show
+
+p = figure(width=400, height=400)
+
+# add a square scatter renderer with a size, color, and alpha
+p.scatter([1, 2, 3, 4, 5], [6, 7, 2, 4, 5], marker="square", size=20, color="olive", alpha=0.5)
+
+# show the results
+show(p)
+```
+
+### 其他类型
+https://github.com/bokeh/bokeh/blob/branch-3.6/examples/basic/scatters/markertypes.py
+```python
+from bokeh.core.enums import MarkerType
+from bokeh.plotting import figure, show
+
+bases = [
+    "asterisk",
+    "circle",
+    "cross",
+    "dash",
+    "diamond",
+    "dot",
+    "hex",
+    "inverted_triangle",
+    "plus",
+    "square",
+    "star",
+    "triangle",
+    "x",
+    "y",
+]
+
+kinds = [
+    "",
+    "cross",
+    "dot",
+    "pin",
+    "x",
+    "y",
+]
+
+data = []
+
+for base in bases:
+    for kind in kinds:
+        name = f"{base}_{kind}" if kind else base
+        if name in MarkerType:
+            data.append((name, base, kind))
+
+marker, base, kind = zip(*data)
+
+p = figure(
+    x_range=kinds,
+    y_range=list(reversed(bases)),
+    toolbar_location=None,
+    x_axis_location="above",
+)
+p.grid.grid_line_color = None
+p.axis.major_tick_line_color = None
+
+p.scatter(
+    marker=marker,
+    x=kind,
+    y=base,
+    size=25,
+    fill_alpha=0.4,
+    fill_color="orange",
+)
+
+show(p)
 ```
