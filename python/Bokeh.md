@@ -68,6 +68,25 @@ p.line(df.hour, df.pv, legend_label="PV", line_width=2)
 show(p)
 ```
 
+## Palette
+https://docs.bokeh.org/en/latest/docs/reference/palettes.html
+```python
+from bokeh.models import DatetimeTickFormatter
+from bokeh.palettes import Bokeh, Magma, Inferno, Plasma, Viridis, Cividis
+from bokeh.plotting import figure, output_notebook,  show
+
+output_notebook()
+
+p = figure(title="UV/PV/IP", x_axis_label='date', y_axis_label='num', x_axis_type="datetime")
+
+# add a line renderer with legend and line thickness to the plot
+p.line(df.hour, df.pv, legend_label="PV", line_width=2, color = Bokeh[3][0])
+p.line(df.hour, df.uv, legend_label="UV", line_width=2, line_dash=[4, 4], color = Bokeh[3][1])
+
+# show the results
+show(p)
+```
+
 ## HoverTool
 Bokeh中的一个工具，用于在鼠标悬停时显示数据点的信息。要使用HoverTool，首先需要导入HoverTool类，然后将其添加到图形对象的tools属性中。接下来，可以通过传递一个Tooltip对象来自定义悬停时显示的内容。
 ```python
