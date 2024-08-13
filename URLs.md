@@ -2659,6 +2659,12 @@ https://github.com/openstreetmap/cgimap
 
 # Python
 
+https://github.com/pokepetter/ursina
+
+https://github.com/flareteam/flare-game
+
+https://github.com/SFTtech/openage
+
 https://github.com/bokeh/bokeh
 
 https://github.com/holoviz/hvplot
