@@ -445,3 +445,44 @@ p.scatter('x', 'y', size=20, source=source)
 
 show(p)
 ```
+
+## ColumnDataSource
+
+```python
+from bokeh.plotting import figure
+from bokeh.models import ColumnDataSource
+
+# create a Python dict as the basis of your ColumnDataSource
+data = {'x_values': [1, 2, 3, 4, 5],
+        'y_values': [6, 7, 2, 3, 6]}
+
+# create a ColumnDataSource by passing the dict
+source = ColumnDataSource(data=data)
+
+# create a plot using the ColumnDataSource's two columns
+p = figure()
+p.circle(x='x_values', y='y_values', source=source)
+```
+
+```python
+from bokeh.models import ColumnDataSource
+# from bokeh.models import DatetimeTickFormatter
+# from bokeh.palettes import Bokeh, Magma, Inferno, Plasma, Viridis, Cividis
+# from bokeh.plotting import figure, output_notebook,  show
+
+source = ColumnDataSource(data=df)
+
+output_notebook()
+
+p = figure(title="UV/PV/IP", x_axis_label='date', y_axis_label='num', x_axis_type="datetime")
+
+# add a line renderer with legend and line thickness to the plot
+p.line(x='hour', y="pv", source=source, legend_label="PV", line_width=2, color = Bokeh[6][0])
+p.line(x='hour', y="uv", source=source, legend_label="UV", line_width=2, line_dash=[4, 4], color = Bokeh[6][2])
+p.line(x='hour', y="ip", source=source, legend_label="IP", line_width=2, line_dash=[4, 4], color = Bokeh[6][4])
+
+p.add_tools(HoverTool(tooltips=[("date", "@hour{%F}")], formatters={"@hour": "datetime"}))
+
+# show the results
+show(p)
+```
