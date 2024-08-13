@@ -50,6 +50,28 @@ plot.title.text = "New Title"
 push_notebook(handle=handle)
 ```
 
+## Legend
+```python
+from bokeh.models import DatetimeTickFormatter
+from bokeh.palettes import Bokeh, Magma, Inferno, Plasma, Viridis, Cividis
+from bokeh.plotting import figure, output_notebook,  show
+
+output_notebook()
+
+p = figure(title="UV/PV/IP", x_axis_label='date', y_axis_label='num', x_axis_type="datetime")
+
+# add a line renderer with legend and line thickness to the plot
+p.line(df.hour, df.pv, legend_label="PV", line_width=2, color = Bokeh[6][0])
+p.line(df.hour, df.uv, legend_label="UV", line_width=2, line_dash=[4, 4], color = Bokeh[6][2])
+p.line(df.hour, df.ip, legend_label="IP", line_width=2, line_dash=[4, 4], color = Bokeh[6][4])
+
+# 需要在添加图例之后设置
+p.legend.location = "bottom_left"
+
+# show the results
+show(p)
+```
+
 ## Formatter
 
 ```python
