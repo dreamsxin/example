@@ -713,3 +713,8 @@ callback.start()
 # 显示图表
 curdoc().add_root(plot)
 ```
+
+## 数学符号
+
+https://docs.bokeh.org/en/latest/docs/user_guide/styling/mathtext.html
+
