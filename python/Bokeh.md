@@ -20,7 +20,7 @@ p.line(x, y, legend_label="Temp.", line_width=2)
 show(p)
 ```
 
-## 
+## 指定生成文件名
 
 ```python
 from bokeh.plotting import figure, output_file, show
@@ -32,7 +32,7 @@ p.circle([1, 2, 3, 4, 5], [10, 15, 7, 12, 9], size=10)
 show(p)
 ```
 
-##
+## 
 
 ```python
 from bokeh.plotting import figure
@@ -485,4 +485,45 @@ p.add_tools(HoverTool(tooltips=[("date", "@hour{%F}")], formatters={"@hour": "da
 
 # show the results
 show(p)
+```
+
+## 主题
+
+内置5种主题：caliber, dark_minimal, light_minimal, night_sky, and contrast.
+```python
+from bokeh.io import curdoc
+from bokeh.plotting import figure, output_file, show
+
+x = [1, 2, 3, 4, 5]
+y = [6, 7, 6, 4, 5]
+
+output_file("dark_minimal.html")
+
+curdoc().theme = 'dark_minimal'
+
+p = figure(title='dark_minimal', width=300, height=300)
+p.line(x, y)
+
+show(p)
+```
+
+### 自定义主题
+```python
+from bokeh.themes import Theme
+curdoc().theme = Theme(filename="./theme.yml")
+```
+`theme.yml`
+```yml
+attrs:
+    figure:
+        background_fill_color: '#2F2F2F'
+        border_fill_color: '#2F2F2F'
+        outline_line_color: '#444444'
+    Axis:
+        axis_line_color: !!null
+    Grid:
+        grid_line_dash: [6, 4]
+        grid_line_alpha: .3
+    Title:
+        text_color: "white"
 ```
