@@ -333,6 +333,79 @@ text_input.on_change("value", my_text_input_handler)
 ```
 
 ### Tooltips
+
+```python
+from bokeh.models import DatetimeTickFormatter
+from bokeh.palettes import Bokeh, Magma, Inferno, Plasma, Viridis, Cividis
+from bokeh.plotting import figure, output_notebook,  show
+
+output_notebook()
+
+p = figure(title="UV/PV/IP", x_axis_label='date', y_axis_label='num', x_axis_type="datetime")
+
+# add a line renderer with legend and line thickness to the plot
+p.line(df.hour, df.pv, legend_label="PV", line_width=2, color = Bokeh[6][0])
+p.line(df.hour, df.uv, legend_label="UV", line_width=2, line_dash=[4, 4], color = Bokeh[6][2])
+p.line(df.hour, df.ip, legend_label="IP", line_width=2, line_dash=[4, 4], color = Bokeh[6][4])
+
+p.add_tools(HoverTool(tooltips=[("date", "@x{%F}")], formatters={"@x": "datetime"}))
+
+# show the results
+show(p)
+```
+
+https://docs.bokeh.org/en/latest/docs/user_guide/interaction/tools.html#ug-interaction-tools-formatting-tooltip-fields
+
+- $index
+index of selected point in the data source
+
+- $glyph_view
+a reference to the glyph view for the glyph that was hit
+
+- $name
+value of the name property of the hovered glyph renderer
+
+- $x
+x-coordinate under the cursor in data space
+
+- $y
+y-coordinate under the cursor in data space
+
+- $sx
+x-coordinate under the cursor in screen (canvas) space
+
+- $sy
+y-coordinate under the cursor in screen (canvas) space
+
+- $snap_x
+x-coordinate where the tooltip is anchored in data space
+
+- $snap_y
+y-coordinate where the tooltip is anchored in data space
+
+- $snap_sx
+x-coordinate where the tooltip is anchored in screen (canvas) space
+
+- $snap_sy
+y-coordinate where the tooltip is anchored in screen (canvas) space
+
+- $color
+colors from a data source, with the syntax: $color[options]:field_name. The available options are: hex (to display the color as a hex value), swatch (color data from data source displayed as a small color box).
+
+- $swatch
+color data from data source displayed as a small color box.
+
+Additionally, certain glyphs may report additional data that is specific to that glyph
+
+- $indices
+indices of all the selected points in the data source
+
+- $segment_index
+segment index of a selected sub-line (multi-line glyphs only)
+
+- $image_index
+pixel index into an image array (image glyphs only)
+
 ```python
 from bokeh.io import show
 from bokeh.layouts import column
@@ -348,3 +421,26 @@ input_with_html_tooltip = TextInput(value="default", title="Label2:", descriptio
 show(column(input_with_plaintext_tooltip, input_with_html_tooltip))
 ```
 
+```python
+from bokeh.models import ColumnDataSource
+from bokeh.plotting import figure, show
+
+source = ColumnDataSource(data=dict(
+    x=[1, 2, 3, 4, 5],
+    y=[2, 5, 8, 2, 7],
+    desc=['A', 'b', 'C', 'd', 'E'],
+))
+
+TOOLTIPS = [
+    ("index", "$index"),
+    ("(x,y)", "($x, $y)"), # $ 开头对应特殊字段，例如鼠标在数据或屏幕空间中的坐标 以@开头的字段名与ColumnDataSource中的列相关联。
+    ("desc", "@desc"),
+]
+
+p = figure(width=400, height=400, tooltips=TOOLTIPS,
+           title="Mouse over the dots")
+
+p.scatter('x', 'y', size=20, source=source)
+
+show(p)
+```
