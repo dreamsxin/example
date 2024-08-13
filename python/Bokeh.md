@@ -527,3 +527,30 @@ attrs:
     Title:
         text_color: "white"
 ```
+
+## 散点图
+
+https://docs.bokeh.org/en/latest/docs/reference/plotting/figure.html=
+
+默认 `marker = 'circle'`
+
+```python
+from bokeh.plotting import figure, show
+
+p = figure(width=400, height=400)
+
+# add a scatter circle renderer with a size, color, and alpha
+p.scatter([1, 2, 3, 4, 5], [6, 7, 2, 4, 5], size=20, color="navy", alpha=0.5)
+
+# show the results
+show(p)
+```
+效果等同
+```python
+from bokeh.plotting import figure, show
+
+plot = figure(width=400, height=400)
+plot.circle(x=[1, 2, 3, 4, 5], y=[6, 7, 2, 4, 5], size=20, color="navy", alpha=0.5) # radius=0.2 占用数据空间的百分比
+
+show(plot)
+```
