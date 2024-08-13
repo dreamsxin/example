@@ -3,6 +3,11 @@
 - https://github.com/latex3/latex2e
 - https://github.com/latex3/latex3
 
+## 编辑器
+
+- https://www.texstudio.org/
+- https://github.com/TeXworks/texworks
+
 # :sparkles: LaTeX 数学公式语法大全
 ## 保留字符
 
