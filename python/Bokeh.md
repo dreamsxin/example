@@ -49,3 +49,47 @@ handle = show(plot, notebook_handle=True)
 plot.title.text = "New Title"
 push_notebook(handle=handle)
 ```
+
+## Formatter
+
+```python
+from bokeh.models import DatetimeTickFormatter
+from bokeh.plotting import figure, output_notebook,  show
+
+output_notebook()
+
+p = figure(title="UV/PV/IP", x_axis_label='date', y_axis_label='num', x_axis_type="datetime")
+
+p.xaxis.formatter.context = DatetimeTickFormatter(days="%m-%d %H:%M")
+
+p.line(df.hour, df.pv, legend_label="PV", line_width=2)
+
+# show the results
+show(p)
+```
+
+## HoverTool
+Bokeh中的一个工具，用于在鼠标悬停时显示数据点的信息。要使用HoverTool，首先需要导入HoverTool类，然后将其添加到图形对象的tools属性中。接下来，可以通过传递一个Tooltip对象来自定义悬停时显示的内容。
+```python
+from bokeh.plotting import figure, show
+from bokeh.models import HoverTool, ColumnDataSource
+
+# 创建一个数据源
+data = {'x': [1, 2, 3, 4, 5],
+        'y': [6, 7, 2, 4, 5],
+        'label': ['A', 'B', 'C', 'D', 'E']}
+source = ColumnDataSource(data)
+
+# 创建一个图形对象
+p = figure(x_axis_label='X', y_axis_label='Y')
+
+# 绘制散点图
+p.circle(x='x', y='y', size=10, source=source)
+
+# 创建一个HoverTool，并设置显示内容
+hover = HoverTool(tooltips=[('Label', '@label'), ('Value', '($x, $y)')])
+p.add_tools(hover)
+
+# 显示图形
+show(p)
+```
