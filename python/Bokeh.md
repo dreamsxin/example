@@ -83,6 +83,7 @@ output_notebook()
 p = figure(title="UV/PV/IP", x_axis_label='date', y_axis_label='num', x_axis_type="datetime")
 
 p.xaxis.formatter.context = DatetimeTickFormatter(days="%m-%d %H:%M")
+# p.xaxis.formatter.days = '%Hh'
 
 p.line(df.hour, df.pv, legend_label="PV", line_width=2)
 
