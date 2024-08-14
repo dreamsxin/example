@@ -19,19 +19,21 @@ Seaborn 绘图函数根据图形层级分为两种类型：
 - relplot(关系绘图)：figure级函数，适合绘制 x,y变量连续型数据
   - scatterplot：axes级函数（散点图）
   - lineplot：axes级函数（折线图）
-- displot（分布统计绘图）：figure级函数，适合绘制 x连续
+
+- displot（分布统计绘图）：figure级函数，适合绘制 x 连续的分段统计
   - histplot：axes级函数（直方图）
   - kdeplot：axes级函数（核密度图）
   - ecdfplot：axes级函数（累积分布图）
   - rugplot：axes级函数（地毯图）
   - distplot：官方已废弃的过时api
+
 - catplot（类别统计绘图）：figure级函数，适合绘制x分类，y连续
   - striplot：axes级函数（分类散点条图）
   - swarmplot：axes级函数（分类散点簇图）
-  - boxplot：axes级函数（箱形图）
-  - violinplot：axes级函数（提琴图）
-  - barplot：axes级函数（柱形图）
-  - pointplot：axes级函数（分类统计点图）
+  - boxplot：axes级函数（箱形图），max，min 的 distribtuion
+  - violinplot：axes级函数（提琴图），max，min 的 distribtuion
+  - barplot：axes级函数（柱形图），aggegation
+  - pointplot：axes级函数（分类统计点图），aggegation
   - countplot：axes级函数（数量统计图）
 - lmplot（回归统计绘图）：：figure级函数
   - regplot：axes级函数（回归拟合图）
