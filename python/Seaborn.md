@@ -333,6 +333,25 @@ ax2=fig.add_subplot(122) # 参数 122 表示 将画布分割成 1 行 2 列，�
 sns.scatterplot(data=tips,x="total_bill",y="tip",hue='smoker',ax=ax1)
 sns.scatterplot(data=tips,x="total_bill",y="tip",hue='smoker',size='sex',ax=ax2)
 ```
+**使用 lineplot**
+```python
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+fmri=sns.load_dataset('fmri')
+
+fig=plt.figure()
+
+(ax1,ax2),(ax3,ax4)=fig.subplots(2,2)
+
+sns.lineplot(data=fmri,x="timepoint",y="signal",ax=ax1)
+sns.lineplot(data=fmri,x="timepoint",y="signal",hue='region',ax=ax2)
+sns.lineplot(data=fmri,x="timepoint",y="signal",hue='region',style='event',ax=ax3)
+sns.lineplot(data=fmri,x="timepoint",y="signal",hue='region',size='event',ax=ax4)
+
+plt.show()
+```
+
 ### Categorical plots 分类图表
 catplot 分类图表的接口，通过指定kind参数可以画出下面的八种图
 - stripplot 分类散点图
@@ -354,10 +373,54 @@ catplot 分类图表的接口，通过指定kind参数可以画出下面的八�
 ### Regression plots 回归图
 
 - lmplot 回归模型图
-- regplot 线性回归图
-- residplot 线性回归残差图
+  - regplot 线性回归图，axes级函数。绘制线性回归拟合。
+  - residplot 线性回归残差图，axes级函数。绘制线性回归的误差图。（不能用lmplot绘制resid图）
+
+| hue         | 分系列用不同的颜色绘制                                                  |
+|-------------|-----------------------------------------------------------------------|
+| col         | 按照某列值进行分组。                                                    |
+| row         | 按照某行值进行分组。                                                    |
+| c           | 置信区间的大小，取值0-100                                               |
+| order       | 指定拟合多项式阶数                                                     |
+| scatter     | 是否绘制散点图                                                         |
+| x_jitter    | 为x变量添加随机噪点。会导致绘制的散点移动，不会改变原始数据。                               |
+| y_jitter    | 为y变量添加随机噪点。会导致绘制的散点移动，不会改变原始数据。                               |
+| x_estimator | 参数值为函数，如np.mean。对每个x值的所有y值用函数计算，绘制得到的点，并绘制误差线。          |
+| x_bins      | 当x不是离散值时x_estimator可以配合x_bins指定计算点和误差线数量                      |
+| robust      | 对异常值降低权重                                                                 |
+| logistic    | logistic=True时，假设y取值只有2个比如True和False，并用statsmodels中的逻辑回归模型回归。 |
+
+```python
+import seaborn as sns
+
+sns.set_style("white")
+
+tips = sns.load_dataset("tips")
+
+sns.lmplot(data=tips, x="total_bill", y="tip")
+sns.residplot(data=tips, x="total_bill", y="tip")
+```
 
 ### Matrix plots 矩阵图
 - heatmap 热力图
+| annot      | 在单元格内显示数据。       |
+|------------|------------------|
+| fmt        | 设置annot参数数据显示格式。 |
+| cbar       | 是否显示颜色条。         |
+| cmap       | 设置colormap。      |
+| square     | 单元格是否方形。         |
+| linewidths | 设置单元格线条宽度。       |
+| linecolor  | 设置单元格线条颜色。       |
+
 - clustermap 聚集图
 
+
+```python
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+data = np.random.rand(10, 10)
+
+sns.heatmap(data=data, annot=True, fmt=".2f")
+```
