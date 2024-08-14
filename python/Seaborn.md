@@ -183,6 +183,25 @@ sns.despine()
 
 https://seaborn.pydata.org/tutorial/error_bars.html
 
+相同 X 轴上，存在多个 Y 值，用到。
+```python
+import seaborn as sns
+sns.set_theme(style="darkgrid")
+
+# Load an example dataset with long-form data
+fmri = sns.load_dataset("fmri")
+
+# Plot the responses for different events and regions
+sns.lineplot(x="timepoint", y="signal",
+             hue="region", style="event",
+             data=fmri)
+
+sns.relplot(data=fmri,x="timepoint",y="signal",kind="line")
+sns.relplot(data=fmri,x="timepoint",y="signal",kind="line", errorbar=None)
+
+plt.show
+```
+
 ## 图表类型
 
 seaborn 图表一共有5个大类。
