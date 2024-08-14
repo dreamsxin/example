@@ -412,7 +412,14 @@ plt.show()
   - kdeplot：核密度分布
   - ecdfplot：累积分布
   - rugplot：地毯图(用短线密度表示分布)。rugplot可以在其他图形（hist,kde,ecdf）中显示。不能使用figure级函数displot绘制。
-
+```python
+fig, ax =plt.subplots(1,5,constrained_layout=True, figsize=(15, 3))
+_ = sns.histplot(penguins, x="flipper_length_mm", stat="count", ax=ax[0])      # count, 也是默认值
+_ = sns.histplot(penguins, x="flipper_length_mm", stat="frequency", ax=ax[1])  # frequency 
+_ = sns.histplot(penguins, x="flipper_length_mm", stat="probability", ax=ax[2])# probability
+_ = sns.histplot(penguins, x="flipper_length_mm", stat="percent", ax=ax[3])    # percent
+_ = sns.histplot(penguins, x="flipper_length_mm", stat="density", ax=ax[4])    # density
+```
 **常用参数简介**
 
 | data | data为类字典数据或DataFrame。数组为参数时不需要指定data。  |
