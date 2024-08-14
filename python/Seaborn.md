@@ -16,16 +16,16 @@ Seaborn 绘图函数根据图形层级分为两种类型：
 - axes级：绘图函数在单个axes上绘图，函数返回值就是axes对象。
 - figure级：绘图函数在figure上绘图，返回一个 FacetGrid 对象，类似 Figure 对象，可以管理 figure。
 
-- relplot(关系绘图)：figure级函数
+- relplot(关系绘图)：figure级函数，适合绘制 x,y变量连续型数据
   - scatterplot：axes级函数（散点图）
   - lineplot：axes级函数（折线图）
-- displot（分布统计绘图）：figure级函数
+- displot（分布统计绘图）：figure级函数，适合绘制 x连续
   - histplot：axes级函数（直方图）
   - kdeplot：axes级函数（核密度图）
   - ecdfplot：axes级函数（累积分布图）
   - rugplot：axes级函数（地毯图）
   - distplot：官方已废弃的过时api
-- catplot（类别统计绘图）：figure级函数
+- catplot（类别统计绘图）：figure级函数，适合绘制x分类，y连续
   - striplot：axes级函数（分类散点条图）
   - swarmplot：axes级函数（分类散点簇图）
   - boxplot：axes级函数（箱形图）
