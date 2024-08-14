@@ -179,6 +179,10 @@ sns.despine(left=False, top=False, right=False, bottom=False)
 sns.despine()
 ```
 
+## 误差条
+
+https://seaborn.pydata.org/tutorial/error_bars.html
+
 ## 图表类型
 
 seaborn 图表一共有5个大类。
