@@ -203,10 +203,84 @@ relplot 函数为 figure 级函数，返回 FacetGrid 对象。FacetGrid 对象�
 - palette参数：指定hue分组的每组曲线的颜色。
 - markers参数：设置True使用默认点样式。False不显示点。可以用列表为style设置对应点样式(长度必须和style分组数相同)。
 - sizes参数：把size映射到一个指定的区间。
+折线图专用
+- dashes参数：bool设置是否使用默认线样式(实线)。用列表为style分组设置对应线样式(列表长度必须和style分组数相同)
+- sort参数：是否对x排序。默认为True。False则按照数组中x的顺序绘图。
+- ci 参数：当存在 x 值对应多个 y 值时，用置信区间绘制线条，默认显示 95% 置信区间(confidence intervals)。
+  - ci=None：表示不显示置信区间。
+  - ci='sd'：表示显示标准偏差(standard deviation)而不是置信区间。
+  - ci=数值：表示指定置信区间的数值。
+- estimator参数：聚合设置，默认为平均值
+  - estimator=None：不使用聚合，x对应多个y就每个x坐标绘制多个y点。
+  - estimator=func：聚合函数，比如mean，sum等。
 **其他参数**
-- legend参数：图例显示方式。False不现实图例。brief则hue和size的分组都取等间距样本作为图例。full则把分组内所有数值都显示为图例。auto则自动选择brief或full。
+- legend参数：图例显示方式，默认 True。False不显示图例。brief 则 hue 和 size 的分组都取等间距样本作为图例。full 则把分组内所有数值都显示为图例。auto 则自动选择 brief 或 full。
 - height参数：每个子图的高度(单位inch)
 - aspect参数：宽度=aspect×高度
+
+> hue,style,size类似，都是用于分组，hue根据颜色分组，style根据点先样式分组，size根据点大小或线粗细分组。每个组在曲线图中就是绘制一根单独的曲线。
+
+**tips 数据集示例散点图**
+数据集为一个餐厅的小费数据。
+total_bill为总账单、tip为小费金额；
+sex为消费者性别，smoker为是否抽烟，size为用餐人数。
+day、time分别为日期、时间。
+
+```python
+import seaborn as sns
+
+tips = sns.load_dataset("tips")
+
+sns.relplot(data=tips,x='total_bill',y='tip') #观察账单和小费的关系，绘制散点图
+sns.relplot(data=tips,x='total_bill',y='tip',kind='line') #观察账单和小费的关系，绘制折线图
+
+sns.relplot(data=tips,x='total_bill',y='tip',hue='day') #分别观察每天的账单和小费的关系。
+sns.relplot(data=tips,x='total_bill',y='tip',hue='smoker') #分别观察抽烟和不抽烟人群的账单和小费的关系。
+sns.relplot(data=tips,x='total_bill',y='tip',hue='size') #根据就餐人数，分别观察人群的账单和小费的关系。
+
+# palette
+sns.relplot(data=tips,x='total_bill',y='tip',hue='day',palette='coolwarm')  #用colormap指定颜色
+sns.relplot(data=tips,x='total_bill',y='tip',hue='day',palette='ch:start=2,rot=.5') #用cubehelix参数指定颜色
+sns.relplot(data=tips,x='total_bill',y='tip',hue='day',palette=('r','g','b','gray')) #用列表参数指定颜色
+
+# style分组
+sns.relplot(data=tips,x='total_bill',y='tip',style="smoker")  #抽烟的人一个样式，不抽烟的人一个样式。
+sns.relplot(data=tips,x='total_bill',y='tip',hue='smoker',style="smoker")  #组合样式
+sns.relplot(data=tips,x='total_bill',y='tip',hue='smoker',style="time") #组合样式
+
+# style+marker
+sns.relplot(data=tips,x='total_bill',y='tip',style="time",markers=["o","*"]) #用 markers 参数指定 style 分组点样式
+
+# size分组
+sns.relplot(data=tips,x='total_bill',y='tip',size="smoker")#size分组(根据是否抽烟，分组)
+sns.relplot(data=tips,x='total_bill',y='tip',hue='smoker',size="size")#hue+size
+sns.relplot(data=tips,x='total_bill',y='tip',hue='day',style="size",size="smoker")#hue+style+size
+
+# 设置大小数值 size数据的大小不太适合显示，比如都特别小，或者差异不明显不便于观看，用 sizes 参数可以把 size 映射到一个指定的区间
+sns.relplot(data=tips,x='total_bill',y='tip',hue='day',size="size",sizes=(10,200)) #把size映射到10-200区间，用于显示大小
+
+# 多子图
+sns.relplot(data=tips,x='total_bill',y='tip',col='smoker')     #不同子图绘制smoker不同的图形，绘制在不同的行 
+sns.relplot(data=tips,x='total_bill',y='tip',row='smoker',col='time') #用不同的行绘制子图区分smoker，不同的列子图区分time
+sns.relplot(data=tips,x='total_bill',y='tip',hue='smoker',col='time') #根据time绘制多列子图，每个子图用hue分组
+sns.relplot(data=tips,x='total_bill',y='tip',hue='smoker',col='day',col_wrap=2) #每列最多2个子图，超过2个自动换行
+```
+
+**随机数据集示例折线图**
+```python
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+import pandas as pd
+
+# 随机生成 500x2 （500行，2列）的数组
+df=pd.DataFrame(np.random.randn(500, 2).cumsum(axis=0), columns=["x", "y"])
+
+sns.relplot(data=df,x="x",y="y",kind="line")
+sns.relplot(data=df,x="x",y="y",kind="line",sort=False)
+plt.show()
+```
+
 
 ### Categorical plots 分类图表
 catplot 分类图表的接口，通过指定kind参数可以画出下面的八种图
