@@ -147,3 +147,42 @@ sns.despine(left=False, top=False, right=False, bottom=False)
 # 隐藏
 sns.despine()
 ```
+
+## 图表类型
+
+seaborn 图表一共有5个大类。
+
+### Relational plots 关系类图表
+
+relplot 关系类图表的接口，通过指定kind参数可以画出下面的两种图
+- scatterplot 散点图
+- lineplot 折线图
+
+### Categorical plots 分类图表
+catplot 分类图表的接口，通过指定kind参数可以画出下面的八种图
+- stripplot 分类散点图
+- swarmplot 能够显示分布密度的分类散点图
+- boxplot 箱图
+- violinplot 小提琴图
+- boxenplot 增强箱图
+- pointplot 点图
+- barplot 条形图
+- countplot 计数图
+
+### Distribution plot 分布图
+- jointplot 双变量关系图
+- pairplot 变量关系组图
+- distplot 直方图，质量估计图
+- kdeplot 核函数密度估计图
+- rugplot 将数组中的数据点绘制为轴上的数据
+
+### Regression plots 回归图
+
+- lmplot 回归模型图
+- regplot 线性回归图
+- residplot 线性回归残差图
+
+### Matrix plots 矩阵图
+- heatmap 热力图
+- clustermap 聚集图
+
