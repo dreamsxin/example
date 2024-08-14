@@ -434,7 +434,15 @@ _ = sns.histplot(penguins, x="flipper_length_mm", stat="density", ax=ax[4])    #
 | row,col   | 把row,col指定的数据按照行或列排列到不同的子图。                             |
 | palette | 指定hue分组的每组曲线的颜色。                                        |
 
+```python
+sns.displot(tips, x="total_bill")
+sns.displot(tips, x="total_bill", kind="kde", fill=True, cmap="mako")
 
+penguins = sns.load_dataset("penguins")
+sns.displot(penguins, x="flipper_length_mm", kind="kde")
+
+sns.displot(penguins, x="bill_length_mm", y="bill_depth_mm", hue="species", kind="kde")
+```
 
 ### Regression plots 回归图
 
