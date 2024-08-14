@@ -144,3 +144,26 @@ plt.legend()
 
 plt.show()
 ```
+
+## 画布布局
+
+```python
+import matplotlib.pyplot as plt
+from numpy import *
+
+x = [1, 2, 3, 4, 5]
+y = [1, 4, 9, 16, 20]
+fig = plt.figure()
+
+#修改处，原先是 121
+fig.add_subplot(211)
+plt.scatter(x, y)
+
+#新增 223 
+fig.add_subplot(223)
+plt.scatter(x, y)
+
+fig.add_subplot(224)
+plt.scatter(x, y)
+plt.show()
+```
