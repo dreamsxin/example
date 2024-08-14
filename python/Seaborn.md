@@ -206,10 +206,13 @@ relplot 函数为 figure 级函数，返回 FacetGrid 对象。FacetGrid 对象�
 折线图专用
 - dashes参数：bool设置是否使用默认线样式(实线)。用列表为style分组设置对应线样式(列表长度必须和style分组数相同)
 - sort参数：是否对x排序。默认为True。False则按照数组中x的顺序绘图。
-- ci 参数：当存在 x 值对应多个 y 值时，用置信区间绘制线条，默认显示 95% 置信区间(confidence intervals)。
-  - ci=None：表示不显示置信区间。
-  - ci='sd'：表示显示标准偏差(standard deviation)而不是置信区间。
-  - ci=数值：表示指定置信区间的数值。
+- ci 参数（已改名为 errorbar 误差条）：当存在 x 值对应多个 y 值时，用置信区间绘制线条，默认显示 95% 置信区间(confidence intervals)。
+  - None：表示不显示置信区间。
+  - 'pi'：范围，数据两端的差值 max(s)-min(s)
+  - 'sd'：标准差，表示显示标准偏差(standard deviation)而不是置信区间。
+  - 'se'：标准误差
+  - ci：置信区间，通常取95%
+  - 自定义：errorbar：lambda x: (x.min()), x.max())等价于errorbar=('pi', 100)
 - estimator参数：聚合设置，默认为平均值
   - estimator=None：不使用聚合，x对应多个y就每个x坐标绘制多个y点。
   - estimator=func：聚合函数，比如mean，sum等。
@@ -280,6 +283,13 @@ sns.relplot(data=df,x="x",y="y",kind="line")
 sns.relplot(data=df,x="x",y="y",kind="line",sort=False)
 plt.show()
 ```
+**fmri 数据集示例折线图**
+fmri 是一组事件相关功能核磁共振成像数据。
+subject 为14个测试者。
+timpoint为时间点。
+event为事件，分为刺激stim和暗示cue。
+region为区域，分为额叶和前叶。
+signal为信号。
 
 
 ### Categorical plots 分类图表
