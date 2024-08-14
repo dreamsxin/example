@@ -2659,6 +2659,8 @@ https://github.com/openstreetmap/cgimap
 
 # Python
 
+https://github.com/JelteF/PyLaTeX
+
 https://github.com/pokepetter/ursina
 
 https://github.com/flareteam/flare-game
