@@ -363,12 +363,70 @@ catplot 分类图表的接口，通过指定kind参数可以画出下面的八�
 - barplot 条形图
 - countplot 计数图
 
+**kind**
+**分类散点**
+- strip 散点条图：数据按x分组，所有x相同的y值，在x坐标上方绘制散点，散点形成条状。
+  - hue参数：分组按不同颜色绘图
+  - dodge参数：是否将不同的组分开绘制
+  - jitter参数：设置抖动量，False表示散点条绘制在一条线上。默认为True。
+- swarm 散点群图：类似散点条图，但是y值相同的点显示为树状。
+**分类分布图**
+- box 箱型图图：每一组数据分别统计中位数、25%位置数、75%位置数，以及高位和低位值。
+  - hue参数：分组按不同颜色绘图
+  - dodge参数：是否将不同的组分开绘制
+  - orient参数：“v”|“h”，设置box图方向
+  - whis参数：设置低位和高位点系数，高位、低位数公式：中位数±whis*(75%位数-25%位数)，whis设置为np.inf时，低位和高位值取min和max。
+- boxen 增强型箱型图：绘制更多的分位数
+  - hue,分组按不同颜色绘图
+  - dodge,是否将不同的组分开绘制
+  - orient,“v”|“h”，设置boxen图方向
+  - k_depth,箱形图箱数设置默认值tukey，还可以是“proportion”, “trustworthy”, “full”，都是内置的确定方法。当为数字是表示具体箱形框数量。
+
+- violin 小提琴图，越宽的地方表示y值密度越大，小提琴图由轮廓和内部图形组成：
+  轮廓是kde核密度估计曲线。
+  内部是箱型图的四分位数。
+**分类估计图**
+- bar：柱形图应用函数获取估计值（默认采用平均值），然后绘制成柱形图。柱形图上方的短线为置信区间
+- point：点图绘制平均值曲线和置信区间，和lineplot非常像，显示的线条和短线和lineplot也完全一致。
+- count：计数图对指定x或y坐标中每个值出现的次数进行统计，绘制成柱形图。柱形高度坐标值统计个数。
+```python
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+tips = sns.load_dataset("tips")
+
+sns.catplot(data=tips, x="day", y="total_bill", kind="strip")
+sns.catplot(data=tips, x="day", y="total_bill", kind="swarm")
+sns.catplot(data=tips, x="day", y="total_bill", kind="box")
+sns.catplot(data=tips, x="day", y="total_bill", kind="violin")
+
+plt.show()
+```
+
 ### Distribution plot 分布图
-- jointplot 双变量关系图
-- pairplot 变量关系组图
-- distplot 直方图，质量估计图
-- kdeplot 核函数密度估计图
-- rugplot 将数组中的数据点绘制为轴上的数据
+分布就是了解数据变量的分布规律的。seaborn中“分布”绘图函数共5个：
+- displot：通过kind参数指定为 hist,kde,ecdf。默认为hist。为 figure 级函数，返回 FacetGrid 对象，类似于figure。
+  - histplot：直方图
+  - kdeplot：核密度分布
+  - ecdfplot：累积分布
+  - rugplot：地毯图(用短线密度表示分布)。rugplot可以在其他图形（hist,kde,ecdf）中显示。不能使用figure级函数displot绘制。
+
+**常用参数简介**
+
+| data | data为类字典数据或DataFrame。数组为参数时不需要指定data。  |
+|--------|----------------------------------------|
+| x,y  | 只指定x时，表示统计单变量x的分布。x,y都指定时表示双变量分布。      |
+| kind | 绘图类型。“hist”,直方图，"kde"核密度图，"ecdf"累积分布图。 |
+
+
+**分组聚合参数**
+
+| hue     | 用不同颜色对数组分组。hue可以是列表或者data的key。hue的每一个数据绘制一组分布图，给一个图例标签。 |
+|-----------|---------------------------------------------------------|
+| row,col   | 把row,col指定的数据按照行或列排列到不同的子图。                             |
+| palette | 指定hue分组的每组曲线的颜色。                                        |
+
+
 
 ### Regression plots 回归图
 
