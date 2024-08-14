@@ -146,6 +146,34 @@ plt.show()
 ```
 
 ## 画布布局
+- plt.figure()
+  创建一个画布。参数num：相当于给画布定义一个id，如果给出了num，之前没有使用，则创建一个新的画布；如果之前使用了这个num，那么返回那个画布的引用，在之前的画布上继续作图。如果没有给出num, 则每次创建一块新的画布。
+- add_subplot()
+  向图中加入子图的轴。返回子图的坐标轴axes。可通过 返回的 ax 设置各种图的参数。
+- add_subplot()
+ 向图中加入子图的轴。只影响当前子图
+```python
+import numpy as np
+from matplotlib import pyplot as plt
+from scipy.interpolate import interp1d
+ 
+x=np.linspace(0,10*np.pi,num=20)
+y=np.sin(x)
+yn=np.cos(x)
+f1=interp1d(x,y,kind='linear')#线性插值
+f2=interp1d(x,y,kind='cubic')#三次样条插值
+x_pred=np.linspace(0,10*np.pi,num=1000)
+y1=f1(x_pred)
+y2=f2(x_pred)
+plt.figure(1)
+plt.plot(x_pred,y1,'r',label='linear')
+plt.plot(x_pred,y2,'b--',label='cubic')
+plt.legend()
+# plt.show()
+plt.figure(2)
+plt.plot(x,yn,label='new')
+plt.legend()
+```
 
 ```python
 import matplotlib.pyplot as plt
@@ -166,4 +194,36 @@ plt.scatter(x, y)
 fig.add_subplot(224)
 plt.scatter(x, y)
 plt.show()
+```
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+ 
+# Fixing random state for reproducibility
+np.random.seed(19680801)
+ 
+ 
+x = np.random.rand(10)
+y = np.random.rand(10)
+z = np.sqrt(x**2 + y**2)
+ 
+plt.subplot(321)
+plt.scatter(x, y, s=80, c=z, marker=">")
+ 
+plt.subplot(322)
+plt.scatter(x, y, s=80, c=z, marker=(5, 0))
+ 
+verts = np.array([[-1, -1], [1, -1], [1, 1], [-1, -1]])
+plt.subplot(323)
+plt.scatter(x, y, s=80, c=z, marker=verts)
+ 
+plt.subplot(324)
+plt.scatter(x, y, s=80, c=z, marker=(5, 1))
+ 
+plt.subplot(325)
+plt.scatter(x, y, s=80, c=z, marker='+')
+ 
+plt.subplot(326)
+plt.scatter(x, y, s=80, c=z, marker=(5, 2))
 ```
