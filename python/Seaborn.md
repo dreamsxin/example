@@ -204,7 +204,6 @@ sns.relplot(data=fmri,x="timepoint",y="signal",kind="line", errorbar=None)
 
 plt.show
 ```
-
 ## 图表类型
 
 seaborn 图表一共有5个大类。
@@ -491,3 +490,34 @@ data = np.random.rand(10, 10)
 
 sns.heatmap(data=data, annot=True, fmt=".2f")
 ```
+
+
+## FacetGrid
+
+relplot、catplot、lmplot等，这些函数可以通过col、row等在一个Figure中绘制多个图。这些函数之所以有这些功能，是因为他们的底层使用了FacetGrid来组装这些图形。今天我们就来学习FacetGrid的使用。
+
+先创建一个FacetGrid对象，然后再调用这个对象的map方法。其中map方法的第一个参数是一个函数，后续map将调用这个函数来绘制图形。后面的参数就是传给这个函数的参数。示例代码如下：
+
+```python
+# 在该网格上可视化数据的主要方法是使用该FacetGrid.map()方法。
+# 为其提供绘图功能以及要绘制的数据框中的变量名称。让我们使用直方图来
+# 查看每个子集中tip的分布。
+g = sns.FacetGrid(tips, col="time")
+g.map(plt.hist, "tip");
+```
+
+| 参数                          | 描述          | 对应使用了FacetGrid函数            |
+|-----------------------------|-------------|-----------------------------|
+| plt.plot/sns.lineplot       | 绘制折线图       | sns.relplot(kind="line")    |
+| plt.hexbin                  | 绘制六边形图形     | sns.jointplot(kind="hex")   |
+| plt.hist                    | 绘制直方图       | sns.distplot                |
+| plt.scatter/sns.scatterplot | 绘制散点图       | sns.relplot(kind="scatter") |
+| sns.stripplot               | 绘制分类散点图     | sns.catplot(kind="strip")   |
+| sns.swarmplot               | 绘制散开来的分类散点图 | sns.catplot(kind="swarm")   |
+| sns.boxplot                 | 绘制箱线图       | sns.catplot(kind="box")     |
+| sns.violinplot              | 绘制小提琴图      | sns.catplot(kind="violin")  |
+| sns.pointplot               | 绘制点线图       | sns.catplot(kind="point")   |
+| sns.barplot                 | 绘制条形图       | sns.catplot(kind="bar")     |
+| sns.countplot               | 绘制数量柱状图     | sns.catplot(kind="count")   |
+| sns.regplot                 | 绘制带有回归线的散点图 | sns.lmplot                  |
+
