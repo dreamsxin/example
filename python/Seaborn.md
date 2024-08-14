@@ -183,7 +183,8 @@ sns.despine()
 
 https://seaborn.pydata.org/tutorial/error_bars.html
 
-相同 X 轴上，存在多个 Y 值，用到。
+相同 X 轴上，存在多个 Y 值，用到。线条显示的是y的平均值，填充色把y的95%置信区间范围显示出来了。
+
 ```python
 import seaborn as sns
 sns.set_theme(style="darkgrid")
@@ -314,7 +315,24 @@ event为事件，分为刺激stim和暗示cue。
 region为区域，分为额叶和前叶。
 signal为信号。
 
+**使用 scatterplot**
+scatterplot 是 axes 级函数
 
+返回值是一个axes，可以用ax指定axes。不指定ax时，会在默认的axes中绘图。不指定ax，多次调用scatterplot绘图都会在默认（同一个）的axes中绘图。
+```python
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+tips=sns.load_dataset('tips')
+
+fig=plt.figure()
+ax1=fig.add_subplot(121) # 参数 121 表示 将画布分割成 1 行 2 列，且坐标图位于从左到右，从上到下的第一个位置
+ax2=fig.add_subplot(122) # 参数 122 表示 将画布分割成 1 行 2 列，且坐标图位于从左到右，从上到下的第二个位置
+#ax1,ax2=fig.subplots(1,2)
+
+sns.scatterplot(data=tips,x="total_bill",y="tip",hue='smoker',ax=ax1)
+sns.scatterplot(data=tips,x="total_bill",y="tip",hue='smoker',size='sex',ax=ax2)
+```
 ### Categorical plots 分类图表
 catplot 分类图表的接口，通过指定kind参数可以画出下面的八种图
 - stripplot 分类散点图
