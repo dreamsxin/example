@@ -444,6 +444,23 @@ sns.displot(penguins, x="flipper_length_mm", kind="kde")
 sns.displot(penguins, x="bill_length_mm", y="bill_depth_mm", hue="species", kind="kde")
 ```
 
+**按照日期分布图**
+```python
+import datetime
+
+# dflogin['date'] = np.array([d.toordinal() for d in dflogin['trace_time']])
+dflogin['date'] = np.array([d.timestamp() for d in dflogin['trace_time']])
+sns.displot(dflogin, x="date", kind="kde")
+
+ticks_locations, _ = plt.xticks();
+# Get the labels for those positions
+#labels = [datetime.datetime.fromordinal(int(t)).strftime("%Y-%m-%d %H:%M") for t in ticks_locations]
+labels = [datetime.datetime.fromtimestamp(int(t)).strftime("%Y-%m-%d %H:%M") for t in ticks_locations]
+
+plt.xticks(ticks_locations, labels, rotation=90)
+plt.title("Date distribution");
+```
+
 ### Regression plots 回归图
 
 - lmplot 回归模型图
