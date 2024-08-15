@@ -49,7 +49,7 @@ df['day_filled'] = df['day'].fillna(0)  # 将缺失的day替换为0（或其他�
 print(df)
 ```
 
-## 
+## groupBy
 
 ```python
 import pandas as pd
@@ -130,6 +130,31 @@ summary = df.groupby(['date', 'hour'])['value'].sum()
 print(summary)
 ```
 
+## resample
+
+按周累计上述数据，重新绘图
+```python
+weekly = data.resample("W").sum()
+weekly.plot(style=[':','--','-'])
+plt.ylabel("Weekly bicycle count")
+```
+计算30天的移动平均值
+```python
+daily = data.resample("D").sum()
+
+daily.rolling(30, center=True).mean().plot(style=[':','--','-'])
+plt.ylabel("mean of 30 days count")
+```
+
+## 移动平均
+
+使用移动平均 来平滑曲线
+
+高斯分布时间窗口：窗口宽度=50天 窗口内高斯平滑宽度=10天
+```python
+daily.rolling(50, center=True,
+win_type="gaussian").sum(std=10).plot(style=[':','--','-'])
+```
 ## melt
 类似字典，能对行和列重命名
 
