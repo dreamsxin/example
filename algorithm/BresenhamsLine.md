@@ -32,7 +32,7 @@ def easyway(x0,y0,x1,y1):
 
 ## 推导
 
-由于线段的斜率在0到1之间，因此对于点 $(x_k,y_k)$ ，下个点只可能是 $(x_k+1,y_k)$ 或 $(x_k+1,y_k+1)$ ，其中 $k$ 表示横坐标 $x$ 移动的次数，如图所示。
+由于线段的斜率在0到1之间，因此对于点 $(x_k,y_k)$ ，下个点只可能是 $(x_k+1,y_k)$ 或 $(x_k+1,y_k+1)$ 或 $(x_k,y_k+1)$ ，其中 $k$ 表示横坐标 $x$ 移动的次数，如图所示。
 
 ![next point](https://github.com/dreamsxin/example/blob/master/algorithm/img/bresenham_next-point.png?raw=true)
 
