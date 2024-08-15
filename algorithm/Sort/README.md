@@ -87,7 +87,7 @@ def insert_sort(nums):
 ![https://github.com/dreamsxin/example/blob/master/algorithm/Sort/快速排序.png](https://github.com/dreamsxin/example/blob/master/algorithm/Sort/快速排序.png?raw=true)
 
 
-1. 我们一般已第一个数为partition，然后由两个标兵分别指向开始和结尾。
+1. 我们一般以第一个数为partition，然后由两个标兵分别指向开始和结尾。
 2. 由最右边的橙色箭头开始往前扫描，直到扫描到比partition小的数字停下来，然后再由蓝色箭头向后扫描，直到遇见比partition大的数字停下来。然后交换停下来的两个数字。
 3. 就这样按照顺序，一直扫描。知道橙蓝两个箭头相遇，将相遇时的数字与partition交换就行了。
 
