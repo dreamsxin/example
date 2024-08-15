@@ -37,8 +37,8 @@ def bubble(nums):
 
 ![https://github.com/dreamsxin/example/blob/master/algorithm/Sort/选择排序.png](https://github.com/dreamsxin/example/blob/master/algorithm/Sort/选择排序.png?raw=true)
 
-1. 在第一次遍历中，从最开始到最后。找到最大的数，并于最后一个交换。
-2. 在第二次中，从最开始到倒数第二个。找到最大的数，并于倒数第二个交换。
+1. 在第一次遍历中，从最开始到最后。找到最大的数，并与最后一个交换。
+2. 在第二次中，从最开始到倒数第二个。找到最大的数，并与倒数第二个交换。
 3. 以此类推，循环n次。
 
 ```python
