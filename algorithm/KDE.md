@@ -191,9 +191,9 @@ $$h = 0.9*min(A,\sqrt{\frac{1}{\ln(2)}}*D_m)*n^{-0.2}$$
 - 加权平均中心：指 $n$ 个 POI 点的加权平均中心，即经度和纬度分别乘以权重再取平均；
 - 标准距离计算公式：
 
-  $$
-  SD = \sqrt{\frac{\sum_{i=1}^n(x_i-\bar X)^2}{n}+\frac{\sum_{i=1}^n(y_i-\bar Y)^2}{n}+\frac{\sum_{i=1}^n(z_i-\bar Z)^2}{n}}
-  $$
+$$
+SD = \sqrt{\frac{\sum_{i=1}^n(x_i-\bar X)^2}{n}+\frac{\sum_{i=1}^n(y_i-\bar Y)^2}{n}+\frac{\sum_{i=1}^n(z_i-\bar Z)^2}{n}}
+$$
 
   其中：
 
@@ -203,9 +203,11 @@ $$h = 0.9*min(A,\sqrt{\frac{1}{\ln(2)}}*D_m)*n^{-0.2}$$
 
 - 加权标准距离计算公式：
 
-  $$
-  SD_w = \sqrt{\frac{\sum_{i=1}^n w_i(x_i-\bar X_w)^2}{\sum_{i=1}^{n}w_i}+\frac{\sum_{i=1}^nw_i(y_i-\bar Y_w)^2}{\sum_{i=1}^{n}w_i}+\frac{\sum_{i=1}^nw_i(z_i-\bar Z_w)^2}{\sum_{i=1}^{n}w_i}}
-  $$
+$$
+\begin{align}
+SD_w = \sqrt{\frac{\sum_{i=1}^n w_i(x_i-\bar X_w)^2}{\sum_{i=1}^{n}w_i}+\frac{\sum_{i=1}^nw_i(y_i-\bar Y_w)^2}{\sum_{i=1}^{n}w_i}+\frac{\sum_{i=1}^nw_i(z_i-\bar Z_w)^2}{\sum_{i=1}^{n}w_i}}
+\end{align}
+$$
 
   其中：
 
