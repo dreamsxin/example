@@ -49,15 +49,15 @@
 |  90  |  60  | 3435  |    57     |     0.0005     |
 
 
-使用直方图进行[数据可视化如下](https://en.wikipedia.org/wiki/Histogram#/media/File:Travel_time_histogram_total_n_Stata.png)：
+使用直方图进行数据可视化如下：
 
-![Histogram of travel time (to work), US 2000 census. Area under the curve equals the total number of cases. This diagram uses Q/width from the table.](/img/in-post/kde/Travel_time_histogram_total_n_Stata.png)
+![Histogram of travel time (to work), US 2000 census. Area under the curve equals the total number of cases. This diagram uses Q/width from the table.](https://github.com/dreamsxin/example/blob/master/algorithm/img/Travel_time_histogram_total_n_Stata.png?raw=true))
 
 该直方图使用单位间隔的人数（频次/组距）表示为每个矩形的高度，因此每个矩形的面积表示该区间内的人数，矩形的总面积即为 12.4 亿。
 
-而当直方图使用（频次/组距/总数）表示为每个矩形的高度时，[数据可视化如下](https://en.wikipedia.org/wiki/Histogram#/media/File:Travel_time_histogram_total_1_Stata.png)：
+而当直方图使用（频次/组距/总数）表示为每个矩形的高度时，数据可视化如下：
 
-![Histogram of travel time (to work), US 2000 census. Area under the curve equals 1. This diagram uses Q/total/width from the table.](/img/in-post/kde/Travel_time_histogram_total_1_Stata.png)
+![Histogram of travel time (to work), US 2000 census. Area under the curve equals 1. This diagram uses Q/total/width from the table.](https://github.com/dreamsxin/example/blob/master/algorithm/img/Travel_time_histogram_total_1_Stata.png?raw=true))
 
 此时，矩形的面积表示该区间所占的频率，矩形的总面积为 1，该直方图也即**频率直方图**。
 
