@@ -15,3 +15,10 @@ docker run -d -p 3210:3210 \
   --name lobe-chat \
   lobehub/lobe-chat
 ```
+
+```shell
+git clone https://github.com/lobehub/lobe-chat.git
+cd lobe-chat
+pnpm install
+pnpm run dev
+```
