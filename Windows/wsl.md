@@ -7,6 +7,8 @@ DISM /Online /Cleanup-image /RestoreHealth 修复
 
 ```shell
 wsl --install --web-download
+wsl --list --verbose
+wsl --list --online
 ```
 
 ## Step 1 - Enable the Windows Subsystem for Linux
