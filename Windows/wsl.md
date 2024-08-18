@@ -5,14 +5,19 @@ Dism /Online /Cleanup-Image /ScanHealth   是扫描你全部系统文件并和�
 DISM /Online /Cleanup-image /RestoreHealth 修复
 ```
 
+```shell
+wsl --install --web-download
+```
+
 ## Step 1 - Enable the Windows Subsystem for Linux
 You must first enable the "Windows Subsystem for Linux" optional feature before installing any Linux distributions on Windows.
 
 Open PowerShell as Administrator and run:
 
 PowerShellCopy
-
+```shell
 dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+```
 We recommend now moving on to step #2, updating to WSL 2, but if you wish to only install WSL 1, you can now restart your machine and move on to Step 6 - Install your Linux distribution of choice. To update to WSL 2, wait to restart your machine and move on to the next step.
 
 ## Step 2 - Check requirements for running WSL 2
@@ -31,8 +36,9 @@ Before installing WSL 2, you must enable the Virtual Machine Platform optional f
 Open PowerShell as Administrator and run:
 
 PowerShellCopy
-
+```shell
 dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+```
 Restart your machine to complete the WSL install and update to WSL 2.
 
 ## Step 4 - Download the Linux kernel update package
