@@ -7,3 +7,8 @@ ollama run llama3.1
 ```shell
 mklink /D C:\Users\\Administrator\.ollama\models E:\.ollama
 ```
+
+##
+
+- OLLAMA_ORIGINS
+跨域
