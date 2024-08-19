@@ -59,3 +59,5 @@ adb shell getprop ro.build.version.release
   "appium:appActivity": ".Settings"
 }
 ```
+
+在 Appium Inspector 点击启动 Start Session 即可看到效果。
