@@ -8,6 +8,7 @@ https://developer.android.com/studio/install.html?hl=zh-cn
 ./Android/Sdk/tools/bin/sdkmanager  --list
 ./Android/Sdk/tools/bin/sdkmanager 'system-images;android-27;google_apis;x86'
 ./Android/Sdk/tools/bin/avdmanager create avd --force --name phalcon7 -k 'system-images;android-27;google_apis;x86' -p ~/Android/
+./Android/Sdk/tools/emulator -list-avds
 ./Android/Sdk/tools/emulator -avd phalcon7
 ```
 
