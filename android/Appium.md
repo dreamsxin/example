@@ -62,6 +62,9 @@ adb shell getprop ro.build.version.release
 
 在 Appium Inspector 点击启动 Start Session 即可看到效果。
 
+![Appium-Inspector](./img/Appium%20Inspector.png?raw=true)
+![Appium-Inspector](./img/Appium%20Inspector02.png?raw=true)
+
 **获取当前应用信息**
 只需要去掉appPackage、appActivity即可。
 ```json
