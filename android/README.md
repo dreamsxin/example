@@ -10,6 +10,7 @@ https://developer.android.com/studio/install.html?hl=zh-cn
 ./Android/Sdk/tools/bin/avdmanager create avd --force --name phalcon7 -k 'system-images;android-27;google_apis;x86' -p ~/Android/
 ./Android/Sdk/tools/emulator -list-avds
 ./Android/Sdk/tools/emulator -avd phalcon7
+./Android/Sdk/tools/emulator -avd phalcon7 host -dns-server 8.8.8.8
 ```
 
 ## JDK配置
