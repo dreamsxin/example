@@ -48,6 +48,17 @@ npm i --save-dev webdriverio
 adb devices
 # 查看设备版本
 adb shell getprop ro.build.version.release
+
+# 连接设备
+adb -s emulator-5554 shell
+# 设置代理
+adb shell settings put global http_proxy uname:pwd@host
+
+adb shell settings put system http_proxy [proxy address]:[proxy port]
+adb shell settings put system http_proxy_host [proxy address]
+adb shell settings put system http_proxy_port [proxy port]
+adb shell settings put system http_proxy_username [proxy username]
+adb shell settings put system http_proxy_password [proxy password]
 ```
 ```json
 {
