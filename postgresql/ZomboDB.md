@@ -54,7 +54,7 @@ CREATE INDEX idxproducts ON products
        USING zombodb ((products.*))
         WITH (url='localhost:9200/');
 ```
-还有一些其他索引选项来控制 Elasticsearch 分片和副本的数量。创建ZomboDB 索引时，不仅在 Postgres 中创建了一个索引，还在 Elasticsearch 中创建一个索引。
+还有一些其他索引选项来控制 Elasticsearch 分片和副本的数量，查看配置章节说明。创建ZomboDB 索引时，不仅在 Postgres 中创建了一个索引，还在 Elasticsearch 中创建一个索引。
 
 
 **说明**
@@ -71,3 +71,7 @@ SELECT *
 ```psql
 EXPLAIN SELECT * FROM products WHERE products ==> 'sports, box';
 ```
+
+## 配置
+
+https://github.com/zombodb/zombodb/blob/master/CONFIGURATION-SETTINGS.md
