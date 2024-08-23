@@ -55,7 +55,9 @@ SELECT ('{"foo": [true, "bar"], "tags": {"a": 1, "b": null}}'::jsonb || '{"sex":
 第四个参数默认为 `true`。
 
 ```sql
+-- 设置文本值
 SELECT jsonb_set('{"foo": [true, "bar"], "tags": {"a": 1, "b": null}}'::jsonb, '{foo}', '"test"'::jsonb)->'foo';
+SELECT jsonb_set('{"foo": [true, "bar"], "tags": {"a": 1, "b": null}}'::jsonb, '{foo}', to_jsonb('test'::text))->'foo';
 -- 不存在键值就不修改
 SELECT jsonb_set('{"foo": [true, "bar"], "tags": {"a": 1, "b": null}}'::jsonb, '{sex}', '1'::jsonb, false)->'sex';
 -- 不存在就新增键值
@@ -66,6 +68,8 @@ SELECT jsonb_set('{"foo": [true, "bar"], "tags": {"a": 1, "b": null}}'::jsonb, '
 
 ```sql
 SELECT to_jsonb(timestamp '2014-05-28 12:22:35.614298');
+SELECT to_jsonb(123)
+SELECT to_jsonb('123'::text)
 ```
 
 ## `jsonb_build*`
