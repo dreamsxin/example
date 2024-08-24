@@ -1023,6 +1023,8 @@ https://github.com/onyx-platform/onyx
 
 # GO
 
+https://github.com/syncthing/syncthing
+
 https://github.com/koho/frpmgr
 
 https://github.com/lxzan/gws
@@ -2668,6 +2670,8 @@ https://github.com/openstreetmap/chef
 https://github.com/openstreetmap/cgimap
 
 # Python
+
+https://github.com/kozec/syncthing-gtk
 
 https://github.com/JelteF/PyLaTeX
 
