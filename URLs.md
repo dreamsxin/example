@@ -821,7 +821,10 @@ https://github.com/dreamsxin/php_riak
 
 ## CPP && C++
 
-https://github.com/mgieseki/dvisvgm
+- https://github.com/ntop/ntopng
+ntopng 是一款网络流量探测器，能从流量镜像、NetFlow 导出器、SNMP 设备、防火墙日志和入侵检测系统中收集流量信息，从而提供 360° 网络可视性。
+
+- https://github.com/mgieseki/dvisvgm
 
 https://github.com/rive-app/rive-cpp
 
@@ -2290,14 +2293,13 @@ https://github.com/k9mail/k-9
 
 # Server & Monitoring
 
-https://github.com/Cacti/cacti
+- https://github.com/Cacti/cacti
+Cacti 网络流量监测图形分析工具
+- https://github.com/dreamsxin/zabbix
 
-https://github.com/dreamsxin/zabbix
+- https://github.com/Eugeny/ajenti/
 
-https://github.com/Eugeny/ajenti/
-
-https://github.com/fluent/fluentd
-
+- https://github.com/fluent/fluentd
 
 # SCRIPT Language
 
@@ -3172,3 +3174,9 @@ https://github.com/IBM/type/
 ## Dot Net
 
 https://github.com/files-community/Files
+
+## 网站流量分析
+
+https://github.com/umami-software/umami
+
+https://github.com/milesmcc/shynet
