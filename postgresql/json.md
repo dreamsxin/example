@@ -231,3 +231,13 @@ $body$;
 
 ALTER TABLE books ADD CONSTRAINT books_doc_keys_OK CHECK (top_level_keys_ok(doc)); 
 ```
+
+## 复杂更新
+
+```psql
+with cte as
+(
+    SELECT ext->'time' as time, user_id, eventid, row_number() over(PARTITION by user_id, eventid) rn FROM test t1
+) 
+UPDATE test t2 SET ext = ext || jsonb_set('{}', '{time}', cte.time) FROM cte WHERE cte.rn=1 AND l.user_id=cte.user_id AND l.eventid=cte.eventid and ext->>'time' is null
+```
