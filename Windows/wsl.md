@@ -11,6 +11,12 @@ wsl --list --verbose
 wsl --list --online
 ```
 
+**wsl 参考的对象类型不支持尝试的操作**
+该错误有可能是代理造成的
+```shell
+netsh winsock reset
+```
+
 ## Step 1 - Enable the Windows Subsystem for Linux
 You must first enable the "Windows Subsystem for Linux" optional feature before installing any Linux distributions on Windows.
 
