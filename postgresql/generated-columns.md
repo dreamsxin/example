@@ -19,5 +19,12 @@ CREATE TABLE IF NOT EXISTS test
 
 ### 增加列
 ```sql
+CREATE OR REPLACE FUNCTION truncatedate(s TIMESTAMPTZ) RETURNS date AS $$
+        BEGIN
+       
+        RETURN s::date;
+        END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
 ALTER TABLE test ADD COLUMN xxx_gen text GENERATED ALWAYS AS (ltree2text(xxx)) stored;
 ```
