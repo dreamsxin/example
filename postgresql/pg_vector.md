@@ -1,4 +1,4 @@
-https://github.com/pgvector/pgvector.git
+- https://github.com/pgvector/pgvector.git
 
 ##
 ```psql
@@ -89,6 +89,39 @@ create index on vector using hnsw (vector bit_jaccard_ops);
 ```
 
 ### 学习阶段
+- https://github.com/supabase-community/nextjs-openai-doc-search
+- https://github.com/lvwzhen/law-cn-ai/blob/main/lib/generate-embeddings.ts
+```ts
+          const configuration = new Configuration({
+            apiKey: process.env.OPENAI_KEY,
+          })
+          const openai = new OpenAIApi(configuration)
+
+          const embeddingResponse = await openai.createEmbedding({
+            model: 'text-embedding-ada-002',
+            input,
+          })
+
+          if (embeddingResponse.status !== 200) {
+            throw new Error(inspect(embeddingResponse.data, false, 2))
+          }
+
+          const [responseData] = embeddingResponse.data.data
+
+          const { error: insertPageSectionError, data: pageSection } = await supabaseClient
+            .from('nods_page_section')
+            .insert({
+              page_id: page.id,
+              slug,
+              heading,
+              content,
+              token_count: embeddingResponse.data.usage.total_tokens,
+              embedding: responseData.embedding,
+            })
+            .select()
+            .limit(1)
+            .single()
+```
 #### 1. 创建 PostgreSQL 实例
 #### 2. 创建插件
 ```sql
