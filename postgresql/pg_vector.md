@@ -1,5 +1,5 @@
 - https://github.com/pgvector/pgvector.git
-
+- https://github.com/tmc/langchaingo
 ##
 ```psql
 CREATE EXTENSION IF NOT EXISTS vector;
