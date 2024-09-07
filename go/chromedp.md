@@ -154,7 +154,7 @@ func main() {
 - --remote-debugging-port=9222
 
 ```shell
-google-chrome-stable --remote-debugging-protocol=9222
+google-chrome-stable --remote-debugging-protocol=9222 --user-data-dir=test
 ```
 
 ```shell
