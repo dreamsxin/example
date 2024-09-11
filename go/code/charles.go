@@ -1,5 +1,9 @@
 package main
 
+// https://github.com/kevwan/tproxy
+// https://github.com/ouqiang/mars
+// https://github.com/taikulawo/tlsmiddleman
+
 import (
 	"bytes"
 	"encoding/binary"
