@@ -12,7 +12,7 @@ cargo add scrap
 ```shell
 choco install ffmpeg
 ```
-
+使用 ffplay 播放 raw 数据 `ffplay -f rawvideo -s 512x512 -pix_fmt rgb24 test.raw`
 ```rust
 fn main() {
     use scrap::{Capturer, Display};
@@ -54,6 +54,99 @@ fn main() {
             }
             Err(_) => {
                 // We're done here.
+                break;
+            }
+        }
+    }
+}
+```
+
+### 保存为 MP4
+
+```shell
+cargo add ffmpeg
+```
+
+```rust
+use scrap::{Capturer, Display};
+use std::time::Duration;
+use ffmpeg::{format::context::Output, codec::encoder::Video, software::scaling::Context as SwsContext};
+use ffmpeg::util::format::pixel::Pixel;
+use std::fs::File;
+use std::io::BufWriter;
+
+fn main() {
+    // 获取默认显示
+    let display = Display::primary().unwrap();
+
+    // 创建捕获器
+    let mut capturer = Capturer::new(display).unwrap();
+
+    // 设置输出文件
+    let output_file = File::create("output.mp4").unwrap();
+    let mut output = BufWriter::new(output_file);
+
+    // 设置视频编码器
+    let mut encoder = ffmpeg::encoder::find(ffmpeg::encoder::Id::MPEG4).unwrap();
+    encoder.set_bit_rate(2_000_000);
+    encoder.set_time_base(ffmpeg::util::rational::Rational { num: 1, den: 25 });
+    encoder.set_pixel_format(Pixel::YUV420P);
+    encoder.set_width(capturer.width());
+    encoder.set_height(capturer.height());
+
+    // 打开编码器
+    encoder.open().unwrap();
+
+    // 创建输出上下文
+    let mut output_context = Output::new();
+    output_context.add_stream(encoder).unwrap();
+
+    // 打开输出文件
+    output_context.open(&["output.mp4"], Some("mp4"), None).unwrap();
+
+    // 创建视频编码器
+    let mut video_stream = output_context.find_stream(0).unwrap();
+    let video_encoder = video_stream.codec().encoder().unwrap();
+
+    // 创建视频编码器上下文
+    let mut video_encoder_context = video_encoder.open(&video_stream.codec().params().unwrap()).unwrap();
+
+    // 创建视频编码器上下文
+    let mut sws_context = SwsContext::new(
+        Pixel::BGR24,
+        Pixel::YUV420P,
+        capturer.width(),
+        capturer.height(),
+        ffmpeg::util::frame::video::Flags::empty(),
+    ).unwrap();
+
+    // 开始录制
+    loop {
+        // 捕获一帧
+        let frame = capturer.frame().unwrap();
+
+        // 转换像素格式
+        let mut converted_frame = ffmpeg::util::frame::video::Video::new(
+            Pixel::YUV420P,
+            capturer.width(),
+            capturer.height(),
+        );
+        sws_context.run(&frame, &mut converted_frame).unwrap();
+
+        // 编码帧
+        let mut packet = ffmpeg::packet::Packet::empty();
+        video_encoder_context.encode(&converted_frame, &mut packet).unwrap();
+
+        // 写入输出文件
+        if packet.is_empty() {
+            continue;
+        }
+        packet.write_interleaved(&mut output_context).unwrap();
+
+
+        // 按下 'q' 键退出
+        if let Some(key) = video.window().wait_key(Duration::from_secs(0)) {
+            if key == scrap::Key::Q {
                 break;
             }
         }
