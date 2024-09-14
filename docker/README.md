@@ -15,7 +15,7 @@ FROM <image name>
 
 See: https://github.com/dreamsxin/docker-phalcon
 
-## 创建镜像
+## 根据 Dockerfile 创建镜像
 
 - `-t`	标记来添加 tag，指定新的镜像的用户信息。
 - `.`	是 Dockerfile 所在的路径（当前目录），也可以替换为一个具体的 Dockerfile 的路径。
@@ -58,6 +58,12 @@ sudo docker run -ti -p 8080:80 dreamsxin/phalcon:v1.3 -v
 ```
 
 可以在 docker run 的时候用 `--name` 参数指定容器的名称。
+
+## 停止容器
+
+```shell
+docker stop xxxxx
+```
 
 ## 启动已终止容器
 
