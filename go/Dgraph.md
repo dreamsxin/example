@@ -384,3 +384,128 @@ Dgraph不执行结构或模式。相反，您可以立即开始输入数据并�
  ]
 }
 ```
+
+### 谓词的数据类型
+
+类型包括string、float、int和uid。除此之外，Dgraph还提供了另外三种基本数据类型:geo、dateTime和bool。
+
+uid类型表示两个节点之间的谓词。换句话说，它们表示连接两个节点的边。
+过分组一个或多个谓词来创建自定义数据类型(Type)。
+
+### 查询谓词值
+首先，让我们查询所有的作者和他们的评级rating:
+```json
+{
+  authors_and_ratings(func: has(author_name)) {
+    uid
+    author_name
+    rating
+  }
+}
+```
+
+### 索引
+| 数据类型     | 可用的索引类型                              |
+|----------|--------------------------------------|
+| int      | int                                  |
+| float    | float                                |
+| string   | hash, exact, term, fulltext, trigram |
+| bool     | bool                                 |
+| geo      | geo                                  |
+| dateTime | year, month, day, hour               |
+
+在评级谓词上创建一个索引。Ratel UI让添加索引变得超级简单。
+
+以下是步骤的顺序:
+
+- 转到左边的Schema模式选项卡。
+- 从列表中点击rating评级谓词。
+- 在右侧的属性UI中勾选索引index选项。
+
+### 比较器函数
+| 比较器函数名 | 全称                       |
+|--------|--------------------------|
+| eq     | equals to                |
+| lt     | less than                |
+| le     | less than or equal to    |
+| gt     | greater than             |
+| ge     | greater than or equal to |
+
+| 使用案例                   | 描述                        |
+|------------------------|---------------------------|
+| func: eq(age, 60)      | 返回年龄谓词等于60的节点。            |
+| func: gt(likes, 100)   | 返回值为likes谓词大于100的节点。      |
+| func: le(dislikes, 10) | 返回值为dislikes谓词小于或等于10的节点。 |
+
+```json
+{
+  best_authors(func: ge(rating, 4.0)) {
+    uid
+    author_name
+    rating
+  }
+}
+```
+边published从一个作者节点到一个博客帖子节点。因此，获取作者节点的博客帖子非常简单。我们需要从作者节点开始遍历published边。
+```json
+{
+  authors_and_ratings(func: ge(rating, 4.0)) {
+    uid
+    author_name
+    rating
+    published {
+      title
+      content
+      dislikes
+    }
+  }
+}
+```
+类似地，让我们扩展前面的查询以获取这些博客文章的标签。
+```json
+{
+  authors_and_ratings(func: ge(rating, 4.0)) {
+    uid
+    author_name
+    rating
+    published {
+      title
+      content
+      dislikes
+      tagged {
+        tag_name
+      }
+    }
+  }
+}
+```
+
+### 过滤遍历
+我们可以使用@filter指令过滤遍历的结果。你可以使用@filter指令使用任何Dgraph的比较器函数。您应该使用lt比较器函数来过滤dislikes少于10个的博客文章。
+```json
+{
+  authors_and_ratings(func: ge(rating, 4.0)) {
+    author_name
+    rating
+
+    published @filter(lt(dislikes, 10)) {
+      title
+      likes
+      dislikes
+      tagged {
+        tag_name
+      }
+    }
+  }
+}
+```
+### 查询并找到数据库中的所有标签。
+```json
+{
+  all_tags(func: has(tag_name)) {
+    tag_name
+  }
+}
+```
+
+
