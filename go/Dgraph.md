@@ -684,3 +684,55 @@ Dgraph 中的边是有方向的。您可以看到边 tagged 从博客文章节�
   }
 }
 ```
+
+##
+```txt
+# Define Directives and index
+
+director.film: [uid] @reverse .
+actor.film: [uid] @count .
+genre: [uid] @reverse .
+initial_release_date: dateTime @index(year) .
+name: string @index(exact, term) @lang .
+starring: [uid] .
+performance.film: [uid] .
+performance.character_note: string .
+performance.character: [uid] .
+performance.actor: [uid] .
+performance.special_performance_type: [uid] .
+type: [uid] .
+
+# Define Types
+
+type Person {
+    name
+    director.film
+    actor.film
+}
+
+type Movie {
+    name
+    initial_release_date
+    genre
+    starring
+}
+
+type Genre {
+    name
+}
+
+type Performance {
+    performance.film
+    performance.character
+    performance.actor
+}
+```
+
+```json
+{
+  me(func: allofterms(name@en, "Orlando")) @filter(has(actor.film)) {
+    name@en
+    count(actor.film)
+  }
+}
+```
