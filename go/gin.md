@@ -120,7 +120,7 @@ func New() *Engine {
 }
 ```
 
-### 模板调试实时渲染
+## 模板调试实时渲染
 
 ```go
 	r.FuncMap = template.FuncMap{
@@ -147,4 +147,15 @@ func New() *Engine {
 	if cfg.Server.Mode == "debug" {
 		gin.SetMode(gin.DebugMode)
 	}
+
+	r.LoadHTMLFiles(filenames...)
+```
+
+### 模板错误输出
+
+模板解析错误放在了 `gin.Context` 中的 `Errors` 里，所以可以在中间件中输出：
+```go
+if len(c.Errors) > 0 {
+	log.Pritnln("Errors", c.Errors)
+}
 ```
