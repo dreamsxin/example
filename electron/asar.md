@@ -1,5 +1,6 @@
 
 https://github.com/electron/asar
+https://github.com/pd4d10/debugtron
 
 ## 安装 asar
 `npm install --engine-strict asar`
