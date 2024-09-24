@@ -30,3 +30,14 @@ There are currently four first-party templates:
 ```shell
 npm init electron-app@latest my-app -- --template=webpack
 ```
+
+## Run
+
+```shell
+# 运行
+npm run start
+# 打包
+npm run package
+# 编译，生成安装程序
+npm run make
+```
