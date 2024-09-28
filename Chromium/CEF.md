@@ -1,4 +1,6 @@
 - https://github.com/energye/energy
+- https://github.com/richardwilkes/cef
 - https://github.com/go-rod/rod
 - https://github.com/chromedp/chromedp
 - https://github.com/wailsapp/wails
+- https://cef-builds.spotifycdn.com/index.html
