@@ -1,3 +1,10 @@
+## win10
+
+```shell
+dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+```
+
 ```shell
 sfc /SCANNOW
 Dism /Online /Cleanup-Image /CheckHealth  是检查映像以查看是否有检测到损坏
