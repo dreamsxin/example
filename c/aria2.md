@@ -5,7 +5,7 @@ aria2 is a lightweight multi-protocol & multi-source command-line download utili
 ```shell
 git clone https://github.com/aria2/aria2.git
 cd aria2
-sudo apt-get install libxml2-dev libcppunit-dev autoconf automake autotools-dev autopoint libtool
+sudo apt-get install pkg-config libxml2-dev libcppunit-dev autoconf automake autotools-dev autopoint libtool
 autoreconf -i
 ```
 
