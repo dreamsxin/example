@@ -1,6 +1,8 @@
 ## win10
 
 ```shell
+bcdedit /set hypervisorlaunchtype off
+bcdedit
 dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
 dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
 ```
