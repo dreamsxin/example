@@ -1,3 +1,14 @@
+## 源
+22.04 配置地址为 `/etc/apt/sources.list.d/ubuntu.sources`
+```txt
+# 阿里云
+Types: deb
+URIs: http://mirrors.aliyun.com/ubuntu/
+Suites: noble noble-updates noble-security
+Components: main restricted universe multiverse
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+```
+
 # 使用
 
 ```shell
