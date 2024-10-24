@@ -3,6 +3,10 @@
 ```shell
 bcdedit /set hypervisorlaunchtype off
 bcdedit
+Invoke-WebRequest -Uri https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx -Out Microsoft.VCLibs.x64.14.00.Desktop.appx
+Add-AppxPackage .\Microsoft.VCLibs.x64.14.00.Desktop.appx
+Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform
+# 删除 C:\Users\Administrator\AppData\Local\Packages\ 目录
 Get-AppxPackage -AllUsers -Name *Ubuntu*
 dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
 dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
