@@ -24,3 +24,7 @@ wmic process where caption="chrome.exe" get caption,commandline /value
 wmic process 进程id get caption,commandline,ParentProcessId /value
 wmic process where ParentProcessId=进程id
 ```
+
+## ProcessMonitor
+
+https://learn.microsoft.com/en-us/sysinternals/downloads/procmon#download
