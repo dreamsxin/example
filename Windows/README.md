@@ -15,3 +15,11 @@ tasklist | findstr 25720
 taskkill  /PID 25720
 taskkill  /f /PID 25720
 ```
+
+## 查看进程
+
+```shell
+wmic process where caption="chrome.exe"
+wmic process where caption="chrome.exe" get caption,commandline /value
+wmic process 进程id get caption,commandline /value
+```
