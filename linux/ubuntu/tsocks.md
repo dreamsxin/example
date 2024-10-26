@@ -1,4 +1,5 @@
-# tsocks 使用
+# tsocks
+透明代理
 
 ## 安装
 ```shell
