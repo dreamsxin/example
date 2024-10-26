@@ -1,4 +1,7 @@
 # tsocks
+
+https://github.com/mezantrop/tsocks
+
 透明代理
 
 ## 安装
