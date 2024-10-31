@@ -15,7 +15,8 @@ docker build -t camoufox-builder
 # docker run -v "$(pwd)/dist:/app/dist" camoufox-builder --target <os> --arch <arch>
 docker run -v "$(pwd)/dist:/app/dist" camoufox-builder --target windows --arch x86_64
 
-docker exec -it <容器ID或名称> python3 ./multibuild.py
+docker start <容器ID或名称> 
+docker exec -it <容器ID或名称> it
 ```
 
 
