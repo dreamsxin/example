@@ -14,3 +14,16 @@ https://github.com/LadybirdBrowser/ladybird
 **camoufox**
 https://github.com/daijro/camoufox
 
+## MozillaBuild
+
+https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe
+
+## 编译
+
+```shell
+mkdir mozilla-source
+cd mozilla-source
+hg clone https://hg.mozilla.org/mozilla-central
+mach build
+mach run
+```
