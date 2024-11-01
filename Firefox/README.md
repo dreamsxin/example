@@ -74,6 +74,64 @@ hg up -C central
 ./mach build
 ```
 
+## 编译选项
+https://firefox-source-docs.mozilla.org/setup/configuring_build_options.html
+
+### Configuring Build Options
+
+`browser/confvars.sh`
+
+**Branding**
+https://firefox-source-docs.mozilla.org/browser/branding/docs/index.html
+
+### 查看编译选项
+```shell
+./mach configure -- --help
+```
+
+### 创建配置文件
+可以使用环境变量 `MOZCONFIG` 指定配置文件。
+
+配置文件 `mozconfig-dbg`
+```conf
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-ff-dbg
+ac_add_options --enable-debug
+```
+
+配置文件 ` mozconfig-rel-opt`
+```conf
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-ff-rel-opt
+ac_add_options --disable-debug
+ac_add_options --enable-optimize
+```
+使用
+```shell
+$ env MOZCONFIG=/path/to/mozconfig-dbg ./mach build
+$ env MOZCONFIG=/path/to/mozconfig-rel-opt ./mach build
+```
+
+>>> `.mozconfig` 带点的文件名已经不推荐使用。
+
+```shell
+echo "# My first mozilla config" > mozconfig
+```
+
+**常见选项**
+- `mk_add_options` 会被用于 `client.mk`，比如 `MOZ_OBJDIR`
+- `ac_add_options` 会被用于 `configure`
+
+- ac_add_options --enable-project=browser
+选择编译 browser，默认开启
+- ac_add_options --enable-project=comm/mail
+- ac_add_options --enable-calendar
+- ac_add_options --enable-project=suite
+
+**语言**
+- mk_add_options MOZ_CO_LOCALES=ISOcode
+```shell
+./mach configure -enable-ui-locale        # Select the user interface locale (default: en-US) [en-US]
+```
+
 ## 错误
 
 **.mozbuild/windows-rs contains version 0.58.0, but expected 0.52.0.**
