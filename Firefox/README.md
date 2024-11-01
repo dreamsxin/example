@@ -32,15 +32,21 @@ https://www.python.org/downloads/release/python-3119/
 **MozillaBuild**
 https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe
 
-### 编译
+### 下载源码
+
 运行 mozilla-build
 ```shell
 C:\mozilla-build\start-shell.bat
 ```
-在 mozilla-build 提示窗口中输入
+
+- https://archive.mozilla.org/pub/firefox/releases/130.0.1/source/
+指定版本
 ```shell
-# Using the C:\mozilla-build\start-shell.bat shell from step 1:
-cd c:/
+wget https://archive.mozilla.org/pub/firefox/releases/130.0.1/source/firefox-130.0.1.source.tar.xz
+```
+
+- 自动下载最新版本
+```shell
 mkdir mozilla-source
 cd mozilla-source
 wget https://hg.mozilla.org/mozilla-central/raw-file/default/python/mozboot/bin/bootstrap.py
@@ -51,6 +57,8 @@ python3 bootstrap.py --vcs=git
 # To use Mercurial as your VCS
 python3 bootstrap.py
 ```
+
+### 编译
 
 ```shell
 ./mach configure
