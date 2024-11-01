@@ -61,9 +61,18 @@ python3 bootstrap.py
 ### 编译
 
 ```shell
+./mach bootstrap
 ./mach configure
 ./mach build-backend -b VisualStudio
 ./mach build
+```
+
+## 错误
+
+**.mozbuild/windows-rs contains version 0.58.0, but expected 0.52.0.**
+重新执行
+```shell
+./mach bootstrap
 ```
 
 ## 目录说明
