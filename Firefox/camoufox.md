@@ -8,6 +8,21 @@ cd camoufox
 docker build -t camoufox-builder .
 ```
 
+### 打补丁
+
+```shell
+#!/bin/bash
+ 
+ 
+for patch in ./patches/*.patch; do
+  patch -p1 < "$patch"
+done
+
+for patch in ./patches/playwright/*.patch; do
+  patch -p1 < "$patch"
+done
+```
+
 ### 编译
 
 ```shell
