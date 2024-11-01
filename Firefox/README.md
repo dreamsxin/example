@@ -161,6 +161,8 @@ ac_add_options --enable-project=browser
 
 ## 日志
 ```shell
+set MOZ_LOG="all:3,timestamp,sync,rotate:10"
+set MOZ_LOG_FILE="log.txt"
 set NSPR_LOG_MODULES=all:5,timestamp,sync
 set NSPR_LOG_FILE=C:\Users\Administrator\Desktop\firefox.log
 ```
