@@ -70,6 +70,7 @@ hg up -C central
 ```shell
 ./mach bootstrap
 ./mach configure
+./mach configure--disable-tests --with-ccache=sccache
 ./mach build-backend -b VisualStudio
 ./mach build
 ```
