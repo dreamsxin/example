@@ -53,7 +53,9 @@ python3 bootstrap.py
 ```
 
 ```shell
-mach build-backend --backend=VisualStudio
+./mach configure
+./mach build-backend -b VisualStudio
+./mach build
 ```
 
 ## 目录说明
