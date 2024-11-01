@@ -5,7 +5,7 @@
 ```shell
 git clone --depth 1 https://github.com/daijro/camoufox
 cd camoufox
-docker build -t camoufox-builder
+docker build -t camoufox-builder .
 ```
 
 ### 编译
