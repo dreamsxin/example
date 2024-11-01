@@ -159,6 +159,11 @@ ac_add_options --enable-project=browser
 ./mach bootstrap
 ```
 
+## 日志
+```shell
+set NSPR_LOG_MODULES=all:5,timestamp,sync
+set NSPR_LOG_FILE=C:\Users\Administrator\Desktop\firefox.log
+```
 ## 目录说明
 
 Mozilla 家族所有的项目代码（如 Firefox, Thunderbird, etc.）都被整合在一个单独的源码树中。其中既包括源代码，也包括在所支持的平台（ Linux, Windows, OS X 等）构建工程所依赖的代码。 
