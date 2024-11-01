@@ -89,7 +89,15 @@ https://firefox-source-docs.mozilla.org/browser/branding/docs/index.html
 ./mach configure -- --help
 ```
 
-### 创建配置文件
+### 配置文件
+
+>>> `.mozconfig` 带点的文件名已经不推荐使用。
+
+创建配置文件
+```shell
+echo "# My first mozilla config" > mozconfig
+```
+
 可以使用环境变量 `MOZCONFIG` 指定配置文件。
 
 配置文件 `mozconfig-dbg`
@@ -109,11 +117,21 @@ ac_add_options --enable-optimize
 $ env MOZCONFIG=/path/to/mozconfig-dbg ./mach build
 $ env MOZCONFIG=/path/to/mozconfig-rel-opt ./mach build
 ```
+**可以嵌套配置文件**
+创建公共配置`mozconfig-common`
+```conf
+# add common options here, such as making an optimized release build
+mk_add_options MOZ_PARALLEL_BUILD=4
+ac_add_options --enable-optimize --disable-debug
+···
+配置 `mozconfig-firefox` 引入
+```conf
+# include the common mozconfig
+. ./mozconfig-common
 
->>> `.mozconfig` 带点的文件名已经不推荐使用。
-
-```shell
-echo "# My first mozilla config" > mozconfig
+# Build Firefox
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-firefox
+ac_add_options --enable-project=browser
 ```
 
 **常见选项**
