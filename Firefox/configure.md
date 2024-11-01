@@ -1,3 +1,4 @@
+```txt
 $ ./mach configure -- --help
  checking for vcs source checkout... no
  checking whether cross compiling... no
@@ -427,4 +428,4 @@ ious system integration hooks (Unix remoting, Windows MessageWindow name, etc.
 
    Options from ..\build\moz.configure\old.configure:
      M4                        Path to the m4 program
-
+```
