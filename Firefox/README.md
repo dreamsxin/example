@@ -58,6 +58,13 @@ python3 bootstrap.py --vcs=git
 python3 bootstrap.py
 ```
 
+### 更新源码
+
+```shell
+cd /mozilla-unified
+hg up -C central
+```
+
 ### 编译
 
 ```shell
