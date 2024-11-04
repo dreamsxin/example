@@ -174,91 +174,14 @@ docker build -t camoufox-builder .
 # 运行容器 -d 后台运行 -t 表示返回一个 tty 终端，-i 表示打开容器的标准输入，使用这个命令可以得到一个容器的 shell 终端 -p 端口映射
 sudo docker run -dti --name camoufox -p 22022:22 camoufox-builder -v
 ```
-## 补丁
-## `fingerprint-injection.patch`
-### navigator.
-- userAgent
-- appCodeName
-appVersion
-appName
-languages
-language
-platform
-oscpu
-product
-productSub
-pdfViewerEnabled
-cookieEnabled
-onLine
-buildID
-doNotTrack
-globalPrivacyControl
-hardwareConcurrency
-maxTouchPoints
-globalPrivacyControl
-
-### window.
-innerWidth
-innerHeight
-outerWidth
-outerHeight
-screenX
-screenY
-devicePixelRatio
-scrollMinX
-scrollMinY
-scrollMaxX
-scrollMaxY
-history.length
-
-### screen.
-pageXOffset
-pageYOffset
-colorDepth
-pixelDepth
-screen.availLeft, screen.availTop, screen.availWidth, screen.availHeight
-
-### battery:
-charging
-dischargingTime
-chargingTime
-level
-
-## `network-patches.patch`
-### headers.
-User-Agent
-Accept-Language
-Accept-Encoding
-
-### locale:
-language
-region
-script
-
-## `timezone-spoofing.patch`
-### timezone
-
-## `screen-hijacker.patch`
-### screen.
-height
-
-## `anti-font-fingerprinting.patch`
-
-字体
-
-## `audio-context-spoofing.patch`
-
-### AudioContext:
-sampleRate
-outputLatency
-maxChannelCount
 
 ## 配置
 `CAMOU_CONFIG`
 ```json
 {
-	"navigator.userAgent":"Mozilla/15.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
-	"locale:language":"zh",
-	"locale:region":"CN"
+	"navigator.userAgent": "Mozilla/15.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+	"geolocation:latitude": 116.407957,
+	"geolocation:longitude": 39.887764,
+	"debug": true
 }
 ```
