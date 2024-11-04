@@ -1,6 +1,9 @@
-## 补丁
-```json
-{"navigator.userAgent":"Mozilla/15.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36","geolocation:latitude":116.407957,"geolocation:longitude":39.887764,"debug":true}
+## 生成补丁
+
+```shell
+git format-patch <branch_name>..<other_branch_name>
+git format-patch <commit_start>..<commit_end>
+git format-patch 21f2374e6a21e43062bf640cc58729040eedbac1..f0bb30cceb97ba93fab2a9097a2475f0f18b88f3
 ```
 
 ## `fingerprint-injection.patch`
