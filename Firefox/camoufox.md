@@ -94,6 +94,7 @@ sudo docker run -dti --name camoufox -p 22022:22 camoufox-builder -v
 appVersion
 appName
 languages
+language
 platform
 oscpu
 product
@@ -135,7 +136,24 @@ dischargingTime
 chargingTime
 level
 
+`patches\network-patches.patch`
 ### headers.
 User-Agent
 Accept-Language
 Accept-Encoding
+
+`patches\locale-spoofing.patch`
+### locale:
+language
+region
+script
+
+## 配置
+`CAMOU_CONFIG`
+```json
+{
+	"navigator.userAgent":"Mozilla/15.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+	"locale:language":"zh",
+	"locale:region":"CN"
+}
+```
