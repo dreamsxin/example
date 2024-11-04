@@ -15,6 +15,10 @@ https://github.com/LadybirdBrowser/ladybird
 **camoufox**
 https://github.com/daijro/camoufox
 
+## VS 插件
+
+https://marketplace.visualstudio.com/items?itemName=vsdbgplat.MicrosoftChildProcessDebuggingPowerTool
+
 ## 编译
 
 - https://firefox-source-docs.mozilla.org/setup/windows_build.html
