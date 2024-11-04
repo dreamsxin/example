@@ -86,3 +86,56 @@ docker build -t camoufox-builder .
 # 运行容器 -d 后台运行 -t 表示返回一个 tty 终端，-i 表示打开容器的标准输入，使用这个命令可以得到一个容器的 shell 终端 -p 端口映射
 sudo docker run -dti --name camoufox -p 22022:22 camoufox-builder -v
 ```
+## 补丁
+`patches\fingerprint-injection.patch`
+### navigator.
+- userAgent
+- appCodeName
+appVersion
+appName
+languages
+platform
+oscpu
+product
+productSub
+pdfViewerEnabled
+cookieEnabled
+onLine
+buildID
+doNotTrack
+globalPrivacyControl
+hardwareConcurrency
+maxTouchPoints
+globalPrivacyControl
+
+### window.
+innerWidth
+innerHeight
+outerWidth
+outerHeight
+screenX
+screenY
+devicePixelRatio
+scrollMinX
+scrollMinY
+scrollMaxX
+scrollMaxY
+history.length
+
+### screen.
+pageXOffset
+pageYOffset
+colorDepth
+pixelDepth
+screen.availLeft, screen.availTop, screen.availWidth, screen.availHeight
+
+### battery:
+charging
+dischargingTime
+chargingTime
+level
+
+### headers.
+User-Agent
+Accept-Language
+Accept-Encoding
