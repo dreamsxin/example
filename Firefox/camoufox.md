@@ -148,6 +148,9 @@ language
 region
 script
 
+`timezone-spoofing.patch`
+### timezone
+
 ## 配置
 `CAMOU_CONFIG`
 ```json
