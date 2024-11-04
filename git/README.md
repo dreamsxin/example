@@ -19,6 +19,7 @@ git config --global core.quotepath false
 
 ```shell
 git config --global core.autocrlf true
+git config --global core.autocrlf false
 ```
 
 ## 忽略权限修改
