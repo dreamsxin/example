@@ -102,6 +102,16 @@ https://firefox-source-docs.mozilla.org/browser/branding/docs/index.html
 ```shell
 echo "# My first mozilla config" > mozconfig
 ```
+```config
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-ff-dbg
+ac_add_options --disable-optimize
+ac_add_options --enable-debug
+ac_add_options --enable-debug-symbols
+ac_add_options --enable-official-branding
+ac_add_options --disable-crashreporter
+ac_add_options --disable-updater
+ac_add_options --enable-eme=widevine
+```
 
 可以使用环境变量 `MOZCONFIG` 指定配置文件。
 
