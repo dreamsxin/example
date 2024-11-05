@@ -28,6 +28,8 @@ ac_add_options --with-l10n-base=$PWD/browser/locales/l10n
 ac_add_options --enable-bootstrap
 
 export MOZ_REQUIRE_SIGNING=
+MOZ_REQUIRE_SIGNING=
+MOZ_REQUIRE_ADDON_SIGNING=0
 
 mk_add_options MOZ_CRASHREPORTER=0
 mk_add_options MOZ_DATA_REPORTING=0
