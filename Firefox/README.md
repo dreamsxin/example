@@ -26,6 +26,7 @@ https://marketplace.visualstudio.com/items?itemName=vsdbgplat.MicrosoftChildProc
 - https://firefox-source-docs.mozilla.org/setup/windows_build.html
 - https://firefox-source-docs.mozilla.org/build/buildsystem/visualstudio.html
 
+生成头文件路径：`include\mozilla\`
 ### 环境
 
 **Mercurial**
