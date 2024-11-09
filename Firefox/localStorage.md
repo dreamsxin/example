@@ -1,0 +1,2 @@
+## `dom\localstorage\`
+`kDataFileName`
