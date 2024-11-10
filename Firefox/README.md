@@ -20,6 +20,10 @@ https://github.com/daijro/camoufox
 ## VS 插件
 
 https://marketplace.visualstudio.com/items?itemName=vsdbgplat.MicrosoftChildProcessDebuggingPowerTool
+关闭多进程模式 `browser.tabs.remote.autostart`。
+然后修改程序入口函数 wmain：
+
+`#undef mozilla_LauncherProcessWin_h`
 
 ## 编译
 
@@ -27,6 +31,16 @@ https://marketplace.visualstudio.com/items?itemName=vsdbgplat.MicrosoftChildProc
 - https://firefox-source-docs.mozilla.org/build/buildsystem/visualstudio.html
 
 生成头文件路径：`include\mozilla\`
+
+## 调试
+将 `firefox.exe` 工程设置为启动项。
+`xpcom_threads` 工程里面的 `nsThread.cpp` 文件打印线程名。
+```c++
+nsresult nsThread::Init(const nsACString& aName) {
+  printf(“ThreadName:%s\n”, aName.Data());
+}
+```
+
 ### 环境
 
 **Mercurial**
@@ -83,6 +97,7 @@ hg up -C central
 ```
 
 ## 编译选项
+
 https://firefox-source-docs.mozilla.org/setup/configuring_build_options.html
 
 ### Configuring Build Options
