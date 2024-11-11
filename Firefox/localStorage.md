@@ -99,7 +99,9 @@ constexpr auto kStorageName = u"storage"_ns;
 - LSRequestBase::FinishInternal()
 - LSRequestBase::Run()
 - LSRequestBase::StartRequest()
+- PrepareDatastoreOp::LoadDataOp::DoDatastoreWork()
 - PrepareDatastoreOp::Start()
+- PrepareDatastoreOp::GetResponse
 - TransactionDatabaseOperationBase::RunOnConnectionThread()
 - Database::EnsureConnection()
 - ConnectionPool::GetOrCreateConnection
