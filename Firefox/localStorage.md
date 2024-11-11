@@ -41,6 +41,14 @@ void InitializeQuotaManager() {
 - QuotaManager::InitializeOrigin
 
 ## `dom\localstorage\`
+
+**继承关系**
+```c++
+class PrepareDatastoreOp
+    : public LSRequestBase,
+      public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
+}
+```
 - InitializeLocalStorage
 只是注册回调
 ```c++
@@ -99,6 +107,10 @@ constexpr auto kStorageName = u"storage"_ns;
 - LSRequestBase::FinishInternal()
 - LSRequestBase::Run()
 - LSRequestBase::StartRequest()
+- ConnectionDatastoreOperationBase::Run()
+- ConnectionDatastoreOperationBase::RunOnConnectionThread()
+- PrepareDatastoreOp::NestedRun()
+- PrepareDatastoreOp::BeginLoadData()
 - PrepareDatastoreOp::LoadDataOp::DoDatastoreWork()
 - PrepareDatastoreOp::Start()
 - PrepareDatastoreOp::GetResponse
