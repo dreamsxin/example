@@ -29,7 +29,7 @@ void InitializeQuotaManager() {
     IndexedDatabaseManager* mgr = IndexedDatabaseManager::GetOrCreate();
     QM_WARNONLY_TRY(MOZ_TO_RESULT(mgr));
   }
-
+  // 
   QM_WARNONLY_TRY(QM_TO_RESULT(QuotaManager::Initialize()));
 
 #ifdef DEBUG
@@ -37,9 +37,12 @@ void InitializeQuotaManager() {
 #endif
 }
 ```
+- QuotaManager::EnsureCreated()
+- QuotaManager::InitializeOrigin
 
 ## `dom\localstorage\`
 - InitializeLocalStorage
+只是注册回调
 ```c++
 void InitializeLocalStorage() {
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -92,6 +95,11 @@ constexpr auto kStorageName = u"storage"_ns;
 #define LS_ARCHIVE_FILE_NAME u"ls-archive.sqlite"
 #define LS_ARCHIVE_TMP_FILE_NAME u"ls-archive-tmp.sqlite"
 ```
+- LSRequestBase::Finish()
+- LSRequestBase::FinishInternal()
+- LSRequestBase::Run()
+- LSRequestBase::StartRequest()
+- PrepareDatastoreOp::Start()
 - TransactionDatabaseOperationBase::RunOnConnectionThread()
 - Database::EnsureConnection()
 - ConnectionPool::GetOrCreateConnection
