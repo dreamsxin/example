@@ -134,9 +134,14 @@ constexpr auto kStorageName = u"storage"_ns;
 - QuotaManager::Get()
 - QuotaManager::EnsureTemporaryOriginIsInitializedInternal
 - QuotaManager::Init()
-
+- QuotaManager::Observer::Observe
+设置 `gBasePath`
 - QuotaManager::Initialize()
 - QuotaManager::GetOrCreate()
+```cpp
+auto instance = MakeRefPtr<QuotaManager>(*gBasePath, *gStorageName);
+```
+- QuotaManager::QuotaManager()
 初始化目录
 ```c++
   QM_TRY_UNWRAP(
