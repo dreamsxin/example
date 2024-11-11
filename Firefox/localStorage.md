@@ -1,4 +1,40 @@
+
+## `dom\ipc\ContentProcess.cpp`
+- `ContentProcess::Init`
+
+## `toolkit\xre\nsAppRunner.cpp`
+- `ScopedXPCOMStartup::Initialize`
+```c++
+nsXREDirProvider::nsXREDirProvider() { gDirServiceProvider = this; }
+
+nsresult ScopedXPCOMStartup::Initialize(bool aInitJSContext) {
+  NS_ASSERTION(gDirServiceProvider, "Should not get here!");
+
+  nsresult rv;
+
+  // gDirServiceProvider
+  rv = NS_InitXPCOM(&mServiceManager, gDirServiceProvider->GetAppDir(),
+                    gDirServiceProvider, aInitJSContext);
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Couldn't start xpcom!");
+    mServiceManager = nullptr;
+  } else {
+#ifdef DEBUG
+    nsCOMPtr<nsIComponentRegistrar> reg = do_QueryInterface(mServiceManager);
+    NS_ASSERTION(reg, "Service Manager doesn't QI to Registrar.");
+#endif
+  }
+
+  return rv;
+}
+```
 ## `xpcom\io`
+
+组件定义 `xpcom\io\components.conf`
+- `NS_InitXPCOM`
+```c++
+nsDirectoryService::RealInit();
+```
 
 ## `xpcom\io\nsDirectoryService.h`
 
