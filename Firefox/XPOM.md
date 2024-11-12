@@ -8,6 +8,12 @@ XPCOM 不仅仅支持组件化软件开发，他也提供了很多开发平台�
 - 对象消息传输 ( object message passing )
 - 内存管理 ( Memory management )
 
+## `xpcom\components\nsServiceManagerUtils.h`
+## `dist\xpcom\components\StaticComponents.cpp`
+构建时会生成，所有模块 cid 会存在
+```c++
+const StaticModule gStaticModules[]
+```
 
 ## nsISupports 基接口
 在基于接口和组件的编程中有两个最基本的问题：组件的生命周期(也叫做对象所有权)和接口查询，或者说能够在运行时获得组件支持的接口。
