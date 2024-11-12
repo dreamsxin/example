@@ -181,7 +181,7 @@ int New_SomeInterface(SomeInterface **ret)
 }
 ```
 
-## XPIDL和Type Libraries
+## XPIDL 和 Type Libraries
 如何定义接口，让其可以跨平台，语言，本地开发环境？ 使用IDL(Interface define language)是一种简单而有效的方式。 XPCOM使用基于CORBA OMG规范的变体接口定义语言，XPIDL，可以通过它指定接口的方法，属性，常量，甚至可以定义接口的继承。
 使用 XPIDL 来定义你的接口时，需要注意一些缺陷。 它不支持多重继承。 如果你定义一个新的接口，它不能继承自多个接口，只能是一个。 另一个针对XPIDL定义接口的限制是，他的方法名称必须不一致。你可能有两个方法有相同的函数名，但是参数不一样，在XPIDL里一个变通方案就是使用 不同的函数名。
 XPIDL 允许你生成类型库(typelibs)，后缀名为`.xpt`的文件。 类型库文件是接口的二进制表现形式。 它为非C++的其它语言提供了访问接口的能力。 当组件被其它语言访问时，他们可以使用二进制类型库访问接口，知道支持什么方法，和怎么调用。
@@ -192,3 +192,68 @@ XPCOM这方面的能力叫做XPConnect。 XPConnect是XPCOM的一层，为其他
 
 在XPCOM，除了组件的支持和管理外，还提供了大量的服务帮助开发者写跨平台的组件。 这些服务包括一个跨平台的文件抽象，它提供了统一和强大的访问文件，目录服务，以维持应用程序的位置和系统特定的位置；一个内存管理，以确保每个使用这都 使用相同的内存分配器；一个事件通知系统，允许进行简单的事件传输。
 
+## XPCOM 宏
+
+### `xpcom\base\nsISupportsImpl.h`
+
+| 宏 | 说明 |
+|--------------------|-----------------------------------|
+| NS_IMPL_ISUPPORTS | 为给出的类实现nsISupports 接口，并可提供数量为n的接口 |
+| NS_DECL_ISUPPORTS  | 申明nsISuppports接口的方法，包含了nRefCnt变量。 |
+| NS_INIT_ISUPPORTS  | 初始化nRefCnt为0，必须在类的构造函数里调用。        |
+| NS_GET_IID         | 返回给定名称的接口的IID。 接口必须有XPIDL生成。      |
+| NS_IMPL_QUERY_INTERFACE |       |
+
+- `mozilla::detail::kImplementedIID`
+```c++
+
+namespace mozilla::detail {
+
+// Helper which is roughly equivalent to NS_GET_IID, which also performs static
+// assertions that `Class` is allowed to implement the given XPCOM interface.
+//
+// These assertions are done like this to allow them to be used within the
+// `NS_INTERFACE_TABLE_ENTRY` macro, though they are also used in
+// `NS_IMPL_QUERY_BODY`.
+template <typename Class, typename Interface>
+constexpr const nsIID& GetImplementedIID() {
+  if constexpr (mozilla::detail::InterfaceNeedsThreadSafeRefCnt<
+                    Interface>::value) {
+    static_assert(Class::HasThreadSafeRefCnt::value,
+                  "Cannot implement a threadsafe interface with "
+                  "non-threadsafe refcounting!");
+  }
+  return NS_GET_TEMPLATE_IID(Interface);
+}
+
+template <typename Class, typename Interface>
+constexpr const nsIID& kImplementedIID = GetImplementedIID<Class, Interface>();
+
+}
+```
+
+每一个XPCOM对象都要实现 nsISupports接口，但是一遍又一遍的写相似的实现代码真的很烦。
+```c++
+/**
+ * Convenience macros for implementing all nsISupports methods for
+ * a simple class.
+ * @param _class The name of the class implementing the method
+ * @param _classiiddef The name of the #define symbol that defines the IID
+ * for the class (e.g. NS_ISUPPORTS_IID)
+ */
+
+#define NS_IMPL_ISUPPORTS0(_class) \
+  NS_IMPL_ADDREF(_class)           \
+  NS_IMPL_RELEASE(_class)          \
+  NS_IMPL_QUERY_INTERFACE0(_class)
+
+#define NS_IMPL_ISUPPORTS(aClass, ...) \
+  NS_IMPL_ADDREF(aClass)               \
+  NS_IMPL_RELEASE(aClass)              \
+  NS_IMPL_QUERY_INTERFACE(aClass, __VA_ARGS__)
+```
+它使用的是接口的名称，而不是接口的 IID 。 在宏实现里，使用了 NS_GET_ID() 宏，从名称获取接口的 IID 。
+```c++
+#define NS_GET_IID(T) (T::COMTypeInfo<T, void>::kIID)
+#define NS_GET_TEMPLATE_IID(T) (T::template COMTypeInfo<T, void>::kIID)
+```
