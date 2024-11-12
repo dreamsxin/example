@@ -1,1 +1,2 @@
-https://github.com/bitmovin/demos/tree/develop/player/drm
+- https://bitmovin.com/demos/drm/
+- https://github.com/bitmovin/demos/tree/develop/player/drm
