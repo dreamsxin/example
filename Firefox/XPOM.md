@@ -10,7 +10,7 @@ XPCOM 不仅仅支持组件化软件开发，他也提供了很多开发平台�
 
 ## `xpcom\components\nsServiceManagerUtils.h`
 ## `dist\xpcom\components\StaticComponents.cpp`
-构建时会生成，所有模块 cid 会存在
+此文件构建时会生成，生成脚本  `xpcom\components\gen_static_components.py`
 ```c++
 const StaticModule gStaticModules[]
 ```
