@@ -149,6 +149,7 @@ constexpr auto kStorageName = u"storage"_ns;
 - LSRequestBase::StartRequest()
 - ConnectionDatastoreOperationBase::Run()
 - ConnectionDatastoreOperationBase::RunOnConnectionThread()
+- PrepareDatastoreOp::DatabaseWork()
 - PrepareDatastoreOp::NestedRun()
 - PrepareDatastoreOp::BeginLoadData()
 - PrepareDatastoreOp::LoadDataOp::DoDatastoreWork()
