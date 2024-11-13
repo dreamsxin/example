@@ -1,7 +1,8 @@
 # 
 
 寄存器相关查看：
-https://github.com/dreamsxin/example/blob/master/Assembly
+- https://github.com/dreamsxin/example/blob/master/Assembly
+- https://github.com/kruschk/programming-from-the-ground-up
 
 ## Programming Ground Up 深入理解程序设计使用Linux汇编语言
 
