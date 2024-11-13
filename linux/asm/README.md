@@ -1,3 +1,8 @@
+# 
+
+寄存器相关查看：
+https://github.com/dreamsxin/example/blob/master/Assembly
+
 ## Programming Ground Up 深入理解程序设计使用Linux汇编语言
 
 - https://github.com/IammyselfYBX/GAS-Programming_from_the_Ground-Up
