@@ -1,5 +1,6 @@
 - https://bitmovin.com/demos/drm/
 - https://github.com/bitmovin/demos/tree/develop/player/drm
+- https://github.com/emarsden/dash-mpd-cli
 
 chrome 通过打开组件列表搜索 Widevine 查看
 ```shell
