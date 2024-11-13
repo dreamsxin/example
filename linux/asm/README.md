@@ -35,10 +35,12 @@
 ## .section
 该指令将程序分成几个不同部分。
 
-**.section .data**
+### .section .data
+
 数据段，列出程序所需的内存空间。
 
-**.section .text**
+###  .section .text
+
 文本段，存储程序的指令。
 
 
