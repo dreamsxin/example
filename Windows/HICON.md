@@ -68,3 +68,174 @@ HBITMAP ConvertIconToBitmap(HICON  hIcon)
 ```
 
 还有一种方法就是先创建一个兼容位图, 然后通过API函数::DrawIcon()复制上去, CopyImage函数可以用来替换创建兼容DC以后的那些骤了
+
+## 例子
+
+```c++
+#include <windows.h>
+#include <gdiplus.h>
+#include <sstream>
+
+using namespace Gdiplus;
+#pragma comment (lib,"Gdiplus.lib")
+
+// 将数字转换为字符串
+std::wstring NumberToString(int number) {
+    std::wstringstream ss;
+    ss << number;
+    return ss.str();
+}
+
+// 将字符串绘制到位图上
+HICON CreateHICONFromNumber(int number) {
+    // 初始化GDI+
+    GdiplusStartupInput gdiplusStartupInput;
+    ULONG_PTR gdiplusToken;
+    GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+
+    // 创建位图
+    Bitmap* bitmap = new Bitmap(32, 32, PixelFormat32bppARGB);
+    Graphics* graphics = new Graphics(bitmap);
+
+    // 设置字体和颜色
+    FontFamily *fontFamily = new FontFamily(L"Arial");
+    Font *font = new Gdiplus::Font(fontFamily, 12, FontStyleRegular, UnitPixel);
+    SolidBrush *brush = new SolidBrush(Color(255, 0, 0, 0)); // 红色
+
+    // 将数字转换为字符串
+    std::wstring numberStr = NumberToString(number);
+
+    // 绘制字符串到位图
+    RectF layoutRect(0, 0, 32, 32);
+    graphics->DrawString(numberStr.c_str(), -1, font, layoutRect, NULL, brush);
+
+    // 将位图转换为HICON
+    HICON hIcon = NULL;
+    bitmap->GetHICON(&hIcon);
+
+    // 清理GDI+
+    delete bitmap;
+    delete graphics;
+    delete font;
+    delete brush;
+    GdiplusShutdown(gdiplusToken);
+
+    return hIcon;
+}
+
+int main() {
+    int number = 123;
+    HICON hIcon = CreateHICONFromNumber(number);
+
+    // 使用HICON，例如将其设置为窗口图标
+    HWND hwnd = GetDesktopWindow();
+    (HICON)::SendMessageW(hwnd, WM_SETICON, (WPARAM)ICON_BIG,
+        (LPARAM)hIcon);
+    (HICON)::SendMessageW(hwnd, WM_SETICON, (WPARAM)ICON_SMALL,
+        (LPARAM)hIcon);
+
+    // 等待一段时间，以便可以看到图标
+    Sleep(15000);
+
+    // 释放HICON
+    DestroyIcon(hIcon);
+
+    return 0;
+}
+```
+```c++
+#include <windows.h>
+#include <gdiplus.h>
+#include <sstream>
+
+using namespace Gdiplus;
+
+#pragma comment (lib,"Gdiplus.lib")
+
+// 将数字转换为字符串
+std::wstring NumberToString(int number) {
+    std::wstringstream ss;
+    ss << number;
+    return ss.str();
+}
+
+// 从文件加载ICO图标
+HICON LoadIconFromFile(const std::wstring& filePath) {
+    return (HICON)LoadImage(NULL, filePath.c_str(), IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
+}
+
+// 在图标上绘制数字
+HICON DrawNumberOnIcon(HICON hIcon, int number) {
+    // 初始化GDI+
+    GdiplusStartupInput gdiplusStartupInput;
+    ULONG_PTR gdiplusToken;
+    GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+
+    // 获取图标信息
+    ICONINFO iconInfo;
+    GetIconInfo(hIcon, &iconInfo);
+
+    // 创建位图
+    Bitmap* bitmap = Bitmap::FromHBITMAP(iconInfo.hbmColor, NULL);
+
+    // 创建Graphics对象
+    Graphics* graphics = new Graphics(bitmap);
+
+    // 设置字体和颜色
+    FontFamily* fontFamily = new FontFamily(L"Arial");
+    Font* font = new Gdiplus::Font(fontFamily, 12, FontStyleRegular, UnitPixel);
+    SolidBrush* brush = new SolidBrush(Color(255, 0, 0, 0)); // 红色
+
+    // 将数字转换为字符串
+    std::wstring numberStr = NumberToString(number);
+
+    // 计算字符串位置
+    RectF layoutRect(0, 0, 32, 32); // 假设图标大小为32x32
+    StringFormat* stringFormat = new StringFormat;
+    stringFormat->SetAlignment(StringAlignmentCenter);
+    stringFormat->SetLineAlignment(StringAlignmentCenter);
+
+    // 绘制字符串
+    graphics->DrawString(numberStr.c_str(), -1, font, layoutRect, stringFormat, brush);
+
+    // 将位图转换为HICON
+    HICON hNewIcon = NULL;
+    bitmap->GetHICON(&hNewIcon);
+
+    // 清理资源
+    delete bitmap;
+    delete graphics;
+    delete font;
+    delete brush;
+    delete stringFormat;
+    DeleteObject(iconInfo.hbmColor);
+    DeleteObject(iconInfo.hbmMask);
+    GdiplusShutdown(gdiplusToken);
+
+    return hNewIcon;
+}
+
+int main() {
+    std::wstring filePath = L"your_icon.ico"; // 替换为你的ICO文件路径
+    int number = 123;
+
+    // 从文件加载ICO图标
+    HICON hIcon = LoadIconFromFile(filePath);
+
+    // 在图标上绘制数字
+    HICON hNewIcon = DrawNumberOnIcon(hIcon, number);
+
+    // 使用HICON，例如将其设置为窗口图标
+    HWND hwnd = GetDesktopWindow();
+    SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hNewIcon);
+
+    // 等待一段时间，以便可以看到图标
+    Sleep(5000);
+
+    // 释放HICON
+    DestroyIcon(hNewIcon);
+    DestroyIcon(hIcon);
+
+    return 0;
+}
+```
