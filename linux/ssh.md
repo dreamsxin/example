@@ -158,3 +158,7 @@ echo "ubuntu" > mypassword.txt
 sshpass -f mypassword.txt ssh ostechnix@192.168.1.30 uname -a
 ```
 
+## 客户端
+
+- MobaXterm Home Edition
+- Bitvise SSH Client
