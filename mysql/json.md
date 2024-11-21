@@ -2,7 +2,9 @@
 ## 查询
 
 ```sql
-SELECT * FROM test WHERE JSON_CONTAINS(field, JSON_OBJECT('keyname', ?))
+SELECT * FROM test WHERE JSON_CONTAINS(field, JSON_OBJECT('keyname', ?));
+SELECT * FROM test WHERE JSON_EXTRACT(field, '$') = 'null';
+SELECT * FROM test WHERE JSON_EXTRACT(field, '$.key1') IS NULL;
 ```
 
 ## 修改
