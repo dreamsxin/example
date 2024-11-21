@@ -95,6 +95,8 @@ hg up -C central
 ./mach build-backend -b VisualStudio
 ./mach build
 ./mach clobber
+env MOZCONFIG=mozconfig-dbg ./mach build
+env MOZCONFIG=mozconfig-rel ./mach build
 ```
 
 ## 编译选项
