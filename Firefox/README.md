@@ -94,6 +94,7 @@ hg up -C central
 ./mach configure --disable-tests --enable-debug
 ./mach build-backend -b VisualStudio
 ./mach build
+./mach clobber
 ```
 
 ## 编译选项
