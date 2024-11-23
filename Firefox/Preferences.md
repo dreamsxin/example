@@ -1,3 +1,5 @@
+## `browser\app\profile\firefox.js`
+
 ## `modules\libpref\Preferences.cpp`
 如果满足以下两个条件之一，则首选项将被“净化”（即不发送到 webcontent 进程）：
 1.首选项名称与以下列表中的前缀之一匹配
