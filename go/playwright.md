@@ -16,3 +16,209 @@ https://github.com/playwright-community/playwright-go
 - page.locator('article:has-text("products")').click()
 # 匹配 article 标签下包含类名为 promo 的 div 标签的节点
 - page.locator("article:has(div.promo)").click()
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"math/rand"
+	"net/url"
+	"os"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/dreamsxin/go-now"
+	"github.com/playwright-community/playwright-go"
+)
+
+func GetRandInt(max int) int {
+	return rand.Intn(max)
+}
+
+func RandSleep(t time.Duration) {
+	time.Sleep(t + time.Duration(100+GetRandInt(999))*time.Millisecond)
+}
+
+func RequestHandle(request playwright.Request) {
+	//fmt.Printf(">> %s %s\n", request.Method(), request.URL())
+}
+func ResponseHandle(response playwright.Response) {
+	go func() {
+		urlstr := response.URL()
+		u, err := url.Parse(urlstr)
+		if err != nil {
+			return
+		}
+		if strings.HasPrefix(u.Path, "/api/products/shopify-products") {
+			sdatestr := u.Query().Get("published_time_begin")
+			fmt.Printf("sdatestr %s << %v %s\n", sdatestr, response.Status(), urlstr)
+
+			t := time.Now()
+			if sdatestr != "" {
+				if response.Status() == 200 {
+					bodystr, err := response.Body()
+					if err == nil {
+						dataChan <- Data{Urlstr: urlstr, Bodystr: string(bodystr)}
+					}
+				}
+				t, _ = time.Parse(time.DateOnly, sdatestr)
+				t = t.AddDate(0, -1, 0)
+			}
+
+			RandSleep(2 * time.Second)
+			handle_selectdate(response.Frame().Page(), t)
+		}
+	}()
+
+}
+
+func handle_login(browserpage playwright.Page) {
+
+	RandSleep(time.Millisecond)
+	log.Println("输入账号名")
+
+	err := browserpage.GetByPlaceholder("请输入您的邮箱").Click()
+	if err != nil {
+		log.Println("browserpage.GetByPlaceholder", err)
+		return
+	}
+	browserpage.GetByPlaceholder("请输入您的邮箱").Fill("")
+
+	err = browserpage.GetByPlaceholder("请输入您的密码").Click()
+	if err != nil {
+		log.Println("browserpage.GetByPlaceholder", err)
+		return
+	}
+	browserpage.GetByPlaceholder("请输入您的密码").Fill("")
+
+	RandSleep(time.Second)
+	browserpage.Locator("#loginBut").Click()
+}
+
+func handle_selectdate(browserpage playwright.Page, t time.Time) {
+	sdate := now.With(t).BeginningOfMonth()
+	edate := now.With(t).EndOfMonth()
+
+	log.Println("handle_selectdate", sdate.Format(time.DateOnly), edate.Format(time.DateOnly))
+
+	RandSleep(time.Millisecond)
+
+	err := browserpage.GetByPlaceholder("开始日期").Fill(sdate.Format(time.DateOnly))
+	if err != nil {
+		log.Println("browserpage.GetByPlaceholder", err)
+		return
+	}
+
+	err = browserpage.GetByPlaceholder("结束日期").Fill(edate.Format(time.DateOnly))
+	if err != nil {
+		log.Println("browserpage.GetByPlaceholder", err)
+		return
+	}
+
+	RandSleep(10 * time.Second)
+	err = browserpage.GetByText("搜索").Click()
+	if err != nil {
+		log.Println("browserpage.GetByText", err)
+		return
+	}
+}
+
+func OnLoadHandle(browserpage playwright.Page) {
+	urlstr := browserpage.URL()
+	u, err := url.Parse(urlstr)
+	if err != nil {
+		return
+	}
+	if u.Host != "sellercenter.io" {
+		return
+	}
+	if strings.HasPrefix(u.Path, "/cn/shopify-product") {
+		log.Printf("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< page %s\n", browserpage.URL())
+		go func() {
+			RandSleep(time.Millisecond)
+			err := browserpage.GetByText("现在登录").Click()
+			if err != nil {
+				log.Println("browserpage.GetByText", err)
+
+				t := time.Now()
+				handle_selectdate(browserpage, t)
+				return
+			}
+			handle_login(browserpage)
+		}()
+	}
+}
+
+var syncgroup sync.WaitGroup
+
+type Data struct {
+	Urlstr  string
+	Bodystr string
+}
+
+var dataChan chan Data
+
+func main() {
+	syncgroup.Add(1)
+	dataChan = make(chan Data, 1000)
+
+	file, err := os.OpenFile(fmt.Sprintf("./log%s.txt", time.Now().Format(time.DateOnly)), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	go func() {
+		// 循环读取 dataChan
+		for data := range dataChan {
+
+			b, err := json.Marshal(data)
+			if err != nil {
+				log.Println("json.Marshal", err)
+				continue
+			}
+			// 追加内容
+			file.Write(b)
+			file.WriteString("\n")
+		}
+	}()
+	err = playwright.Install()
+	if err != nil {
+		log.Fatalf("could not install playwright: %v", err)
+	}
+	pw, err := playwright.Run()
+	if err != nil {
+		log.Fatalf("could not start playwright: %v", err)
+	}
+	browser, err := pw.Chromium.Launch(playwright.BrowserTypeLaunchOptions{
+		Headless: playwright.Bool(false),
+		Timeout:  playwright.Float(60000),
+	})
+	if err != nil {
+		log.Fatalf("could not launch browser: %v", err)
+	}
+	page, err := browser.NewPage()
+	if err != nil {
+		log.Fatalf("could not create page: %v", err)
+	}
+	page.SetDefaultTimeout(60000)
+	page.OnRequest(RequestHandle)
+	page.OnResponse(ResponseHandle)
+	page.OnLoad(OnLoadHandle)
+	if _, err = page.Goto("https://sellercenter.io/cn/shopify-product"); err != nil {
+		log.Fatalf("could not goto: %v", err)
+	}
+
+	syncgroup.Wait()
+	if err = browser.Close(); err != nil {
+		log.Fatalf("could not close browser: %v", err)
+	}
+	if err = pw.Stop(); err != nil {
+		log.Fatalf("could not stop Playwright: %v", err)
+	}
+}
+
+```
