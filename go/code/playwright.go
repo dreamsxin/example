@@ -68,7 +68,7 @@ func handle_login(browserpage playwright.Page) {
 		log.Println("browserpage.GetByPlaceholder", err)
 		return
 	}
-	browserpage.GetByPlaceholder("请输入您的邮箱").Fill("dreamsxin@gmail.com")
+	browserpage.GetByPlaceholder("请输入您的邮箱").Fill("xxxxxx@xxxx.com")
 
 	err = browserpage.GetByPlaceholder("请输入您的密码").Click()
 	if err != nil {
