@@ -1975,6 +1975,24 @@ https://github.com/Fenoxo/sourceTiTS
 
 # HTML5
 
+https://astro.unl.edu/animationsLinks.html
+
+https://astro.unl.edu/classaction/animations/coordsmotion/daylighthoursexplorer.html
+日夜长短比较
+https://astro.unl.edu/classaction/animations/coordsmotion/sunsrays.html
+
+https://astro.unl.edu/classaction/animations/coordsmotion/daylightsimulator.html
+日光模拟
+- https://astro.unl.edu/classaction/animations/coordsmotion/obliquity.html
+地轴倾角
+- https://astro.unl.edu/classaction/animations/coordsmotion/seasonsim.html
+荒岛
+- https://astro.unl.edu/classaction/animations/coordsmotion/transitmovie.html
+四季变换
+- https://astro.unl.edu/naap/motion1/animations/seasons_ecliptic.html
+公转
+https://github.com/chidiwilliams/3d-orbit-simulation
+
 https://github.com/ccnmtl/astro-simulations
 
 https://ccnmtl.github.io/astro-simulations/lunar-phase-simulator/
