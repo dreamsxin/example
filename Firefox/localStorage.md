@@ -49,6 +49,9 @@ nsDirectoryService::RealInit();
 
 
 ### `dom\quota\ActorsParent.cpp`
+- InitializeLocalStorage
+- EnsureStorageConnection
+根据 `mOriginMetadata` 选择目录
 - InitializeQuotaManager
 ```c++
 void InitializeQuotaManager() {
