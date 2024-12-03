@@ -5,6 +5,7 @@ https://github.com/puppeteer/puppeteer
 ```shell
 npm init -y
 npm i puppeteer
+npm i puppeteer-firefox
 npm i puppeteer-core
 ```
 
