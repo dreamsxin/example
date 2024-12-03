@@ -16,6 +16,7 @@ import puppeteer from 'puppeteer';
 
 // Launch the browser and open a new blank page
 const browser = await puppeteer.launch({
+  headless: false,
   product: 'firefox', // or 'chrome'
   protocol: 'webDriverBiDi',
 });
