@@ -5,7 +5,7 @@ from selenium.webdriver.chrome.service import Service
 import requests
 
 
-def driver_setting_yundeng(browserid):
+def driver_setting(browserid):
     # time.sleep(2)
 
     headers = {
