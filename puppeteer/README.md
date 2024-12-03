@@ -21,6 +21,13 @@ const browser = await puppeteer.launch({
   product: 'firefox', // or 'chrome'
   protocol: 'webDriverBiDi',
 });
+
+const wsEndpoint = browser.wsEndpoint();
+const url = new URL(wsEndpoint);
+const port = url.port;
+ 
+console.log('Puppeteer is listening on port:', port);
+
 const page = await browser.newPage();
 
 // Navigate the page to a URL.
