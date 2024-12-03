@@ -1,5 +1,12 @@
-```html
 
+## `remote.active-protocols`
+定义远程协议。
+- WebDriver BiDi（1）
+- CDP（`2`）。
+同时支持两个协议设置为`3`。自 Firefox 129 以来默认为 `1`（WebDriver BiDi）。
+
+## 检测
+```html
 <!DOCTYPE html>
 <html>
 
