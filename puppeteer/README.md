@@ -9,7 +9,7 @@ npm i puppeteer-core
 ```
 
 ## Demo
-
+文件名 `main.mjs` （可以不用定义 "type": "module"）：
 ```js
 import puppeteer from 'puppeteer';
 // Or import puppeteer from 'puppeteer-core';
