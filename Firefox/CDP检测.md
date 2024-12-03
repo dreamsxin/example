@@ -5,6 +5,13 @@
 - CDP（`2`）。
 同时支持两个协议设置为`3`。自 Firefox 129 以来默认为 `1`（WebDriver BiDi）。
 
+```js
+  // Defines the protocols that will be active for the Remote Agent.
+  // 1: WebDriver BiDi
+  // 2: CDP (Chrome DevTools Protocol)
+  // 3: WebDriver BiDi + CDP
+  pref("remote.active-protocols", 1);
+```
 ## 检测
 ```html
 <!DOCTYPE html>
