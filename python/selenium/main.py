@@ -12,7 +12,7 @@ def server(shopid):
     try:
         # mla_profile_id = api_setting.get_mla_profile_id()
         print('开始启动浏览器 driver')
-        driver = driver_setting.driver_setting_yundeng(shopid)
+        driver = driver_setting.driver_setting(shopid)
         if driver is None:
             print('server', shopid, "driver 配置失败")
             return
