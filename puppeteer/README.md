@@ -20,6 +20,7 @@ const browser = await puppeteer.launch({
   headless: false,
   product: 'firefox', // or 'chrome'
   protocol: 'webDriverBiDi',
+  executablePath: 'D:/mozilla-source/mozilla-unified/obj-x86_64-pc-windows-msvc/dist/bin/firefox.exe',
 });
 
 const wsEndpoint = browser.wsEndpoint();
@@ -53,3 +54,5 @@ console.log('The title of this blog post is "%s".', fullTitle);
 
 await browser.close();
 ```
+
+`D:\mozilla-source\mozilla-unified\obj-x86_64-pc-windows-msvc\dist\bin\firefox.exe --allow-pre-commit-input --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-hang-monitor --disable-infobars --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --disable-search-engine-choice-screen --disable-sync --enable-automation --export-tagged-pdf --generate-pdf-document-outline --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --disable-features=Translate,AcceptCHFrame,MediaRouter,OptimizationHints,ProcessPerSiteUpToMainFrameThreshold,IsolateSandboxedIframes --enable-features=PdfOopif about:blank --remote-debugging-port=0 --user-data-dir=C:\Users\ADMINI~1\AppData\Local\Temp\puppeteer_dev_chrome_profile-M7r3Fy`
