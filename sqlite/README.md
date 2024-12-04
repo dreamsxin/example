@@ -1,5 +1,7 @@
 # SQLite3
 
+- https://www.sqlite.org/index.html
+
 Command 	Description
 - .show 	Displays current settings for various parameters
 - .databases 	Provides database names and files
@@ -41,3 +43,7 @@ sqlite3 ./phalcon_test.sqlite
 .quit
 .exit
 ```
+
+## 工具
+
+https://github.com/sqlitebrowser/sqlitebrowser
