@@ -2,11 +2,15 @@
 
 - https://github.com/latex3/latex2e
 - https://github.com/latex3/latex3
+- https://tex.stackexchange.com/
+- https://github.com/learnlatex/learnlatex.github.io
 
 ## 编辑器
 
 - https://www.texstudio.org/
 - https://github.com/TeXworks/texworks
+- https://github.com/brucemiller/LaTeXML
+- 
 
 # :sparkles: LaTeX 数学公式语法大全
 ## 保留字符
