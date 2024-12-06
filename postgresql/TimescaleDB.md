@@ -270,7 +270,8 @@ SELECT create_hypertable('conditions', 'time', if_not_exists => TRUE);
 ## 查询 timescale 的区块信息
 
 ```sql
-select * from chunk_relation_size('conditions');
+-- select * from chunk_relation_size('conditions');
+SELECT chunk_relation_size('your_hypertable_name', 'your_chunk_id');
 ```
 
 ## 转换已存在的表和数据
@@ -1434,7 +1435,7 @@ SELECT add_job('user_defined_action','1h', fixed_schedule => false);
 ## chunk
 
 ```psql
-SELECT show_chunks('tablename')
+SELECT show_chunks('tablename');
 SELECT pg_size_pretty(hypertable_size('tablename'));
 SELECT * FROM timescaledb_information.hypertables WHERE hypertable_name = 'tablename';
 
