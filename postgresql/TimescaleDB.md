@@ -114,7 +114,7 @@ CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
 ```
 
 ## 查看块
-
+https://docs.timescale.com/api/latest/hypertable/hypertable_detailed_size/
 ```psql
 SELECT
     *
@@ -267,11 +267,15 @@ SELECT create_hypertable('conditions', 'time', 'location', 4);
 SELECT create_hypertable('conditions', 'time', if_not_exists => TRUE);
 ```
 
-## 查询 timescale 的区块信息
+## 查询 timescale 的区块大小等信息
 
 ```sql
--- select * from chunk_relation_size('conditions');
-SELECT chunk_relation_size('your_hypertable_name', 'your_chunk_id');
+-- select * from chunk_relation_size('conditions/tablename');
+SELECT show_chunks('tablename'); -- 显示超表所有区块
+SELECT show_chunks('tablename', older_than => INTERVAL '3 months');
+SELECT show_chunks('tablename', created_before => INTERVAL '3 months');
+SELECT * FROM chunks_detailed_size('tablename')
+  ORDER BY chunk_name, node_name;
 ```
 
 ## 转换已存在的表和数据
