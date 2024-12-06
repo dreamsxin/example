@@ -405,6 +405,7 @@ sudo -u postgres /usr/lib/postgresql/9.4/bin/pg_resetxlog  .
 # 查看数据库占用空间
 
 ```sql
+select pg_size_pretty(pg_database_size('dbname'));
 select pg_database.datname, pg_database_size(pg_database.datname) AS size from pg_database;
 ```
 
