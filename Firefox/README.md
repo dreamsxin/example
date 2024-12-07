@@ -3,26 +3,25 @@ https://github.com/mozilla/gecko-dev
 
 ## 开源浏览器
 
-https://github.com/zen-browser/desktop
-
-https://github.com/BrowserWorks/Waterfox
-
-https://github.com/Floorp-Projects/Floorp
-
-https://github.com/OtterBrowser/otter-browser
-
-https://github.com/LadybirdBrowser/ladybird
-
-https://github.com/codeprof/PhantomBrowser
+- https://github.com/zen-browser/desktop
+- https://github.com/BrowserWorks/Waterfox
+- https://github.com/Floorp-Projects/Floorp
+- https://github.com/OtterBrowser/otter-browser
+- https://github.com/LadybirdBrowser/ladybird
+- https://github.com/codeprof/PhantomBrowser
 
 ## 指纹浏览器
 
 **camoufox**
-https://github.com/daijro/camoufox
+- https://github.com/daijro/camoufox
+
+## RPA
+
+- https://docs.automa.site/guide/quick-start.html
 
 ## VS 插件
 
-https://marketplace.visualstudio.com/items?itemName=vsdbgplat.MicrosoftChildProcessDebuggingPowerTool
+- https://marketplace.visualstudio.com/items?itemName=vsdbgplat.MicrosoftChildProcessDebuggingPowerTool
 关闭多进程模式 `browser.tabs.remote.autostart`。
 然后修改程序入口函数 wmain：
 
