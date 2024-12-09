@@ -24,7 +24,7 @@ pip install -e .
 - https://holoviews.org/getting_started/Introduction.html
 - https://github.com/holoviz/holoviews/tree/main/examples/assets
 
-### 例子：地铁站
+### 例子：表格数据-地铁站
 
 **散点图**
 ```python
@@ -42,10 +42,37 @@ print(scatter)
 scatter
 ```
 
-**组合布局：增加直方图**
+**合成layout：增加直方图**
 ```python
 layout = scatter + hv.Histogram(np.histogram(station_info['opened'], bins=24), kdims=['opened'])
 print(layout)
 layout
 ```
 
+### 例子：数组数据-出租车下车点
+
+```python
+taxi_dropoffs = {hour:arr for hour, arr in np.load('../assets/hourly_taxi_data.npz').items()}
+print('Hours: {hours}'.format(hours=', '.join(taxi_dropoffs.keys())))
+print('Taxi data contains {num} arrays (one per hour).\nDescription of the first array:\n'.format(num=len(taxi_dropoffs)))
+np.info(taxi_dropoffs['0'])
+```
+
+**地点覆盖图**
+```python
+# 限制数值范围 (x0,y0,x1,y1)
+bounds = (-74.05, 40.70, -73.90, 40.80)
+image = hv.Image(taxi_dropoffs['0'], ['lon','lat'], bounds=bounds)
+image
+```
+**增加点图**
+```python
+points = hv.Points(station_info, ['lon','lat']).opts(color="red")
+image * points
+```
+
+**合成覆盖图+覆盖图点图**
+```python
+points = hv.Points(station_info, ['lon','lat']).opts(color="red")
+image + image * points
+```
