@@ -26,7 +26,7 @@ pip install -e .
 
 ### 例子：地铁站
 
-
+**散点图**
 ```python
 import pandas as pd
 import numpy as np
@@ -36,4 +36,16 @@ hv.extension('bokeh')
 
 station_info = pd.read_csv('../assets/station_info.csv')
 station_info.head()
+
+scatter = hv.Scatter(station_info, 'services', 'ridership')
+print(scatter)
+scatter
 ```
+
+**组合布局：增加直方图**
+```python
+layout = scatter + hv.Histogram(np.histogram(station_info['opened'], bins=24), kdims=['opened'])
+print(layout)
+layout
+```
+
