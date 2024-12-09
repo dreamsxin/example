@@ -4,7 +4,8 @@
 
 > Stop plotting your data - annotate your data and let it visualize itself.
 
-https://github.com/holoviz/holoviews
+- https://github.com/holoviz/holoviews
+- https://holoviews.org/reference/elements/matplotlib/Spikes.html
 
 ## 安装
 
@@ -32,6 +33,7 @@ import pandas as pd
 import numpy as np
 import holoviews as hv
 from holoviews import opts
+
 hv.extension('bokeh')
 
 station_info = pd.read_csv('../assets/station_info.csv')
@@ -122,4 +124,31 @@ composition.opts(
 **保存**
 ```python
 hv.save(composition, 'holomap.html')
+```
+
+## 例子：神经元放电数据（神经元在受到刺激时产生的电信号脉冲）
+
+```python
+import pandas as pd
+import holoviews as hv
+from holoviews import opts
+
+spike_train = pd.read_csv('../assets/spike_train.csv.gz')
+spike_train.head(n=3)
+```
+
+**曲线和**
+```python
+curve  = hv.Curve( spike_train, 'milliseconds', 'Hertz', label='Firing Rate')
+spikes = hv.Spikes(spike_train, 'milliseconds', [],      label='Spike Train')
+
+layout = curve + spikes
+layout
+```
+
+**自定义外观**
+```python
+layout.opts(
+    opts.Curve( height=200, width=900, xaxis=None, line_width=1.50, color='red', tools=['hover']),
+    opts.Spikes(height=150, width=900, yaxis=None, line_width=0.25, color='grey')).cols(1)
 ```
