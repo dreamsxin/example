@@ -1038,6 +1038,10 @@ https://github.com/onyx-platform/onyx
 
 # GO
 
+https://github.com/chromedp/chromedp
+
+https://github.com/mafredri/cdp
+
 https://github.com/gocolly/colly
 
 https://github.com/syncthing/syncthing
