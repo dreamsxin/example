@@ -52,6 +52,10 @@ layout
 ### 例子：数组数据-出租车下车点
 
 ```python
+npfiledata = np.load('assets/hourly_taxi_data.npz')
+# 转为 csv
+npp = pd.DataFrame(data=npfiledata['0'])
+npp.to_csv("data.csv")
 # 根据键值对视图，创建字典
 taxi_dropoffs = {hour:arr for hour, arr in np.load('../assets/hourly_taxi_data.npz').items()}
 print('Hours: {hours}'.format(hours=', '.join(taxi_dropoffs.keys())))
