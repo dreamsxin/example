@@ -91,7 +91,8 @@ hg up -C central
 
 ## 编译环境
 
-https://firefox-source-docs.mozilla.org/writing-rust-code/update-policy.html
+- https://firefox-source-docs.mozilla.org/writing-rust-code/update-policy.html
+设置 rust 版本。
 
 ### 编译
 
