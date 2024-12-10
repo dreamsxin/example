@@ -1,5 +1,6 @@
 ## 文档
-https://github.com/mozilla/gecko-dev
+- https://firefox-source-docs.mozilla.org/setup/windows_build.html#building-firefox-on-windows
+- https://github.com/mozilla/gecko-dev
 
 ## 开源浏览器
 
@@ -87,6 +88,10 @@ python3 bootstrap.py
 cd /mozilla-unified
 hg up -C central
 ```
+
+## 编译环境
+
+https://firefox-source-docs.mozilla.org/writing-rust-code/update-policy.html
 
 ### 编译
 
