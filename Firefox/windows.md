@@ -1,3 +1,5 @@
+## widget\windows\nsWindow.cpp
+- nsWindow::Create
 ## widget\windows\WinEventObserver.cpp
 ```c++
 bool WinEventHub::Initialize() {
