@@ -1038,6 +1038,8 @@ https://github.com/onyx-platform/onyx
 
 # GO
 
+https://github.com/3proxy/3proxy
+
 https://github.com/chromedp/chromedp
 
 https://github.com/mafredri/cdp
