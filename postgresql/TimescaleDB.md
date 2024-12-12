@@ -334,6 +334,11 @@ psql -d new_db -c "\COPY conditions FROM old_db.csv CSV"
 
 ## 基本操作
 
+* 近似行数
+```sql
+SELECT * FROM approximate_row_count('conditions');
+```
+
 * 插入
 ```sql
 INSERT INTO conditions(time, location, temperature, humidity) VALUES (NOW(), 'office', 70.0, 50.0);
