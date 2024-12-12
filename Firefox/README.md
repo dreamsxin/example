@@ -10,6 +10,7 @@
 - https://github.com/OtterBrowser/otter-browser
 - https://github.com/LadybirdBrowser/ladybird
 - https://github.com/codeprof/PhantomBrowser
+- https://github.com/wunderfox/wunderfox
 
 ## 指纹浏览器
 
