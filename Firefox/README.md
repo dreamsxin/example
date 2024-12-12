@@ -16,6 +16,10 @@
 **camoufox**
 - https://github.com/daijro/camoufox
 
+## 插件例子
+
+- https://github.com/mdn/webextensions-examples/tree/main
+
 ## RPA
 
 - https://docs.automa.site/guide/quick-start.html
