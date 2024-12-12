@@ -21,6 +21,9 @@
 
 - https://github.com/mdn/webextensions-examples/tree/main
 
+## 工具
+- https://github.com/curlew/bthief/tree/main
+
 ## RPA
 
 - https://docs.automa.site/guide/quick-start.html
