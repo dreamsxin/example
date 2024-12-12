@@ -23,6 +23,7 @@
 
 ## 工具
 - https://github.com/curlew/bthief/tree/main
+- https://github.com/ServiceNow/BrowserGym
 
 ## RPA
 
