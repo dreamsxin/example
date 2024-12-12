@@ -1480,3 +1480,8 @@ SELECT * FROM hypertable_detailed_size('表名') ORDER BY node_name;
 
 - max_locks_per_transaction
   
+## 查询定时任务
+```sql
+SELECT add_retention_policy('cpu', INTERVAL '7 days');
+SELECT * FROM timescaledb_information.jobs;
+```
