@@ -35,3 +35,28 @@ bool WinEventHub::Initialize() {
   return true;
 }
 ```
+
+## 窗口消息
+
+- MOZ_HAS_REMOTE
+- -no-remote
+
+### nsRemoteService
+- StartupServer()
+### nsWinRemoteServer
+### nsWinRemoteClient
+- SendCommandLine
+### ipc\glue\WindowsMessageLoop.cpp
+- NeuteredWindowRegion
+- StartNeutering
+```c++
+::SetWindowsHookEx(WH_CALLWNDPROC, CallWindowProcedureHook, nullptr, gUIThreadId);
+```
+- CallWindowProcedureHook
+- NeuteredWindowProc
+```c++
+SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)NeuteredWindowProc);
+SetWindowLongPtr(hWnd, GWLP_WNDPROC, currentWndProc);
+SetProp(hWnd, kOldWndProcProp, (HANDLE)currentWndProc)
+```
+- ProcessOrDeferMessage
