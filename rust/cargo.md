@@ -26,3 +26,9 @@ cargo add enigo
 [dependencies]
 enigo = "0.2.1"
 ```
+
+#‌# crate-type
+用于指定编译单元的类型，主要有两种类型：lib 和 bin。
+
+-‌ lib‌：当使用crate-type = "lib"时，编译器会生成一个库文件（.rlib），这个库文件可以被其他 crate 引用和使用。
+-‌ ‌bin‌：当使用crate-type = "bin"时，编译器会生成一个可执行文件。这种类型的crate包含一个main函数，可以直接运行‌。
