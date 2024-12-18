@@ -3213,6 +3213,10 @@ https://github.com/hastenax/poloniexBot
 
 https://github.com/geogebra/geogebra （动态几何软件）
 
+**API 测试工具**
+- https://github.com/httpie/cli
+- https://github.com/httpie/desktop
+
 ## 字体 && Font
 
 https://sourceforge.net/projects/wqy/
