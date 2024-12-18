@@ -42,6 +42,42 @@ curl -I -X DELETE http://localhost
 curl -v http://localhost
 ```
 
+```shell
+curl -X POST \
+  "http://localhost:3001/api/users/login" \
+  --header 'Content-Type: application/json' \
+  --header 'Accept: application/json' \
+  -d '
+  {
+    "email": "frog@example.com",
+    "password": "fishfish"
+  }'
+```
+
+## 使用 python
+`usersLogin.py`
+```python
+#!/usr/bin/env bash
+# Users
+usersLogin() {
+  email=$1
+  password=$2
+  curl -X POST \
+    "$URL/users/login" \
+    --header 'Content-Type: application/json' \
+    --header 'Accept: application/json' \
+    -d '
+    {
+      "email": "'"$email"'",
+      "password": "'"$password"'"
+    }'
+}
+# Variables
+URL="http://localhost:3001/api"
+```
+```shell
+usersLogin.py 'frog@example.com' 'fishfish' | jq
+```
 ## 代理主机和端口
 
 ```shell
