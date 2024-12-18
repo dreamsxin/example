@@ -29,6 +29,16 @@
 
 - https://docs.automa.site/guide/quick-start.html
 
+## IDE 配置
+
+https://firefox-source-docs.mozilla.org/contributing/editor.html
+
+- Visual Studio Code
+`./mach ide vscode`
+- Visual Studio
+You can run a Visual Studio project by running:
+`./mach ide visualstudio`
+
 ## VS 插件
 
 - https://marketplace.visualstudio.com/items?itemName=vsdbgplat.MicrosoftChildProcessDebuggingPowerTool
