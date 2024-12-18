@@ -75,8 +75,40 @@ usersLogin() {
 # Variables
 URL="http://localhost:3001/api"
 ```
+执行
 ```shell
 usersLogin.py 'frog@example.com' 'fishfish' | jq
+```
+`usersFindById.py`
+```python
+#!/usr/bin/env bash
+# Users
+usersLogin() {
+  email=$1
+  password=$2
+  curl -X POST \
+    "$URL/users/login" \
+    --header 'Content-Type: application/json' \
+    --header 'Accept: application/json' \
+    -d '
+    {
+      "email": "'"$email"'",
+      "password": "'"$password"'"
+    }'
+}
+usersFindById() {
+  id=${1:-1}
+  curl -X GET \
+    "$URL/users/$id" \
+    --header "Authorization: Bearer $TOKEN"
+}
+# Variables
+URL="http://localhost:3001/api"
+TOKEN="$(usersLogin 'frog@example.com' 'fishfish' | jq -r .token)"
+```
+使用
+```shell
+usersFindById 1 | jq
 ```
 ## 代理主机和端口
 
