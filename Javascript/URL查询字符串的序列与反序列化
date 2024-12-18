@@ -1,0 +1,37 @@
+## 序列化
+```js
+let params = new URLSearchParams();
+params.append('name', 'John');
+params.append('age', '30');
+let queryString = params.toString();
+console.log("https://xxxxxxx?" +queryString); 
+
+function objectToQueryString(obj) {
+  return Object.entries(obj).map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join('&');
+}
+console.log(objectToQueryString({name: 'John', age: '30'}));
+```
+## 反序列化
+```js
+let queryString = "name=John&age=30";
+let params = new URLSearchParams(queryString);
+console.log(params.get('name')); // "John"
+console.log(params.get('age')); // "30"
+
+let url = new URL('https://example.com?name=John&age=30');
+let params = new URLSearchParams(url.search);
+console.log(params.get('name')); // "John"
+console.log(params.get('age')); // "30"
+
+function queryStringToObject(queryString) {
+  let obj = {};
+  let arr = queryString.split("&");
+  for(let i = 0; i < arr.length; i++){
+    let temp = arr[i].split("=");
+    obj[temp[0]] = temp[1];
+  }
+  return obj;
+}
+console.log(queryStringToObject('name=John&age=30'));
+
+```
