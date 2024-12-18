@@ -2,6 +2,9 @@
 ## 插件
 
 - https://marketplace.visualstudio.com/items?itemName=yzane.markdown-pdf#usage
+- GlassIt-VSC 背景透明度
+https://marketplace.visualstudio.com/items?itemName=s-nlf-fh.glassit
+- https://github.com/r23qw/vscode-http-client
 
 ### Command Palette
 1. Open the Markdown file
