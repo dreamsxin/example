@@ -3216,6 +3216,7 @@ https://github.com/geogebra/geogebra （动态几何软件）
 **API 测试工具**
 - https://github.com/httpie/cli
 - https://github.com/httpie/desktop
+- https://github.com/r23qw/vscode-http-client
 
 ## 字体 && Font
 
