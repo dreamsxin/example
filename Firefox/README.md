@@ -80,6 +80,9 @@ https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe
 运行 mozilla-build
 ```shell
 C:\mozilla-build\start-shell.bat
+# 指定起始目录
+C:\mozilla-build\start-shell.bat -where D:\firefox
+C:\mozilla-build\start-shell.bat -here
 ```
 
 - https://archive.mozilla.org/pub/firefox/releases/130.0.1/source/
