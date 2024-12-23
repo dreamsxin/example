@@ -4,10 +4,30 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"net/netip"
 	"strconv"
 	"strings"
 	"encoding/binary"
 )
+
+func ip4To6() {
+	ip := net.ParseIP("127.0.0.1")
+	if ip == nil {
+		fmt.Println("IP address is not valid")
+		return
+	}
+
+	if ip.To4() != nil {
+		fmt.Println("IP address is v4", ip, netip.AddrFrom16([16]byte(ip)).String())
+	} else {
+		fmt.Println("IP address is v6")
+	}
+
+	data := netip.MustParseAddr("::ffff:1.2.3.4").As16()
+	ip4As6 := net.IP(data[:])
+
+	fmt.Println("ip4As6 address is v4", ip4As6.String(), netip.AddrFrom16([16]byte(ip)).String())
+}
 
 // ip 地址转 二进制
 func ipToBinary(ipStr string) (string, error) {
