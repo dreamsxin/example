@@ -8,11 +8,9 @@
 ## Docker
 
 This will start a ParadeDB instance with default user postgres and password postgres
-```shell
-docker exec -it paradedb psql -U postgres
-```
 
 ```shell
+docker run --name paradedb -e POSTGRES_USER=myuser -e POSTGRES_PASSWORD=mypassword -e POSTGRES_DB=mydatabase -v paradedb_data:/var/lib/postgresql/data/ -p 5432:5432 -d paradedb/paradedb:latest
 docker run \
   --name paradedb \
   -e POSTGRESQL_USERNAME=<user> \
@@ -23,6 +21,10 @@ docker run \
   -p 5432:5432 \
   -d \
   paradedb/paradedb:latest
+```
+
+```shell
+docker exec -it paradedb psql -U postgres
 ```
 
 ## 创建测试数据
@@ -40,7 +42,22 @@ LIMIT 3;
 
 ## 创建 BM25  索引
 
-```shell
+**Syntax**
+```sql
+CREATE INDEX <index_name> ON <schema_name>.<table_name>
+USING bm25 (<columns>)
+WITH (key_field='<key_field>');
+```
+目标列表中的第一列。
+- key_field
+整数类型性能最佳。
+**Basic Usage**
+```sql
+CREATE INDEX search_idx ON mock_items
+USING bm25 (id, description, category, rating, in_stock, created_at, metadata, weight_range)
+WITH (key_field='id');
+```
+```sql
 CALL paradedb.create_bm25(
         index_name => 'search_idx',
         schema_name => 'public',
