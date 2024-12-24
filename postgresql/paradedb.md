@@ -39,8 +39,89 @@ SELECT description, rating, category
 FROM mock_items
 LIMIT 3;
 ```
+**创建索引**
+```sql
+CREATE INDEX search_idx ON mock_items
+USING bm25 (id, description, category, rating, in_stock, created_at, metadata, weight_range)
+WITH (key_field='id');
+```
 
-## 创建 BM25  索引
+**搜索**
+```sql
+SELECT description, rating, category
+FROM mock_items
+WHERE description @@@ 'shoes' OR category @@@ 'footwear' AND rating @@@ '>2'
+ORDER BY description
+LIMIT 5;
+
+SELECT description, rating, category, paradedb.score(id)
+FROM mock_items
+WHERE description @@@ 'shoes' OR category @@@ 'footwear' AND rating @@@ '>2'
+ORDER BY score DESC, description
+LIMIT 5;
+
+SELECT description, rating, category
+FROM mock_items
+WHERE description @@@ '"white shoes"~1'
+LIMIT 5;
+```
+
+**join**
+```sql
+CALL paradedb.create_bm25_test_table(
+  schema_name => 'public',
+  table_name => 'orders',
+  table_type => 'Orders'
+);
+
+ALTER TABLE orders
+ADD CONSTRAINT foreign_key_product_id
+FOREIGN KEY (product_id)
+REFERENCES mock_items(id);
+
+SELECT * FROM orders LIMIT 3;
+```
+**创建索引**
+```sql
+CREATE INDEX orders_idx ON orders
+USING bm25 (order_id, customer_name)
+WITH (key_field='order_id');
+```
+
+**关联查询**
+```sql
+SELECT o.order_id, o.customer_name, m.description
+FROM orders o
+JOIN mock_items m ON o.product_id = m.id
+WHERE o.customer_name @@@ 'Johnson' AND m.description @@@ 'shoes'
+ORDER BY order_id
+LIMIT 5;
+```
+
+**相似性搜索**
+```sql
+ALTER TABLE mock_items ADD COLUMN embedding vector(3);
+
+UPDATE mock_items m
+SET embedding = ('[' ||
+    ((m.id + 1) % 10 + 1)::integer || ',' ||
+    ((m.id + 2) % 10 + 1)::integer || ',' ||
+    ((m.id + 3) % 10 + 1)::integer || ']')::vector;
+
+SELECT description, rating, category, embedding
+FROM mock_items
+LIMIT 3;
+
+CREATE INDEX on mock_items
+USING hnsw (embedding vector_cosine_ops);
+
+SELECT description, category, rating, embedding
+FROM mock_items
+ORDER BY embedding <=> '[1,2,3]', description
+LIMIT 3;
+```
+
+## 创建 BM25 索引
 
 **Syntax**
 ```sql
@@ -50,7 +131,7 @@ WITH (key_field='<key_field>');
 ```
 目标列表中的第一列。
 - key_field
-整数类型性能最佳。
+必须为唯一字段，整数类型性能最佳。
 **Basic Usage**
 ```sql
 CREATE INDEX search_idx ON mock_items
