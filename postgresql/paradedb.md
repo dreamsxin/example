@@ -46,6 +46,19 @@ USING bm25 (id, description, category, rating, in_stock, created_at, metadata, w
 WITH (key_field='id');
 ```
 
+**查看指定索引模式**
+```sql
+SELECT name, field_type FROM paradedb.schema('search_idx');
+```
+**索引大小**
+```sql
+SELECT index_size FROM paradedb.index_size('search_idx');
+```
+**索引段**
+```sql
+SELECT * FROM paradedb.index_info('search_idx');
+```
+
 **搜索**
 ```sql
 SELECT description, rating, category
@@ -138,7 +151,191 @@ CREATE INDEX search_idx ON mock_items
 USING bm25 (id, description, category, rating, in_stock, created_at, metadata, weight_range)
 WITH (key_field='id');
 ```
+### WITH 选项
+支持 `text_fields`、`json_fields`、`numeric_fields`、`numeric_fields`、`boolean_fields`、`datetime_fields`、`range_fields`、`range_fields`。
+
+### 标记器 Tokenizers
+指定文本的拆分方式，允许对同一个字段使用多个标记器。
+`text_fields`、`json_fields` 支持 `tokenizer`。
+**可用的 tokenizer 类型**
 ```sql
+SELECT * FROM paradedb.tokenizers();
+```
+
+- default
+默认，按空格和标点符号分割文本来标记文本，过滤掉大于 255 字节的标记，并转换为小写
+```sql
+CREATE INDEX search_idx ON mock_items
+USING bm25 (id, description)
+WITH (
+    key_field = 'id',
+    text_fields = '{
+        "description": {
+          "tokenizer": {"type": "default"}
+        }
+    }'
+);
+```
+- whitespace
+与 类似default，但仅基于空格进行拆分。过滤掉大于 255 字节的标记并转换为小写。
+- raw
+将整个文本视为单个标记。过滤掉大于 255 个字节的标记并转换为小写。
+- regex
+使用正则表达式对文本进行标记。可以使用参数指定正则表达式pattern。例如，\\W+按非单词字符进行拆分。
+```sql
+CREATE INDEX search_idx ON mock_items
+USING bm25 (id, description)
+WITH (
+    key_field = 'id',
+    text_fields = '{
+        "description": {
+          "tokenizer": {"type": "regex", "pattern": "\\W+"}
+        }
+    }'
+);
+```
+- ngram
+根据指定参数将单词拆分为重叠子字符串，从而对文本进行标记。例如，`3-gram` 标记器将单词拆分 `cheese` 为 `che`、`hee`、`ees`和`ese`。
+```sql
+CREATE INDEX search_idx ON mock_items
+USING bm25 (id, description)
+WITH (
+    key_field = 'id',
+    text_fields = '{
+        "description": {
+          "tokenizer": {"type": "ngram", "min_gram": 2, "max_gram": 3, "prefix_only": false}
+        }
+    }'
+);
+```
+- source_code
+根据代码中常用的大小写约定（如 camelCase 或 PascalCase）拆分文本，从而对文本进行标记。过滤掉超过 255 个字节的标记，并使用 ASCII 折叠将其转换为小写。
+```sql
+CREATE INDEX search_idx ON mock_items
+USING bm25 (id, description)
+WITH (
+    key_field = 'id',
+    text_fields = '{
+        "description": {
+          "tokenizer": {"type": "source_code"}
+        }
+    }'
+);
+```
+- chinese_compatible
+```sql
+CREATE INDEX search_idx ON mock_items
+USING bm25 (id, description)
+WITH (
+    key_field = 'id',
+    text_fields = '{
+        "description": {
+          "tokenizer": {"type": "chinese_compatible"}
+        }
+    }'
+);
+```
+- chinese_lindera
+Lindera 标记器是一种更高级的 CJK 标记器，它使用预建的中文、日语或韩语词典将文本分解为有意义的标记（单词或短语），而不是单个字符。
+```sql
+CREATE INDEX search_idx ON mock_items
+USING bm25 (id, description)
+WITH (
+    key_field = 'id',
+    text_fields = '{
+        "description": {
+          "tokenizer": {"type": "chinese_lindera"}
+        }
+    }'
+);
+```
+- icu
+ICU（Unicode 国际化组件）标记器根据 Unicode 标准分解文本。它可用于标记大多数语言，并可识别不同语言之间单词边界的细微差别。
+
+### 标记过滤器 Token Filters
+
+- stemmer
+- remove_long
+默认为 255
+- lowercase
+默认为 true
+### 例子
+```sql
+CREATE INDEX search_idx ON public.mock_items
+USING bm25 (id, description, description_ngram, description_stem)
+WITH (
+    key_field='id',
+    text_fields='{
+        "description": {"tokenizer": {"type": "whitespace"}},
+        "description_ngram": {"tokenizer": {"type": "ngram", "min_gram": 3, "max_gram": 3, "prefix_only": false} "column": "description"},
+        "description_stem": {"tokenizer": {"type": "default", "stemmer": "English"}, "column": "description"}}
+    }'
+);
+
+-- Example queries
+SELECT * FROM mock_items WHERE id @@@ paradedb.parse('description_ngram:cam AND description_stem:digitally');
+SELECT * FROM mock_items WHERE id @@@ paradedb.parse('description:"Soft cotton" OR description_stem:shirts');
+
+CREATE INDEX search_idx ON mock_items
+USING bm25 (id, description)
+WITH (
+    key_field = 'id',
+    text_fields = '{
+        "description": {
+          "tokenizer": {"type": "ngram", "min_gram": 2, "max_gram": 3, "prefix_only": false} -- 定义分词器 en-stem，category 精确匹配
+        }
+    }'
+);
+
+CREATE INDEX search_idx ON mock_items
+USING bm25 (id, description, category)
+WITH (
+    key_field = 'id',
+    text_fields = '{
+        "description": {
+          "tokenizer": {"type": "ngram", "min_gram": 2, "max_gram": 3, "prefix_only": false} -- 定义分词器 en-stem，category 精确匹配
+        },
+        "category": {
+            "tokenizer": {"type": "ngram", "min_gram": 2, "max_gram": 3, "prefix_only": false} -- 定义分词器 en-stem，category 精确匹配
+        }
+    }'
+);
+
+CREATE INDEX search_idx ON mock_items
+USING bm25 (id, description)
+WITH (
+    key_field = 'id',
+    text_fields = '{
+        "description": {
+          "fast": true,
+          "tokenizer": {"type": "ngram", "min_gram": 2, "max_gram": 3, "prefix_only": false}
+        }
+    }'
+);
+
+CREATE INDEX search_idx ON mock_items
+USING bm25 (id, metadata)
+WITH (
+  key_field = 'id',
+  json_fields = '{
+    "metadata": {
+      "fast": true
+    }
+  }'
+);
+
+SELECT * FROM paradedb.format_create_bm25(
+  index_name => 'search_idx',
+  table_name => 'mock_items',
+  key_field => 'id',
+  text_fields => paradedb.field('description') || paradedb.field('category'),
+  numeric_fields => paradedb.field('rating'),
+  boolean_fields => paradedb.field('in_stock'),
+  datetime_fields => paradedb.field('created_at'),
+  json_fields => paradedb.field('metadata'),
+  range_fields => paradedb.field('weight_range')
+);
+
 CALL paradedb.create_bm25(
         index_name => 'search_idx',
         schema_name => 'public',
