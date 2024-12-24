@@ -1,0 +1,6 @@
+- https://github.com/VictoriaMetrics/VictoriaMetrics
+- https://prometheus.io/
+- https://grafana.com/
+- https://www.influxdata.com/
+- https://www.elastic.co/
+- https://www.elastic.co/kibana
