@@ -43,7 +43,7 @@ func init() {
 	mapVar.Add("field1", 1)
 	mapVar.AddFloat("field2", 0.001)
 
-	expvar.Publish("customStuct", expvar.Func(exportStruct))
+	expvar.Publish("customStuct", expvar.Func(exportStruct)) // 强制转换类型为 type Func func() any
 	field1.Add(2)
 	field2.Add(0.002)
 }
