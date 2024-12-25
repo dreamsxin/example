@@ -1,6 +1,11 @@
+- https://github.com/sepandhaghighi/art
 - https://github.com/red-data-tools/YouPlot
 - https://github.com/mkaz/termgraph
 - https://github.com/asciimoo/drawille
 - https://github.com/eliukblau/pixterm
 - https://github.com/alishtory/qrcode-terminal
 - https://github.com/aca/tdraw
+- https://github.com/piotrmurach/tty-box
+- https://github.com/piotrmurach/tty-pie
+- https://github.com/juan-leon/lowcharts
+- https://github.com/gooofy/drawilleplot
