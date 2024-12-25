@@ -155,9 +155,9 @@ func (h *MyEventHandler) String() string {
 
 func main() {
 	cfg := canal.NewDefaultConfig()
-	cfg.Addr = "rds-yunlogin-public.mysql.rds.aliyuncs.com:3306"
-	cfg.User = "admin1_go"
-	cfg.Password = "0sw57ZPHKB05lfJi"
+	cfg.Addr = "localhost"
+	cfg.User = "root"
+	cfg.Password = "123456"
 
 	cfg.IncludeTableRegex = []string{"yl_device.*", "yl_shop.*"}
 	cfg.Dump.Databases = []string{"yl_device", "yl_shop"}
