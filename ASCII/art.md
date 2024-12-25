@@ -1,4 +1,7 @@
 - https://github.com/sepandhaghighi/art
+- https://github.com/chubin/pyphoon
+- https://github.com/dialup-inc/ascii
+- https://github.com/blampe/goat
 - https://github.com/red-data-tools/YouPlot
 - https://github.com/mkaz/termgraph
 - https://github.com/asciimoo/drawille
