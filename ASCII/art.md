@@ -1,0 +1,6 @@
+- https://github.com/red-data-tools/YouPlot
+- https://github.com/mkaz/termgraph
+- https://github.com/asciimoo/drawille
+- https://github.com/eliukblau/pixterm
+- https://github.com/alishtory/qrcode-terminal
+- https://github.com/aca/tdraw
