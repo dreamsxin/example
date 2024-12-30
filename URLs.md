@@ -2983,6 +2983,10 @@ https://github.com/bitnine-oss/agensgraph
 
 https://github.com/dgraph-io/dgraph
 
+## 数据分析
+
+https://github.com/mathesar-foundation/mathesar
+
 # 分布式 && 大数据 && NoSQL 数据库
 
 https://github.com/rread/lustre
