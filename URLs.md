@@ -453,11 +453,15 @@ https://github.com/excalidraw/excalidraw
 
 https://github.com/ptomato/gnome-inform7
 
-https://github.com/mermaid-js/mermaid/tree/develop
+https://github.com/mermaid-js/mermaid
 
 https://github.com/antvis/X6
 
 https://github.com/mingrammer/diagrams
+
+https://github.com/eclipse-sprotty/sprotty
+
+https://github.com/prmr/JetUML
 
 # Java
 
