@@ -87,3 +87,11 @@ ani = animation.FuncAnimation(fig, animate, init_func=init,
  
 plt.show()
 ```
+
+## 安装模块
+执行单元输入
+```shell
+!pip install <module_name>
+# 或
+!conda install <module_name>
+```
