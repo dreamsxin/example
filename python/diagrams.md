@@ -18,6 +18,7 @@ $ poetry add diagrams
 
 - Diagrams
 Diagram is a primary object representing a diagram.
+可定义方向： `direction="TB"`
 - Nodes
 Node is an object representing a node or system component.
 - Clusters
@@ -37,7 +38,17 @@ from diagrams.aws.network import ELB
 with Diagram("Web Service", show=False):
     ELB("lb") >> EC2("web") >> RDS("userdb")
 ```
+**Jupyter Notebooks**
 
+Diagrams can also be rendered directly inside Jupyter notebooks like this:
+```python
+from diagrams import Diagram
+from diagrams.aws.compute import EC2
+
+with Diagram("Simple Diagram") as diag:
+    EC2("web")
+diag
+```
 
 ## 节点样式
 
