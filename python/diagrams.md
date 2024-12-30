@@ -98,7 +98,7 @@ with Diagram("Web Service", show=False) as diag:
     web = EC2("web")
     userdb = RDS("userdb")
     lb >> web >> userdb # 使用默认 Edges
-    web >> Edge(color="firebrick", style="dashed") >> userdb
+    web << Edge(color="firebrick", style="dashed") << userdb
 diag
 ```
 
