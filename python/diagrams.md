@@ -16,37 +16,89 @@ $ poetry add diagrams
 
 ## 组成
 
-- Diagrams
+### Diagrams
 Diagram is a primary object representing a diagram.
-可定义方向： `direction="TB"`
-- Nodes
+**Options**
+- outformat
+- filename
+- show
+- direction
+direction="TB"、direction="LR"
+### Nodes
 Node is an object representing a node or system component.
-- Clusters
+节点对象由三部分组成：提供者、资源类型和名称。
+```python
+# aws resources
+from diagrams.aws.compute import ECS, Lambda
+from diagrams.aws.database import RDS, ElastiCache
+from diagrams.aws.network import ELB, Route53, VPC
+# ...
+
+# azure resources
+from diagrams.azure.compute import FunctionApps
+from diagrams.azure.storage import BlobStorage
+# ...
+
+# alibaba cloud resources
+from diagrams.alibabacloud.compute import ECS
+from diagrams.alibabacloud.storage import ObjectTableStore
+# ...
+
+# gcp resources
+from diagrams.gcp.compute import AppEngine, GKE
+from diagrams.gcp.ml import AutoML
+# ...
+
+# k8s resources
+from diagrams.k8s.compute import Pod, StatefulSet
+from diagrams.k8s.network import Service
+from diagrams.k8s.storage import PV, PVC, StorageClass
+# ...
+
+# oracle resources
+from diagrams.oci.compute import VirtualMachine, Container
+from diagrams.oci.network import Firewall
+from diagrams.oci.storage import FileStorage, StorageGateway
+# ...
+```
+### Clusters
 Cluster allows you to group (or cluster) nodes in an isolated group.
-- Edges
+### Edges
 Edge represents an edge between nodes.
+边缘对象包含三个属性：标签、颜色和样式。
+默认可以不设置。
 
 ## Quick Start
 生成图片 `web_service.png`
 ```python
 # diagram.py
-from diagrams import Diagram
+from diagrams import Diagram, Edge
 from diagrams.aws.compute import EC2
 from diagrams.aws.database import RDS
 from diagrams.aws.network import ELB
 
 with Diagram("Web Service", show=False):
-    ELB("lb") >> EC2("web") >> RDS("userdb")
+    lb = ELB("lb")
+    web = EC2("web")
+    userdb = RDS("userdb")
+    lb >> web >> userdb # 使用默认 Edges
+    web >> Edge(color="firebrick", style="dashed") >> userdb
 ```
 **Jupyter Notebooks**
 
 Diagrams can also be rendered directly inside Jupyter notebooks like this:
 ```python
-from diagrams import Diagram
+from diagrams import Diagram, Edge
 from diagrams.aws.compute import EC2
+from diagrams.aws.database import RDS
+from diagrams.aws.network import ELB
 
-with Diagram("Simple Diagram") as diag:
-    EC2("web")
+with Diagram("Web Service", show=False) as diag:
+    lb = ELB("lb")
+    web = EC2("web")
+    userdb = RDS("userdb")
+    lb >> web >> userdb # 使用默认 Edges
+    web >> Edge(color="firebrick", style="dashed") >> userdb
 diag
 ```
 
