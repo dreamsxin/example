@@ -106,7 +106,9 @@ HICON CreateHICONFromNumber(int number) {
     std::wstring numberStr = NumberToString(number);
 
     // 绘制字符串到位图
-    RectF layoutRect(0, 0, 32, 32);
+
+    //Gdiplus::RectF layoutRect(0, 0, ::GetSystemMetrics(SM_CXICON), ::GetSystemMetrics(SM_CYICON)); // 根据系统图标大小来设置。
+    RectF layoutRect(0, 0, 32, 32); // 假设图标大小为32x32
     graphics->DrawString(numberStr.c_str(), -1, font, layoutRect, NULL, brush);
 
     // 将位图转换为HICON
