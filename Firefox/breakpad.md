@@ -1,0 +1,35 @@
+# 注册表（regedit）
+
+`HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps`
+
+| 值 | 描述 | 类型 | 默认值 |
+| --- | --- | --- | --- |
+| **DumpFolder** | 要存储转储文件的路径。 如果不使用默认路径，请确保该文件夹包含允许崩溃进程将数据写入文件夹的 ACL。 对于服务崩溃，转储将写入特定于服务的配置文件文件夹，具体取决于所使用的服务帐户。 例如，系统服务的配置文件文件夹为 %WINDIR%\\System32\\Config\\SystemProfile。 对于网络和本地服务，文件夹为 %WINDIR%\\ServiceProfiles。  
+ | REG\_EXPAND\_SZ | %LOCALAPPDATA%\\CrashDumps |
+| **DumpCount** | 文件夹中的最大转储文件数。 超过最大值后，文件夹中最早的转储文件将替换为新的转储文件。 | REG\_DWORD | 10 |
+| **DumpType** | 指定以下转储类型之一   0：自定义转储   1：小型转储   2：完全转储 | REG\_DWORD | 1 |
+| **CustomDumpFlags** | 要使用的自定义转储选项。 仅当 **DumpType**设置为 0 时，才使用此值。 这些选项是 MINIDUMP\_TYPE 枚举值的按位组合。  | REG\_DWORD %> |  |
+
+# 捕获崩溃
+`toolkit\crashreporter\breakpad-client\windows\handler\exception_handler.cc`
+## 支持的捕获方式
+`exception_handler.h` 文件中可以看到以下定义：
+
+```c++
+enum HandlerType {
+  HANDLER_NONE = 0,
+  HANDLER_EXCEPTION = 1 << 0,          // SetUnhandledExceptionFilter
+  HANDLER_INVALID_PARAMETER = 1 << 1,  // _set_invalid_parameter_handler
+  HANDLER_PURECALL = 1 << 2,           // _set_purecall_handler
+  HANDLER_ALL = HANDLER_EXCEPTION |
+                HANDLER_INVALID_PARAMETER |
+                HANDLER_PURECALL
+};
+```
+
+- HANDLER_EXCEPTION
+即使用 SetUnhandledExceptionFilter 函数捕获，也就是大家熟知的SEH
+- HANDLER_INVALID_PARAMETER
+使用 _set_purecall_handler 捕获纯虚函数导致的崩溃
+- HANDLER_PURECALL
+使用 _set_invalid_parameter_handler 捕获错误参数调用导致的崩溃
