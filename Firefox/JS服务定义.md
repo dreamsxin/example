@@ -1,3 +1,8 @@
+## dom\chrome-webidl
+- ChromeUtils.webidl
+- IOUtils.webidl
+- PathUtils.webidl
+
 ## tools\ts\build_services.js
 生成 `lib.gecko.services.d.ts`
 ```js
