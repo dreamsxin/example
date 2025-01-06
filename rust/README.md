@@ -1507,9 +1507,87 @@ let six = f(5);
 
 Rust 有两种需要你了解的注释格式：行注释（line comments）和文档注释（doc comments）。
 
-- //    行注释
-- ///   用来注释它后面的项，并且内建 Markdown 标记支持
-- //!   用来注释包含它的项
+- // 行注释
+```rust
+// 这是单行注释的示例
+fn main() {
+    // 编译器会忽略这里的注释
+    let x = 5; // 这是一个变量声明
+}
+```
+- /* */ 多行注释
+```rust
+/*
+这是一个多行注释的示例。
+它可以跨越多行。
+/* 在已经被注释的部分再添加注释。 */
+*/
+fn main() {
+    let y = 10;
+    /*
+    下面的代码虽然被注释，但可以展示一个代码块的结构：
+    if y > 5 {
+        println!("y is greater than 5");
+    }
+    */
+}
+```
+- ///   文档注释
+用来注释它后面的项，并且内建 Markdown 标记支持，通过 rustdoc 工具生成 HTML 文档。
+```rust
+/// 加上两个数
+///
+/// # Arguments
+/// * `a` - A i32
+/// * `b` - A i32
+///
+/// # Returns
+/// * A i32
+///
+/// # Examples
+/// ```
+/// use docs_demo::math::add;
+/// let a = 1;
+/// let b = 2;
+/// assert_eq!(add(a, b), 3);
+/// ```
+pub fn add(a: i32, b: i32) -> i32 {
+    a + b
+}
+```
+- /** ... */ 多行文档注释
+```rust
+/**
+处理特定任务并返回结果的函数。
+
+# 注意
+
+这个函数对输入参数有特定的限制，比如...
+
+# 示例
+\```
+let output = another_function(10);  
+println!("输出值: {}", output);
+\```
+*/
+fn another_function(param: i32) -> i32 {
+    param * 2
+}
+```
+- //!   模块注释
+在模块或文件级别，通常位于文件的开始或模块的顶部。rustdoc 会将这一部分作为整个模块或 crate 的文档。
+```rust
+//! math crate
+//!
+//! `math` 是一个演示如何使用文件级文档注释的例子
+//!
+//! 它包含以下两个函数。
+//! - add
+//! - subtract
+```
+
+### 要生成文档
+可以在项目目录下运行 cargo doc 命令。这会把 Rust 包以及其依赖项生成 HTML 文档，并将其放在 target/doc/<project name> 目录下。
 
 ## 控制流
 
