@@ -19,8 +19,15 @@ await page.goto("https://www.baidu.com")
 import puppeteer from 'puppeteer';
 
 const firefoxBrowser = await puppeteer.connect({
-  browserURL: "http://127.0.0.1:63656",
+  browserURL: "http://127.0.0.1:55176",
 });
+firefoxBrowser.on('targetcreated', function (target) {
+  console.log(target.type() + ' was created');
+});
+firefoxBrowser.on('targetdestroyed', function (target) {
+ console.log(target.type() + ' was destroyed');
+});
+
 const page = await firefoxBrowser.newPage();
 
 await page.goto("https://www.baidu.com")
