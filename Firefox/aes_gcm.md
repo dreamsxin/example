@@ -77,11 +77,21 @@ void printHex(const unsigned char* data, size_t length) {
 }
 
 static bool DoCipher(const mozilla::UniquePK11SymKey& aSymKey,
-                                      const std::vector<uint8_t>& inBytes,
+                                      const std::vector<uint8_t>& inBytes_,
                                       std::vector<uint8_t>& outBytes,
                                       bool encrypt) {
   outBytes.clear();
 
+  std::cout << "---------------inBytes_ printHex"  <<std::endl;
+  printHex(inBytes_.data(), inBytes_.size());
+  std::vector<uint8_t> inBytes(inBytes_);
+  size_t prefixLen = sizeof(kEncryptionYunLoginVersionPrefix) - 1;
+  if (!encrypt) {
+    if (prefixLen > 0) {
+      // Remove the Prefix from the input.
+      inBytes.erase(inBytes.begin(), inBytes.begin() + prefixLen);
+    }
+  }
   // Build params.
   // We need to get the IV from inBytes if we decrypt.
   if (!encrypt && (inBytes.size() < mIVLength || inBytes.empty())) {
@@ -107,8 +117,9 @@ static bool DoCipher(const mozilla::UniquePK11SymKey& aSymKey,
     // An IV was passed in. Use the first mIVLength bytes from inBytes as IV.
     ivp = inBytes.data();
   }
-      std::cout << "---------------ivp printHex"  <<std::endl;
-    printHex(ivBuf.data(), ivBuf.size());
+  std::cout << "---------------ivp printHex"  <<std::endl;
+    printHex(ivp, 12);
+
 
   CK_GCM_PARAMS gcm_params;
   gcm_params.pIv = const_cast<unsigned char*>(ivp);
@@ -122,7 +133,6 @@ static bool DoCipher(const mozilla::UniquePK11SymKey& aSymKey,
                         sizeof(CK_GCM_PARAMS)};
 
   size_t blockLength = 16;
-  size_t prefixLen = sizeof(kEncryptionYunLoginVersionPrefix) - 1;
   outBytes.resize(inBytes.size() + blockLength);
   unsigned int outLen = 0;
   SECStatus srv = SECFailure;
@@ -152,14 +162,15 @@ static bool DoCipher(const mozilla::UniquePK11SymKey& aSymKey,
     printHex(outBytes.data(), outBytes.size());
   } else {
     std::vector<uint8_t> input(inBytes);
-    if (prefixLen > 0) {
-      // Remove the Prefix from the input.
-      input.erase(input.begin(), input.begin() + prefixLen);
-    }
+      std::cout << "---------------input printHex"  <<std::endl;
+    printHex(input.data(), input.size());
+
     // Remove the IV from the input.
     input.erase(input.begin(), input.begin() + mIVLength);
+      std::cout << "---------------input printHex2"  <<std::endl;
+    printHex(input.data(), input.size());
     srv = PK11_Decrypt(aSymKey.get(), CKM_AES_GCM, &paramsItem, outBytes.data(),
-                       &outLen, input.size() + blockLength, input.data(),
+                       &outLen, outBytes.size(), input.data(),
                        input.size());
     if (srv != SECSuccess) {
         std::cout << "---------------PK11_Decrypt failed"  <<std::endl;
