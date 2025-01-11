@@ -1,3 +1,195 @@
+
+## dom\crypto\KeyAlgorithmProxy.cpp
+- KeyAlgorithmProxy::Mechanism()
+
+## dom\crypto\WebCryptoCommon.h
+- inline CK_MECHANISM_TYPE MapAlgorithmNameToMechanism(const nsString& aName) 
+## 
+```c++
+#include "pk11pub.h"
+#include "nss.h"
+#include "ScopedNSSTypes.h"
+#include "mozilla/Unused.h"
+
+#include <vector>
+#include <iostream>
+
+constexpr char kEncryptionYunLoginVersionPrefix[] = "xx";
+const size_t mIVLength = 12;
+
+static bool GenerateRandom(std::vector<uint8_t>& r) {
+  if (r.empty()) {
+    std::cout << "GenerateRandom r.empty()" <<std::endl;
+    return false;
+  }
+  mozilla::UniquePK11SlotInfo slot(PK11_GetInternalSlot());
+  if (!slot) {
+    return false;
+  }
+
+  SECStatus srv = PK11_GenerateRandomOnSlot(slot.get(), r.data(), r.size());
+  if (srv != SECSuccess) {
+    r.clear();
+    return false;
+  }
+
+  return true;
+}
+
+static bool BuildAesGcmKey(std::vector<uint8_t> aKeyBytes,
+                                            /* out */ mozilla::UniquePK11SymKey& aKey) {
+  // if (aKeyBytes.size() != mKeyByteLength) {
+  //   std::cout << "BuildAesGcmKey failed aKeyBytes.size() != mKeyByteLength " << aKeyBytes.data() <<std::endl;
+  //   return false;
+  // }
+
+  mozilla::UniquePK11SlotInfo slot(PK11_GetInternalSlot());
+  if (!slot) {
+    return false;
+  }
+
+  mozilla::UniqueSECItem key (SECITEM_AllocItem(nullptr, nullptr, aKeyBytes.size()));
+  if (!key) {
+    std::cout << "SECITEM_AllocItem failed" <<std::endl;
+    return false;
+  }
+  key->type = siBuffer;
+  memcpy(key->data, aKeyBytes.data(), aKeyBytes.size());
+  key->len = aKeyBytes.size();
+
+  mozilla::UniquePK11SymKey symKey(
+      PK11_ImportSymKey(slot.get(), CKM_AES_GCM, PK11_OriginUnwrap,
+                        CKA_DECRYPT | CKA_ENCRYPT, key.get(), nullptr));
+
+  if (!symKey) {
+    return false;
+  }
+  aKey.swap(symKey);
+
+  return true;
+}
+
+void printHex(const unsigned char* data, size_t length) {
+    for (size_t i = 0; i < length; ++i) {
+        printf("%02X ", data[i]);
+    }
+    printf("\n");
+}
+
+static bool DoCipher(const mozilla::UniquePK11SymKey& aSymKey,
+                                      const std::vector<uint8_t>& inBytes,
+                                      std::vector<uint8_t>& outBytes,
+                                      bool encrypt) {
+  outBytes.clear();
+
+  // Build params.
+  // We need to get the IV from inBytes if we decrypt.
+  if (!encrypt && (inBytes.size() < mIVLength || inBytes.empty())) {
+    std::cout << "------------------DoCipher failed inBytes.size() < mIVLength" <<std::endl;
+    return false;
+  }
+
+  const uint8_t* ivp = nullptr;
+
+  // std::vector<uint8_t> ivBuf= {0xec, 0x51, 0x69, 0x16, 0xfc, 0x40, 0xac, 0x58, 0x85, 0x14, 0x7f, 0x9d};
+  // ivp = ivBuf.data();
+  std::vector<uint8_t> ivBuf;
+  if (encrypt) {
+    // Generate a new IV.
+    ivBuf.resize(mIVLength);
+    bool rv = GenerateRandom(ivBuf);
+    if (!rv || ivBuf.size() != mIVLength) {
+      std::cout << "---------------GenerateRandom failed" <<std::endl;
+      return false;
+    }
+    ivp = ivBuf.data();
+  } else {
+    // An IV was passed in. Use the first mIVLength bytes from inBytes as IV.
+    ivp = inBytes.data();
+  }
+      std::cout << "---------------ivp printHex"  <<std::endl;
+    printHex(ivBuf.data(), ivBuf.size());
+
+  CK_GCM_PARAMS gcm_params;
+  gcm_params.pIv = const_cast<unsigned char*>(ivp);
+  gcm_params.ulIvLen = mIVLength;
+  gcm_params.ulIvBits = gcm_params.ulIvLen * 8;
+  gcm_params.ulTagBits = 128;
+  gcm_params.pAAD = nullptr;
+  gcm_params.ulAADLen = 0;
+
+  SECItem paramsItem = {siBuffer, reinterpret_cast<unsigned char*>(&gcm_params),
+                        sizeof(CK_GCM_PARAMS)};
+
+  size_t blockLength = 16;
+  size_t prefixLen = sizeof(kEncryptionYunLoginVersionPrefix) - 1;
+  outBytes.resize(inBytes.size() + blockLength);
+  unsigned int outLen = 0;
+  SECStatus srv = SECFailure;
+
+  if (encrypt) {
+    srv = PK11_Encrypt(aSymKey.get(), CKM_AES_GCM, &paramsItem, outBytes.data(),
+                       &outLen, inBytes.size() + blockLength, inBytes.data(),
+                       inBytes.size());
+    if (srv != SECSuccess) {
+        std::cout << "---------------PK11_Encrypt failed" <<std::endl;
+      outBytes.clear();
+      return false;
+    }
+
+    outBytes.resize(outLen);
+    // Prepend the used IV to the ciphertext.
+    mozilla::Unused << outBytes.insert(outBytes.begin(), ivp, ivp + mIVLength);
+    outLen += mIVLength;
+    // Prepend the Prefix to the ciphertext.
+    if (prefixLen > 0) {
+      mozilla::Unused << outBytes.insert(
+          outBytes.begin(), kEncryptionYunLoginVersionPrefix,
+          kEncryptionYunLoginVersionPrefix + prefixLen);
+      outLen += prefixLen;
+    }
+      std::cout << "---------------PK11_Encrypt printHex"  <<std::endl;
+    printHex(outBytes.data(), outBytes.size());
+  } else {
+    std::vector<uint8_t> input(inBytes);
+    if (prefixLen > 0) {
+      // Remove the Prefix from the input.
+      input.erase(input.begin(), input.begin() + prefixLen);
+    }
+    // Remove the IV from the input.
+    input.erase(input.begin(), input.begin() + mIVLength);
+    srv = PK11_Decrypt(aSymKey.get(), CKM_AES_GCM, &paramsItem, outBytes.data(),
+                       &outLen, input.size() + blockLength, input.data(),
+                       input.size());
+    if (srv != SECSuccess) {
+        std::cout << "---------------PK11_Decrypt failed"  <<std::endl;
+      outBytes.clear();
+      return false;
+    }
+    outBytes.resize(outLen);
+    std::cout << "---------------PK11_Decrypt printHex"  <<std::endl;
+    printHex(outBytes.data(), outBytes.size());
+  }
+
+  return true;
+}
+
+bool gcm_cipher(std::string key, const std::vector<uint8_t>& inBytes,
+                                            std::vector<uint8_t>& outBytes, bool encrypt) {
+  if (inBytes.empty()) {
+    std::cout << "-------------------inBytes.empty()" <<std::endl;
+    return false;
+  }
+  std::vector<uint8_t> buf(key.begin(), key.end());
+  mozilla::UniquePK11SymKey symKey;
+  bool rv = BuildAesGcmKey(buf, symKey);
+  if (!rv) {
+    std::cout << "---------------------BuildAesGcmKey failed" <<std::endl;
+    return false;
+  }
+  return DoCipher(symKey, inBytes, outBytes, encrypt);
+}
+```
 ```c++
 #include <stdio.h>
 #include <stdlib.h>
