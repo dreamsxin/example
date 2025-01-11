@@ -172,3 +172,14 @@ function hexToUint8Array(hexString) {
   }
 })();
 ```
+
+## c++
+
+```shell
+sudo apt-get install libnss3-dev
+sudo apt-get install libnspr4-dev
+```
+
+```shell
+g++ -o main main.cpp -I /usr/include/nss -I /usr/include/nspr -lnss3 -lssl3
+```
