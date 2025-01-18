@@ -15,6 +15,7 @@ const page = await firefoxBrowser.newPage();
 await page.goto("https://www.baidu.com")
 ```
 
+## CDP
 ```js
 import puppeteer from 'puppeteer';
 
@@ -38,7 +39,6 @@ await page.goto("https://www.baidu.com")
 import puppeteer from 'puppeteer';
 
 const firefoxBrowser = await puppeteer.connect({
-  //browserURL: "http://127.0.0.1:57107",
   browserWSEndpoint: "ws://127.0.0.1:57107/session",
   protocol: "webDriverBiDi",
 });
@@ -63,10 +63,11 @@ firefoxBrowser.on('targetchanged', function (target) {
  console.log(target.type() + ' was targetchanged');
 });
 
-const page = await firefoxBrowser.newPage();
-
+const pages = await firefoxBrowser.pages();
+let page = pages[0];
 await page.goto("https://www.baidu.com")
 // 获取页面内容
 const content = await page.content();
 console.log(content);
+await firefoxBrowser.disconnect();
 ```
