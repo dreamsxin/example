@@ -18,7 +18,7 @@ await page.goto("https://www.baidu.com")
 ## CDP
 ```js
 import puppeteer from 'puppeteer';
-
+// "http://127.0.0.1:55176/json/version"
 const firefoxBrowser = await puppeteer.connect({
   browserURL: "http://127.0.0.1:55176",
 });
