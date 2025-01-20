@@ -1,9 +1,11 @@
 #
 
+- https://tex.stackexchange.com/
 - https://github.com/latex3/latex2e
 - https://github.com/latex3/latex3
-- https://tex.stackexchange.com/
 - https://github.com/learnlatex/learnlatex.github.io
+- https://latex.91maths.com/
+- https://www.latexlive.com/
 
 ## 编辑器
 
