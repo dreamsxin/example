@@ -13,3 +13,4 @@
 - https://github.com/CubicBear/cubicbear.github.io/tree/main/doc
   The Finest Of Geometry 几何观止 经典几何对象
 - https://github.com/fanhongtao/math
+- https://github.com/jamesfang8499/math1/tree/main
