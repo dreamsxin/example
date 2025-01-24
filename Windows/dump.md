@@ -1,3 +1,13 @@
+## Debugging Tools for Windows
+https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/
+
+```shell
+<path to debugger>\cdb.exe -g -G -o <path to firefox>\firefox.exe
+"C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\cdb.exe" -g -G -o "C:\Program Files\Mozilla Firefox\firefox.exe"
+<path to debugger>\cdb.exe -g -G -p <PID>
+```
+
+## 
 ```bat
 @echo 启用Dump
 
