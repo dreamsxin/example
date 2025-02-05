@@ -1,3 +1,4 @@
+https://github.com/microsoft/vscode
 
 ## 插件
 
@@ -5,6 +6,7 @@
 - GlassIt-VSC 背景透明度
 https://marketplace.visualstudio.com/items?itemName=s-nlf-fh.glassit
 - https://github.com/r23qw/vscode-http-client
+- https://github.com/continuedev/continue
 
 ### Command Palette
 1. Open the Markdown file
