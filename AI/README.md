@@ -8,3 +8,5 @@
 - https://github.com/deepseek-ai/DeepSeek-V3
 - https://github.com/deepseek-ai/DeepSeek-R1
 - https://github.com/deepseek-ai/Janus
+- https://github.com/BlinkDL/RWKV-LM
+- https://github.com/Ai00-X/ai00_server
