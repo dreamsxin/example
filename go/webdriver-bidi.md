@@ -89,3 +89,176 @@ func main() {
 }
 
 ```
+
+## 测试
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"net/url"
+	"os/exec"
+	"time"
+
+	"github.com/gorilla/websocket"
+)
+
+// Command 表示发送给 WebDriver BiDi 的命令
+type Command struct {
+	ID     int         `json:"id"`
+	Method string      `json:"method"`
+	Params interface{} `json:"params,omitempty"`
+}
+
+// Response 表示从 WebDriver BiDi 接收的响应
+type Response struct {
+	ID     int             `json:"id"`
+	Result json.RawMessage `json:"result,omitempty"`
+	Error  *Error          `json:"error,omitempty"`
+}
+
+// Error 表示 WebDriver BiDi 返回的错误
+type Error struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
+// NewSessionParams 表示创建新会话的参数
+type NewSessionParams struct {
+	Capabilities map[string]interface{} `json:"capabilities"`
+}
+
+// ScriptEvaluateParams 表示执行脚本的参数
+type ScriptEvaluateParams struct {
+	Expression string `json:"expression"`
+}
+
+// EventListenerParams 表示监听事件的参数
+type EventListenerParams struct {
+	Event string `json:"event"`
+}
+
+func main() {
+
+	log.SetFlags(log.Lshortfile | log.LstdFlags)
+	cmd := exec.Command("D:/Program Files/Mozilla Firefox/firefox.exe", "--remote-debugging-port=9222", "--marionette")
+	err := cmd.Start()
+	if err != nil {
+		log.Fatal("启动 Firefox 失败:", err)
+	}
+
+	// 等待 Firefox 启动完成
+	time.Sleep(2 * time.Second)
+
+	// WebSocket URL for WebDriver BiDi
+	u := url.URL{Scheme: "ws", Host: "localhost:9222", Path: "/session"}
+
+	// 连接到 WebSocket 服务器
+	conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	if err != nil {
+		log.Fatal("dial:", err)
+	}
+	defer conn.Close()
+
+	// 1. 创建新会话
+	newSessionCmd := Command{
+		ID:     1,
+		Method: "session.new",
+		Params: NewSessionParams{
+			Capabilities: map[string]interface{}{
+				"browserName": "chrome",
+			},
+		},
+	}
+
+	err = conn.WriteJSON(newSessionCmd)
+	if err != nil {
+		log.Fatal("write:", err)
+	}
+
+	// 读取创建会话的响应
+	_, message, err := conn.ReadMessage()
+	if err != nil {
+		log.Fatal("read:", err)
+	}
+
+	var newSessionResponse Response
+	err = json.Unmarshal(message, &newSessionResponse)
+	if err != nil {
+		log.Fatal("unmarshal:", err)
+	}
+
+	if newSessionResponse.Error != nil {
+		log.Fatalf("session.new error: %v", newSessionResponse.Error)
+	}
+
+	fmt.Printf("New session created: %s\n", newSessionResponse.Result)
+
+	// 2. 执行脚本
+	scriptCmd := Command{
+		ID:     2,
+		Method: "script.evaluate",
+		Params: ScriptEvaluateParams{
+			Expression: "1 + 2",
+		},
+	}
+
+	err = conn.WriteJSON(scriptCmd)
+	if err != nil {
+		log.Fatal("write:", err)
+	}
+
+	// 读取脚本执行的响应
+	_, message, err = conn.ReadMessage()
+	if err != nil {
+		log.Fatal("read:", err)
+	}
+	log.Println("message:", string(message))
+
+	var scriptResponse Response
+	err = json.Unmarshal(message, &scriptResponse)
+	if err != nil {
+		log.Fatal("unmarshal:", err)
+	}
+
+	if scriptResponse.Error != nil {
+		log.Fatalf("script.evaluate error: %v", scriptResponse.Error)
+	}
+
+	fmt.Printf("Script result: %s\n", scriptResponse.Result)
+
+	// 3. 监听事件
+	eventCmd := Command{
+		ID:     3,
+		Method: "event.listen",
+		Params: EventListenerParams{
+			Event: "DOM.contentLoaded",
+		},
+	}
+
+	err = conn.WriteJSON(eventCmd)
+	if err != nil {
+		log.Fatal("write:", err)
+	}
+
+	// 持续接收事件
+	for {
+		_, message, err := conn.ReadMessage()
+		if err != nil {
+			log.Fatal("read:", err)
+		}
+		log.Println("message:", string(message))
+
+		var event Response
+		err = json.Unmarshal(message, &event)
+		if err != nil {
+			log.Fatal("unmarshal:", err)
+		}
+
+		fmt.Printf("Event received: %s\n", event.Result)
+		time.Sleep(1 * time.Second)
+	}
+}
+```
