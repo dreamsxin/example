@@ -63,6 +63,29 @@ const session = await browser.newBrowserCDPSession();
   // 验证是否收到事件
   console.log('Event received:', gotEvent);
 
+  const client = await page.context().newCDPSession(page);
+  client.on('Page.screencastFrame', async (frameObject) => {
+    // logger.log(frameObject.metadata, frameObject.sessionId);
+
+    try {
+      const buf = Buffer.from(frameObject.data, 'base64');
+      await client.send('Page.screencastFrameAck', { sessionId: frameObject.sessionId });
+
+      //await client.send('Page.stopScreencast');
+      console.log("screencastFrame", buf);
+    } catch (err) {
+      logger.error('Page.screencastFrame', err);
+    }
+  });
+
+  await client.send('Page.startScreencast', {
+    format: 'png',
+    quality: 90,
+    maxWidth: 1024,
+    maxHeight: 768,
+    everyNthFrame: 1,
+  });
+
 
   await page.goto("https://www.baidu.com")
 
