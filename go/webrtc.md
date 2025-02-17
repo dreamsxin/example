@@ -210,3 +210,58 @@ func decode1(in string, obj *webrtc.SessionDescription) {
 	}
 }
 ```
+
+## 信令服务器
+
+用以交换
+
+```go
+package main
+
+import (
+	"log"
+	"net/http"
+	"github.com/gorilla/websocket"
+)
+
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool { return true }, // 允许跨域
+}
+
+type Message struct {
+	Type string `json:"type"` // offer/answer/candidate
+	Data string `json:"data"`
+}
+
+func handleWebSocket(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println("WebSocket upgrade failed:", err)
+		return
+	}
+	defer conn.Close()
+
+	for {
+		var msg Message
+		err := conn.ReadJSON(&msg)
+		if err != nil {
+			log.Println("Read error:", err)
+			break
+		}
+
+		// 广播消息给其他客户端（实际应实现房间逻辑）
+		broadcastMessage(conn, msg)
+	}
+}
+
+func broadcastMessage(sender *websocket.Conn, msg Message) {
+	// 这里简化广播逻辑，实际需根据房间管理转发
+	// 示例：将桌面端的offer转发给浏览器端，反之亦然
+}
+
+func main() {
+	http.HandleFunc("/ws", handleWebSocket)
+	log.Println("信令服务器运行在 :8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+```
