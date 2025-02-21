@@ -138,3 +138,10 @@ sudo update-alternatives --install \
 --slave /usr/bin/llvm-symbolizer   llvm-symbolizer  /usr/bin/llvm-symbolizer-3.5 \
 --slave /usr/bin/llvm-tblgen       llvm-tblgen      /usr/bin/llvm-tblgen-3.5 \
 ```
+
+
+## 编译
+
+```shell
+./mach configure --without-wasm-sandboxed-libraries --disable-tests
+```
