@@ -78,7 +78,8 @@ sudo apt-get install llvm -y
 sudo apt-get install clang libclang-dev -y
 sudo apt-get install gcc-multilib -y
 
-# 设置环境变量 export PATH=/usr/lib/llvm-18/bin/:$PATH
+# 设置环境变量~/.bashrc 添加 export PATH=/usr/lib/llvm-18/bin/:$PATH
+source ~/.bashrc
 ```
 
 ```shell
