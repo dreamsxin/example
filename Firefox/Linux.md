@@ -130,7 +130,7 @@ sudo update-alternatives --install \
 ## 编译
 
 ```shell
-./mach configure --without-wasm-sandboxed-libraries --disable-tests
+./mach configure --without-wasm-sandboxed-libraries  --disable-tests --disable-crashreporter
 ```
 
 ## 错误
