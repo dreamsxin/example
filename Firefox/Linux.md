@@ -49,24 +49,11 @@ sudo apt-get install -y nodejs
 
 **llvm**
 ```shell
-deb http://apt.llvm.org/focal/ llvm-toolchain-focal main
-deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal main
-# 16
-deb http://apt.llvm.org/focal/ llvm-toolchain-focal-16 main
-deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-16 main
-# 17
-deb http://apt.llvm.org/focal/ llvm-toolchain-focal-17 main
-deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-17 main
+ wget https://apt.llvm.org/llvm.sh
+chmod +x llvm.sh
+sudo ./llvm.sh 18 all
 
-# LLVM
-apt-get install libllvm-18-ocaml-dev libllvm18 llvm-18 llvm-18-dev llvm-18-doc llvm-18-examples llvm-18-runtime
-# Clang and co
-apt-get install clang-18 clang-tools-18 clang-18-doc libclang-common-18-dev libclang-18-dev libclang1-18 clang-format-18 python3-clang-18 clangd-18 clang-tidy-18
-# or
 sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
-sudo apt-get install llvm -y
-sudo apt-get install clang libclang-dev -y
-sudo apt-get install gcc-multilib -y
 
 # 设置环境变量~/.bashrc 添加 export PATH=/usr/lib/llvm-18/bin/:$PATH
 source ~/.bashrc
