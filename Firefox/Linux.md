@@ -17,31 +17,21 @@ sudo apt install -y libpci-dev libxrandr-dev libdbus-1-3
 ```
 
 ```shell
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source ~/.cargo/env
-
-# 如果上面安装出错错误，请检查 curl 是否使用 snap 安装的版本
-sudo snap list |grep curl
-sudo snap remove curl
-
-# https://launchpad.net/~ubuntu-mozilla-security/+archive/ubuntu/rust-next
-sudo add-apt-repository ppa:ubuntu-mozilla-security/rust-next
-sudo apt-get update
-sudo apt-get install rustc cargo
-sudo add-apt-repository --remove ppa:ubuntu-mozilla-security/rust-next
-```
-
-```shell
 sudo update-alternatives --config editor
 ```
 
 **rust**
 ```shell
-sudo add-apt-repository ppa:jonathonf/rust-nightly
-sudo apt update
-sudo apt install rustc cargo
-
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source ~/.cargo/env
+cargo install cbindgen
+
+# 如果上面安装出错错误，请检查 curl 是否使用 snap 安装的版本
+sudo snap list |grep curl
+sudo snap remove curl
+```
+
+```shell
 rustup install 1.84.1
 rustup default 1.84.1
 rustup default nightly  # 将默认工具链设置为 nightly
