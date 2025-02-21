@@ -132,3 +132,11 @@ sudo update-alternatives --install \
 ```shell
 ./mach configure --without-wasm-sandboxed-libraries --disable-tests
 ```
+
+## 错误
+
+`error: could not exec the linker `/usr/local/src/firefox130/build/cargo-linker`
+
+```shell
+sudo chmod a+x /usr/local/src/firefox130/build/cargo-linker
+```
