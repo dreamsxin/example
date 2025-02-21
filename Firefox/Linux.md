@@ -18,6 +18,8 @@ sudo apt install -y libpci-dev libxrandr-dev libdbus-1-3
 
 ```shell
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source ~/.cargo/env
+
 # 如果上面安装出错错误，请检查 curl 是否使用 snap 安装的版本
 sudo snap list |grep curl
 sudo snap remove curl
@@ -57,10 +59,26 @@ sudo apt-get install -y nodejs
 
 **llvm**
 ```shell
+deb http://apt.llvm.org/focal/ llvm-toolchain-focal main
+deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal main
+# 16
+deb http://apt.llvm.org/focal/ llvm-toolchain-focal-16 main
+deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-16 main
+# 17
+deb http://apt.llvm.org/focal/ llvm-toolchain-focal-17 main
+deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-17 main
+
+# LLVM
+apt-get install libllvm-18-ocaml-dev libllvm18 llvm-18 llvm-18-dev llvm-18-doc llvm-18-examples llvm-18-runtime
+# Clang and co
+apt-get install clang-18 clang-tools-18 clang-18-doc libclang-common-18-dev libclang-18-dev libclang1-18 clang-format-18 python3-clang-18 clangd-18 clang-tidy-18
+# or
 sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
 sudo apt-get install llvm -y
 sudo apt-get install clang libclang-dev -y
 sudo apt-get install gcc-multilib -y
+
+# 设置环境变量 export PATH=/usr/lib/llvm-18/bin/:$PATH
 ```
 
 ```shell
@@ -76,4 +94,56 @@ sudo apt install libpango1.0-dev -y
 sudo apt install libxi-dev
 sudo apt install libx11-xcb-dev libxrandr-dev libxcomposite-dev libxcursor-dev libxdamage-dev
 sudo apt-get install nasm
+```
+
+## llvm-update-alternatives
+```shell
+#!/usr/bin/env sh
+
+sudo update-alternatives --install \
+        /usr/bin/llvm-config       llvm-config      /usr/bin/llvm-config-3.4  200 \
+--slave /usr/bin/llvm-ar           llvm-ar          /usr/bin/llvm-ar-3.4 \
+--slave /usr/bin/llvm-as           llvm-as          /usr/bin/llvm-as-3.4 \
+--slave /usr/bin/llvm-bcanalyzer   llvm-bcanalyzer  /usr/bin/llvm-bcanalyzer-3.4 \
+--slave /usr/bin/llvm-cov          llvm-cov         /usr/bin/llvm-cov-3.4 \
+--slave /usr/bin/llvm-diff         llvm-diff        /usr/bin/llvm-diff-3.4 \
+--slave /usr/bin/llvm-dis          llvm-dis         /usr/bin/llvm-dis-3.4 \
+--slave /usr/bin/llvm-dwarfdump    llvm-dwarfdump   /usr/bin/llvm-dwarfdump-3.4 \
+--slave /usr/bin/llvm-extract      llvm-extract     /usr/bin/llvm-extract-3.4 \
+--slave /usr/bin/llvm-link         llvm-link        /usr/bin/llvm-link-3.4 \
+--slave /usr/bin/llvm-mc           llvm-mc          /usr/bin/llvm-mc-3.4 \
+--slave /usr/bin/llvm-mcmarkup     llvm-mcmarkup    /usr/bin/llvm-mcmarkup-3.4 \
+--slave /usr/bin/llvm-nm           llvm-nm          /usr/bin/llvm-nm-3.4 \
+--slave /usr/bin/llvm-objdump      llvm-objdump     /usr/bin/llvm-objdump-3.4 \
+--slave /usr/bin/llvm-ranlib       llvm-ranlib      /usr/bin/llvm-ranlib-3.4 \
+--slave /usr/bin/llvm-readobj      llvm-readobj     /usr/bin/llvm-readobj-3.4 \
+--slave /usr/bin/llvm-rtdyld       llvm-rtdyld      /usr/bin/llvm-rtdyld-3.4 \
+--slave /usr/bin/llvm-size         llvm-size        /usr/bin/llvm-size-3.4 \
+--slave /usr/bin/llvm-stress       llvm-stress      /usr/bin/llvm-stress-3.4 \
+--slave /usr/bin/llvm-symbolizer   llvm-symbolizer  /usr/bin/llvm-symbolizer-3.4 \
+--slave /usr/bin/llvm-tblgen       llvm-tblgen      /usr/bin/llvm-tblgen-3.4 \
+
+
+sudo update-alternatives --install \
+        /usr/bin/llvm-config       llvm-config      /usr/bin/llvm-config-3.5  200 \
+--slave /usr/bin/llvm-ar           llvm-ar          /usr/bin/llvm-ar-3.5 \
+--slave /usr/bin/llvm-as           llvm-as          /usr/bin/llvm-as-3.5 \
+--slave /usr/bin/llvm-bcanalyzer   llvm-bcanalyzer  /usr/bin/llvm-bcanalyzer-3.5 \
+--slave /usr/bin/llvm-cov          llvm-cov         /usr/bin/llvm-cov-3.5 \
+--slave /usr/bin/llvm-diff         llvm-diff        /usr/bin/llvm-diff-3.5 \
+--slave /usr/bin/llvm-dis          llvm-dis         /usr/bin/llvm-dis-3.5 \
+--slave /usr/bin/llvm-dwarfdump    llvm-dwarfdump   /usr/bin/llvm-dwarfdump-3.5 \
+--slave /usr/bin/llvm-extract      llvm-extract     /usr/bin/llvm-extract-3.5 \
+--slave /usr/bin/llvm-link         llvm-link        /usr/bin/llvm-link-3.5 \
+--slave /usr/bin/llvm-mc           llvm-mc          /usr/bin/llvm-mc-3.5 \
+--slave /usr/bin/llvm-mcmarkup     llvm-mcmarkup    /usr/bin/llvm-mcmarkup-3.5 \
+--slave /usr/bin/llvm-nm           llvm-nm          /usr/bin/llvm-nm-3.5 \
+--slave /usr/bin/llvm-objdump      llvm-objdump     /usr/bin/llvm-objdump-3.5 \
+--slave /usr/bin/llvm-ranlib       llvm-ranlib      /usr/bin/llvm-ranlib-3.5 \
+--slave /usr/bin/llvm-readobj      llvm-readobj     /usr/bin/llvm-readobj-3.5 \
+--slave /usr/bin/llvm-rtdyld       llvm-rtdyld      /usr/bin/llvm-rtdyld-3.5 \
+--slave /usr/bin/llvm-size         llvm-size        /usr/bin/llvm-size-3.5 \
+--slave /usr/bin/llvm-stress       llvm-stress      /usr/bin/llvm-stress-3.5 \
+--slave /usr/bin/llvm-symbolizer   llvm-symbolizer  /usr/bin/llvm-symbolizer-3.5 \
+--slave /usr/bin/llvm-tblgen       llvm-tblgen      /usr/bin/llvm-tblgen-3.5 \
 ```
