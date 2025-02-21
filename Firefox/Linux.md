@@ -21,6 +21,12 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 # 如果上面安装出错错误，请检查 curl 是否使用 snap 安装的版本
 sudo snap list |grep curl
 sudo snap remove curl
+
+# https://launchpad.net/~ubuntu-mozilla-security/+archive/ubuntu/rust-next
+sudo add-apt-repository ppa:ubuntu-mozilla-security/rust-next
+sudo apt-get update
+sudo apt-get install rustc cargo
+sudo add-apt-repository --remove ppa:ubuntu-mozilla-security/rust-next
 ```
 
 ```shell
