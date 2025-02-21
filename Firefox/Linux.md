@@ -1,6 +1,28 @@
 https://www.browserbase.com/blog/recommending-playwright
 
 ## 配置环境
+
+```shell
+sudo apt install git
+git config core.fileMode false
+
+sudo apt update
+sudo apt install -y build-essential mercurial zip python3 python3-pip cmake
+sudo apt install -y clang llvm
+sudo apt install -y libcurl4-openssl-dev libxt-dev libasound2-dev libgtk2.0-dev
+sudo apt install -y libdbus-1-dev libdbus-glib-1-dev libglib2.0-dev
+sudo apt install -y libxt6 libxss1 libx11-xcb-dev libxcomposite-dev
+sudo apt install -y libasound2-dev libpulse-dev libxt-dev libxtst-dev
+sudo apt install -y libpci-dev libxrandr-dev libdbus-1-3
+```
+
+```shell
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+# 如果上面安装出错错误，请检查 curl 是否使用 snap 安装的版本
+sudo snap list |grep curl
+sudo snap remove curl
+```
+
 ```shell
 sudo update-alternatives --config editor
 ```
