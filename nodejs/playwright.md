@@ -98,3 +98,65 @@ const session = await browser.newBrowserCDPSession();
   // // 关闭浏览器
   // await browser.close();
 ```
+
+## 展示示例
+
+```js
+import playwright from "playwright";
+
+// 启动 Chrome 浏览器
+const browser = await playwright.chromium.launch({
+  headless: false, // 可以设置为 true 以无头模式运行
+});
+
+// const browser = await playwright.chromium.connectOverCDP("ws://192.168.8.101:8282/?apiKey=014027e40b3e4f10a4118380cdd53136&sessionId=a1ca93a02a1141d0812cf4bc9d1995b5")
+// // 创建一个新的 CDP 会话
+const session = await browser.newBrowserCDPSession();
+
+// 监听 Target.targetCreated 事件
+let gotEvent = false;
+session.on("Target.targetCreated", () => {
+  gotEvent = true;
+  console.log("Target created event received");
+});
+
+// 启用目标发现
+await session.send("Target.setDiscoverTargets", { discover: true });
+
+// 创建一个新页面
+const newPage = await browser.newPage();
+
+const client = await newPage.context().newCDPSession(newPage);
+
+let displayPage = await browser.newPage();
+await displayPage.goto("about:blank");
+await displayPage.evaluate(() => {
+  let img = document.createElement("img");
+  img.width = window.innerWidth;
+  img.height = window.innerHeight;
+  document.body.appendChild(img);
+  return img;
+});
+let imgHandle = await displayPage.$("img");
+
+client.on("Page.screencastFrame", async (ev) => {
+  //console.log('screencastFrame', ev);
+  await client.send("Page.screencastFrameAck", { sessionId: ev.sessionId });
+  const base64 = ev.data;
+  await imgHandle.evaluate((img, base64) => {
+    img.src = "data:image/png;base64," + base64;
+  }, base64);
+});
+await client.send("Page.startScreencast");
+
+await newPage.goto("https://www.baidu.com");
+
+// // 关闭页面
+// await page.close();
+
+// // 分离 CDP 会话
+// await session.detach();
+
+// // 关闭浏览器
+// await browser.close();
+```
