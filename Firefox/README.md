@@ -163,6 +163,7 @@ ac_add_options --enable-official-branding
 ac_add_options --disable-crashreporter
 ac_add_options --disable-updater
 ac_add_options --enable-eme=widevine
+ac_add_options --without-wasm-sandboxed-libraries
 ```
 
 可以使用环境变量 `MOZCONFIG` 指定配置文件。
