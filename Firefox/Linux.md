@@ -114,4 +114,28 @@ sudo dpkg -i xxxx
 ./mach ide vscode
 ```
 
+## wsl 下编译
 
+### 交叉编译工具
+
+```shell
+sudo apt install -y build-essential autoconf curl git mercurial python3 python3-pip nodejs npm zip unzip clang lld llvm
+sudo apt install -y gcc-x86-64-linux-gnu g++-x86-64-linux-gnu binutils-x86-64-linux-gnu
+```
+
+···conf
+# 启用交叉编译
+ac_add_options --target=x86_64-pc-linux-gnu
+ac_add_options --host=x86_64-pc-linux-gnu
+
+# 指定交叉编译工具链路径
+export CC=x86_64-linux-gnu-gcc
+export CXX=x86_64-linux-gnu-g++
+export AR=x86_64-linux-gnu-ar
+export RANLIB=x86_64-linux-gnu-ranlib
+
+# 优化构建选项
+ac_add_options --enable-application=browser
+ac_add_options --enable-optimize
+ac_add_options --disable-debug
+```
