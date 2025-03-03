@@ -1,6 +1,6 @@
 
-https://github.com/kardianos/service
-https://github.com/winsw/winsw/
+- https://github.com/kardianos/service
+- https://github.com/winsw/winsw/
 
 ```go
 package main
@@ -109,3 +109,34 @@ servicedemo.exe stop
 ```shell
 servicedemo.exe uninstall
 ```
+
+## bat
+
+https://learn.microsoft.com/zh-cn/windows-server/administration/windows-commands/sc-create
+
+### 安装
+```bat
+@echo off
+set SERVICE_NAME=browser-agent
+set EXE_ARGS="\"C:\cloud-browser\browser\browser.exe\" start"
+
+REM 请求管理员权限
+if not "%1"=="amAdmin" (
+    powershell start -verb runas '%0' amAdmin
+    exit /b
+)
+
+REM 创建服务
+sc create %SERVICE_NAME% binPath= %EXE_ARGS% start= auto
+
+REM 检查结果
+if %errorlevel% equ 0 (
+    echo 服务创建成功！可执行以下命令启动：
+    echo net start %SERVICE_NAME%
+) else (
+    echo 服务创建失败，请检查路径和权限！
+)
+pause
+```
+
+
