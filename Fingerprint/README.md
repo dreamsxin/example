@@ -1,5 +1,8 @@
 # What Is Browser Fingerprinting?
 
+- https://github.com/abrahamjuliot/creepjs
+- https://browserscan.net/
+
 Browser fingerprinting is a process of identifying web clients by collecting specific data points from devices, HTTP connections, and software features.
 
 Think of it this way: a real fingerprint image is a unique identifier that looks like a combination of lines and curves, right? Now, in the digital world, each line and curve encodes information from your end, including:
