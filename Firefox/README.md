@@ -64,6 +64,15 @@ nsresult nsThread::Init(const nsACString& aName) {
 }
 ```
 
+
+## 布局调试
+
+https://firefox-source-docs.mozilla.org/layout/LayoutDebugger.html
+
+Use a debug build or add `ac_add_options --enable-layout-debugger` to your mozconfig.
+
+Run with `./mach run --layoutdebug [filename]`
+
 ### 环境
 
 **Mercurial**
