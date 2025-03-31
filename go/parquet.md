@@ -8,242 +8,299 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"sort"
+	"sync"
+	"time"
 
 	"github.com/apache/arrow/go/v12/arrow"
 	"github.com/apache/arrow/go/v12/arrow/array"
 	"github.com/apache/arrow/go/v12/arrow/memory"
 	"github.com/apache/arrow/go/v12/parquet"
-	"github.com/apache/arrow/go/v12/parquet/compress"
 	"github.com/apache/arrow/go/v12/parquet/pqarrow"
 )
 
-func main() {
-	// 创建内存池（使用默认Go分配器）
-	pool := memory.NewGoAllocator()
+// 系统配置
+const (
+	MaxFileRecords = 100000    // 单个文件最大记录数
+	MergeThreshold = 10        // 触发合并的文件数量阈值
+	DataDir        = "./data"  // 数据存储目录
+	MergeInterval  = 5 * time.Minute // 合并检查间隔
+)
 
-	// 定义Schema（包含多种数据类型）
+// 流式写入器
+type StreamWriter struct {
+	mu         sync.Mutex
+	currentRec int               // 当前文件记录数
+	writer     *pqarrow.FileWriter // Parquet写入器
+	schema     *arrow.Schema     // 数据模式
+	filePath   string            // 当前文件路径
+}
+
+// 初始化流式写入器
+func NewStreamWriter(schema *arrow.Schema) *StreamWriter {
+	return &StreamWriter{
+		schema: schema,
+	}
+}
+
+// 追加写入记录
+func (sw *StreamWriter) Write(rec arrow.Record) error {
+	sw.mu.Lock()
+	defer sw.mu.Unlock()
+
+	// 创建新文件（首次写入或达到阈值）
+	if sw.writer == nil || sw.currentRec >= MaxFileRecords {
+		if err := sw.rotateFile(); err != nil {
+			return err
+		}
+	}
+
+	// 写入记录
+	if err := sw.writer.Write(rec); err != nil {
+		return fmt.Errorf("写入失败: %w", err)
+	}
+
+	sw.currentRec += int(rec.NumRows())
+	return nil
+}
+
+// 切换新文件
+func (sw *StreamWriter) rotateFile() error {
+	// 关闭现有写入器
+	if sw.writer != nil {
+		if err := sw.writer.Close(); err != nil {
+			return err
+		}
+	}
+
+	// 生成新文件名
+	sw.filePath = filepath.Join(DataDir,
+		fmt.Sprintf("data_%d.parquet", time.Now().UnixNano()))
+
+	// 创建新写入器
+	f, err := os.Create(sw.filePath)
+	if err != nil {
+		return fmt.Errorf("创建文件失败: %w", err)
+	}
+
+	props := parquet.NewWriterProperties(
+		parquet.WithCompression(parquet.CompressionSnappy),
+		parquet.WithMaxRowGroupLength(128*1024),
+	)
+
+	writer, err := pqarrow.NewFileWriter(
+		sw.schema,
+		f,
+		props,
+		pqarrow.DefaultWriterProps(),
+	)
+	if err != nil {
+		f.Close()
+		return fmt.Errorf("创建写入器失败: %w", err)
+	}
+
+	sw.writer = writer
+	sw.currentRec = 0
+	return nil
+}
+
+// 异步合并器
+type Merger struct {
+	mu    sync.Mutex
+	files []string // 待合并文件列表
+}
+
+// 添加待合并文件
+func (m *Merger) AddFile(path string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.files = append(m.files, path)
+}
+
+// 启动合并协程
+func (m *Merger) Start(ctx context.Context) {
+	go func() {
+		ticker := time.NewTicker(MergeInterval)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ticker.C:
+				m.tryMerge()
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+}
+
+// 尝试合并文件
+func (m *Merger) tryMerge() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if len(m.files) < MergeThreshold {
+		return
+	}
+
+	// 排序文件（按时间顺序）
+	sort.Strings(m.files)
+	toMerge := m.files[:MergeThreshold]
+	m.files = m.files[MergeThreshold:]
+
+	// 执行合并
+	mergedFile := filepath.Join(DataDir,
+		fmt.Sprintf("merged_%d.parquet", time.Now().UnixNano()))
+	
+	if err := mergeParquetFiles(toMerge, mergedFile); err != nil {
+		log.Printf("合并失败: %v", err)
+		return
+	}
+
+	// 删除原始文件（生产环境建议先验证合并结果）
+	for _, f := range toMerge {
+		if err := os.Remove(f); err != nil {
+			log.Printf("删除文件失败 %s: %v", f, err)
+		}
+	}
+}
+
+// 合并多个Parquet文件
+func mergeParquetFiles(inputs []string, output string) error {
+	// 读取第一个文件获取schema
+	f, err := os.Open(inputs[0])
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	reader, err := pqarrow.NewFileReader(f, pqarrow.ArrowReadProperties{}, memory.DefaultAllocator)
+	if err != nil {
+		return err
+	}
+	schema := reader.Schema()
+
+	// 创建输出文件
+	outFile, err := os.Create(output)
+	if err != nil {
+		return err
+	}
+	defer outFile.Close()
+
+	writer, err := pqarrow.NewFileWriter(
+		schema,
+		outFile,
+		parquet.NewWriterProperties(
+			parquet.WithCompression(parquet.CompressionSnappy),
+		),
+		pqarrow.DefaultWriterProps(),
+	)
+	if err != nil {
+		return err
+	}
+	defer writer.Close()
+
+	// 合并数据
+	for _, path := range inputs {
+		tbl, err := readParquetFile(path)
+		if err != nil {
+			return err
+		}
+		defer tbl.Release()
+
+		if err := writer.WriteTable(tbl); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// 生成测试数据
+func generateTestData(schema *arrow.Schema) arrow.Record {
+	pool := memory.NewGoAllocator()
+	b := array.NewRecordBuilder(pool, schema)
+	defer b.Release()
+
+	// 填充测试数据
+	ts := time.Now().UnixNano() / 1e6
+	for i := 0; i < 1000; i++ {
+		b.Field(0).(*array.Int64Builder).Append(int64(i))
+		b.Field(1).(*array.StringBuilder).Append(fmt.Sprintf("item-%d", i))
+		b.Field(2).(*array.Float64Builder).Append(float64(i)*1.5)
+		b.Field(3).(*array.TimestampBuilder).Append(arrow.Timestamp(ts + int64(i)))
+	}
+
+	return b.NewRecord()
+}
+
+func main() {
+	// 初始化数据目录
+	if err := os.MkdirAll(DataDir, 0755); err != nil {
+		log.Fatal("创建目录失败:", err)
+	}
+
+	// 定义数据模式
 	schema := arrow.NewSchema(
 		[]arrow.Field{
-			{
-				Name: "id", 
-				Type: arrow.PrimitiveTypes.Int64,
-				Nullable: false,
-			},
-			{
-				Name: "product_name", 
-				Type: arrow.BinaryTypes.String,
-				Nullable: true,
-			},
-			{
-				Name: "price",
-				Type: arrow.PrimitiveTypes.Float64,
-				Nullable: false,
-			},
-			{
-				Name: "in_stock",
-				Type: arrow.FixedWidthTypes.Boolean,
-				Nullable: true,
-			},
-			{
-				Name: "timestamp",
-				Type: arrow.FixedWidthTypes.Timestamp_ms,
-				Nullable: false,
-			},
+			{Name: "id", Type: arrow.PrimitiveTypes.Int64},
+			{Name: "name", Type: arrow.BinaryTypes.String},
+			{Name: "value", Type: arrow.PrimitiveTypes.Float64},
+			{Name: "timestamp", Type: arrow.FixedWidthTypes.Timestamp_ms},
 		},
 		nil,
 	)
 
-	// 创建列构建器（注意及时释放资源）
-	idBuilder := array.NewInt64Builder(pool)
-	defer idBuilder.Release()
+	// 初始化组件
+	writer := NewStreamWriter(schema)
+	merger := &Merger{}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	nameBuilder := array.NewStringBuilder(pool)
-	defer nameBuilder.Release()
+	// 启动合并协程
+	merger.Start(ctx)
 
-	priceBuilder := array.NewFloat64Builder(pool)
-	defer priceBuilder.Release()
+	// 模拟实时数据流
+	go func() {
+		for {
+			rec := generateTestData(schema)
+			defer rec.Release()
 
-	stockBuilder := array.NewBooleanBuilder(pool)
-	defer stockBuilder.Release()
+			if err := writer.Write(rec); err != nil {
+				log.Printf("写入失败: %v", err)
+				continue
+			}
 
-	tsBuilder := array.NewTimestampBuilder(pool, arrow.FixedWidthTypes.Timestamp_ms)
-	defer tsBuilder.Release()
+			// 记录需要合并的文件
+			if writer.filePath != "" {
+				merger.AddFile(writer.filePath)
+			}
 
-	// 填充测试数据
-	idBuilder.AppendValues([]int64{1, 2, 3, 4}, nil)
-	
-	nameBuilder.AppendValues([]string{"Laptop", "Phone", nil, "Tablet"}, 
-		[]bool{true, true, false, true}) // 第三个元素为null
-	
-	priceBuilder.AppendValues([]float64{1299.99, 699.99, 899.00, 299.99}, nil)
-	
-	stockBuilder.AppendValues([]bool{true, false, true, true}, 
-		[]bool{true, true, true, true}) // 全部非null
-	
-	tsBuilder.AppendValues([]arrow.Timestamp{
-		arrow.Timestamp(1672531200000), // 2023-01-01
-		arrow.Timestamp(1672617600000), // 2023-01-02
-		arrow.Timestamp(1672704000000), // 2023-01-03
-		arrow.Timestamp(1672790400000), // 2023-01-04
-	}, nil)
+			time.Sleep(100 * time.Millisecond) // 模拟数据产生间隔
+		}
+	}()
 
-	// 创建Record Batch
-	rec := array.NewRecord(
-		schema,
-		[]arrow.Array{
-			idBuilder.NewArray(),
-			nameBuilder.NewArray(),
-			priceBuilder.NewArray(),
-			stockBuilder.NewArray(),
-			tsBuilder.NewArray(),
-		},
-		-1, // 自动计算行数
-	)
-	defer rec.Release()
-
-	// 创建输出文件
-	f, err := os.Create("products.parquet")
-	if err != nil {
-		log.Fatal("创建文件失败:", err)
-	}
-	defer f.Close()
-
-	// 配置Parquet写入参数
-	props := parquet.NewWriterProperties(
-		parquet.WithCompression(compress.Codecs.Snappy), // 使用Snappy压缩
-		parquet.WithDictionaryDefault(true),           // 启用字典编码
-		parquet.WithDataPageVersion(parquet.DataPageV2), // 使用V2数据页格式
-		parquet.WithMaxRowGroupLength(128*1024),       // 128KB行组大小
-	)
-
-	// 创建Parquet写入器
-	writer, err := pqarrow.NewFileWriter(
-		rec.Schema(), 
-		f, 
-		props,                  // 写入属性
-		pqarrow.DefaultWriterProps(), // 默认Arrow属性
-	)
-	if err != nil {
-		log.Fatal("创建Parquet写入器失败:", err)
-	}
-	defer writer.Close()
-
-	// 写入数据（可多次写入多个Record Batch）
-	if err := writer.Write(rec); err != nil {
-		log.Fatal("写入数据失败:", err)
-	}
-
-	// 显式关闭以确保数据刷新到磁盘
-	if err := writer.Close(); err != nil {
-		log.Fatal("关闭写入器失败:", err)
-	}
-
-	fmt.Println("Parquet文件已成功生成: products.parquet")
-
-	// 可选：验证文件内容
-	if err := verifyParquetFile("products.parquet"); err != nil {
-		log.Fatal("验证失败:", err)
-	}
+	// 保持主程序运行
+	select {}
 }
 
-// 验证Parquet文件内容
-func verifyParquetFile(path string) error {
+// 读取Parquet文件（辅助函数）
+func readParquetFile(path string) (arrow.Table, error) {
 	f, err := os.Open(path)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer f.Close()
 
-	// 创建Parquet读取器
-	reader, err := pqarrow.NewFileReader(
-		f, 
-		pqarrow.ArrowReadProperties{},
-		memory.NewGoAllocator(),
-	)
+	reader, err := pqarrow.NewFileReader(f, pqarrow.ArrowReadProperties{}, memory.DefaultAllocator)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	// 获取文件元数据
-	meta := reader.MetaData()
-	fmt.Printf("\n文件元数据:\n")
-	fmt.Printf("版本: %s\n", meta.Version())
-	fmt.Printf("创建者: %s\n", meta.CreatedBy())
-	fmt.Printf("行数: %d\n", meta.NumRows())
-	fmt.Printf("行组数: %d\n", meta.NumRowGroups())
-
-	// 读取第一个行组
-	arrowReadProps := pqarrow.ArrowReadProperties{BatchSize: 1024}
-	tbl, err := reader.ReadTable(&arrowReadProps)
-	if err != nil {
-		return err
-	}
-	defer tbl.Release()
-
-	fmt.Printf("\nSchema验证:\n%s\n", tbl.Schema())
-
-	fmt.Println("\n前10行数据样例:")
-	tr := array.NewTableReader(tbl, 10)
-	defer tr.Release()
-
-	for tr.Next() {
-		rec := tr.Record()
-		fmt.Println(rec)
-	}
-
-	return nil
-}
-
-// 1. 每次追加写入新文件
-func appendData(newRec arrow.Record) error {
-    filename := fmt.Sprintf("data_%d.parquet", time.Now().Unix())
-    
-    writer, err := newParquetWriter(filename, newRec.Schema())
-    if err != nil {
-        return err
-    }
-    defer writer.Close()
-    
-    return writer.Write(newRec)
-}
-
-// 2. 查询时合并读取
-func readAllData() (arrow.Table, error) {
-    dataset, _ := ds.NewDataset(
-        []string{"data_*.parquet"},
-        nil, // 自动推断Schema
-        parquet.NewFileFormat(),
-    )
-    
-    scanner := ds.NewScanner(dataset, ds.WithBatchSize(1024))
-    return scanner.ToTable()
-}
-
-// 合并多个Parquet文件
-func mergeFiles(inputs []string, output string) error {
-    // 创建合并后的写入器
-    writer := newParquetWriter(output, schema)
-    defer writer.Close()
-    
-    // 逐个读取并合并
-    for _, f := range inputs {
-        tbl := readParquetFile(f)
-        defer tbl.Release()
-        
-        if err := writer.WriteTable(tbl); err != nil {
-            return err
-        }
-    }
-    return nil
-}
-
-// 示例：每日合并
-func dailyMerge() {
-    files := listFiles("data_*.parquet")
-    mergeFiles(files, fmt.Sprintf("merged_%s.parquet", time.Now().Format("20060102")))
-    deleteFiles(files) // 可选删除原文件
+	return reader.ReadTable(nil)
 }
 ```
