@@ -4,6 +4,7 @@
 
 ```shell
 npx @modelcontextprotocol/inspector
+npx @modelcontextprotocol/inspector D:/xxxx/mcp.exe
 ```
 
 ## 实例1
