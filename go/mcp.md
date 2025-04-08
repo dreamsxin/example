@@ -151,3 +151,18 @@ func main() {
 	}
 }
 ```
+
+## nginx 配置
+
+```conf
+    location /sse {
+        proxy_pass http://localhost:8283;
+        proxy_buffering off;
+        proxy_cache off;
+    }   
+    location /message {                                                                                                                                                                                                                                                                                                   
+        proxy_pass http://localhost:8283;
+        proxy_buffering off;
+        proxy_cache off;
+    }
+```
