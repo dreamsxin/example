@@ -1,3 +1,62 @@
+## 查看网络设备状态
+
+```shell
+ip link show
+ip addr show
+# 启用网卡
+sudo ip link set enp7s0 up
+sudo ip link set enp7s0 down
+```
+
+-‌ MULTICAST‌：表示这个网卡可以发送多播包。多播是一种网络通信方式，允许一个发送方将数据同时发送给多个接收方，而不必为每个接收方单独发送数据包‌。
+‌-‌ UP‌：表示网卡处于启动状态，但不一定有物理连接‌。
+-‌ ‌LOWER_UP‌：表示L1层（物理层）是启动的，即插着网线，有物理连接‌。
+-‌ ‌LOOPBACK‌：表示这是一个环回接口，通常用于本机通信，地址通常为127.0.0.1‌。
+-‌ ‌RUNNING‌：表示网卡不仅启动了，而且正在运行中，通常用于指示网络接口的物理和逻辑连接都已就绪‌。
+
+```shell
+# 查看启用的网卡
+ifconfig
+# 查看所有网卡
+ifconfig -a
+# 启用网卡
+sudo ifconfig enp7s0 up
+```
+
+### 配置 IP
+
+```shell
+sudo ip addr add 192.168.1.100/24 dev eth0
+sudo ifconfig eth0 192.168.1.100 netmask 255.255.255.0 up
+```
+
+**DHCP**
+```shell
+sudo systemctl enable dhcpcd
+sudo systemctl start dhcpcd
+# or
+sudo systemctl enable dhclient
+sudo systemctl start dhclient
+```
+`/etc/network/interfaces`
+```conf
+auto eth0
+iface eth0 inet dhcp
+#or
+ADDRESS=192.168.0.10
+NETMASK=255.255.255.0
+
+DEVICE=eth0 #物理设备名
+IPADDR=192.168.1.10 #IP地址
+NETMASK=255.255.255.0 #掩码值
+NETWORK=192.168.1.0 #网络地址(可不要)
+BROADCAST=192.168.1.255 #广播地址（可不要）
+GATEWAY=192.168.1.1 #网关地址
+ONBOOT=yes # [yes|no]（引导时是否激活设备）
+USERCTL=no #[yes|no]（非root用户是否可以控制该设备）
+BOOTPROTO=static #[none|static|bootp|dhcp]（引导时不使用协议|静态分配|BOOTP协议|DHCP协议）
+```
+
 ## 查看系统中都在监听哪些端口
 
 ```shell
