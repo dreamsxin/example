@@ -159,9 +159,17 @@ func main() {
         proxy_pass http://localhost:8283;
         proxy_buffering off;
         proxy_cache off;
+
+        # 保持连接活性，不发送连接关闭的信号
+        proxy_set_header Connection '';
+
         proxy_connect_timeout 600s;
         proxy_read_timeout 600s;
         proxy_send_timeout 600s;
+        # Other necessary SSE headers
+        proxy_set_header Cache-Control 'no-cache';
+        proxy_set_header Connection 'keep-alive';
+
     }   
     location /message {                                                                                                                                                                                                                                                                                                   
         proxy_pass http://localhost:8283;
