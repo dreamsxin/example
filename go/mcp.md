@@ -159,6 +159,9 @@ func main() {
         proxy_pass http://localhost:8283;
         proxy_buffering off;
         proxy_cache off;
+        proxy_connect_timeout 600s;
+        proxy_read_timeout 600s;
+        proxy_send_timeout 600s;
     }   
     location /message {                                                                                                                                                                                                                                                                                                   
         proxy_pass http://localhost:8283;
