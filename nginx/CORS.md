@@ -1,5 +1,21 @@
 # CORS 跨域（Cross-Origin Resource Sharing）
 
+- https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Guides/CORS
+
+备注： 当响应的是附带身份凭证的请求时，服务端必须明确 Access-Control-Allow-Origin 的值，而不能使用通配符“*”。
+
+## https
+
+通过客户端传过来的头信息（origin）设置。
+
+```conf
+        if ($http_origin = ''){
+            set $http_origin "*";
+        }   
+
+        add_header 'Access-Control-Allow-Origin' $http_origin;
+```
+
 ## 注意事项
 
 * Nginx 只处理最后一个 `add_header`。
