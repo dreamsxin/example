@@ -43,7 +43,7 @@ import playwright from 'playwright';
 //   });
 
 const browser = await playwright.chromium.connectOverCDP("ws://127.0.0.1:63043/devtools/browser/9cc443f0-1ff6-4bc3-a9db-1064cc9605c0")
-// 创建一个新的 CDP 会话
+// 创建一个新的 CDP 会话 CDPSession 对象可以用来与浏览器的 Chrome DevTools Protocol (CDP) 会话进行交互，执行底层 CDP 命令并监视和处理与浏览器相关的事件。
 const session = await browser.newBrowserCDPSession();
 
 
