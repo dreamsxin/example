@@ -57,6 +57,10 @@ const session = await browser.newBrowserCDPSession();
   // 启用目标发现
   await session.send('Target.setDiscoverTargets', { discover: true });
 
+  //const ctx = await browser.newContext();
+  //const ctx = await browser.contexts()[0];
+  //const newPage = await ctx.newPage();
+
   // 创建一个新页面
   const page = await browser.newPage();
 
