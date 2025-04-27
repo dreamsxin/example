@@ -59,3 +59,21 @@ go tool pprof http://192.168.1.27:8080/debug/pprof/trace
 ```shell
  go tool pprof -http=192.168.1.27:8081 pprof.server.alloc_objects.alloc_space.inuse_objects.inuse_space.001.pb.gz
 ```
+
+```go
+package main
+
+import (
+  "github.com/gin-contrib/pprof"
+  "github.com/gin-gonic/gin"
+)
+
+func main() {
+  router := gin.Default()
+  // default is "debug/pprof"
+  pprof.Register(router)
+  //pprof.Register(router, "dev/pprof")
+
+  router.Run(":8080")
+}
+```
