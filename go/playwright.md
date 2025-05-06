@@ -342,3 +342,21 @@ func startHttpServer() {
 	}()
 }
 ```
+
+## 上传文件
+
+- https://github.com/playwright-community/playwright-go/blob/main/input_files_helper.go
+
+```go
+// 上传单个文件
+page.Locator("input#upload").SetInputFiles([]string{"myfile.pdf"})
+
+// 支持直接传递文件内容和元数据
+page.Locator("input#upload").SetInputFiles([]playwright.File{
+    {
+        Name:     "test.txt",
+        MimeType: "text/plain",
+        Buffer:   []byte("file content"),
+    },
+})
+```
