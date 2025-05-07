@@ -113,7 +113,7 @@ const browser = await playwright.chromium.launch({
   headless: false, // 可以设置为 true 以无头模式运行
 });
 
-// const browser = await playwright.chromium.connectOverCDP("ws://192.168.8.101:8282/?apiKey=014027e40b3e4f10a4118380cdd53136&sessionId=a1ca93a02a1141d0812cf4bc9d1995b5")
+// const browser = await playwright.chromium.connectOverCDP("ws://localhost")
 // // 创建一个新的 CDP 会话
 const session = await browser.newBrowserCDPSession();
 
@@ -163,4 +163,38 @@ await newPage.goto("https://www.baidu.com");
 
 // // 关闭浏览器
 // await browser.close();
+```
+
+## 上传
+
+```js
+import playwright from "playwright";
+
+const browser = await playwright.chromium.connectOverCDP("ws://localhost")
+
+const defaultContext = browser.contexts()[0];
+const newPage = defaultContext.pages()[0];
+
+try {
+
+  await newPage.goto("http://localhost/upload");
+
+  const cdpSession = await defaultContext.newCDPSession(newPage);
+  const root = await cdpSession.send("DOM.getDocument");
+
+  // Then find our input element
+  const inputNode = await cdpSession.send("DOM.querySelector", {
+    nodeId: root.root.nodeId,
+    selector: "#fileInput",
+  });
+
+  // Use DOM.setFileInputFiles CDP command
+  const remoteFilePath = `762686.png`;
+  await cdpSession.send("DOM.setFileInputFiles", {
+    files: [remoteFilePath],
+    nodeId: inputNode.nodeId,
+  });
+} catch (error) {
+  console.log(error);
+}
 ```
