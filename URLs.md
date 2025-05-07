@@ -2651,6 +2651,8 @@ https://github.com/PrashantMangukiya/SwiftCoreImageFilter
 
 # Rust
 
+https://github.com/CapSoftware/Cap
+
 https://github.com/rust-lang/rust
 
 https://github.com/rust-lang/cargo
