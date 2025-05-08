@@ -1050,7 +1050,11 @@ https://github.com/onyx-platform/onyx
 
 # GO
 
-https://github.com/kbinani/screenshot
+- https://github.com/MontFerret/ferret
+
+Declarative web scraping
+
+- https://github.com/kbinani/screenshot
 
 https://github.com/pion/webrtc
 
