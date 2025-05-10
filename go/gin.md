@@ -159,3 +159,439 @@ if len(c.Errors) > 0 {
 	log.Pritnln("Errors", c.Errors)
 }
 ```
+
+## 断点续传服务模块
+
+```text
+resumable/
+├── config.go       // 配置相关
+├── download.go     // 下载功能
+├── upload.go       // 上传功能
+├── utils.go        // 工具函数
+└── resumable.go    // 主模块
+```
+
+- resumable.go
+```go
+package resumable
+
+import (
+	"fmt"
+
+	"github.com/gin-gonic/gin"
+)
+
+// Service 断点续传服务
+type Service struct {
+	config *Config
+}
+
+```
+
+- config.go
+```go
+package resumable
+
+// Config 断点续传服务的配置
+type Config struct {
+	// 上传文件存储目录
+	UploadDir string
+	// 单次上传内存限制
+	MaxMemory int64
+	// 是否启用日志
+	EnableLog bool
+}
+
+// DefaultConfig 返回默认配置
+func DefaultConfig() *Config {
+	return &Config{
+		UploadDir:  "./uploads",
+		MaxMemory:  8 << 20, // 8 MB
+		EnableLog:  true,
+	}
+}
+```
+
+- utils.go
+```go
+package resumable
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+)
+
+// httpRange 表示HTTP Range头部的范围
+type httpRange struct {
+	start, end int64
+}
+
+// parseRange 解析HTTP Range头部
+func parseRange(rangeHeader string, fileSize int64) ([]httpRange, error) {
+	if !strings.HasPrefix(rangeHeader, "bytes=") {
+		return nil, fmt.Errorf("无效的 Range 头: %s", rangeHeader)
+	}
+
+	rangeHeader = strings.TrimPrefix(rangeHeader, "bytes=")
+	var ranges []httpRange
+
+	for _, r := range strings.Split(rangeHeader, ",") {
+		r = strings.TrimSpace(r)
+		if r == "" {
+			continue
+		}
+
+		parts := strings.Split(r, "-")
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("无效的范围格式: %s", r)
+		}
+
+		start, end := parts[0], parts[1]
+		var startByte, endByte int64
+		var err error
+
+		if start == "" {
+			// 如果起始位置为空，例如 -500，表示最后 500 字节
+			endByte, err = strconv.ParseInt(end, 10, 64)
+			if err != nil {
+				return nil, fmt.Errorf("无效的范围结束位置: %s", end)
+			}
+			if endByte <= 0 {
+				return nil, fmt.Errorf("范围结束位置必须大于 0")
+			}
+			startByte = fileSize - endByte
+			if startByte < 0 {
+				startByte = 0
+			}
+			endByte = fileSize - 1
+		} else {
+			// 正常范围，例如 500-999
+			startByte, err = strconv.ParseInt(start, 10, 64)
+			if err != nil {
+				return nil, fmt.Errorf("无效的范围起始位置: %s", start)
+			}
+
+			if end == "" {
+				// 如果结束位置为空，例如 500-，表示从 500 到文件末尾
+				endByte = fileSize - 1
+			} else {
+				endByte, err = strconv.ParseInt(end, 10, 64)
+				if err != nil {
+					return nil, fmt.Errorf("无效的范围结束位置: %s", end)
+				}
+			}
+		}
+
+		if startByte >= fileSize {
+			return nil, fmt.Errorf("范围起始位置超出文件大小")
+		}
+		if endByte >= fileSize {
+			endByte = fileSize - 1
+		}
+		if startByte > endByte {
+			return nil, fmt.Errorf("范围起始位置大于结束位置")
+		}
+
+		ranges = append(ranges, httpRange{startByte, endByte})
+	}
+
+	if len(ranges) == 0 {
+		return nil, fmt.Errorf("没有有效的范围")
+	}
+
+	return ranges, nil
+}
+
+// ensureDir 确保目录存在
+func ensureDir(dir string) error {
+	return os.MkdirAll(dir, 0755)
+}
+
+// safeFilename 确保文件名安全
+func safeFilename(filename string) string {
+	return filepath.Base(filename)
+}
+```
+
+- download.go
+```go
+package resumable
+
+import (
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+)
+
+// HandleDownload 处理文件下载，支持断点续传
+func (s *Service) HandleDownload(c *gin.Context) {
+	filename := c.Param("filename")
+	filepath := filepath.Join(s.config.UploadDir, safeFilename(filename))
+
+	// 检查文件是否存在
+	fileInfo, err := os.Stat(filepath)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "文件不存在"})
+		return
+	}
+
+	// 打开文件
+	file, err := os.Open(filepath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "无法打开文件"})
+		return
+	}
+	defer file.Close()
+
+	// 获取文件大小
+	fileSize := fileInfo.Size()
+
+	// 设置响应头
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	c.Header("Accept-Ranges", "bytes")
+	c.Header("Content-Type", "application/octet-stream")
+	c.Header("Content-Length", strconv.FormatInt(fileSize, 10))
+
+	// 检查是否有 Range 头
+	rangeHeader := c.Request.Header.Get("Range")
+	if rangeHeader != "" {
+		// 解析 Range 头
+		ranges, err := parseRange(rangeHeader, fileSize)
+		if err != nil {
+			c.JSON(http.StatusRequestedRangeNotSatisfiable, gin.H{"error": "Range 头无效"})
+			return
+		}
+
+		if len(ranges) > 1 {
+			c.JSON(http.StatusRequestedRangeNotSatisfiable, gin.H{"error": "不支持多重范围请求"})
+			return
+		}
+
+		// 获取范围
+		start := ranges[0].start
+		end := ranges[0].end
+
+		// 设置部分内容响应
+		c.Status(http.StatusPartialContent)
+		c.Header("Content-Range", fmt.Sprintf("bytes %d-%d/%d", start, end, fileSize))
+		c.Header("Content-Length", strconv.FormatInt(end-start+1, 10))
+
+		// 移动文件指针到起始位置
+		_, err = file.Seek(start, io.SeekStart)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "无法定位文件"})
+			return
+		}
+
+		// 发送部分内容
+		_, err = io.CopyN(c.Writer, file, end-start+1)
+		if err != nil {
+			// 客户端可能中断连接，这是预期的
+			if s.config.EnableLog {
+				fmt.Printf("下载中断: %v\n", err)
+			}
+			return
+		}
+	} else {
+		// 发送整个文件
+		c.Status(http.StatusOK)
+		_, err = io.Copy(c.Writer, file)
+		if err != nil {
+			// 客户端可能中断连接，这是预期的
+			if s.config.EnableLog {
+				fmt.Printf("下载中断: %v\n", err)
+			}
+			return
+		}
+	}
+}
+```
+
+- upload.go
+```go
+package resumable
+
+import (
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+
+	"github.com/gin-gonic/gin"
+)
+
+// HandleUpload 处理文件上传，支持断点续传
+func (s *Service) HandleUpload(c *gin.Context) {
+	// 限制请求体大小
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, s.config.MaxMemory)
+
+	// 获取文件名和当前上传位置
+	filename := c.PostForm("filename")
+	if filename == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "未提供文件名"})
+		return
+	}
+
+	// 安全检查文件名
+	filename = safeFilename(filename)
+	filePath := filepath.Join(s.config.UploadDir, filename)
+
+	// 获取 Content-Range 头
+	contentRange := c.Request.Header.Get("Content-Range")
+	var start, end, total int64
+	var err error
+
+	if contentRange != "" {
+		// 解析 Content-Range 头 (格式: bytes start-end/total)
+		parts := strings.Split(contentRange, " ")
+		if len(parts) != 2 || !strings.HasPrefix(parts[0], "bytes") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Content-Range 格式无效"})
+			return
+		}
+
+		rangeParts := strings.Split(parts[1], "/")
+		if len(rangeParts) != 2 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Content-Range 格式无效"})
+			return
+		}
+
+		positions := strings.Split(rangeParts[0], "-")
+		if len(positions) != 2 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Content-Range 格式无效"})
+			return
+		}
+
+		start, err = strconv.ParseInt(positions[0], 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Content-Range 起始位置无效"})
+			return
+		}
+
+		end, err = strconv.ParseInt(positions[1], 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Content-Range 结束位置无效"})
+			return
+		}
+
+		total, err = strconv.ParseInt(rangeParts[1], 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Content-Range 总大小无效"})
+			return
+		}
+	} else {
+		// 如果没有 Content-Range，则假设是从头开始上传
+		start = 0
+		end = -1
+		total = -1
+	}
+
+	// 获取上传的文件
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "未找到上传的文件"})
+		return
+	}
+
+	// 打开上传的文件
+	src, err := file.Open()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "无法打开上传的文件"})
+		return
+	}
+	defer src.Close()
+
+	var dst *os.File
+
+	// 检查文件是否已存在
+	if _, err := os.Stat(filePath); err == nil && start > 0 {
+		// 文件存在且不是从头开始上传，打开文件进行追加
+		dst, err = os.OpenFile(filePath, os.O_WRONLY, 0644)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "无法打开目标文件"})
+			return
+		}
+		defer dst.Close()
+
+		// 移动到指定位置
+		_, err = dst.Seek(start, io.SeekStart)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "无法定位到指定位置"})
+			return
+		}
+	} else {
+		// 文件不存在或从头开始上传，创建新文件
+		dst, err = os.Create(filePath)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "无法创建目标文件"})
+			return
+		}
+		defer dst.Close()
+	}
+
+	// 复制数据
+	written, err := io.Copy(dst, src)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "写入文件失败"})
+		return
+	}
+
+	// 获取当前文件大小
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "无法获取文件信息"})
+		return
+	}
+	currentSize := fileInfo.Size()
+
+	// 判断是否上传完成
+	isComplete := total == -1 || currentSize >= total
+
+	status := "部分上传"
+	if isComplete {
+		status = "上传完成"
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":       status,
+		"filename":     filename,
+		"size":         currentSize,
+		"total":        total,
+		"bytesWritten": written,
+	})
+}
+
+// HandleUploadStatus 获取上传文件的状态
+func (s *Service) HandleUploadStatus(c *gin.Context) {
+	filename := c.Param("filename")
+	filePath := filepath.Join(s.config.UploadDir, safeFilename(filename))
+
+	// 检查文件是否存在
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			c.Header("Upload-Exists", "false")
+			c.Header("Upload-Size", "0")
+			c.Status(http.StatusOK)
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "无法获取文件信息"})
+		return
+	}
+
+	// 文件存在，返回当前大小
+	c.Header("Upload-Exists", "true")
+	c.Header("Upload-Size", strconv.FormatInt(fileInfo.Size(), 10))
+	c.Status(http.StatusOK)
+}
+```
