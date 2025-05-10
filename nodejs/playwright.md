@@ -198,3 +198,39 @@ try {
   console.log(error);
 }
 ```
+
+## 下载
+
+```js
+import playwright from "playwright";
+
+const browser = await playwright.chromium.connectOverCDP("ws://localhost")
+
+const defaultContext = browser.contexts()[0];
+const newPage = defaultContext.pages()[0];
+
+try {
+  await newPage.goto("http://localhost:8081/upload.html", { timeout: 20000 });
+
+  const cdpSession = await defaultContext.newCDPSession(newPage);
+
+  await cdpSession.send("Browser.setDownloadBehavior", {
+    behavior: "allow",
+    //downloadPath: "downloads",
+    //eventsEnabled: true,
+  });
+
+  const [download] = await Promise.all([
+    newPage.waitForEvent("download"),
+    newPage.locator("#download").click(),
+  ]);
+
+  //await download.saveAs('test' + download.suggestedFilename());
+  //download.saveAs("./test.xpi");
+  const path = await download.path();
+  console.log("Downloaded file path:", path);
+} catch (error) {
+  console.log(error);
+}
+
+```
