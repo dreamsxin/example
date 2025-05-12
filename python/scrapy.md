@@ -96,7 +96,3 @@ FEED_EXPORT_ENCODING = 'utf-8'
 ### 3. 修改中间件
 编辑 middlewares.py 文件，添加以下代码：
 
-## 例子
-
-- https://github.com/hanxweb/Scrapy-SearchEngines
-- https://github.com/naqushab/SearchEngineScrapy
