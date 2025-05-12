@@ -163,9 +163,12 @@ func main() {
         # 保持连接活性，不发送连接关闭的信号
         proxy_set_header Connection '';
 
+	proxy_read_timeout 65s; # 空闲时间
         proxy_connect_timeout 600s;
         proxy_read_timeout 600s;
         proxy_send_timeout 600s;
+	client_max_body_size 10m; # 设置消息最大体积
+	proxy_max_temp_file_size 0;
         # Other necessary SSE headers
         proxy_set_header Cache-Control 'no-cache';
         proxy_set_header Connection 'keep-alive';
