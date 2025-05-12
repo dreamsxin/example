@@ -230,4 +230,39 @@ func run(ctx context.Context, verbose bool, urlstr, nav string, d time.Duration)
 	return rasterm.Encode(os.Stdout, img)
 }
 ```
-```shell
+
+## 命令执行
+
+```go
+// Command names.
+const (
+	CommandActivateTarget         = "Target.activateTarget"
+	CommandAttachToTarget         = "Target.attachToTarget"
+	CommandAttachToBrowserTarget  = "Target.attachToBrowserTarget"
+	CommandCloseTarget            = "Target.closeTarget"
+	CommandExposeDevToolsProtocol = "Target.exposeDevToolsProtocol"
+	CommandCreateBrowserContext   = "Target.createBrowserContext"
+	CommandGetBrowserContexts     = "Target.getBrowserContexts"
+	CommandCreateTarget           = "Target.createTarget"
+	CommandDetachFromTarget       = "Target.detachFromTarget"
+	CommandDisposeBrowserContext  = "Target.disposeBrowserContext"
+	CommandGetTargetInfo          = "Target.getTargetInfo"
+	CommandGetTargets             = "Target.getTargets"
+	CommandSetAutoAttach          = "Target.setAutoAttach"
+	CommandAutoAttachRelated      = "Target.autoAttachRelated"
+	CommandSetDiscoverTargets     = "Target.setDiscoverTargets"
+	CommandSetRemoteLocations     = "Target.setRemoteLocations"
+)
+
+
+func (p *CreateTargetParams) Do(ctx context.Context) (targetID ID, err error) {
+	// execute
+	var res CreateTargetReturns
+	err = cdp.Execute(ctx, CommandCreateTarget, p, &res)
+	if err != nil {
+		return "", err
+	}
+
+	return res.TargetID, nil
+}
+```
