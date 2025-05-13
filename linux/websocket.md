@@ -1,4 +1,6 @@
 
+- https://github.com/vi/websocat
+
 ```shell
 # 建立WebSocket连接并保持
 websocat --ping-interval 10 ws://example.com:端口/路径
