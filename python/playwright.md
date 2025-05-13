@@ -1,4 +1,7 @@
 
+- https://github.com/crifan/web_automation_tool_playwright
+- https://github.com/crifan/crifanLibPython/blob/master/python3/crifanLib/thirdParty/crifanPlaywright.py
+
 ```py
 # Function: Playwright demo baidu search
 # Author: Crifan Li
