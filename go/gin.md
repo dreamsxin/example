@@ -595,3 +595,81 @@ func (s *Service) HandleUploadStatus(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 ```
+
+## 验证模块
+
+常用验证标签说明：
+
+- required：必填字段
+- min/max：字符串长度或数值范围
+- gte/lte：大于等于/小于等于
+- oneof：枚举值验证
+- email：邮箱格式验证
+- uuid：UUID格式验证
+- omitempty：空值跳过验证34
+
+```go
+import "github.com/go-playground/validator/v10"
+
+type CustomStruct struct {
+    Field string `binding:"required,customValidation"`
+}
+
+func setupCustomValidator() {
+    if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+        v.RegisterValidation("customValidation", func(fl validator.FieldLevel) bool {
+            return fl.Field().String() == "valid"
+        })
+    }
+}
+```
+
+```go
+type QueryParams struct {
+    Page     int    `form:"page" binding:"required,min=1"`
+    PageSize int    `form:"page_size" binding:"required,min=5,max=50"`
+    Keyword  string `form:"keyword" binding:"omitempty,min=2"`
+}
+
+func handleQuery(c *gin.Context) {
+    var params QueryParams
+    if err := c.ShouldBindQuery(¶ms); err != nil {
+        // 处理错误
+    }
+    // 使用参数...
+}
+```
+
+```go
+type URIParams struct {
+    ID   string `uri:"id" binding:"required,uuid"`
+    Type string `uri:"type" binding:"required,oneof=book movie music"`
+}
+
+func handleURI(c *gin.Context) {
+    var params URIParams
+    if err := c.ShouldBindUri(¶ms); err != nil {
+        // 处理错误
+    }
+    // 使用参数...
+}
+```
+
+```go
+LoginForm struct {
+    Username string `form:"username" binding:"required"`
+    Password string `form:"password" binding:"required,min=6"`
+    Remember bool   `form:"remember"`
+}
+
+func handleForm(c *gin.Context) {
+    var form LoginForm
+    if err := c.ShouldBind(&form); err != nil {
+        // 处理错误
+    }
+    // 处理表单...
+}
+```
+
+```go
+```
