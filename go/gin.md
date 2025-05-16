@@ -672,4 +672,62 @@ func handleForm(c *gin.Context) {
 ```
 
 ```go
+# 必填验证
+type LoginForm struct {
+    Username string `form:"username" binding:"required"`  // 强制字段必须存在:ml-citation{ref="1,2" data="citationList"}
+}
+# 空值跳过验证
+type SearchParams struct {
+    Keyword string `form:"keyword" binding:"omitempty,min=2"`  // 空值时跳过后续验证:ml-citation{ref="3,8" data="citationList"}
+}
+# 长度范围
+type User struct {
+    Password string `json:"password" binding:"min=6,max=20"`  // 密码长度6-20字符:ml-citation{ref="1,2" data="citationList"}
+}
+# 格式验证
+type Profile struct {
+    Email string `json:"email" binding:"email"`      // 邮箱格式验证:ml-citation{ref="1,6" data="citationList"}
+    URL   string `json:"url" binding:"url"`          // URL格式验证:ml-citation{ref="1,3" data="citationList"}
+    UUID  string `uri:"uuid" binding:"uuid"`         // UUID格式验证:ml-citation{ref="2,6" data="citationList"}
+}
+# 枚举值验证
+type CategoryParams struct {
+    Type string `uri:"type" binding:"oneof=book movie music"`  // 仅允许指定枚举值:ml-citation{ref="2,6" data="citationList"}
+}
+# 范围限制
+type Product struct {
+    Price float64 `json:"price" binding:"gte=0,lte=1000"`  // 价格范围0-1000:ml-citation{ref="1,7" data="citationList"}
+    Stock int     `json:"stock" binding:"min=0"`           // 库存不可为负数:ml-citation{ref="3,6" data="citationList"}
+}
+# 精确值匹配
+type CodeRequest struct {
+    Code int `query:"code" binding:"eq=200"`  // 必须等于200:ml-citation{ref="3,8" data="citationList"}
+}
+# 字段相等验证
+type RegisterRequest struct {
+    Password        string `json:"password" binding:"required"`
+    ConfirmPassword string `json:"confirm_password" binding:"eqfield=Password"` // 必须与Password相等:ml-citation{ref="2,6" data="citationList"}
+}
+# 字段不等验证
+type UpdateRequest struct {
+    OldPassword string `json:"old_password" binding:"required"`
+    NewPassword string `json:"new_password" binding:"nefield=OldPassword"` // 必须与旧密码不同:ml-citation{ref="3,8" data="citationList"}
+}
+# 切片/数组验证
+type TagRequest struct {
+    Tags []string `json:"tags" binding:"dive,min=3"`  // 每个元素长度≥3:ml-citation{ref="3,8" data="citationList"}
+}
+# ‌Map 键值验证
+type Config struct {
+    Metadata map[string]string `json:"metadata" binding:"dive,keys,min=3,endkeys,required"` // Key长度≥3, Value必填:ml-citation{ref="3,8" data="citationList"}
+}
+# 时间验证
+type Event struct {
+    StartTime time.Time `json:"start_time" binding:"lte"`  // 时间必须≤当前时间:ml-citation{ref="8" data="citationList"}
+}
+# 条件验证
+type Filter struct {
+    EnableFilter bool   `form:"enable_filter"`
+    FilterValue  string `form:"filter_value" binding:"required_if=EnableFilter true"` // EnableFilter为true时必填:ml-citation{ref="3,8" data="citationList"}
+}
 ```
