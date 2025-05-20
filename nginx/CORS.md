@@ -4,6 +4,9 @@
 
 备注： 当响应的是附带身份凭证的请求时，服务端必须明确 Access-Control-Allow-Origin 的值，而不能使用通配符“*”。
 
+如果后端返回非200的状态时没有添加头，加个 `always`
+`add_header 'Access-Control-Allow-Origin' '*' always;`
+
 ## https
 
 通过客户端传过来的头信息（origin）设置。
