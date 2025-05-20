@@ -1,4 +1,22 @@
 
+## 外键
+
+- https://gorm.io/docs/has_one.html
+- 
+```go
+type User struct {
+  gorm.Model
+  Name       string     `gorm:"index"`
+  CreditCard CreditCard `gorm:"foreignKey:UserName;references:Name"`
+}
+
+type CreditCard struct {
+  gorm.Model
+  Number   string
+  UserName string
+}
+```
+
 ## 缓存
 
 ```go
