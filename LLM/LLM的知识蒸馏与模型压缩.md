@@ -1,5 +1,7 @@
 # LLM的知识蒸馏与模型压缩
 
+- https://github.com/AIGeniusInstitute/pycnblog/blob/main/ai/478/LLM%E7%9A%84%E7%9F%A5%E8%AF%86%E8%92%B8%E9%A6%8F%E4%B8%8E%E6%A8%A1%E5%9E%8B%E5%8E%8B%E7%BC%A9.md?plain=1
+
 ## 关键词
 **知识蒸馏**、**模型压缩**、**大规模语言模型**、**神经网络**、**量化**、**剪枝**、**低秩分解**、**嵌入模型**、**模型优化**
 
