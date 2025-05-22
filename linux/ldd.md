@@ -21,3 +21,36 @@ ldd 不是个可执行程式，而只是个 shell 脚本； ldd 显示可执行�
 ldd 显示可执行模块的 dependency 的工作原理，其实质是通过 ld-linux.so（elf 动态库的装载器）来实现的。我们知道，ld-linux.so 模块会先于 executable 模块程序工作，并获得控制权，因此当上述的那些环境变量被设置时，ld-linux.so 选择了显示可执行模块的 dependency。
 
 实际上可以直接执行ld-linux.so模块，如：`/lib/ld-linux.so.2 --list program`（这相当于ldd program）
+
+
+## rpath 和 runpath
+
+在 Linux 系统中，ldd 命令用于打印共享库的依赖关系，而 rpath 和 runpath 是与动态链接库相关的两个环境变量，它们用于指定程序运行时搜索动态库的路径。
+
+rpath (Run-time Library Path)：在编译时设置，用于告诉系统在程序运行时查找动态库的路径。
+
+runpath (Run-Path)：类似于 rpath，但在某些情况下（如使用了 -Wl,--enable-new-dtags 链接选项时），它会被优先考虑。
+
+### 查看现有的 rpath 和 runpath
+
+你可以使用 readelf 工具来查看一个 ELF 文件的 rpath 和 runpath 设置：
+```shell
+readelf -d /path/to/your/executable | grep '(RPATH\|RUNPATH)'
+```
+
+### 编译设置 rpath
+
+```shell
+gcc -o your_program your_program.c -Wl,-rpath,/your/library/path -L/your/library/path -llibraryname
+# --enable-new-dtags
+gcc -o your_program your_program.c -Wl,--enable-new-dtags,-rpath,/your/library/path -L/your/library/path -llibraryname
+```
+
+### 修改
+
+```shell
+sudo apt-get install patchelf
+patchelf --set-rpath /usr/glib-2.31/lib common_shell_exec
+```
+
+- export LD_LIBRARY_PATH=/your/library/path:$LD_LIBRARY_PATH
