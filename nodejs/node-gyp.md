@@ -26,6 +26,12 @@ Install tools with Chocolatey:
 choco install python visualstudio2022-workload-vctools -y
 ```
 
+## python
+
+```shell
+npm config set python "D:\Python\python.exe"  # 替换为实际路径
+```
+
 ## 安装C/C++编译工具。
 
 ```shell
