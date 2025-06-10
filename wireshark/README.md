@@ -112,3 +112,13 @@ tls.handshake.extensions_server_name contains "baidu"
 ```shell
 tls && (tcp.port == 443 || tcp.port == 8443)
 ```
+
+```shell
+ssl.handshake.type == 1 and ip.addr == x.x.x.x
+```
+
+## 验证证书
+
+```shell
+openssl s_client -connect example.com:443 -servername domain.com
+```
