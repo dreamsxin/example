@@ -1,4 +1,5 @@
-# pprof 
+# pprof
+
 全称是 performance profiles，是 google 官方提供的性能分析工具，项目地址：`https://github.com/google/pprof`。
 配合 Graphviz 使用可以提供图形化的能力。
 
@@ -40,7 +41,8 @@ go tool pprof http://192.168.1.27:8080/debug/pprof/trace
 ```
 开启本地服务
 ```shell
- go tool pprof -http=192.168.1.27:8081 pprof.server.alloc_objects.alloc_space.inuse_objects.inuse_space.001.pb.gz
+go tool pprof -http=192.168.1.27:8081 pprof.server.alloc_objects.alloc_space.inuse_objects.inuse_space.001.pb.gz
+go tool pprof -http=192.168.1.27:8081 http://192.168.1.27:8080/debug/pprof/allocs
 ```
 
 ```go
@@ -69,6 +71,7 @@ func main() {
 `go tool pprof http://localhost:8899/debug/pprof/profile`
 `go tool pprof http://localhost:8899/debug/pprof/heap`
 `go tool pprof https://localhost/debug/pprof/heap?debug=1&seconds=10`
+
 进去之后输入「top」，就能很直观的看到哪个方法占用了内存。
 我们可以再输入获得更详细的信息：
 `list main.main`
@@ -79,6 +82,10 @@ echo "ulimit -c unlimited" >> ~/.profile
 echo "export GOTRACEBACK=crash " >> ~/.profile
 export GOBACTRACE=crash
 ```
+
+### 图形 graphviz
+
+- https://www.graphviz.org/
 
 ### pprof 字段
 
@@ -126,3 +133,7 @@ trace（程序执行追踪）
 描述：记录程序的执行轨迹。通过 trace，可以跟踪程序的所有执行过程，详细记录 goroutine 的调度、阻塞等事件。
 用途：帮助分析程序的执行流程，查看 goroutine 的调度情况，尤其是在并发程序中，分析并发和同步的问题。
 示例：使用 trace 你可以查看程序在特定时间段内的所有调度事件，包括 goroutine 的启动、调度、阻塞等情况。
+
+##
+
+https://github.com/cloudwego/goref
