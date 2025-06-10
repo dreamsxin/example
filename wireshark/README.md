@@ -95,3 +95,20 @@ http and http.request.uri contains "/api/v2"
 ip.dst == xxx.xxx.xxx.xxx
 tcp.stream eq 125
 ```
+
+## 抓包 https
+
+设置环境变量 `SSLKEYLOGFILE` 值 `D:\xxxx.log`。
+
+在wireshark首选项中，选择TLS协议，编辑Pre-Master-Secret文件路径：
+
+匹配域名
+```shell
+tls.handshake.extensions_server_name == "www.baidu.com"
+tls.handshake.extensions_server_name contains "baidu"
+```
+
+匹配端口
+```shell
+tls && (tcp.port == 443 || tcp.port == 8443)
+```
