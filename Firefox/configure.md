@@ -1,3 +1,11 @@
+## win32
+
+```conf
+ac_add_options --enable-application=browser
+ac_add_options --target=win32
+mk_add_options MOZ_MAKE_FLAGS="-j4"
+```
+
 ```conf
 ac_add_options --enable-application=browser
  
