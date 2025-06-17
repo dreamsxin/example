@@ -1050,6 +1050,9 @@ https://github.com/onyx-platform/onyx
 
 # GO
 
+- https://github.com/tidwall/sjson
+- https://github.com/tidwall/gjson
+- https://github.com/tidwall/buntdb
 - https://github.com/MontFerret/ferret
 
 Declarative web scraping
