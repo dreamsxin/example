@@ -11,7 +11,7 @@ options = webdriver.ChromeOptions()
 options.binary_location = r'C:\Users\Administrator\FbBrowser\2.0.1.2\YunLogin.exe'
 
 
-service = Service(executable_path=r'C:\Users\Administrator\FbBrowser\2.0.1.2\chromedriver.exe')
+service = Service(service_args=['--disable-build-check'], executable_path=r'C:\Users\Administrator\FbBrowser\2.0.1.2\chromedriver.exe')
 
 driver = webdriver.Chrome(service=service, options=options)
 driver.get('http://www.baidu.com')
