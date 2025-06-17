@@ -33,7 +33,11 @@ webdriver_path = "D:\\TEST\\chromedriver.exe"
 service = Service(
    service_args=['--disable-build-check'],
    executable_path=webdriver_path)
-
+service.service_args = [
+    '--connect-timeout=30',    # 连接超时
+    '--read-timeout=60',       # 读取超时
+    '--startup-timeout=90'     # 启动超时:ml-citation{ref="2,4" data="citationList"}
+]
 print('webdriver_path', webdriver_path)
 
 driver = webdriver.Chrome(options=options, service=service)
