@@ -94,6 +94,30 @@ format (printf 类似）
 - testing.PB
 - Next() 接口 。 判断是否继续循环
 
+```go
+package pkg
+
+import (
+	"testing"
+)
+
+func BenchmarkUngzip(b *testing.B) {
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		Ungzip("../coffee.html.gz")
+	}
+}
+
+func BenchmarkUnpgzip(b *testing.B) {
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		Unpgzip("../coffee.html.gz")
+	}
+}
+```
+
 ## testing.M
 
 可以在测试函数执行之前做一些其他操作
