@@ -118,6 +118,10 @@ func BenchmarkUnpgzip(b *testing.B) {
 }
 ```
 
+```shell
+go run . test -benchmem -run=^$ -bench ^BenchmarkUngzip$ test2/test14/pgzip/pkg -count=1
+```
+
 ## testing.M
 
 可以在测试函数执行之前做一些其他操作
