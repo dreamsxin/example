@@ -120,6 +120,7 @@ func BenchmarkUnpgzip(b *testing.B) {
 
 ```shell
 go test -benchmem -run=^$ -bench ^BenchmarkUngzip$ test2/test14/pgzip/pkg -count=1
+go test -benchmem -run=^$ -bench ^(BenchmarkUngzip|BenchmarkUnpgzip)$ test2/test14/pgzip/pkg -count=1
 ```
 
 ## testing.M
