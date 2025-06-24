@@ -1,3 +1,4 @@
+```go
 package main
 
 import (
@@ -53,3 +54,4 @@ func int2ip(nn uint32) net.IP {
 	binary.BigEndian.PutUint32(ip, nn)
 	return ip
 }
+```
