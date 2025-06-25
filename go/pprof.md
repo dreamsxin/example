@@ -88,7 +88,7 @@ export GOBACTRACE=crash
 ```shell
 wget -O trace.out http://localhost:8899/debug/pprof/trace?seconds=10
 go tool trace trace.out
-go tool pprof http://localhost:8899/debug/pprof/trace?seconds=10
+go tool trace http://localhost:8899/debug/pprof/trace?seconds=10
 ```
 
 ### 图形 graphviz
