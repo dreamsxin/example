@@ -83,6 +83,14 @@ echo "export GOTRACEBACK=crash " >> ~/.profile
 export GOBACTRACE=crash
 ```
 
+### io 时间
+
+```shell
+wget -O trace.out http://localhost:8899/debug/pprof/trace?seconds=10
+go tool trace trace.out
+go tool pprof http://localhost:8899/debug/pprof/trace?seconds=10
+```
+
 ### 图形 graphviz
 
 - https://www.graphviz.org/
