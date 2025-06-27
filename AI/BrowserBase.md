@@ -1,7 +1,107 @@
 ## 将自然语言指令转为代码。
 
+### 将自然语言指令转为代码
+
 - https://github.com/browserbase/stagehand/blob/main/examples/example.ts
 - https://github.com/browserbase/stagehand/blob/main/examples/operator-example.ts
+- https://github.com/browserbase/stagehand/blob/main/examples/google_enter.ts
+
+### 使用自定义 AI 模型分析内容
+- https://github.com/browserbase/stagehand/blob/main/examples/custom_client_aisdk.ts 
+
+### 调用链路
+
+#### agent
+
+- https://github.com/browserbase/stagehand/blob/main/lib/index.ts
+```js
+  agent(options?: AgentConfig): {
+    execute: (
+      instructionOrOptions: string | AgentExecuteOptions,
+    ) => Promise<AgentResult>;
+  } {
+    if (!options || !options.provider) {
+      // use open operator agent
+      return {
+        execute: async (instructionOrOptions: string | AgentExecuteOptions) => {
+          return new StagehandOperatorHandler(
+            this.stagehandPage,
+            this.logger,
+            this.llmClient,
+          ).execute(instructionOrOptions);
+        },
+      };
+    }
+
+    const agentHandler = new StagehandAgentHandler(
+      this,
+      this.stagehandPage,
+      this.logger,
+      {
+        modelName: options.model,
+        clientOptions: options.options,
+        userProvidedInstructions:
+          options.instructions ??
+          `You are a helpful assistant that can use a web browser.
+      You are currently on the following page: ${this.stagehandPage.page.url()}.
+      Do not ask follow up questions, the user will trust your judgement.`,
+        agentType: options.provider,
+      },
+    );
+
+    this.log({
+      category: "agent",
+      message: "Creating agent instance",
+      level: 1,
+    });
+
+    return {
+      execute: async (instructionOrOptions: string | AgentExecuteOptions) => {
+        const executeOptions: AgentExecuteOptions =
+          typeof instructionOrOptions === "string"
+            ? { instruction: instructionOrOptions }
+            : instructionOrOptions;
+
+        if (!executeOptions.instruction) {
+          throw new StagehandError(
+            "Instruction is required for agent execution",
+          );
+        }
+
+        if (this.usingAPI) {
+          if (!this.apiClient) {
+            throw new StagehandNotInitializedError("API client");
+          }
+
+          if (!options.options) {
+            options.options = {};
+          }
+
+          if (options.provider === "anthropic") {
+            options.options.apiKey = process.env.ANTHROPIC_API_KEY;
+          } else if (options.provider === "openai") {
+            options.options.apiKey = process.env.OPENAI_API_KEY;
+          } else if (options.provider === "google") {
+            options.options.apiKey = process.env.GOOGLE_API_KEY;
+          }
+
+          if (!options.options.apiKey) {
+            throw new StagehandError(
+              `API key not found for \`${options.provider}\` provider. Please set the ${options.provider === "anthropic" ? "ANTHROPIC_API_KEY" : "OPENAI_API_KEY"} environment variable or pass an apiKey in the options object.`,
+            );
+          }
+
+          return await this.apiClient.agentExecute(options, executeOptions);
+        }
+
+        return await agentHandler.execute(executeOptions);
+      },
+    };
+  }
+```
+- https://github.com/browserbase/stagehand/blob/main/lib/agent/StagehandAgent.ts
+- https://github.com/browserbase/stagehand/blob/main/lib/agent/AgentClient.ts
+
 
 ```js
 async function example() {
