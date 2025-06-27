@@ -19,6 +19,8 @@ type CreditCard struct {
 
 ## 缓存
 
+- https://github.com/Pacific73/gorm-cache
+
 ```go
 package start
 
