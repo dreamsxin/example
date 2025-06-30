@@ -1,0 +1,4 @@
+```shell
+pip install locustio
+```
+
