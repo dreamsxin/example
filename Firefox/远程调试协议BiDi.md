@@ -192,3 +192,44 @@ const fullTitle = await textSelector?.evaluate(el => el.textContent);
 // Print the full title.
 console.log('The title of this blog post is "%s".', fullTitle);
 ```
+
+```js
+import puppeteer from 'puppeteer-core';
+import { promises as fsPromises } from 'fs';
+
+const browser = await puppeteer.connect({
+  browserWSEndpoint: "ws://127.0.0.1:9989/session",
+  protocol: 'webDriverBiDi'
+});
+
+browser.on("targetchanged", async (target) => {
+  console.log("Target changed:", target.url());
+});
+browser.on("disconnected", () => {
+  console.log("Browser disconnected");
+});
+browser.on("targetcreated", async (target) => {
+  console.log("Target created:", target.url());
+});
+
+const page = await browser.newPage();
+
+// Navigate the page to a URL.
+await page.goto('https://www.baidu.com/');
+
+// Print the full title.
+const title = await page.title();
+console.log('The title of this blog post is "%s".', title);
+
+const screenshotBuffer = await page.screenshot({
+  type: 'jpeg',
+  quality: 80,
+});
+
+await page.close();
+
+console.log(screenshotBuffer);
+
+// 保存到文件
+await fsPromises.writeFile('screenshot.jpg', screenshotBuffer);
+```
