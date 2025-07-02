@@ -233,3 +233,101 @@ console.log(screenshotBuffer);
 // 保存到文件
 await fsPromises.writeFile('screenshot.jpg', screenshotBuffer);
 ```
+
+**页面变动截图**
+```js
+import puppeteer from "puppeteer-core";
+import { promises as fsPromises } from "fs";
+
+// 启动本地 Chrome 浏览器
+
+const localbrowser = await puppeteer.launch({
+  executablePath:
+    "C:/Users/Administrator/AppData/Local/Google/Chrome/Application/chrome.exe",
+  headless: false,
+  defaultViewport: null, // 设置视口大小
+});
+
+const displayPage = await localbrowser.newPage();
+await displayPage.goto("about:blank");
+await displayPage.evaluate(() => {
+  let img = document.createElement("img");
+  // img.width = window.innerWidth;
+  // img.height = window.innerHeight;
+  document.body.appendChild(img);
+  return img;
+});
+let imgHandle = await displayPage.$("img");
+
+const browser = await puppeteer.connect({
+  browserWSEndpoint: "ws://127.0.0.1:9989/session",
+  protocol: "webDriverBiDi",
+  defaultViewport: null, // 设置视口大小
+});
+
+browser.on("targetchanged", async (target) => {
+  //console.log("Target changed:", target.url());
+});
+browser.on("disconnected", () => {
+  //console.log("Browser disconnected");
+});
+browser.on("targetcreated", async (target) => {
+  //console.log("Target created:", target.url());
+});
+
+const page = await browser.newPage();
+// 监听 DOMContentLoaded 事件
+page.on("domcontentloaded", async () => {
+  console.log("页面 DOM 加载完成，开始截图...");
+
+  // 截图
+  const base64 = await page.screenshot({ encoding: "base64" });
+  await imgHandle.evaluate((img, base64) => {
+    img.src = "data:image/png;base64," + base64;
+  }, base64);
+
+  await page.evaluate(() => {
+    console.log("evaluate...");
+    new MutationObserver(() => {
+      window.__DOM_CHANGED = true; // 标记变动
+    }).observe(document.body, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+    });
+  });
+});
+
+// 监听 load 事件
+page.on("load", async () => {
+  console.log("页面 load，开始截图...");
+});
+
+async function checkDOM() {
+  const changed = await page.evaluate(() => window.__DOM_CHANGED);
+  if (changed) {
+    await page.evaluate(() => (window.__DOM_CHANGED = false));
+    const base64 = await page.screenshot({ encoding: "base64" });
+    await imgHandle.evaluate((img, base64) => {
+      img.src = "data:image/png;base64," + base64;
+    }, base64);
+  }
+  setTimeout(checkDOM, 1000); // 递归调用实现间隔检查
+}
+
+checkDOM();
+
+try {
+  // Navigate the page to a URL.
+  await page.goto("https://www.baidu.com/");
+
+  // Print the full title.
+  let title = await page.title();
+  console.log('The title of this blog post is "%s".', title);
+} finally {
+  // Close the page.
+  //await page.close();
+}
+
+//await localbrowser.close();
+```
