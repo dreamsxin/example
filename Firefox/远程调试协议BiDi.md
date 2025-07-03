@@ -237,7 +237,18 @@ await fsPromises.writeFile('screenshot.jpg', screenshotBuffer);
 **页面变动截图**
 ```js
 import puppeteer from "puppeteer-core";
-import { promises as fsPromises } from "fs";
+import readline from "readline";
+
+if (process.platform === "win32") {
+  var rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  rl.on("SIGINT", function () {
+    process.emit("SIGINT");
+  });
+}
 
 // 启动本地 Chrome 浏览器
 
@@ -254,6 +265,7 @@ await displayPage.evaluate(() => {
   let img = document.createElement("img");
   // img.width = window.innerWidth;
   // img.height = window.innerHeight;
+  img.style.maxWidth = window.innerWidth; // 设置图片最大宽度为视口宽度
   document.body.appendChild(img);
   return img;
 });
@@ -276,6 +288,24 @@ browser.on("targetcreated", async (target) => {
 });
 
 const page = await browser.newPage();
+
+// 进程退出时关闭浏览器
+process.on("exit",  async () => {
+  console.log('exit...');
+})
+
+process.on('SIGINT',async () => {
+  console.log('Received SIGINT, exiting gracefully...');
+  await page.close();
+  process.exit();
+});
+
+process.on('SIGTERM',async () => {
+  console.log('Received SIGTERM, exiting gracefully...');
+  await page.close();
+  process.exit();
+});
+
 // 监听 DOMContentLoaded 事件
 page.on("domcontentloaded", async () => {
   console.log("页面 DOM 加载完成，开始截图...");
@@ -287,13 +317,41 @@ page.on("domcontentloaded", async () => {
   }, base64);
 
   await page.evaluate(() => {
-    console.log("evaluate...");
-    new MutationObserver(() => {
+    const debounce = (fn, delay) => {
+      let timer;
+      return async (...args) => {
+        clearTimeout(timer);
+        return new Promise((resolve) => {
+          timer = setTimeout(async () => {
+            const result = await fn(...args);
+            resolve(result);
+          }, delay);
+        });
+      };
+    };
+
+    // 使用示例
+    const handleChange = debounce(async () => {
+      console.log("------------------DOM changed");
       window.__DOM_CHANGED = true; // 标记变动
+      return "DOM changed";
+    }, 100);
+
+    console.log("evaluate MutationObserver...");
+    new MutationObserver(() => {
+      handleChange();
     }).observe(document.body, {
       subtree: true,
       childList: true,
       attributes: true,
+    });
+
+    document.addEventListener("mouseover", (e) => {
+      handleChange();
+    });
+
+    document.addEventListener("mouseout", (e) => {
+      handleChange();
     });
   });
 });
@@ -303,16 +361,18 @@ page.on("load", async () => {
   console.log("页面 load，开始截图...");
 });
 
+let checktimer = null;
 async function checkDOM() {
   const changed = await page.evaluate(() => window.__DOM_CHANGED);
   if (changed) {
+    console.log("页面 changed，开始截图...");
     await page.evaluate(() => (window.__DOM_CHANGED = false));
     const base64 = await page.screenshot({ encoding: "base64" });
     await imgHandle.evaluate((img, base64) => {
       img.src = "data:image/png;base64," + base64;
     }, base64);
   }
-  setTimeout(checkDOM, 1000); // 递归调用实现间隔检查
+  checktimer = setTimeout(checkDOM, 100); // 递归调用实现间隔检查
 }
 
 checkDOM();
@@ -328,6 +388,4 @@ try {
   // Close the page.
   //await page.close();
 }
-
-//await localbrowser.close();
 ```
