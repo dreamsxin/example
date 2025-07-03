@@ -242,7 +242,7 @@ import readline from "readline";
 if (process.platform === "win32") {
   var rl = readline.createInterface({
     input: process.stdin,
-    output: process.stdout
+    output: process.stdout,
   });
 
   rl.on("SIGINT", function () {
@@ -287,22 +287,26 @@ browser.on("targetcreated", async (target) => {
   //console.log("Target created:", target.url());
 });
 
-const page = await browser.newPage();
+let page = await browser.newPage();
 
 // 进程退出时关闭浏览器
-process.on("exit",  async () => {
-  console.log('exit...');
-})
+process.on("exit", async () => {
+  console.log("exit...");
+});
 
-process.on('SIGINT',async () => {
-  console.log('Received SIGINT, exiting gracefully...');
-  await page.close();
+process.on("SIGINT", async () => {
+  console.log("Received SIGINT, exiting gracefully...");
+  if(page != null) {
+    await page.close();
+  }
   process.exit();
 });
 
-process.on('SIGTERM',async () => {
-  console.log('Received SIGTERM, exiting gracefully...');
-  await page.close();
+process.on("SIGTERM", async () => {
+  console.log("Received SIGTERM, exiting gracefully...");
+  if(page != null) {
+    await page.close();
+  }
   process.exit();
 });
 
@@ -346,6 +350,10 @@ page.on("domcontentloaded", async () => {
       attributes: true,
     });
 
+    document.addEventListener("mousemove", (e) => {
+      handleChange();
+    });
+
     document.addEventListener("mouseover", (e) => {
       handleChange();
     });
@@ -362,6 +370,9 @@ page.on("load", async () => {
 });
 
 async function checkDOM() {
+  if (page == null) {
+    return;
+  }
   const changed = await page.evaluate(() => window.__DOM_CHANGED);
   if (changed) {
     console.log("页面 changed，开始截图...");
@@ -383,8 +394,29 @@ try {
   // Print the full title.
   let title = await page.title();
   console.log('The title of this blog post is "%s".', title);
-} finally {
+  await page.waitForSelector('input[name="wd"]');
+  await page.locator('input[name="wd"]').fill("automate beyond recorder");
+
+  // 获取文本框元素
+  const input = await page.$('input[name="wd"]');
+  const box = await input.boundingBox();
+
+  // 模拟拖拽选中
+  let x = Math.floor(box.x);
+  let y = Math.floor(box.y);
+  let w = Math.floor(box.width);
+  let h = Math.floor(box.height);
+  console.log(x, y, w, h, x + w - 10, y + h - 10);
+  await page.mouse.move(x + 10, y + 10);
+  await page.mouse.down();
+  await page.mouse.move(x + w - 10, y + h - 10, {
+    steps: 20,
+  });
+  await page.mouse.up();
+} catch (err) {
+  console.log(err);
   // Close the page.
-  //await page.close();
+  await page.close();
+  page = null;
 }
 ```
