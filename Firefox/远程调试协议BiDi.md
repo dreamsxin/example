@@ -361,7 +361,6 @@ page.on("load", async () => {
   console.log("页面 load，开始截图...");
 });
 
-let checktimer = null;
 async function checkDOM() {
   const changed = await page.evaluate(() => window.__DOM_CHANGED);
   if (changed) {
@@ -372,7 +371,7 @@ async function checkDOM() {
       img.src = "data:image/png;base64," + base64;
     }, base64);
   }
-  checktimer = setTimeout(checkDOM, 100); // 递归调用实现间隔检查
+  setTimeout(checkDOM, 100); // 递归调用实现间隔检查
 }
 
 checkDOM();
