@@ -10,6 +10,16 @@
 pip install pybind11
 ```
 
+## 创建项目 pysdk
+
 ## 将 PyBind11 路径添加到项目
 
 在 开发人员 PowerShell 中，运行命令 python -m pybind11 --includes 或 py -m pybind11 --includes。
+
+## 使用扩展 .pyd
+
+```py
+import pysdk
+
+help(pysdk)
+```
