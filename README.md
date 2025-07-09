@@ -122,6 +122,7 @@ gprof test gmon.out -p性能测试
 
 ## 性能测试工具
 
+- jmeter
 - LoadRunner
 	> 可以做录制，业务逻辑复杂的流程
 - Curl-Loader
@@ -129,6 +130,8 @@ gprof test gmon.out -p性能测试
 - Apache ab
 
 Apache ab判断成功与否只是判断2xx响应代码，不接收服务器的返回值，所以响应以及网络带宽上占有优势，但是Loadrunner要完整接受服务器的返回值，所以在同样的响应时间下，Apache ab测试支持的并发用户数会大于Loadrunner,TPS值也相应的会比Loadrunner大。
+
+- wrk
 
 ## 流程图工具
 
