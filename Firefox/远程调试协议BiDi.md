@@ -2,6 +2,7 @@
 
 ```shell
 firefox.exe --remote-debugging-port 9989 -remote-allow-origins *
+env MOZCONFIG=mozconfig-rel ./mach run --remote-debugging-port=9989 --headless
 ```
 
 ## 调用流程
