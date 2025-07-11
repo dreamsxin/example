@@ -199,6 +199,29 @@ try {
 }
 ```
 
+```js
+import playwright from "playwright";
+import path from "path";
+
+//const browser = await playwright.chromium.connectOverCDP("wss://cloud-hk.yunlogin.com/ws?apiKey=test1100000000000000000000000009")
+const browser = await playwright.chromium.connectOverCDP(
+  "ws://192.168.0.99:8182?sessionId=c713602e4b334b16b93a1dce7b6d2d5f&apiKey=c713602e4b334b16b93a1dce7b6d2d5f"
+);
+
+const defaultContext = browser.contexts()[0];
+const newPage = defaultContext.pages()[0];
+
+try {
+  await newPage.goto("https://baidu.com/", { timeout: 20000 });
+
+  const fileChooserPromise = newPage.waitForEvent('filechooser');
+  const fileChooser = await fileChooserPromise;
+  await fileChooser.setFiles(path.join("./", 'test.webp'));
+} catch (error) {
+  console.log(error);
+}
+```
+
 ## 下载
 
 ```js
