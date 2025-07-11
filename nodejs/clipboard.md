@@ -49,3 +49,46 @@ async function copyImageToClipboard(imageUrl) {
 }
 </script>
 ```
+
+```js
+async function getClipboardContents() {
+  try {
+    const clipboardItems = await navigator.clipboard.read();
+    for (const clipboardItem of clipboardItems) {
+      for (const type of clipboardItem.types) {
+        const blob = await clipboardItem.getType(type);
+        console.log(URL.createObjectURL(blob));
+      }
+    }
+  } catch (err) {
+    console.error(err.name, err.message);
+  }
+}
+```
+
+## 拦截 copy 事件
+```js
+
+const clipboardItems = [];
+
+document.addEventListener('copy', async (e) => {
+  e.preventDefault();
+  try {
+    let clipboardItems = [];
+    for (const item of e.clipboardData.items) { // 从 event 中拿取数据
+      if (!item.type.startsWith('image/')) {
+        continue;
+      }
+      clipboardItems.push(
+        new ClipboardItem({
+          [item.type]: item,
+        })
+      );
+      await navigator.clipboard.write(clipboardItems);
+      console.log('Image copied.');
+    }
+  } catch (err) {
+    console.error(err.name, err.message);
+  }
+});
+```
