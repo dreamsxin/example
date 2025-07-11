@@ -257,3 +257,57 @@ try {
 }
 
 ```
+
+## 剪贴板
+
+```js
+const clipboardContent = await this.page.evaluate(() => navigator.clipboard.readText());
+
+// Grant clipboard permissions to browser context
+await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    
+// Get clipboard content after the link/button has been clicked
+const handle = await page.evaluateHandle(() => navigator.clipboard.readText());
+const clipboardContent = await handle.jsonValue();
+```
+
+```js
+  await page.evaluate(async () => {
+            const base64 = `data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAUA
+            AAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO
+                9TXL0Y4OHwAAAABJRU5ErkJggg==`;
+
+            const response = await fetch(base64);
+            const blob = await response.blob();
+            const clipboardImageHolder = document.getElementById("you-are-the-one");
+            clipboardImageHolder.focus();
+
+            let pasteEvent = new Event("paste", { bubbles: true, cancelable: true });
+            pasteEvent = Object.assign(pasteEvent, {
+                clipboardData: {
+                    items: {
+                        a: {
+                            kind: "file",
+                            getAsFile() {
+                                return new File([blob], "foo.png", { type: blob.type });
+                            },
+                        },
+                    },
+                },
+            });
+
+            console.log("event", pasteEvent);
+            clipboardImageHolder.dispatchEvent(pasteEvent);
+        });
+```
+
+```js
+const context = await browser.newContext({ permissions: ["clipboard-read", "clipboard-write"] });
+const page = await context.newPage();
+
+const clipPage = await context.newPage();
+await clipPage.goto(imageUrl);
+await clipPage.keyboard.press("Control+C");
+await page.bringToFront();
+await page.keyboard.press("Control+V");
+```
