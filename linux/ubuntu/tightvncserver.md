@@ -17,7 +17,7 @@ Add the following line to the end of the file:
 
 `startxfce4 &`
 
-如果是 gnome 环境
+如果是 ubuntu-desktop 环境
 `gnome-session &`
 
 `vncserver.service`
