@@ -1,5 +1,5 @@
 ```shell
-sudo apt-get install ubuntu-desktop
+sudo apt -y install xfce4 xfce4-terminal
 sudo systemctl set-default graphical.target
 sudo apt-get install tightvncserver
 # 启动
