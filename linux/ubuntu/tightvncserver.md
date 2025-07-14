@@ -18,7 +18,26 @@ Add the following line to the end of the file:
 `startxfce4 &`
 
 如果是 ubuntu-desktop 环境
-`gnome-session &`
+```shell
+#!/bin/bash
+export $(dbus-launch)  # 主要是这句
+export XKL_XMODMAP_DISABLE=1
+unset SESSION_MANAGER
+
+gnome-panel &
+gnome-settings-daemon &
+metacity &
+nautilus &
+gnome-terminal &
+
+# [ -x /etc/vnc/xstartup ] && exec /etc/vnc/xstartup
+# [ -r $HOME/.Xresources ] && xrdb $HOME/.Xresources
+
+xsetroot -solid grey
+vncconfig -iconic &
+x-terminal-emulator -geometry 80x24+10+10 -ls -title "$VNCDESKTOP Desktop" &
+gnome-session &
+```
 
 `vncserver.service`
 ```conf
