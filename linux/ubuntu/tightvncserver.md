@@ -10,9 +10,12 @@ nano /etc/systemd/system/vncserver.service
 systemctl daemon-reload
 systemctl enable --now vncserver
 ```
+
 `~/.vnc/xstartup`
 Add the following line to the end of the file:
 `startxfce4 &`
+如果是 gnome 环境
+`gnome-session &`
 
 `vncserver.service`
 ```conf
