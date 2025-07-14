@@ -2,6 +2,10 @@
 sudo apt-get install ubuntu-desktop
 sudo systemctl set-default graphical.target
 sudo apt-get install tightvncserver
+# 启动
+tightvncserver
+
+nc -zv 127.0.0.1 5901
 
 nano /etc/systemd/system/vncserver.service
 
