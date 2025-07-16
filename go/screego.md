@@ -1,6 +1,8 @@
-#
+# screego
 
-https://github.com/screego/server
+- https://github.com/screego/server
+
+允许分享指定窗口、浏览器标签页、整个屏幕
 
 - 多用户屏幕共享
 - 通过 WebRTC 安全传输
