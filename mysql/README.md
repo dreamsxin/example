@@ -70,8 +70,8 @@ INSERT INTO person (name, birthday) VALUES ('A', '2019-08-01 00:00:00'), ('B', '
 ```sql
 use mysql;
 CREATE USER IF NOT EXISTS "prestashop"@"localhost" IDENTIFIED BY "1234567";
-GRANT ALL PRIVILEGES ON *.* TO root@'%' WITH GRANT OPTION;
-GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER ON *.* TO root@'%';
+GRANT ALL PRIVILEGES ON *.* TO 'prestashop'@'localhost' WITH GRANT OPTION;
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER ON *.* TO 'prestashop'@'localhost';
 FLUSH PRIVILEGES;
 ```
 **可能错误**
@@ -180,3 +180,71 @@ net stop mysql
 
 services.msc
 ```
+
+## 远程连接
+
+在Ubuntu上配置MySQL允许远程连接需完成以下步骤，确保操作准确性与安全性：
+
+### 一、修改MySQL配置文件
+1. **调整监听地址**  
+   打开配置文件（路径通常为`/etc/mysql/mysql.conf.d/mysqld.cnf`）：
+   ```bash
+   sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
+   ```
+   找到`bind-address = 127.0.0.1`改为`bind-address = 0.0.0.0`（允许所有IP访问）。
+
+
+
+2. **保存并退出**  
+   按`Ctrl+O`保存，`Ctrl+X`退出编辑器。
+
+### 二、创建远程访问用户并授权
+1. **登录MySQL**  
+   ```bash
+   sudo mysql -u root -p
+   ```
+
+2. **创建远程用户**  
+   替换`username`和`password`：
+   ```sql
+   CREATE USER 'username'@'%' IDENTIFIED BY 'password';
+   ```
+
+3. **授予全局权限**  
+   ```sql
+   GRANT ALL PRIVILEGES ON *.* TO 'username'@'%' WITH GRANT OPTION;
+   FLUSH PRIVILEGES;  -- 刷新权限生效
+   ```
+
+### 三、配置防火墙
+1. **开放3306端口**  
+   ```bash
+   sudo ufw allow 3306/tcp  # 允许TCP流量通过
+   sudo ufw reload          # 重载规则
+   ```
+
+
+
+2. **验证防火墙状态**  
+   ```bash
+   sudo ufw status  # 检查3306端口是否允许
+   ```
+
+### 四、重启MySQL服务
+```bash
+sudo systemctl restart mysql  # 应用配置修改
+```
+
+### 五、验证远程连接
+在远程主机使用命令测试：
+```bash
+mysql -h [服务器IP] -u username -p
+```
+输入密码后成功登录即配置完成。
+
+---
+
+#### ️ 安全建议
+- 避免直接授权`root`用户远程访问，改用普通用户。
+- 限制IP范围：将`'%'`替换为具体IP（如`'192.168.1.%'`）。
+- 云服务器需在安全组中开放3306端口。
