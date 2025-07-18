@@ -1,8 +1,10 @@
-#
+# Manim
 
 https://github.com/3b1b/manim
 
 Manim is an engine for precise programmatic animations, designed for creating explanatory math videos.
+
+Manim 是一个用于精确编程动画的引擎，专为创建解释性数学视频而设计。
 
 ##
 
