@@ -36,6 +36,8 @@ mysql -uroot -p
 show databases;
 show tables;
 desc tablename;
+# 显示当前所在库
+SELECT DATABASE();
 ```
 
 ### 创建数据库
