@@ -67,10 +67,34 @@ INSERT INTO person (name, birthday) VALUES ('A', '2019-08-01 00:00:00'), ('B', '
 
 ```sql
 use mysql;
-CREATE USER "prestashop"@"localhost" IDENTIFIED BY "1234567";
+CREATE USER IF NOT EXISTS "prestashop"@"localhost" IDENTIFIED BY "1234567";
 GRANT ALL PRIVILEGES ON *.* TO root@'%' WITH GRANT OPTION;
 GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER ON *.* TO root@'%';
 FLUSH PRIVILEGES;
+```
+**可能错误**
+`ERROR 1396 (HY000): Operation xxx failed for user`
+```sql
+-- Check if a user exists
+SELECT User, Host FROM mysql.user WHERE User = 'username' AND Host = 'hostname';
+
+-- Creating users
+CREATE USER IF NOT EXISTS 'username'@'hostname' IDENTIFIED BY 'password';
+
+-- Dropping users
+DROP USER IF EXISTS 'username'@'hostname';
+
+-- List all instances of the user with different hosts
+SELECT User, Host FROM mysql.user WHERE User = 'username';
+
+-- Then use the exact user and host combination
+DROP USER 'username'@'192.168.1.%';  -- Instead of 'username'@'%'
+
+-- After direct modifications to mysql tables
+FLUSH PRIVILEGES;
+
+SELECT EXISTS(SELECT 1 FROM mysql.user
+             WHERE User = 'username' AND Host = 'hostname') AS user_exists;
 ```
 
 ### 导入sql
