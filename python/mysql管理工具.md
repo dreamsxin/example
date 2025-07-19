@@ -8,9 +8,10 @@ pip install mysql-connector
 
 ```python
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 import mysql.connector
 from mysql.connector import Error
+import pandas as pd
 
 class DatabaseManager:
     def __init__(self, root):
@@ -68,6 +69,11 @@ class DatabaseManager:
         
         self.reconnect_btn = ttk.Button(btn_frame, text="重连", command=self.reconnect_db, state=tk.DISABLED)
         self.reconnect_btn.pack(side=tk.LEFT, padx=5)
+
+        self.export_btn = ttk.Button(btn_frame, text="导出表格",
+                                   command=self.export_table_data,
+                                   state=tk.DISABLED)
+        self.export_btn.pack(side=tk.LEFT, padx=5)
         
         # 配置网格权重
         conn_frame.columnconfigure(1, weight=1)
@@ -75,7 +81,7 @@ class DatabaseManager:
     def setup_table_ui(self):
         table_frame = ttk.Frame(self.main_frame)
         table_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
-        
+
         # 表格列表区域
         self.tables_list = tk.Listbox(table_frame)
         self.tables_list.pack(side=tk.LEFT, fill=tk.Y, padx=(0,5))
@@ -117,6 +123,7 @@ class DatabaseManager:
             self.connect_btn.config(state=tk.DISABLED)
             self.disconnect_btn.config(state=tk.NORMAL)
             self.reconnect_btn.config(state=tk.NORMAL)
+            self.export_btn.config(state=tk.NORMAL)
             messagebox.showinfo("成功", "数据库连接成功")
         except Error as e:
             messagebox.showerror("错误", f"连接失败: {e}")
@@ -130,6 +137,7 @@ class DatabaseManager:
             self.connect_btn.config(state=tk.NORMAL)
             self.disconnect_btn.config(state=tk.DISABLED)
             self.reconnect_btn.config(state=tk.DISABLED)
+            self.export_btn.config(state=tk.DISABLED)
             messagebox.showinfo("成功", "已断开数据库连接")
     
     def reconnect_db(self):
@@ -191,6 +199,50 @@ class DatabaseManager:
 
             # 设置列宽
             self.tree.column(col, width=min(max_width, 300))  # 限制最大宽度300px
+
+    def export_table_data(self):
+        if not self.connection:
+            return
+            
+        try:
+            # 获取当前选中表
+            selected_table = self.tables_list.get(self.tables_list.curselection())
+            if not selected_table:
+                messagebox.showwarning("警告", "请先选择要导出的表")
+                return
+
+            # 弹出保存文件对话框
+            file_path = filedialog.asksaveasfilename(
+                defaultextension='.xlsx',
+                filetypes=[('Excel文件', '*.xlsx'), 
+                          ('CSV文件', '*.csv'),
+                          ('所有文件', '*.*')],
+                title="保存导出文件"
+            )
+            if not file_path:
+                return
+
+            # 执行查询获取完整数据
+            cursor = self.connection.cursor()
+            cursor.execute(f"SELECT * FROM {selected_table}")
+            rows = cursor.fetchall()
+            columns = [desc[0] for desc in cursor.description]
+            
+            # 使用pandas处理数据导出
+            df = pd.DataFrame(rows, columns=columns)
+            
+            if file_path.endswith('.xlsx'):
+                df.to_excel(file_path, index=False)
+            else:
+                df.to_csv(file_path, index=False)
+                
+            messagebox.showinfo("成功", f"数据已导出到:\n{file_path}")
+            
+        except Error as e:
+            messagebox.showerror("导出错误", f"导出失败: {e}")
+        finally:
+            if 'cursor' in locals():
+                cursor.close()
 
 
 if __name__ == "__main__":
