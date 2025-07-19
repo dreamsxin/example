@@ -1,10 +1,18 @@
 # Manim
 
-https://github.com/3b1b/manim
+- https://github.com/3b1b/manim
+- https://github.com/ManimCommunity/manim
 
 Manim is an engine for precise programmatic animations, designed for creating explanatory math videos.
 
 Manim 是一个用于精确编程动画的引擎，专为创建解释性数学视频而设计。
+
+System requirements are FFmpeg, OpenGL and LaTeX (optional, if you want to use LaTeX). For Linux, Pango along with its development headers are required. 
+
+See https://github.com/ManimCommunity/ManimPango#building
+
+- Install FFmpeg.
+- Install a LaTeX distribution. MiKTeX is recommended.
 
 ## 原版
 ```shell
