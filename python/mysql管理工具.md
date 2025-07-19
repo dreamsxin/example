@@ -169,7 +169,7 @@ class DatabaseManager:
             
             # 设置列
             for col in self.tree["columns"]:
-                self.tree.heading(col, text=col)
+                self.tree.heading(col, text=col, command=lambda c=col: self.treeview_sort_column(c, False))
                 self.tree.column(col, minwidth=100, anchor=tk.CENTER, stretch=True)
             
             # 添加数据
@@ -180,8 +180,31 @@ class DatabaseManager:
             self.adjust_column_widths()
             cursor.close()
 
+    def treeview_sort_column(self, col, reverse):
+        """通用排序函数，支持数字/字符串自动识别"""
+        l = [(self.tree.set(k, col), k) for k in self.tree.get_children('')]
+
+        print(f"Sorting column {col} with reverse={reverse}")
+        # 尝试数值转换排序
+        try:
+            l.sort(key=lambda t: float(t[0]) if t[0].replace('.','',1).isdigit() else t[0], reverse=reverse)
+            print("数字排序")
+        except Error as e: # 如果转换失败，则按字符串排序，抛出异常后继续执行
+            print(f"排序失败: {e}")
+            l.sort(key=lambda t: t[0].lower(), reverse=reverse)
+            print("纯字符串排序")
+
+        # 重新排列Treeview项
+        for index, (val, k) in enumerate(l):
+            self.tree.move(k, '', index)
+
+        # 更新列头箭头标记
+        self.tree.heading(col,
+                command=lambda: self.treeview_sort_column(col, not reverse),
+                text=self.tree.heading(col)['text'][:-2] + (' ↓' if reverse else ' ↑'))
+
     def adjust_column_widths(self, event=None):
-            
+
         # 计算每列最大宽度
         for col in self.tree["columns"]:
             max_width = 100  # 最小宽度
@@ -243,7 +266,6 @@ class DatabaseManager:
         finally:
             if 'cursor' in locals():
                 cursor.close()
-
 
 if __name__ == "__main__":
     root = tk.Tk()
