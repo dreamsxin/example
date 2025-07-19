@@ -6,7 +6,42 @@ Manim is an engine for precise programmatic animations, designed for creating ex
 
 Manim 是一个用于精确编程动画的引擎，专为创建解释性数学视频而设计。
 
-##
+## 原版
+```shell
+pip install manimgl
+manimgl 文件.py 场景名 -o  # 自动打开渲染结果
+```
+
+## 社区版
+```shell
+pip install manim
+manim 文件.py 场景名 -pqm  # 指定渲染质量（如 -pqm 中等质量）
+```
+```python
+from manim import *  # 导入社区版
+```
+
+## 对比
+原版
+```python
+from manimlib import *
+
+class Demo(Scene):
+    def construct(self):
+        circle = Circle(color=BLUE)
+        self.play(ShowCreation(circle))
+```
+社区版
+```python
+from manim import *
+
+class Demo(Scene):
+    def construct(self):
+        circle = Circle(color=BLUE)
+        self.play(Create(circle))  # 函数名差异
+```
+
+## 原版安装
 
 ```shell
 # Install manimgl
