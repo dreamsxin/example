@@ -7,3 +7,13 @@
 ```shell
 npm install -g browserify
 ```
+
+## 示例
+
+playwright 转换
+
+- https://github.com/browserify/browserify
+
+```shell
+browserify index.js -o playwright-web.js -r ./fake-bufferutil.js:bufferutil -r ./fake-utf-8-validate.js:utf-8-validate -r ./fake-electron/index.js:electron/index.js -r ./custom-url-mock.js:url -r ./fake-fs.js:fs -r ./ws-mock.js:ws
+```
