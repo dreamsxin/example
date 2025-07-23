@@ -311,3 +311,35 @@ await clipPage.keyboard.press("Control+C");
 await page.bringToFront();
 await page.keyboard.press("Control+V");
 ```
+
+## 保存网页
+
+```js
+import { chromium } from "playwright";
+import fs from "fs";
+
+(async () => {
+  const options = {
+    headless: false,
+  };
+
+  console.log("Starting browser");
+  const browser = await chromium.launch(options);
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.goto("https://baidu.com/");
+
+  console.log(await page.content())
+  await page.pdf({ path: 'output.pdf', format: 'A4' });
+
+  const session = await page.context().newCDPSession(page)
+
+  const doc = await session.send('Page.captureSnapshot', { format: 'mhtml' });
+  console.log(doc);
+
+  // 写入本地文件
+  fs.writeFileSync('page.mhtml', doc.data);
+  
+  await browser.close();
+})();
+```
