@@ -53,4 +53,14 @@ sudo apt-get install patchelf
 patchelf --set-rpath /usr/glib-2.31/lib common_shell_exec
 ```
 
+### 
+
+动态库默认路径： `/etc/ld.so.conf`
+
+**环境变量**
 - export LD_LIBRARY_PATH=/your/library/path:$LD_LIBRARY_PATH
+
+```shell
+env |grep LD_LIBRARY_PATH
+echo $LD_LIBRARY_PATH
+```
