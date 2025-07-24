@@ -11,3 +11,7 @@ Linux系统中的strings命令是一个专门用于从二进制文件中提取�
 ```shell
 strings -t x program | grep "key_"
 ```
+
+```shell
+strings libstdc++.so.6 |grep GLIBCXX
+```
