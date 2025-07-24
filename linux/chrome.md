@@ -1,3 +1,8 @@
+## ubuntu chrome choose password for new keyring
+
+`--password-store=basic`
+`~/.local/share/keyrings/*`
+
 ## 注意事项
 
 **无法启动**
