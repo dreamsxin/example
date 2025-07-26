@@ -344,8 +344,8 @@ import fs from "fs";
 })();
 ```
 
-## browserless 里的 playwright 使用 launchServer
-
+## playwright 使用 launchServer
+- browserless
 ```shell
   protected async loadPwVersions(): Promise<void> {
     const { playwrightVersions } = JSON.parse(
@@ -390,4 +390,66 @@ import fs from "fs";
     return browser;
   }
 
+```
+
+### 1. 启动 BrowserServer 的代码 
+
+```js
+// server.js
+const { chromium } = require('playwright');
+
+(async () => {
+  // 启动 BrowserServer 实例
+  const browserServer = await chromium.launchServer({
+    headless: true,      // 无头模式 (true) 或显示浏览器 (false)
+    port: 9222,          // 指定 WS 端口（可选，默认自动分配）
+    args: ['--disable-gpu'] // 额外浏览器参数
+  });
+
+  // 输出 WebSocket 连接端点
+  console.log('WebSocket Endpoint:', browserServer.wsEndpoint());
+  
+  // 保持服务器运行（按 Ctrl+C 退出）
+  process.on('SIGINT', () => browserServer.close());
+})();
+```
+
+### 2. 连接 BrowserServer 的代码
+
+```js
+// client.js
+const { chromium } = require('playwright');
+
+(async () => {
+  // 从 server.js 输出的 WebSocket URL
+  const wsEndpoint = 'ws://127.0.0.1:9222/...'; // 替换为实际 endpoint
+
+  // 通过 WebSocket 连接现有浏览器
+  const browser = await chromium.connect({ wsEndpoint });
+
+  // 创建新页面
+  const page = await browser.newPage();
+  
+  // 使用页面进行操作
+  await page.goto('https://example.com');
+  console.log(await page.title());
+
+  // 关闭页面和断开连接
+  await page.close();
+  await browser.close();
+})();
+```
+
+**连接参数**
+
+```js
+// 高级连接选项示例
+await chromium.connect({
+  wsEndpoint: 'ws://...',
+  timeout: 30000,          // 连接超时（毫秒）
+  headers: {               // 添加自定义头（如认证）
+    Authorization: 'Bearer TOKEN'
+  },
+  slowMo: 50               // 操作减速（调试用）
+});
 ```
