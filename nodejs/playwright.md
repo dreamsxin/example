@@ -343,3 +343,51 @@ import fs from "fs";
   await browser.close();
 })();
 ```
+
+## browserless 里的 playwright 使用 launchServer
+
+```shell
+  protected async loadPwVersions(): Promise<void> {
+    const { playwrightVersions } = JSON.parse(
+      (await fs.readFile('package.json')).toString(),
+    );
+
+    this.config.setPwVersions(playwrightVersions);
+  }
+
+  public async loadPwVersion(version: string): Promise<typeof playwright> {
+    const versions = this.getPwVersions();
+
+    try {
+      return await import(versions[version] || versions['default']);
+    } catch (err) {
+      debug.log('Error importing Playwright. Using default version', err);
+      return playwright;
+    }
+  }
+
+  public async launch(
+    launcherOpts: BrowserLauncherOptions,
+  ): Promise<playwright.BrowserServer> {
+    const { options, pwVersion } = launcherOpts;
+    this.logger.info(`Launching ${this.constructor.name} Handler`);
+
+    const opts = this.makeLaunchOptions(options);
+    const versionedPw = await this.config.loadPwVersion(pwVersion!);
+    const browser = await versionedPw[this.playwrightBrowserType].launchServer({
+      ...opts,
+      args: opts.args.filter((_) => !!_),
+    });
+    const browserWSEndpoint = browser.wsEndpoint();
+
+    this.logger.info(
+      `${this.constructor.name} is running on ${browserWSEndpoint}`,
+    );
+    this.running = true;
+    this.browserWSEndpoint = browserWSEndpoint;
+    this.browser = browser;
+
+    return browser;
+  }
+
+```
