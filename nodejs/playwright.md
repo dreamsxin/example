@@ -453,3 +453,326 @@ await chromium.connect({
   slowMo: 50               // 操作减速（调试用）
 });
 ```
+
+### 
+
+- playwright\packages\playwright-core\src\remote\playwrightServer.ts
+```js
+  constructor(options: ServerOptions) {
+    /*...*/
+    this._wsServer = new WSServer(/*delegate*/{
+      onRequest: (request, response) => {
+        if (request.method === 'GET' && request.url === '/json') {
+          response.setHeader('Content-Type', 'application/json');
+          response.end(JSON.stringify({
+            wsEndpointPath: this._options.path,
+          }));
+          return;
+        }
+        response.end('Running');
+      },
+
+      onUpgrade: (request, socket) => {
+        const uaError = userAgentVersionMatchesErrorMessage(request.headers['user-agent'] || '');
+        if (uaError)
+          return { error: `HTTP/${request.httpVersion} 428 Precondition Required\r\n\r\n${uaError}` };
+      },
+
+      onHeaders: headers => {
+        if (process.env.PWTEST_SERVER_WS_HEADERS)
+          headers.push(process.env.PWTEST_SERVER_WS_HEADERS!);
+      },
+
+      onConnection: (request, url, ws, id) => {
+        const browserHeader = request.headers['x-playwright-browser'];
+        const browserName = url.searchParams.get('browser') || (Array.isArray(browserHeader) ? browserHeader[0] : browserHeader) || null;
+        const proxyHeader = request.headers['x-playwright-proxy'];
+        const proxyValue = url.searchParams.get('proxy') || (Array.isArray(proxyHeader) ? proxyHeader[0] : proxyHeader);
+
+        const launchOptionsHeader = request.headers['x-playwright-launch-options'] || '';
+        const launchOptionsHeaderValue = Array.isArray(launchOptionsHeader) ? launchOptionsHeader[0] : launchOptionsHeader;
+        const launchOptionsParam = url.searchParams.get('launch-options');
+        let launchOptions: LaunchOptionsWithTimeout = { timeout: DEFAULT_PLAYWRIGHT_LAUNCH_TIMEOUT };
+        try {
+          launchOptions = JSON.parse(launchOptionsParam || launchOptionsHeaderValue);
+          if (!launchOptions.timeout)
+            launchOptions.timeout = DEFAULT_PLAYWRIGHT_LAUNCH_TIMEOUT;
+        } catch (e) {
+        }
+
+        const isExtension = this._options.mode === 'extension';
+        const allowFSPaths = isExtension;
+        launchOptions = filterLaunchOptions(launchOptions, allowFSPaths);
+
+        if (process.env.PW_BROWSER_SERVER && url.searchParams.has('connect')) {
+          const filter = url.searchParams.get('connect');
+          if (filter !== 'first')
+            throw new Error(`Unknown connect filter: ${filter}`);
+          return new PlaywrightConnection(
+              browserSemaphore,
+              ws,
+              false,
+              this._playwright,
+              () => this._initConnectMode(id, filter, browserName, launchOptions),
+              id,
+          );
+        }
+
+        if (isExtension) {
+          if (url.searchParams.has('debug-controller')) {
+            return new PlaywrightConnection(
+                controllerSemaphore,
+                ws,
+                true,
+                this._playwright,
+                async () => { throw new Error('shouldnt be used'); },
+                id,
+            );
+          }
+          return new PlaywrightConnection(
+              reuseBrowserSemaphore,
+              ws,
+              false,
+              this._playwright,
+              () => this._initReuseBrowsersMode(browserName, launchOptions, id),
+              id,
+          );
+        }
+
+        if (this._options.mode === 'launchServer' || this._options.mode === 'launchServerShared') {
+          if (this._options.preLaunchedBrowser) {
+            return new PlaywrightConnection(
+                browserSemaphore,
+                ws,
+                false,
+                this._playwright,
+                () => this._initPreLaunchedBrowserMode(id),
+                id,
+            );
+          }
+
+          return new PlaywrightConnection(
+              browserSemaphore,
+              ws,
+              false,
+              this._playwright,
+              () => this._initPreLaunchedAndroidMode(id),
+              id,
+          );
+        }
+
+        return new PlaywrightConnection(
+            browserSemaphore,
+            ws,
+            false,
+            this._playwright,
+            () => this._initLaunchBrowserMode(browserName, proxyValue, launchOptions, id),
+            id,
+        );
+      },
+    });
+  }
+```
+- playwright\packages\playwright-core\src\server\utils\wsServer.ts
+```js
+  async listen(port: number = 0, hostname: string | undefined, path: string): Promise<string> {
+    debugLogger.log('server', `Server started at ${new Date()}`);
+
+    const server = createHttpServer(this._delegate.onRequest);
+    server.on('error', error => debugLogger.log('server', String(error)));
+    this.server = server;
+
+    const wsEndpoint = await new Promise<string>((resolve, reject) => {
+      server.listen(port, hostname, () => {
+        const address = server.address();
+        if (!address) {
+          reject(new Error('Could not bind server socket'));
+          return;
+        }
+        const wsEndpoint = typeof address === 'string' ? `${address}${path}` : `ws://${hostname || 'localhost'}:${address.port}${path}`;
+        resolve(wsEndpoint);
+      }).on('error', reject);
+    });
+
+    debugLogger.log('server', 'Listening at ' + wsEndpoint);
+
+    this._wsServer = new wsServer({
+      noServer: true,
+      perMessageDeflate,
+    });
+
+    this._wsServer.on('headers', headers => this._delegate.onHeaders(headers));
+
+    /*http升级到websocket*/
+    server.on('upgrade', (request, socket, head) => {
+      /*...*/
+      this._wsServer!.handleUpgrade(request, socket, head, ws => this._wsServer!.emit('connection', ws, request));
+    });
+
+    this._wsServer.on('connection', (ws, request) => {
+      /*...*/
+      const connection = this._delegate.onConnection(request, url, ws, id); // 实例化 PlaywrightConnection
+      (ws as any)[kConnectionSymbol] = connection;
+    });
+
+    return wsEndpoint;
+  }
+```
+- playwright\packages\playwright-core\src\remote\playwrightConnection.ts
+接收客户端消息
+```js
+  constructor(semaphore: Semaphore, ws: WebSocket, controller: boolean, playwright: Playwright, initialize: () => Promise<PlaywrightInitializeResult>, id: string) {
+    this._ws = ws;
+    this._semaphore = semaphore;
+    this._id = id;
+    this._profileName = new Date().toISOString();
+
+    const lock = this._semaphore.acquire();
+
+    this._dispatcherConnection = new DispatcherConnection();
+    this._dispatcherConnection.onmessage = async message => {
+      await lock;
+      if (ws.readyState !== ws.CLOSING) {
+        const messageString = JSON.stringify(message);
+        if (debugLogger.isEnabled('server:channel'))
+          debugLogger.log('server:channel', `[${this._id}] ${monotonicTime() * 1000} SEND ► ${messageString}`);
+        if (debugLogger.isEnabled('server:metadata'))
+          this.logServerMetadata(message, messageString, 'SEND');
+        ws.send(messageString);
+      }
+    };
+    ws.on('message', async (message: string) => {
+      await lock;
+      const messageString = Buffer.from(message).toString();
+      const jsonMessage = JSON.parse(messageString);
+      if (debugLogger.isEnabled('server:channel'))
+        debugLogger.log('server:channel', `[${this._id}] ${monotonicTime() * 1000} ◀ RECV ${messageString}`);
+      if (debugLogger.isEnabled('server:metadata'))
+        this.logServerMetadata(jsonMessage, messageString, 'RECV');
+      this._dispatcherConnection.dispatch(jsonMessage);
+    });
+
+    /*...*/
+  }
+```
+- playwright\packages\playwright-core\src\server\dispatchers\dispatcher.ts
+处理客户端消息
+```js
+  async _runCommand(callMetadata: CallMetadata, method: string, validParams: any) {
+    const controller = new ProgressController(callMetadata, this._object);
+    this._activeProgressControllers.add(controller);
+    try {
+      return await controller.run(progress => (this as any)[method](validParams, progress), validParams?.timeout);
+    } finally {
+      this._activeProgressControllers.delete(controller);
+    }
+  }
+
+ async dispatch(message: object) {
+    const { id, guid, method, params, metadata } = message as any;
+    const dispatcher = this._dispatcherByGuid.get(guid);
+    if (!dispatcher) {
+      this.onmessage({ id, error: serializeError(new TargetClosedError()) });
+      return;
+    }
+
+    let validParams: any;
+    let validMetadata: channels.Metadata;
+    try {
+      const validator = findValidator(dispatcher._type, method, 'Params');
+      const validatorContext = this._validatorFromWireContext();
+      validParams = validator(params, '', validatorContext);
+      validMetadata = metadataValidator(metadata, '', validatorContext);
+      if (typeof (dispatcher as any)[method] !== 'function')
+        throw new Error(`Mismatching dispatcher: "${dispatcher._type}" does not implement "${method}"`);
+    } catch (e) {
+      this.onmessage({ id, error: serializeError(e) });
+      return;
+    }
+
+    if (methodMetainfo.get(dispatcher._type + '.' + method)?.internal) {
+      // For non-js ports, it is easier to detect internal calls here rather
+      // than generate protocol metainfo for each language.
+      validMetadata.internal = true;
+    }
+
+    const sdkObject = dispatcher._object;
+    const callMetadata: CallMetadata = {
+      id: `call@${id}`,
+      location: validMetadata.location,
+      title: validMetadata.title,
+      internal: validMetadata.internal,
+      stepId: validMetadata.stepId,
+      objectId: sdkObject.guid,
+      pageId: sdkObject.attribution?.page?.guid,
+      frameId: sdkObject.attribution?.frame?.guid,
+      startTime: monotonicTime(),
+      endTime: 0,
+      type: dispatcher._type,
+      method,
+      params: params || {},
+      log: [],
+    };
+
+    if (params?.info?.waitId) {
+      // Process logs for waitForNavigation/waitForLoadState/etc.
+      const info = params.info;
+      switch (info.phase) {
+        case 'before': {
+          this._waitOperations.set(info.waitId, callMetadata);
+          await sdkObject.instrumentation.onBeforeCall(sdkObject, callMetadata);
+          this.onmessage({ id });
+          return;
+        } case 'log': {
+          const originalMetadata = this._waitOperations.get(info.waitId)!;
+          originalMetadata.log.push(info.message);
+          sdkObject.instrumentation.onCallLog(sdkObject, originalMetadata, 'api', info.message);
+          this.onmessage({ id });
+          return;
+        } case 'after': {
+          const originalMetadata = this._waitOperations.get(info.waitId)!;
+          originalMetadata.endTime = monotonicTime();
+          originalMetadata.error = info.error ? { error: { name: 'Error', message: info.error } } : undefined;
+          this._waitOperations.delete(info.waitId);
+          await sdkObject.instrumentation.onAfterCall(sdkObject, originalMetadata);
+          this.onmessage({ id });
+          return;
+        }
+      }
+    }
+
+    await sdkObject.instrumentation.onBeforeCall(sdkObject, callMetadata);
+    const response: any = { id };
+    try {
+      // If the dispatcher has been disposed while running the instrumentation call, error out.
+      if (this._dispatcherByGuid.get(guid) !== dispatcher)
+        throw new TargetClosedError(closeReason(sdkObject));
+      const result = await dispatcher._runCommand(callMetadata, method, validParams); // 执行客户端命令
+      const validator = findValidator(dispatcher._type, method, 'Result');
+      response.result = validator(result, '', this._validatorToWireContext());
+      callMetadata.result = result;
+    } catch (e) {
+      if (isTargetClosedError(e)) {
+        const reason = closeReason(sdkObject);
+        if (reason)
+          rewriteErrorMessage(e, reason);
+      } else if (isProtocolError(e)) {
+        if (e.type === 'closed')
+          e = new TargetClosedError(closeReason(sdkObject), e.browserLogMessage());
+        else if (e.type === 'crashed')
+          rewriteErrorMessage(e, 'Target crashed ' + e.browserLogMessage());
+      }
+      response.error = serializeError(e);
+      // The command handler could have set error in the metadata, do not reset it if there was no exception.
+      callMetadata.error = response.error;
+    } finally {
+      callMetadata.endTime = monotonicTime();
+      await sdkObject.instrumentation.onAfterCall(sdkObject, callMetadata);
+    }
+
+    if (response.error)
+      response.log = compressCallLog(callMetadata.log);
+    this.onmessage(response);
+  }
+}
+```
