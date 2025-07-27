@@ -344,6 +344,52 @@ import fs from "fs";
 })();
 ```
 
+## 代码生成
+
+```shell
+# 指定语言和输出文件
+npx playwright codegen --target python -o search_demo.py https://baidu.com
+
+# 使用特定设备模拟（如 iPhone 13）
+npx playwright codegen --device="iPhone 13" https://m.baidu.com
+```
+
+## trace（运行追踪）
+记录测试执行的详细过程（截图、网络请求、时间线等），用于调试。
+
+### 
+```shell
+npx playwright show-trace test-results/<测试名>-trace.zip
+```
+
+### 手动控制追踪
+```
+const { chromium } = require('playwright');
+
+(async () => {
+  const browser = await chromium.launch();
+  const context = await browser.newContext();
+  
+  // 开始记录
+  await context.tracing.start({ 
+    screenshots: true, 
+    snapshots: true 
+  });
+
+  const page = await context.newPage();
+  await page.goto('https://example.com');
+  
+  // ...执行操作...
+  
+  // 保存追踪文件
+  await context.tracing.stop({ 
+    path: 'trace.zip' 
+  });
+  
+  await browser.close();
+})();
+```
+
 ## playwright 使用 launchServer
 - browserless
 ```shell
