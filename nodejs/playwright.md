@@ -459,6 +459,27 @@ const { chromium } = require('playwright');
   process.on('SIGINT', () => browserServer.close());
 })();
 ```
+自定义 userDataDir
+```js
+import { chromium } from "playwright";
+
+(async () => {
+  // 启动 BrowserServer 实例
+  const browserServer = await chromium.launchServer({
+    _userDataDir: "/home/ubuntu/work/browserServer/test",
+    headless: false,      // 无头模式 (true) 或显示浏览器 (false)
+    host: "0.0.0.0",
+    port: 9222,          // 指定 WS 端口（可选，默认自动分配）
+    args: ['--disable-gpu'] // 额外浏览器参数
+  });
+
+  // 输出 WebSocket 连接端点
+  console.log('WebSocket Endpoint:', browserServer.wsEndpoint());
+
+  // 保持服务器运行（按 Ctrl+C 退出）
+  process.on('SIGINT', () => browserServer.close());
+})();
+```
 
 ### 2. 连接 BrowserServer 的代码
 
