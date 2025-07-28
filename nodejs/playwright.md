@@ -344,6 +344,26 @@ import fs from "fs";
 })();
 ```
 
+## 保存状态
+
+```shell
+import { chromium } from "playwright";
+import fs from "fs";
+
+(async () => {
+  const browser = await chromium.connect(
+    "ws://192.168.0.10:9222/df50aef37ede7d58ff16b7f0ce55cdd2"
+    // "ws://localhost:9333/3cb8dc4da1449629a95af453f04eeda3"
+  );
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.goto("https://baidu.com");
+  const state = await context.storageState({ path: "./state.json", indexedDB: true });
+  console.log(state);
+  await browser.close();
+})();
+```
+
 ## 代码生成
 
 ```shell
