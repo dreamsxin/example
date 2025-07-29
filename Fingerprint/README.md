@@ -3,6 +3,7 @@
 - https://github.com/abrahamjuliot/creepjs
 - https://browserscan.net/
 - https://github.com/HMaker/HMaker.github.io
+- https://bot-detector.rebrowser.net/
 
 Browser fingerprinting is a process of identifying web clients by collecting specific data points from devices, HTTP connections, and software features.
 
