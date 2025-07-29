@@ -1,4 +1,4 @@
-```js
+```html
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -86,6 +86,61 @@ alert(document.createElement('script')) */
       console.table(e);
 
       alert("正常");
+    </script>
+  </body>
+</html>
+```
+
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+    />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <title>test测试</title>
+    <meta name="keywords" content="https://github.com/dreamsxin" />
+    <meta name="description" content="https://github.com/dreamsxin" />
+  </head>
+  <body>
+    <script>
+      // console.debug = console.log = ()=>{}
+      // test:
+      console.info(
+        !!("" + window.console.debug).match(
+          /[\)\( ]{3}[>= ]{3}\{\n[ r]{9}etu[n r]{3}n[lu]{3}/
+        )
+      );
+
+      var counter = 0;
+      var e = new Error();
+      Object.defineProperty(e, "stack", {
+        get() {
+          counter++;
+        },
+      });
+      console.log(e);
+      console.info("counter: ", counter);
+
+      var detected = false;
+      var e = new Error();
+      Object.defineProperty(e, "stack", {
+        get() {
+          detected = true;
+          document.write("detected true<br>\n");
+        },
+      });
+
+      document.write("start detected log<br>\n");
+      console.log(e);
+      document.write("start detected table<br>\n");
+      console.table(e);
+      //document.write("start detected clear<br>\n");
+      //console.clear(e);
     </script>
   </body>
 </html>
