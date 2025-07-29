@@ -22,10 +22,35 @@
     <script>
       //'clear','8620759QzHgOr','outerWidth','max','removeChild','1817050qRqjmz','concat','indexOf','addEventListener','pointerType','contextmenu','valueOf','call','704787zYDoIZ','push','keyCode','console','outerHeight','fromCharCode','cut','parent','异常2','table','apply','ctrlKey','1364xzCCFd','innerHTML','preventDefault','86280sJjBAe','now','pop','returnValue','createElement','undefined','macintosh','disableSelect','935832oxBPWm','6cbaMHL','document','6208749pXYgho','native\x20code','return\x20this','userAgent','innerWidth','return\x20new\x20F(','keydown','disableCut','异常3','innerHeight','selectstart','839750npLXMw','body','8YdLqaT','shiftKey','F12','bind','toLowerCase','disableMenu','join','which','disablePaste','copy','altKey','constructor','length','F,a','prototype','paste','metaKey','appendChild','debugger','6uIIIZJ','log','toString','event','slice'
 
+      document.write("navigator.webdriver:" + navigator.webdriver + "<br>\n");
+      console.log(navigator.webdriver);
+      Object.defineProperty(navigator, "webdriver", {
+        get: () => undefined,
+      });
+      document.write("navigator.webdriver:" + navigator.webdriver + "<br>\n");
+
+      document.write(
+        "navigator.webdriver:" +
+          Object.getOwnPropertyDescriptor(
+            Navigator.prototype,
+            "webdriver"
+          ).get.apply(navigator) +
+          "<br>\n"
+      );
+
       /* alert(Function.prototype.bind.toString());
 alert(Function.prototype.toString.call(setTimeout));
 alert(navigator.userAgent.toLowerCase());
 alert(document.createElement('script')) */
+
+navigator.webdriver; // true if webdriver controlled, false otherwise
+// this lazy patch is commonly found on the internet, it does not even set the right value
+Object.defineProperty(navigator, 'webdriver', {
+  get: () => undefined
+});
+navigator.webdriver; // undefined
+Object.getOwnPropertyDescriptor(Navigator.prototype, 'webdriver').get.apply(navigator);
+// true
 
       if (window.top !== window.self) {
         alert("运行在iframe中");
