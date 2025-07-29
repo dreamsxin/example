@@ -20,8 +20,12 @@
   </head>
   <body>
     <script>
-      // 通过大数据量测试控制台性能
+      // 通过大数据量测试控制台性能，记录开始时间
+      const startTime = performance.now();
       console.table(new Array(1000).fill({data: "test"}));
+      // 记录结束时间
+      const endTime = performance.now();
+      document.write("console.table:" + (endTime - startTime) + "<br>\n");
 
       //'clear','8620759QzHgOr','outerWidth','max','removeChild','1817050qRqjmz','concat','indexOf','addEventListener','pointerType','contextmenu','valueOf','call','704787zYDoIZ','push','keyCode','console','outerHeight','fromCharCode','cut','parent','异常2','table','apply','ctrlKey','1364xzCCFd','innerHTML','preventDefault','86280sJjBAe','now','pop','returnValue','createElement','undefined','macintosh','disableSelect','935832oxBPWm','6cbaMHL','document','6208749pXYgho','native\x20code','return\x20this','userAgent','innerWidth','return\x20new\x20F(','keydown','disableCut','异常3','innerHeight','selectstart','839750npLXMw','body','8YdLqaT','shiftKey','F12','bind','toLowerCase','disableMenu','join','which','disablePaste','copy','altKey','constructor','length','F,a','prototype','paste','metaKey','appendChild','debugger','6uIIIZJ','log','toString','event','slice'
 
