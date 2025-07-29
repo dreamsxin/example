@@ -1,3 +1,9 @@
+- https://github.com/Kaliiiiiiiiii-Vinyzu/patchright/blob/main/patchright.patch
+- https://github.com/abrahamjuliot/creepjs
+- https://github.com/rebrowser/rebrowser-bot-detector
+- https://github.com/TheGP/untidetect-tools
+- https://github.com/Granitosaurus/playwright-stealth/blob/main/playwright_stealth/stealth.py
+
 ```html
 <!DOCTYPE html>
 <html lang="en">
