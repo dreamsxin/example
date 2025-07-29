@@ -4,6 +4,8 @@
 - https://browserscan.net/
 - https://github.com/HMaker/HMaker.github.io
 - https://bot-detector.rebrowser.net/
+- https://github.com/rebrowser/rebrowser-bot-detector
+- https://github.com/TheGP/untidetect-tools
 
 Browser fingerprinting is a process of identifying web clients by collecting specific data points from devices, HTTP connections, and software features.
 
