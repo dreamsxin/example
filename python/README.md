@@ -5,7 +5,13 @@
 ## Python的语言特性
 
 Python是一门具有强类型(即变量类型是强制要求的)、动态性、隐式类型(不需要做变量声明)、大小写敏感(var和VAR代表了不同的变量)以及面向对象(一切皆为对象)等特点的编程语言。
- 
+
+## 安装包
+
+```shell
+pip install -i https://pypi.tuna.tsinghua.edu.cn/simple playwright
+```
+
 ## 获取帮助
 
 你可以很容易的通过Python解释器获取帮助。如果你想知道一个对象是如何工作的，那么你所需要做的就是调用`help(<object>)`！另外还有一些有用的方法，`dir()`会显示该对象的所有方法，还有`<object>.__doc__`会显示其文档：
