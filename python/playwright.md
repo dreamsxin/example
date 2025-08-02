@@ -1,4 +1,29 @@
 
+## 例子
+
+```python
+from playwright.async_api import async_playwright
+import asyncio
+
+async def open_baidu():
+    async with async_playwright() as p:
+        # 启动浏览器
+        browser = await p.chromium.connect_over_cdp("ws://localhost:8182/ws?apiKey=c713602e4b334b16b93a1dce7b6d2d5f")
+        # 创建新页面
+        contexts = browser.contexts
+        context = contexts[0]
+        page = await context.new_page()
+        # 导航到百度首页
+        await page.goto("https://www.baidu.com")
+        # 等待3秒以便观察结果
+        await asyncio.sleep(3)
+        # 关闭浏览器
+        await browser.close()
+
+# 运行异步函数
+asyncio.run(open_baidu())
+```
+
 - https://github.com/crifan/web_automation_tool_playwright
 - https://github.com/crifan/crifanLibPython/blob/master/python3/crifanLib/thirdParty/crifanPlaywright.py
 
