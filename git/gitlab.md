@@ -1,4 +1,26 @@
-# SSH KEY 生成
+# 
+
+- https://github.com/gitlabhq/gitlabhq
+
+## 安装
+
+- https://about.gitlab.com/install/
+- https://gitlab.com/gitlab-org/gitlab/-/blob/master/doc/install/installation.md
+
+```shell
+# run as root!
+sudo su
+apt-get update -y
+apt-get upgrade -y
+apt-get install sudo -y
+
+sudo apt-get install -y build-essential zlib1g-dev libyaml-dev libssl-dev libgdbm-dev libre2-dev \
+  libreadline-dev libncurses5-dev libffi-dev curl openssh-server libxml2-dev libxslt-dev \
+  libcurl4-openssl-dev libicu-dev libkrb5-dev logrotate rsync python3-docutils pkg-config cmake \
+  runit-systemd
+```
+
+## SSH KEY 生成
 
 ```shell
 ssh-keygen -t rsa -C "dreamsxin@qq.com"
@@ -74,4 +96,5 @@ server{
         index index.html index.htm;
     }
 }
+
 ```
