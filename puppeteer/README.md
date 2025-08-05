@@ -9,6 +9,26 @@ npm i puppeteer-firefox
 npm i puppeteer-core
 ```
 
+```js
+import puppeteer from 'puppeteer';
+
+const browser = await puppeteer.connect({
+  browserWSEndpoint: "ws://xx.xx.xx.xx/xx"
+});
+
+const context = await browser.createIncognitoBrowserContext();
+const page = await context.newPage();
+console.log(page);
+//  // 获取页面内容
+//  //const content = await page.content();
+// // console.log(content);
+try {
+await page.goto("https://www.google.com", {timeout: 10000});
+} catch (error) {
+  console.error('Navigation error:', error);
+}
+```
+
 ## Demo
 文件名 `main.mjs` （可以不用定义 "type": "module"）：
 ```js
