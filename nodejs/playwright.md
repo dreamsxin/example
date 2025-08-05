@@ -29,6 +29,47 @@ const iPhone = devices['iPhone 6'];
 })();
 ```
 
+```shell
+import { chromium, devices } from "playwright";
+const iPhone = devices['iPhone 6'];
+
+// plugin.setServiceKey('');
+
+// const fingerprint = await plugin.fetch({
+//   tags: ['Microsoft Windows', 'Chrome'],
+// });
+
+// plugin.useFingerprint(fingerprint);
+
+const browser = await chromium.connectOverCDP(
+  //"wss://test.cloud.yunlogin.com/ws?apiKey=linux00000000000000000000000001"
+  "ws://192.168.0.99:8182/ws?apiKey=c713602e4b334b16b93a1dce7b6d2d5f"
+);
+browser.on("disconnected", () => {
+  console.log("浏览器与 Playwright 断开连接");
+  console.log("断开时间:" + new Date().toString());
+});
+
+console.log("启动时间:" + new Date().toString());
+//{...iPhone}
+//const context = await browser.newContext();
+const context = await browser.contexts()[0];
+
+context.on("page", async (newPage) => {
+});
+
+const page = await context.newPage();
+
+page.setExtraHTTPHeaders({
+  "User-Agent": iPhone.userAgent
+})
+await page.setViewportSize({ width: 375, height: 812 });
+//context.setGeolocation()
+//context.setTimezone()
+
+page.goto("https://www.google.com/search?q=CHINA&oq=CHINA&hl=en&gl=us&sourceid=chrome&ie=UTF-8")
+```
+
 ## Record a YouTube video with Playwright.
 ```js
 // Playwright 1.8.0 | docs: https://playwright.dev/docs/videos
