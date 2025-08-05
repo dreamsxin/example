@@ -63,7 +63,8 @@ const page = await context.newPage();
 page.setExtraHTTPHeaders({
   "User-Agent": iPhone.userAgent
 })
-await page.setViewportSize({ width: 375, height: 812 });
+//await page.setViewportSize({ width: 375, height: 812 });
+await page.setViewportSize(iPhone.viewport);
 //context.setGeolocation()
 //context.setTimezone()
 
