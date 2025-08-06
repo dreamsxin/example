@@ -9,3 +9,4 @@
 - https://github.com/kasmtech/workspaces-images
 - https://github.com/kasmtech/KasmVNC
 - https://github.com/kasmtech/workspaces-core-images
+- https://github.com/AlloryDante/undetected-browser
