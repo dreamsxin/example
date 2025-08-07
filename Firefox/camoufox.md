@@ -1,4 +1,19 @@
 - https://github.com/daijro/browserforge
+```bash
+pip install browserforge[all]
+```
+```python
+from browserforge.injectors.playwright import AsyncNewContext
+
+async def main():
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch()
+        # Create a new async context with the injected fingerprint
+        context = await AsyncNewContext(browser, fingerprint=fingerprint)
+        page = await context.new_page()
+        page.goto("https://www.google.com/search?q=CHINA&oq=CHINAx&hl=en&gl=us&sourceid=chrome&ie=UTF-8")
+```
+
 - https://github.com/apify/crawlee-python
 
 ## python
