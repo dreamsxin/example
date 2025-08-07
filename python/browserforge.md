@@ -1,4 +1,5 @@
-https://browserleaks.com/canvas
+- https://browserleaks.com/canvas
+- https://github.com/ultrafunkamsterdam/undetected-chromedriver
 
 ## How to Bypass CreepJS and Spoof Browser Fingerprinting
 - https://www.scrapingbee.com/blog/creepjs-browser-fingerprinting/
