@@ -1,3 +1,6 @@
+- https://github.com/daijro/browserforge
+- https://github.com/apify/crawlee-python
+
 ## python
 
 ```bash
