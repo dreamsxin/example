@@ -14,6 +14,30 @@ async def main():
         page.goto("https://www.google.com/search?q=CHINA&oq=CHINAx&hl=en&gl=us&sourceid=chrome&ie=UTF-8")
 ```
 
+```bash
+import asyncio
+from playwright.async_api import async_playwright
+from browserforge.fingerprints import FingerprintGenerator
+from browserforge.injectors.playwright import AsyncNewContext
+import time
+
+async def main():
+    async with async_playwright() as p:
+        fingerprints = FingerprintGenerator(os="android")
+        fingerprint = fingerprints.generate()
+        browser = await p.chromium.launch(headless=False)
+
+        context = await AsyncNewContext(browser, fingerprint=fingerprint)
+        page = await context.new_page()
+        time.sleep(1)
+        await page.goto("https://www.google.com/search?q=CHINA&oq=CHINAx&hl=en&gl=us&sourceid=chrome&ie=UTF-8")
+        time.sleep(1000)
+        print(await page.title())
+
+
+asyncio.run(main())
+```
+
 - https://github.com/apify/crawlee-python
 
 ## python
