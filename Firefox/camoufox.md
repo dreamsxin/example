@@ -1,3 +1,22 @@
+## python
+
+```bash
+pip install -U camoufox[geoip]
+camoufox fetch
+```
+
+```python
+from camoufox.server import launch_server
+
+launch_server(
+    headless=False,
+    geoip=True,
+    proxy={
+    },
+    port=1234,
+    ws_path='hello'
+)
+```
 
 ## 使用 Docker 创建镜像编译
 
