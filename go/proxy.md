@@ -1,3 +1,8 @@
+##
+
+- https://github.com/therahulprasad/go-socks5-chain
+- https://github.com/synacktiv/bbs
+
 ## 常规代理请求(本地DNS解析)
 
 ```go
