@@ -943,3 +943,55 @@ await chromium.connect({
   }
 }
 ```
+
+##
+
+- packages\playwright-core\src\server\browserType.ts
+
+## 临时目录
+
+- packages\playwright-core\lib\server\browserType.js
+
+```js
+  async _prepareToLaunch(options, isPersistent, userDataDir) {
+    const {
+      ignoreDefaultArgs,
+      ignoreAllDefaultArgs,
+      args = [],
+      executablePath = null
+    } = options;
+    await this._createArtifactDirs(options);
+    const tempDirectories = [];
+    const artifactsDir = await import_fs.default.promises.mkdtemp(import_path.default.join(import_os.default.tmpdir(), "playwright-artifacts-"));
+    tempDirectories.push(artifactsDir);
+    if (userDataDir) {
+      (0, import_assert.assert)(import_path.default.isAbsolute(userDataDir), "userDataDir must be an absolute path");
+      if (!await (0, import_fileUtils.existsAsync)(userDataDir))
+        await import_fs.default.promises.mkdir(userDataDir, { recursive: true, mode: 448 });
+    } else {
+      userDataDir = await import_fs.default.promises.mkdtemp(import_path.default.join(import_os.default.tmpdir(), `playwright_${this._name}dev_profile-`));
+      tempDirectories.push(userDataDir);
+    }
+    await this.prepareUserDataDir(options, userDataDir);
+    const browserArguments = [];
+    if (ignoreAllDefaultArgs)
+      browserArguments.push(...args);
+    else if (ignoreDefaultArgs)
+      browserArguments.push(...this.defaultArgs(options, isPersistent, userDataDir).filter((arg) => ignoreDefaultArgs.indexOf(arg) === -1));
+    else
+      browserArguments.push(...this.defaultArgs(options, isPersistent, userDataDir));
+    let executable;
+    if (executablePath) {
+      if (!await (0, import_fileUtils.existsAsync)(executablePath))
+        throw new Error(`Failed to launch ${this._name} because executable doesn't exist at ${executablePath}`);
+      executable = executablePath;
+    } else {
+      const registryExecutable = import_registry.registry.findExecutable(this.getExecutableName(options));
+      if (!registryExecutable || registryExecutable.browserName !== this._name)
+        throw new Error(`Unsupported ${this._name} channel "${options.channel}"`);
+      executable = registryExecutable.executablePathOrDie(this.attribution.playwright.options.sdkLanguage);
+      await import_registry.registry.validateHostRequirementsForExecutablesIfNeeded([registryExecutable], this.attribution.playwright.options.sdkLanguage);
+    }
+    return { executable, browserArguments, userDataDir, artifactsDir, tempDirectories };
+  }
+```
