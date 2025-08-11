@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/search/query"
@@ -26,6 +27,11 @@ func init() {
 	if err != nil {
 		// 如果打开失败，创建新索引
 		mapping := bleve.NewIndexMapping()
+		// 为Tags字段添加映射
+		tagMapping := bleve.NewTextFieldMapping()
+		tagMapping.Analyzer = "keyword" // 使用keyword分析器，不分词
+		mapping.DefaultMapping.AddFieldMappingsAt("Tags", tagMapping)
+
 		index, err = bleve.New("example.bleve", mapping)
 		if err != nil {
 			log.Fatalf("无法创建索引: %v", err)
@@ -41,12 +47,22 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.FormValue("id")
 	body := r.FormValue("body")
 	from := r.FormValue("from")
+	tagsStr := r.FormValue("tags") // 获取标签参数
+	var tags []string
+	if tagsStr != "" {
+		// 分割逗号分隔的标签，并去除可能的空格
+		tags = strings.Split(tagsStr, ",")
+		for i, tag := range tags {
+			tags[i] = strings.TrimSpace(tag)
+		}
+	}
 
 	document := struct {
 		Id   string
 		From string
 		Body string
-	}{Id: id, From: from, Body: body}
+		Tags []string
+	}{Id: id, From: from, Body: body, Tags: tags}
 
 	err := index.Index(id, document)
 	if err != nil {
@@ -80,7 +96,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	searchRequest := bleve.NewSearchRequest(searchQuery)
 	// 添加需要返回的字段
-	searchRequest.Fields = []string{"From", "Body"}
+	searchRequest.Fields = []string{"From", "Body", "Tags"}
 	searchResult, err := index.Search(searchRequest)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
