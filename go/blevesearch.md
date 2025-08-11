@@ -309,3 +309,246 @@ boolQ.MustNot(bleve.NewTermQuery("过时").SetField("Status"))
 - 用户输入复杂查询：用 QueryStringQuery（需注意安全，避免注入）
 - 标签/类别搜索：用 TermQuery（精确匹配，性能最优）
 - 拼写容错：用 MatchQuery 的 SetAutoFuzziness(true) 或 FuzzyQuery
+
+## Bleve命令行工具用法详解
+
+### 基本语法
+
+```bash
+bleve [command] [flags]
+```
+
+### 核心命令说明
+
+#### 1. create - 创建新索引
+
+```bash
+bleve create -index <index_name> -mapping <mapping.json>
+```
+功能：初始化新的Bleve索引
+参数：
+-index: 指定索引目录名
+-mapping: 指定JSON格式的映射文件路径
+示例：
+
+```bash
+bleve create -index my_index -mapping mapping.json
+```
+
+#### 2. index - 添加文档到索引
+
+```bash
+bleve index -index <index_name> <file1> <file2> ...
+```
+功能：将文件内容添加到索引
+支持格式：纯文本、JSON等
+示例：
+
+```bash
+bleve index -index my_index docs/*.txt
+```
+
+#### 3. query - 搜索索引
+
+```bash
+bleve query -index <index_name> -q <query_string> [-fields <field1>,<field2>]
+```
+
+功能：执行搜索查询
+参数：
+-q: 搜索关键词
+-fields: 指定搜索字段（可选）
+示例：
+
+```bash
+bleve query -index my_index -q "example text" -fields title,content
+```
+
+#### 4. count - 统计文档数量
+
+```bash
+bleve count -index <index_name>
+```
+功能：返回索引中的文档总数
+示例：
+
+```bash
+bleve count -index my_index
+```
+
+#### 5. dump - 导出索引内容
+
+```bash
+bleve dump -index <index_name> [-output <file>]
+```
+功能：导出索引中的所有文档
+参数：
+-output: 指定输出文件（可选，默认stdout）
+
+#### 6. fields - 列出索引字段
+
+```bash
+bleve fields -index <index_name>
+```
+功能：显示索引中所有已定义的字段名称
+
+#### 7. mapping - 查看映射配置
+
+```bash
+bleve mapping -index <index_name>
+```
+功能：输出当前索引使用的映射配置（JSON格式）
+
+#### 8. bulk - 批量导入文档
+
+```bash
+bleve bulk -index <index_name> <json_file1> <json_file2> ...
+```
+功能：从JSON文件批量导入文档（每行一个JSON对象）
+JSON格式要求：
+
+```json
+{"id":"doc1","title":"...","content":"..."}
+{"id":"doc2","title":"...","content":"..."}
+```
+
+### 高级命令
+
+#### 9. dictionary - 查看字段词典
+
+```bash
+bleve dictionary -index <index_name> -field <field_name>
+```
+功能：显示指定字段的所有索引词项及频率
+
+#### 10. check - 检查索引完整性
+
+```bash
+bleve check -index <index_name>
+```
+功能：验证索引结构完整性，检测潜在问题
+全局选项
+-h, --help: 显示命令帮助信息
+所有命令均支持 -index 参数指定目标索引
+使用示例流程
+创建索引：
+
+```bash
+bleve create -index my_index -mapping mapping.json
+```
+添加文档：
+
+```bash
+bleve index -index my_index data/*.md
+```
+执行搜索：
+
+```bash
+bleve query -index my_index -q "bleve教程" -fields title
+```
+查看统计：
+
+```bash
+bleve count -index my_index
+```
+提示：使用 bleve [command] --help 获取特定命令的详细参数说明，例如：
+
+
+```bash
+bleve query --help
+```
+
+## Bleve工作原理及数据存储机制
+
+### 一、Bleve核心工作原理
+
+Bleve是一个基于Go语言的全文搜索引擎库，其核心原理基于倒排索引（Inverted Index）数据结构，主要工作流程包括：
+
+**文档分析（Document Analysis）**
+
+· 接收原始文档（JSON格式为主）
+· 通过分析器（Analyzer） 对文本进行处理：
+    分词（Tokenization）：将文本拆分为词项（Terms）
+    标准化（Normalization）：转为小写、去除标点
+    过滤（Filtering）：去除停用词（如"的"、"the"）、词干提取
+· 生成可索引的词项列表
+
+**索引构建（Indexing）**
+
+· 创建倒排索引：记录每个词项在哪些文档中出现及位置
+· 结构示例：
+    ```plainText
+    词项 "搜索引擎" → 文档1(位置3), 文档5(位置7)
+    词项 "Bleve" → 文档1(位置1), 文档3(位置5), 文档7(位置2)
+    支持动态映射（Dynamic Mapping）和显式字段映射
+    ```
+**查询处理（Query Processing）**
+
+· 解析用户查询（支持MatchQuery、BoolQuery等多种查询类型）
+· 执行查询计划并聚合结果
+· 对结果进行相关性评分（BM25算法）
+
+### 二、数据存储机制：磁盘为主，内存为辅
+
+Bleve不将完整数据放在内存中，而是采用持久化存储+内存缓存的混合架构：
+
+**磁盘存储（核心）**
+
+默认使用BoltDB作为存储引擎（嵌入式KV数据库）
+索引数据存储在文件系统中，典型结构：
+
+```plainText
+example.bleve/
+├── index_meta.json  # 索引元数据
+└── store/           # 实际数据存储（BoltDB文件）
+```
+
+支持多种存储后端：BoltDB、LevelDB、Badger等（可通过配置切换）
+所有索引数据持久化到磁盘，服务重启后数据不丢失
+
+**内存使用（优化）**
+
+索引元数据缓存：词典、字段映射等频繁访问的数据
+查询结果缓存：近期查询结果的临时存储
+内存映射（mmap）：通过操作系统将部分索引文件映射到内存，加速访问
+有限内存占用：不会无限制增长，内存使用量与索引大小正相关
+
+### 三、关键特性说明
+
+**增量索引**
+
+支持文档的增量添加/更新/删除
+无需重建整个索引，仅更新受影响的倒排列表
+
+**并发安全**
+
+内部通过锁机制保证多协程安全访问
+读操作不阻塞写操作（MVCC机制）
+
+**存储优化**
+
+定期执行段合并（Segment Merging）减少磁盘IO
+支持压缩算法降低磁盘占用
+
+### 四、与纯内存搜索引擎的对比
+
+| 特性 | Bleve（混合存储） | 纯内存搜索引擎（如Elasticsearch内存节点） | 
+|--------------|---------------------------|------------------------------------------|
+| 数据持久性 | 断电不丢失 | 全部丢失 | | 内存占用 | 可控 | 与数据量成正比 |
+| 启动速度 | 较慢（需加载元数据） | 极快 | 
+| 适用场景 | 持久化索引服务 | 临时数据分析、高频短期查询 |
+
+### 五、用户项目中的验证
+
+在您的项目目录中：
+
+
+```plainText
+go/search/example.bleve/
+├── index_meta.json  # 索引元数据
+└── store/           # BoltDB存储文件
+```
+
+这些文件证实Bleve将索引数据持久化到磁盘，而非仅存于内存。
+
+总结：Bleve采用磁盘持久化存储保证数据安全，同时通过内存缓存和mmap技术优化查询性能，是兼顾可靠性和效率的设计选择。
