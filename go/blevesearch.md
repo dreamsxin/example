@@ -13,6 +13,7 @@ import (
 	"net/http"
 
 	"github.com/blevesearch/bleve/v2"
+	"github.com/blevesearch/bleve/v2/search/query"
 )
 
 var index bleve.Index
@@ -58,13 +59,25 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 func searchHandler(w http.ResponseWriter, r *http.Request) {
 	// 处理搜索请求
-	query := r.FormValue("q")
-	if query == "" {
+	q := r.FormValue("q")
+	if q == "" {
 		http.Error(w, "缺少查询参数q", http.StatusBadRequest)
 		return
 	}
+	field := r.FormValue("field") // 获取指定字段参数，注意大小写比如 Body
 
-	searchQuery := bleve.NewQueryStringQuery(query)
+	var searchQuery query.Query
+	if field != "" {
+		// 如果指定了字段，使用字段查询
+		matchQuery := bleve.NewMatchQuery(q)
+		matchQuery.SetField(field)
+		matchQuery.SetAutoFuzziness(true) // 开启自动模糊查询
+
+		searchQuery = matchQuery
+	} else {
+		// 否则使用默认的查询字符串查询
+		searchQuery = bleve.NewQueryStringQuery(q)
+	}
 	searchRequest := bleve.NewSearchRequest(searchQuery)
 	// 添加需要返回的字段
 	searchRequest.Fields = []string{"From", "Body"}
@@ -74,6 +87,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Println("查询结果:", searchResult)
 	// 将结果转换为JSON并返回
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(searchResult)
