@@ -102,7 +102,8 @@ func main() {
     // 打印响应
     fmt.Println(string(body))
 }
-
+```
+```go
 package main
 
 import (
