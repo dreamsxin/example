@@ -28,9 +28,15 @@ func init() {
 		// 如果打开失败，创建新索引
 		mapping := bleve.NewIndexMapping()
 		// 为Tags字段添加映射
-		tagMapping := bleve.NewTextFieldMapping()
-		tagMapping.Analyzer = "keyword" // 使用keyword分析器，不分词
+		tagMapping := bleve.NewKeywordFieldMapping()
+		typeMapping := bleve.NewKeywordFieldMapping()  // 内容类型精确匹配
+		urlMapping := bleve.NewKeywordFieldMapping()   // URL精确匹配
+		dateMapping := bleve.NewDateTimeFieldMapping() // 日期类型映射
+
 		mapping.DefaultMapping.AddFieldMappingsAt("Tags", tagMapping)
+		mapping.DefaultMapping.AddFieldMappingsAt("Type", typeMapping)
+		mapping.DefaultMapping.AddFieldMappingsAt("URL", urlMapping)
+		mapping.DefaultMapping.AddFieldMappingsAt("Date", dateMapping)
 
 		index, err = bleve.New("example.bleve", mapping)
 		if err != nil {
@@ -47,7 +53,10 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.FormValue("id")
 	body := r.FormValue("body")
 	from := r.FormValue("from")
-	tagsStr := r.FormValue("tags") // 获取标签参数
+	tagsStr := r.FormValue("tags")     // 获取标签参数
+	contentType := r.FormValue("type") // news, blog, help, module
+	url := r.FormValue("url")          // 网站模块地址
+	date := r.FormValue("date")        // 发布日期
 	var tags []string
 	if tagsStr != "" {
 		// 分割逗号分隔的标签，并去除可能的空格
@@ -62,7 +71,10 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		From string
 		Body string
 		Tags []string
-	}{Id: id, From: from, Body: body, Tags: tags}
+		Type string // 内容类型：news, blog, help, module
+		URL  string // 网站模块地址
+		Date string // 发布/创建日期
+	}{Id: id, From: from, Body: body, Tags: tags, Type: contentType, URL: url, Date: date}
 
 	err := index.Index(id, document)
 	if err != nil {
@@ -80,7 +92,8 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "缺少查询参数q", http.StatusBadRequest)
 		return
 	}
-	field := r.FormValue("field") // 获取指定字段参数，注意大小写比如 Body
+	field := r.FormValue("field")      // 获取指定字段参数，注意大小写比如 Body
+	contentType := r.FormValue("type") // 获取内容类型参数
 
 	var searchQuery query.Query
 	if field != "" {
@@ -94,9 +107,19 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 		// 否则使用默认的查询字符串查询
 		searchQuery = bleve.NewQueryStringQuery(q)
 	}
+
+	// 添加内容类型过滤条件
+	if contentType != "" {
+		typeQuery := bleve.NewTermQuery(contentType)
+		typeQuery.SetField("Type")
+		searchQuery = bleve.NewConjunctionQuery(searchQuery, typeQuery)
+	}
+
 	searchRequest := bleve.NewSearchRequest(searchQuery)
 	// 添加需要返回的字段
-	searchRequest.Fields = []string{"From", "Body", "Tags"}
+	searchRequest.Fields = []string{"From", "Body", "Tags", "Type", "URL", "Date"}
+	//searchRequest.Explain = true // 开启详细解释
+
 	searchResult, err := index.Search(searchRequest)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -116,6 +139,19 @@ func main() {
 	log.Println("服务启动在:9090")
 	log.Fatal(http.ListenAndServe(":9090", nil))
 }
+```
+
+**demo**
+```shell
+curl --request POST \
+  --url http://localhost:9090/index \
+  --header 'Content-Type: application/x-www-form-urlencoded' \
+  --data 'id=中文例子2' \
+  --data 'body=我的名字叫云登2' \
+  --data 'from=测试' \
+  --data 'tags=测试1,指纹1,浏览器2' \
+  --data type=blog \
+  --data url=http://localhost
 ```
 
 ## Bleve中三种映射类型的区别与用法
