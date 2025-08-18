@@ -170,8 +170,11 @@ ORDER BY day DESC;
 
 TimescaleDB可以与多种BI工具集成：
 - Grafana：用于创建实时监控仪表盘
+https://github.com/grafana/grafana
 - Superset：用于高级分析和可视化
+https://github.com/apache/superset
 - Metabase：用于业务团队的自助分析
+https://github.com/metabase/metabase
 
 通过合理设计数据模型和利用TimescaleDB的特性，您可以高效地进行用户行为链路分析，洞察用户行为模式并优化产品体验。
 
