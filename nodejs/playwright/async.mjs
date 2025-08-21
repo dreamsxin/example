@@ -61,12 +61,22 @@ const asyncrequest = async (i) => {
   const cookies = await page.cookies();
   //console.log(cookies);
   // 删除所有 cookies
-  cookies.forEach(async (cookie) => {
-    //console.log(cookie);
+  var haserror = 0;
+  for (let cookie of cookies) {
     await page.deleteCookie(cookie).catch((err) => {
-      errnum++;
+      console.log("删除cookie错误", cookie.name);
+      haserror++;
     });
-  });
+  }
+  if (haserror > 0) {
+    errnum++;
+  }
+  // cookies.forEach(async (cookie) => {
+    //console.log(cookie);
+  //   await page.deleteCookie(cookie).catch((err) => {
+  //     errnum++;
+  //   });
+ //  });
   await page.close();
 };
 
