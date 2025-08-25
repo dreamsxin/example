@@ -1,6 +1,7 @@
 # Playwright
 
-https://playwright.dev/docs/intro
+- https://playwright.dev/docs/intro
+- https://github.com/rebrowser/rebrowser-patches/tree/1.0.19
 
 ## 初始化项目
 
