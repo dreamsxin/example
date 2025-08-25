@@ -3,6 +3,7 @@
 - https://github.com/rebrowser/rebrowser-bot-detector
 - https://github.com/TheGP/untidetect-tools
 - https://github.com/Granitosaurus/playwright-stealth/blob/main/playwright_stealth/stealth.py
+- https://github.com/seleniumbase/SeleniumBase
 
 ```html
 <!DOCTYPE html>
