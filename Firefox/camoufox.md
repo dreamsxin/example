@@ -1,5 +1,4 @@
 - https://github.com/daijro/camoufox
-- https://github.com/clienthold/OpenIncognito/tree/main
 
 ## python
 
