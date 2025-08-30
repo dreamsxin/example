@@ -61,7 +61,14 @@ BOOTPROTO=static #[none|static|bootp|dhcp]（引导时不使用协议|静态分�
 
 ```shell
 netstat -ntl
+netstat -tlnp |grep clickhouse
 ```
+
+- -t 代表TCP连接
+- -u 代表UDP连接
+- -l 代表显示监听状态的端口
+- -n 代表以数字形式显示地址和端口号
+- -p 显示进程标识符和程序名称，对于非root用户，可能需要额外的权限来查看所有用户的进程信息
 
 ## 解决 Linux 下 TIME_WAIT 和 CLOSE_WAIT 过多的问题
 
