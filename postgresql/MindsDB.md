@@ -53,3 +53,75 @@ VALUES ('bikes_model', 'count', 'SELECT * FROM test.bike_data');
 从输入数据中学习预测'count'列。
 输入数据是通过选择语句 'SELECT * FROM test.bike_data' 生成的。
 `select_data_query` 应该是MindsDB可以针对MariaDB运行的有效选择。
+
+## 自定义部署
+
+https://docs.mindsdb.com/setup/self-hosted/docker
+
+### 镜像
+`/etc/docker/daemon.json`
+```json
+{"registry-mirrors": ["https://docker.tuna.tsinghua.edu.cn","https://docker.mirrors.ustc.edu.cn","https://docker.xuanyuan.me"]}
+```
+
+###
+
+```shell
+sudo apt install dnsutils
+dig @114.114.114.114 registry-1.docker.io
+systemctl daemon-reload
+systemctl restart docker
+docker images | grep mindsdb
+docker pull mindsdb/mindsdb:latest
+```
+
+### 自定义配置文件
+
+`mindsdb_config.json`
+````json
+{
+    "config_version":"1.4",
+    "paths": {
+        "root": "/root/mdb_storage"
+    },
+    "debug": false,
+    "integrations": {},
+    "api": {
+        "http": {
+            "host": "0.0.0.0",
+            "port": "47334"
+        },
+        "mysql": {
+            "host": "0.0.0.0",
+            "password": "",
+            "port": "47335",
+            "user": "mindsdb",
+            "database": "mindsdb",
+            "ssl": true
+        },
+         "mongodb": {
+            "host": "0.0.0.0",
+            "port": "47336",
+            "database": "mindsdb"
+        }
+    }
+}
+```
+
+```shel
+mkdir mdb_data
+docker run --name mindsdb_container \
+-e MINDSDB_A2A_HOST=0.0.0.0 \
+-e MINDSDB_USERNAME='admin' -e MINDSDB_PASSWORD='123456' \
+-e MINDSDB_APIS=http,mysql,mcp,a2a \
+-p 47334:47334 -p 47335:47335 -p 47337:47337 -p 47338:47338 \
+-v $(pwd)/mdb_data:/root/mdb_storage \
+-v $(pwd)/mdb_config.json:/root/mindsdb_config.json \
+mindsdb/mindsdb
+```
+
+### 进入容器
+
+```shell
+docker exec -it mindsdb_container sh
+```
