@@ -16,6 +16,12 @@ sudo service clickhouse-server start
 clickhouse-server --config-file=/etc/clickhouse-server/config.xml
 ```
 
+## 查看端口
+
+```shell
+netstat -tlnp |grep clickhouse
+```
+
 ## 配置
 
 `/etc/clickhouse-server/config.xml`
@@ -64,5 +70,6 @@ clickhouse-client --host=example.com
 * 如何实现分布式的
 
 ClickHouse 的分布式，完全依赖配置文件，即每个节点，都共享同样的配置文件，这个配置文件里，写了我跟谁是一个cluster的，我自己的名字是啥
+
 
 
