@@ -230,3 +230,22 @@ speed_download      下载速度，单位-字节每秒。
 ```shell
 curl -o /dev/null -s -w %{http_code}:%{http_connect}:%{content_type}:%{time_namelookup}:%{time_redirect}:%{time_pretransfer}:%{time_connect}:%{time_starttransfer}:%{time_total}:%{speed_download} www.baidu.com
 ```
+
+`curl_time.txt`
+```plainText
+              http: %{http_code}\n
+               dns: %{time_namelookup}s\n
+          redirect: %{time_redirect}s\n
+      time_connect: %{time_connect}s\n
+   time_appconnect: %{time_appconnect}s\n
+  time_pretransfer: %{time_pretransfer}s\n
+time_starttransfer: %{time_starttransfer}s\n
+     size_download: %{size_download}bytes\n
+    speed_download: %{speed_download}B/s\n
+               ----------\n
+        time_total: %{time_total}s\n
+```
+
+```shell
+curl -w "@~/curl_time.txt" -s -H "Content-Type: application/json" www.baidu.com
+```
