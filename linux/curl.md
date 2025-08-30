@@ -226,3 +226,7 @@ speed_download      下载速度，单位-字节每秒。
 -D, --dump-header <file>               将头信息写入指定的文件
 -c, --cookie-jar <file>                操作结束后，要写入 Cookies 的文件位
 ```
+
+```shell
+curl -o /dev/null -s -w %{http_code}:%{http_connect}:%{content_type}:%{time_namelookup}:%{time_redirect}:%{time_pretransfer}:%{time_connect}:%{time_starttransfer}:%{time_total}:%{speed_download} www.baidu.com
+```
