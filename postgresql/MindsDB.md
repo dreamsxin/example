@@ -108,10 +108,10 @@ docker pull mindsdb/mindsdb:latest
 }
 ```
 
+`-e MINDSDB_A2A_HOST=0.0.0.0 \`
 ```shel
 mkdir mdb_data
 docker run --name mindsdb_container \
--e MINDSDB_A2A_HOST=0.0.0.0 \
 -e MINDSDB_USERNAME='admin' -e MINDSDB_PASSWORD='123456' \
 -e MINDSDB_APIS=http,mysql,mcp,a2a \
 -p 47334:47334 -p 47335:47335 -p 47337:47337 -p 47338:47338 \
@@ -124,4 +124,23 @@ mindsdb/mindsdb
 
 ```shell
 docker exec -it mindsdb_container sh
+```
+
+### 列出已运行的容器
+
+默认 `docker ps` 仅显示运行中的容器，而 `-a`（或 `--all`）参数会额外列出已停止、暂停、退出的容器，覆盖全部生命周期状态
+
+显示完整命令
+
+`docker ps --no-trunc`
+
+## 导出镜像
+
+```shell
+docker save mindsdb/mindsdb > mindsdb.tar
+```
+
+## 导入镜像
+```shell
+docker load < mindsdb.tar
 ```
