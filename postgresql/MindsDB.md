@@ -61,7 +61,7 @@ https://docs.mindsdb.com/setup/self-hosted/docker
 ### 镜像
 `/etc/docker/daemon.json`
 ```json
-{"registry-mirrors": ["https://docker.tuna.tsinghua.edu.cn","https://docker.mirrors.ustc.edu.cn","https://docker.xuanyuan.me"]}
+{"registry-mirrors": ["https://docker.1ms.run","https://docker.xuanyuan.me", "https://docker.m.daocloud.io"]}
 ```
 
 ###
