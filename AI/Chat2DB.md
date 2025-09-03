@@ -1,3 +1,3 @@
 
 - https://github.com/CodePhiliaX/Chat2DB
-- Outerbase
+- https://github.com/outerbase/studio
