@@ -2,6 +2,9 @@
 ## 安装 cURL
 
 - https://curl.se/windows/
+```shell
+./curl.exe --request POST --url http://localhost:8080/ --header 'Accept: application/json' --header 'Authorization: xxxx' --header 'Content-Type: application/json' --data '@env.json'
+```
 
 ## 内置
 
