@@ -996,3 +996,25 @@ await chromium.connect({
     return { executable, browserArguments, userDataDir, artifactsDir, tempDirectories };
   }
 ```
+
+## BlockedURLs
+
+```js
+import { chromium } from 'playwright';
+
+const browser = await chromium.launch({ headless: false });
+const page = await browser.newPage();
+
+// Define our blocked extensions
+const blockedExtensions = ['.png', '.css', '.jpg', '.jpeg', '.pdf', '.svg'];
+
+// Use CDP session to block resources
+const client = await page.context().newCDPSession(page);
+
+await client.send('Network.setBlockedURLs', { urls: blockedExtensions });
+
+await page.goto('https://soundcloud.com/tiesto/following');
+
+await page.waitForTimeout(10000);
+await browser.close();
+```
