@@ -114,3 +114,36 @@ with sync_playwright() as p:
     # 打印当前时间
     print("-----------------close time: %s" % (time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())))
 ```
+
+```python
+import asyncio
+from playwright.async_api import async_playwright
+import time
+
+
+async def main():
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=False,
+            args=[
+                f"--disable-extensions-except={path_to_extension}",
+                f"--load-extension={path_to_extension}",
+            ]
+        )
+
+        context = await browser.new_context()
+        page = await context.new_page()
+        client = await context.new_cdp_session(page)
+
+        await client.send('Network.enable')
+        await client.send('Network.setBlockedURLs', {'urls': ['*://*.browserscan.net/*']})
+        try:
+            await page.goto("https://www.browserscan.net/", timeout=10000)
+            time.sleep(1000)
+            print(await page.title())
+        except:
+            print("跳转失败")
+
+        time.sleep(100000)
+
+asyncio.run(main())
+```
