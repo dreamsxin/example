@@ -19,3 +19,26 @@ for($i=0; $i -lt 100; $i++) { # 循环100次，可以根据需要调整
 }
 Write-Host "`r Done!" # 循环结束后显示完成信息
 ```
+
+## 启动脚本
+
+`process_monitor.bat`
+```bat
+@echo off
+set "process_name=your_process.exe"
+set "process_path=C:\path\to\your_process.exe"
+
+:check_process
+tasklist /FI "IMAGENAME eq %process_name%" | find /I "%process_name%" >nul
+if %ERRORLEVEL% equ 0 (
+    timeout /t 30 >nul
+    goto check_process
+) else (
+    start "" "%process_path%"
+    goto check_process
+)
+```
+`run_hidden.vbs`
+```vbs
+CreateObject("WScript.Shell").Run "C:\path\to\process_monitor.bat", 0
+```
