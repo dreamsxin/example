@@ -15,3 +15,9 @@ strings -t x program | grep "key_"
 ```shell
 strings libstdc++.so.6 |grep GLIBCXX
 ```
+
+```shell
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+sudo apt update
+sudo apt install gcc-11 g++-11
+```
