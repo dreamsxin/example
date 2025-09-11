@@ -27,7 +27,17 @@ flush privileges;
 
 ### 登录
 ```shell
+export MYSQL_PWD=your_password
 mysql -uroot -p
+```
+
+### 免密码登录
+`/home/xxxx/.my.cnf`
+```conf
+[client]
+user=your_username
+password=your_password
+host=your_host
 ```
 
 ### 显示所有库和表
@@ -248,3 +258,4 @@ mysql -h [服务器IP] -u username -p
 - 避免直接授权`root`用户远程访问，改用普通用户。
 - 限制IP范围：将`'%'`替换为具体IP（如`'192.168.1.%'`）。
 - 云服务器需在安全组中开放3306端口。
+
