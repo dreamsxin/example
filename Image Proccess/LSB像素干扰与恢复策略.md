@@ -11,11 +11,11 @@
 
 ### 数学原理
 
-对于一组像素值 $P_1, P_2, ..., P_n$，我们定义它们的LSB奇偶性为： \text{Parity} = (P_1 \mod 2) \oplus (P_2 \mod 2) \oplus ... \oplus (P_n \mod 2)
+对于一组像素值 $P_1, P_2, ..., P_n$，我们定义它们的LSB奇偶性为： $\text{Parity} = (P_1 \mod 2) \oplus (P_2 \mod 2) \oplus ... \oplus (P_n \mod 2)$
 
 其中 $\oplus$ 表示异或操作。
 
-要隐藏信息位 $b$，我们调整其中一个像素的LSB，使得： (P_1 \mod 2) \oplus (P_2 \mod 2) \oplus ... \oplus (P_n \mod 2) = b
+要隐藏信息位 $b$，我们调整其中一个像素的LSB，使得： $(P_1 \mod 2) \oplus (P_2 \mod 2) \oplus ... \oplus (P_n \mod 2) = b$
 
 恢复时，我们可以计算当前奇偶性，并与隐藏的信息位比较，确定是否需要调整。
 
