@@ -24,6 +24,10 @@ Add the following line to the end of the file:
 
 如果是 ubuntu-desktop 环境
 ```shell
+sudo apt-get install --no-install-recommends ubuntu-desktop gnome-panel gnome-settings-daemon metacity nautilus gnome-terminal -y
+```
+
+```shell
 #!/bin/bash
 export $(dbus-launch)  # 主要是这句
 export XKL_XMODMAP_DISABLE=1 # 可避免键盘映射冲突
