@@ -26,6 +26,12 @@ Invoke-WebRequest [-Uri] <Uri> [-Method <WebRequestMethod>] [-Headers <IDictiona
 Invoke-WebRequest -Uri "https://localhost/xxxx.zip" -OutFile "xxxx.zip"
 ```
 
+**MD5**
+
+```shell
+certutil -hashfile .\image.png MD5
+```
+
 ### 高级功能
 
 - 代理设置‌：可通过 -Proxy 参数配置 HTTP/HTTPS/SOCKS 代理，或通过环境变量 http_proxy、https_proxy 设置。 ‌‌
