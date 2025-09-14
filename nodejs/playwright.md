@@ -1018,3 +1018,67 @@ await page.goto('https://soundcloud.com/tiesto/following');
 await page.waitForTimeout(10000);
 await browser.close();
 ```
+
+## 谷歌
+
+```typescript
+import { chromium, devices } from 'playwright';
+
+(async () => {
+  // 模拟iPhone 11设备
+  const iPhone11 = devices['iPhone 11'];
+
+  // 启动浏览器，并添加一些启动参数以增强隐蔽性
+  const browser = await chromium.launch({
+    headless: false, // 调试时可设置为 false 观察行为
+    args: [
+      '--disable-blink-features=AutomationControlled', // 重要：禁用自动化控制特征
+      '--disable-web-security', // 可选：禁用Web安全策略，根据需要设置
+      '--no-sandbox',
+      '--disable-setuid-sandbox'
+    ]
+  });
+
+  // 使用模拟设备的参数创建浏览器上下文
+  const context = await browser.newContext({
+   // ...iPhone11, // 应用iPhone 11的预设参数（userAgent, viewport, deviceScaleFactor等）
+    //permissions: ['geolocation'], // 如果需要，可以模拟地理位置权限
+    //locale: 'en-US', // 设置语言环境
+    //timezoneId: 'America/Los_Angeles' // 设置时区
+  });
+
+  // 屏蔽某些资源类型以加速加载（可选，但可能影响页面渲染）
+  await context.route('**/*.{png,jpg,jpeg,svg,gif,webp}', route => route.abort()); // 可阻止图片
+
+  // 创建新页面
+  const page = await context.newPage();
+
+  // 进一步覆盖navigator.webdriver属性（早期方法，不一定始终有效）
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'webdriver', {
+      get: () => undefined
+    });
+  });
+
+  try {
+    // 导航到谷歌
+    await page.goto('https://www.google.com/search?q=python', { waitUntil: 'domcontentloaded' });
+
+    // 模拟人类输入速度进行搜索（例如）
+    await page.type('textarea[name="q"]', 'playwright automation', { delay: 100 }); // 延迟100毫秒输入
+    await page.waitForTimeout(1000 + Math.random() * 1000); // 随机等待1-2秒
+    await page.click('input[name="btnK"]');
+
+    // 等待搜索结果出现
+    await page.waitForSelector('#search');
+
+    // 可以继续其他操作...
+
+  } catch (error) {
+    console.error('An error occurred:', error);
+  } finally {
+    // 调试时可注释掉close，以便观察浏览器状态
+    await browser.close();
+  }
+})();
+```
