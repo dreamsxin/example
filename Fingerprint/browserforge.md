@@ -1,2 +1,4 @@
-- https://github.com/apify/fingerprint-suite/blob/master/packages/fingerprint-injector/src/utils.js
 - https://github.com/daijro/browserforge
+- https://github.com/apify/fingerprint-suite/blob/master/apify_fingerprint_datapoints/__init__.py
+- https://github.com/apify/fingerprint-suite/blob/master/packages/fingerprint-injector/src/utils.js
+- https://github.com/apify/fingerprint-suite/blob/master/packages/fingerprint-generator/src/data_files/fingerprint-network-definition.zip
