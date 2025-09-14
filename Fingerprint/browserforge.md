@@ -1,0 +1,2 @@
+- https://github.com/apify/fingerprint-suite/blob/master/packages/fingerprint-injector/src/utils.js
+- https://github.com/daijro/browserforge
