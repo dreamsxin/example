@@ -1021,6 +1021,15 @@ await browser.close();
 
 ## 谷歌
 
+- --headless=new 或 --headless=old: 以无头模式运行（无图形界面）。
+- --window-size=1280,720: 设置浏览器窗口尺寸。
+- --start-maximized: 启动时最大化窗口。
+- --lang=en-US: 设置浏览器语言。
+- --proxy-server=http://proxy.example.com:8080: 设置代理服务器。
+- --disable-web-security: 禁用同源策略（用于测试，不安全）。
+- --disable-extensions: 禁用所有扩展。
+- --disable-blink-features=AutomationControlled: 尝试隐藏自动化特征（但并非绝对有效）。
+
 ```typescript
 import { chromium, devices } from 'playwright';
 
