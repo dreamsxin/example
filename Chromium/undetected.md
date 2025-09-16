@@ -10,3 +10,4 @@
 - https://github.com/kasmtech/KasmVNC
 - https://github.com/kasmtech/workspaces-core-images
 - https://github.com/AlloryDante/undetected-browser
+- https://github.com/adryfish/fingerprint-chromium
