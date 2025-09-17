@@ -63,3 +63,5 @@ docker exec -it <容器ID> /bin/bash -c 'export HTTP_PROXY="http://user:pass@pro
 $ npm run build
 $ npm run install:debugger #or npm install:dev
 ```
+
+`docker run -p 3001:3001 ghcr.io/browserless/multi`
