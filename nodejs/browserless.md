@@ -56,3 +56,10 @@ docker exec -it <容器ID> /bin/bash -c 'export HTTP_PROXY="http://user:pass@pro
 ## debugger
 
 - https://chrome.browserless.io/debugger/
+
+进入容器运行
+
+```shell
+$ npm run build
+$ npm run install:debugger #or npm install:dev
+```
