@@ -38,3 +38,21 @@ export const availableBrowsers = Promise.all([
 ```
 - browserless\src\browsers\browsers.cdp.ts
 - browserless\src\browsers\browsers.playwright.ts
+
+## Docker
+
+```shell
+docker run -p 3000:3000 ghcr.io/browserless/chromium
+docker run -d \
+  -p 3000:3000 \
+  -e HTTP_PROXY="http://your_proxy_address:proxy_port" \
+  -e HTTPS_PROXY="http://your_proxy_address:proxy_port" \
+  -e NO_PROXY="localhost,127.0.0.1" \
+  browserless/chromium
+
+docker exec -it <容器ID> /bin/bash -c 'export HTTP_PROXY="http://user:pass@proxy:port"'
+```
+
+## debugger
+
+- https://chrome.browserless.io/debugger/
