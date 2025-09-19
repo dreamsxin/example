@@ -1,4 +1,7 @@
 
+## API
+- https://docs.firecrawl.dev/api-reference/endpoint/search
+
 ## 安装
 
 - https://github.com/firecrawl/firecrawl/blob/main/SELF_HOST.md
