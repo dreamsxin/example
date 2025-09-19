@@ -12,7 +12,9 @@ docker-compose up -d  # 启动服务
 
 ## 验证与使用
 - 访问http://localhost:3002/test验证服务是否正常运行
-- API调用示例：通过localhost:3002/v1/crawl接口抓取网页内容
+- API调用示例：
+  - http://localhost:3002/v1/crawl
+  - http://localhost:3002/v2/scrape
 - 管理界面：http://localhost:3002/admin/@/queues查看任务队列状态
 
 ## 配置
