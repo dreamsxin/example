@@ -57,8 +57,6 @@ sudo cat ubuntu-14.04-x86_64-minimal.tar.gz  |docker import - ubuntu:14.04
 sudo docker run -ti -p 8080:80 dreamsxin/phalcon:v1.3 -v
 # 当容器启动立刻停止时，可以自定义启动/bin/bash，进行调试
 sudo docker run -ti -p 8080:80 dreamsxin/phalcon:v1.3 /bin/sh
-# 给已启动容器映射端口
-docker container update --publish-add 3000:3000 <container_id_or_name>
 ```
 
 可以在 docker run 的时候用 `--name` 参数指定容器的名称。
@@ -107,4 +105,5 @@ sudo docker rm xxxx
 https://github.com/weaveworks/scope
 
 https://github.com/swarmpit/swarmpit
+
 
