@@ -78,7 +78,7 @@ docker pull mindsdb/mindsdb:latest
 ### 自定义配置文件
 
 `mindsdb_config.json`
-````json
+```json
 {
     "config_version":"1.4",
     "paths": {
