@@ -14,3 +14,9 @@ PUT /your_index_name/_settings
   "index.lifecycle.rollover_alias": null
 }
 ```
+
+## 单机
+yellow 变 green
+```shell
+curl -X PUT -H 'content-type:application/json' 'localhost:9200/_settings' -d '{ "index" : { "number_of_replicas" : 0 }}'
+```
