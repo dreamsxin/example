@@ -20,3 +20,13 @@ yellow 变 green
 ```shell
 curl -X PUT -H 'content-type:application/json' 'localhost:9200/_settings' -d '{ "index" : { "number_of_replicas" : 0 }}'
 ```
+
+## 
+
+```shell
+curl -X GET "localhost:9200/news/_ilm/explain"
+curl -X GET "localhost:9200/_ilm/policy"
+curl -X GET "localhost:9200/_cat/indices?v&h=index,settings.index.lifecycle.name"
+curl -X POST "localhost:9200/_ilm/stop"
+curl -X POST "localhost:9200/news/_ilm/remove"
+```
