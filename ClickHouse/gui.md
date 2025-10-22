@@ -1,0 +1,3 @@
+- https://github.com/caioricciuti/ch-ui?utm_source=ch-ui&utm_medium=sidebar
+- https://github.com/CodePhiliaX/Chat2DB
+- https://github.com/timestored/qstudio
