@@ -71,6 +71,8 @@ docker stop xxxxx
 
 ```shell
 sudo docker start xxxxx
+# 启动并附加到容器
+docker start -ai <容器名称>
 ```
 
 ## 进入容器 
@@ -105,5 +107,6 @@ sudo docker rm xxxx
 https://github.com/weaveworks/scope
 
 https://github.com/swarmpit/swarmpit
+
 
 
