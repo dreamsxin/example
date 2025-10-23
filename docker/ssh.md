@@ -33,6 +33,14 @@ RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/
 # 保持 SSH 服务在后台运行
 RUN sed -i 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' /etc/pam.d/sshd
 
+# 创建数据目录和配置目录作为卷
+RUN mkdir -p /data && \
+    mkdir -p /config && \
+    mkdir -p /logs
+
+# 定义数据卷
+VOLUME ["/data", "/config", "/logs"]
+
 # 暴露 SSH 端口
 EXPOSE 22
 
