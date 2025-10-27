@@ -12,3 +12,5 @@
 - https://github.com/AlloryDante/undetected-browser
 - https://github.com/adryfish/fingerprint-chromium
 - https://github.com/ClericPy/ichrome
+- https://github.com/rebrowser/rebrowser-playwright/tree/1.52.0
+- https://github.com/rebrowser/rebrowser-patches
