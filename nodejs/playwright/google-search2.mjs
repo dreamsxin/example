@@ -30,7 +30,11 @@ const humanDelay = async (min = 1000, max = 3000) => {
     };
 
     // 访问Google
-    await page.goto('https://www.google.com');
+    page.goto('https://www.google.com');
+    
+    // 需要添加等待确保页面加载完成
+    await page.waitForLoadState('domcontentloaded');
+
     await humanDelay();
 
     // 输入搜索词
