@@ -11,3 +11,4 @@
 - https://github.com/kasmtech/workspaces-core-images
 - https://github.com/AlloryDante/undetected-browser
 - https://github.com/adryfish/fingerprint-chromium
+- https://github.com/ClericPy/ichrome
