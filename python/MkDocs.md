@@ -2,6 +2,37 @@
 
 MkDocs 是一个快速、简单、非常漂亮的静态站点生成器，专门用于构建项目文档。文档源文件使用 Markdown 编写，并通过一个 YAML 配置文件进行配置。
 
+# Welcome to MkDocs
+
+For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+
+## Commands
+
+* `mkdocs new [dir-name]` - Create a new project.
+* `mkdocs serve` - Start the live-reloading docs server.
+* `mkdocs build` - Build the documentation site.
+* `mkdocs -h` - Print help message and exit.
+
+- https://github.com/mondeja/mkdocs-include-markdown-plugin
+
+```shell
+pip install mkdocs
+pip install mkdocs-material
+pip install mkdocs-include-markdown-plugin
+```
+
+## 运行
+
+```shell
+mkdocs serve
+```
+
+## 编译
+
+```shell
+mkdocs build
+```
+
 ---
 
 1. 安装 MkDocs
