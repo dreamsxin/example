@@ -1,0 +1,2 @@
+- https://github.com/sarperavci/GoogleRecaptchaBypass
+- https://github.com/xHossein/PyPasser
