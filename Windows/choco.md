@@ -6,3 +6,9 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManage
 choco -v
 choco install consul
 ```
+
+## ffmpeg
+
+```shell
+choco install ffmpeg-full
+```
