@@ -256,3 +256,9 @@ curl -w "@~/curl_time.txt" -s -H "Content-Type: application/json" www.baidu.com
 - time_appconnect： 这是SSL握手完成所花费的总时间。如果这个值非常高（例如 > 0.5s），那么问题极有可能出在SSL握手环节。
 - time_starttransfer： 从请求开始到服务器返回第一个字节的时间。如果这个值高但 time_appconnect 也高，说明延迟主要耗在SSL握手上。
 - time_connect： 建立TCP连接的时间。这个时间应该很短（ms级），如果它很高，可能是网络问题。
+
+### 测试代理
+
+```sh
+curl -x http://xxx:xxx@xxxx:xxxx -o /dev/null -s -w "DNS解析: %{time_namelookup}s\n建立连接: %{time_connect}s\nSSL握手: %{time_appconnect}s\n准备传输: %{time_pretransfer}s\n开始传输: %{time_starttransfer}s\n总时间: %{time_total}s\n"  'https://www.google.com/search?q=test1xxx'
+```
