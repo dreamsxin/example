@@ -262,3 +262,150 @@ curl -w "@~/curl_time.txt" -s -H "Content-Type: application/json" www.baidu.com
 ```sh
 curl -x http://xxx:xxx@xxxx:xxxx -o /dev/null -s -w "DNS解析: %{time_namelookup}s\n建立连接: %{time_connect}s\nSSL握手: %{time_appconnect}s\n准备传输: %{time_pretransfer}s\n开始传输: %{time_starttransfer}s\n总时间: %{time_total}s\n"  'https://www.google.com/search?q=test1xxx'
 ```
+
+以下是循环测试 100 次的几种方法：
+
+## 1. 基础循环测试
+
+```bash
+for i in {1..100}; do
+    echo "测试第 $i 次:"
+    curl -w "\
+DNS 解析: %{time_namelookup}s\n\
+连接建立: %{time_connect}s\n\
+SSL握手: %{time_appconnect}s\n\
+第一字节: %{time_starttransfer}s\n\
+总时间: %{time_total}s\n\n" \
+    -o /dev/null -s "https://example.com"
+done
+```
+
+## 2. 只输出关键数据（便于分析）
+
+```bash
+for i in {1..100}; do
+    curl -w "第$i次:dns:%{time_namelookup},connect:%{time_connect},ssl:%{time_appconnect},first_byte:%{time_starttransfer},total:%{time_total}\n" \
+    -o /dev/null -s "https://example.com"
+done
+```
+
+## 3. 保存到文件并统计
+
+```bash
+# 清空或创建结果文件
+> curl_results.txt
+
+# 执行100次测试
+for i in {1..100}; do
+    echo "第 $i 次测试..." 
+    curl -w "dns:%{time_namelookup},connect:%{time_connect},ssl:%{time_appconnect},first_byte:%{time_starttransfer},total:%{time_total}\n" \
+    -o /dev/null -s "https://example.com" >> curl_results.txt
+done
+
+echo "测试完成！结果已保存到 curl_results.txt"
+```
+
+## 4. 带进度显示的版本
+
+```bash
+total=100
+for i in $(seq 1 $total); do
+    # 显示进度
+    echo -n "进度: $i/$total "
+    
+    # 执行测试并输出结果
+    curl -w "dns:%.3f,connect:%.3f,ssl:%.3f,first_byte:%.3f,total:%.3f\n" \
+    -o /dev/null -s "https://example.com"
+    
+    # 可选：添加延迟，避免对服务器造成压力
+    sleep 0.1
+done
+```
+
+## 5. 使用函数封装（推荐）
+
+```bash
+#!/bin/bash
+
+test_url() {
+    local url="$1"
+    local count="${2:-100}"
+    
+    echo "开始测试 $url, 共 $count 次..."
+    echo "=========================================="
+    
+    # 测试头
+    echo "次数 DNS解析 TCP连接 SSL握手 第一字节 总时间"
+    echo "---- -------- -------- -------- -------- --------"
+    
+    for i in $(seq 1 $count); do
+        printf "%-4d" $i
+        curl -w " %{time_namelookup} %{time_connect} %{time_appconnect} %{time_starttransfer} %{time_total}\n" \
+        -o /dev/null -s "$url"
+    done
+}
+
+# 使用示例
+test_url "https://example.com" 100
+```
+
+## 6. 生成统计报告
+
+```bash
+#!/bin/bash
+
+URL="https://example.com"
+COUNT=100
+RESULTS_FILE="curl_test_results.txt"
+
+# 清空结果文件
+> "$RESULTS_FILE"
+
+echo "开始性能测试: $URL"
+echo "测试次数: $COUNT"
+echo "开始时间: $(date)"
+echo "=" * 50
+
+# 执行测试
+for i in $(seq 1 $COUNT); do
+    echo -n "."
+    curl -w "%{time_namelookup} %{time_connect} %{time_appconnect} %{time_starttransfer} %{time_total}\n" \
+    -o /dev/null -s "$URL" >> "$RESULTS_FILE"
+    
+    # 每10次换行显示进度
+    if [ $((i % 10)) -eq 0 ]; then
+        echo " $i/$COUNT"
+    fi
+done
+
+echo
+echo "测试完成!"
+echo "结果文件: $RESULTS_FILE"
+
+# 生成统计信息
+echo
+echo "统计信息:"
+echo "---------"
+awk '{
+    dns_sum += $1; connect_sum += $2; ssl_sum += $3; 
+    first_byte_sum += $4; total_sum += $5;
+    dns_arr[NR] = $1; connect_arr[NR] = $2; ssl_arr[NR] = $3;
+    first_byte_arr[NR] = $4; total_arr[NR] = $5;
+} 
+END {
+    asort(dns_arr); asort(connect_arr); asort(ssl_arr);
+    asort(first_byte_arr); asort(total_arr);
+    
+    print "DNS解析:   平均 " dns_sum/NR "s, 最小 " dns_arr[1] "s, 最大 " dns_arr[NR] "s, 中位数 " dns_arr[int(NR/2)] "s"
+    print "TCP连接:   平均 " connect_sum/NR "s, 最小 " connect_arr[1] "s, 最大 " connect_arr[NR] "s, 中位数 " connect_arr[int(NR/2)] "s"
+    print "SSL握手:   平均 " ssl_sum/NR "s, 最小 " ssl_arr[1] "s, 最大 " ssl_arr[NR] "s, 中位数 " ssl_arr[int(NR/2)] "s"
+    print "第一字节:  平均 " first_byte_sum/NR "s, 最小 " first_byte_arr[1] "s, 最大 " first_byte_arr[NR] "s, 中位数 " first_byte_arr[int(NR/2)] "s"
+    print "总时间:    平均 " total_sum/NR "s, 最小 " total_arr[1] "s, 最大 " total_arr[NR] "s, 中位数 " total_arr[int(NR/2)] "s"
+}' "$RESULTS_FILE"
+```
+
+## 7. 简单的一行命令
+
+```bash
+for i in {1..100}; do curl -w "dns:%{time_namelookup} total:%{time_total}\n" -so /dev/null https://example.com; done
+```
