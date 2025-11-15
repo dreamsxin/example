@@ -1,5 +1,7 @@
 # AST还原JavaScript代码教程
 
+- https://github.com/sxzz/ast-explorer
+
 AST（抽象语法树）还原是将混淆或压缩的JavaScript代码还原为可读性更高的形式的过程。以下是详细的教程：
 
 ## 1. 理解AST基础
