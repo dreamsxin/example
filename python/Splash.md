@@ -246,4 +246,280 @@ function main(splash)
 end
 ```
 
-这个教程涵盖了 Splash 的基本使用和高级功能，可以帮助你开始使用 Splash 来处理 JavaScript 渲染的网页。
+## 1. 基础渲染端点
+
+### 1.1 render.html - 获取渲染后的 HTML
+```bash
+# 基本用法
+curl "http://localhost:8050/render.html?url=https://example.com"
+
+# 带等待时间
+curl "http://localhost:8050/render.html?url=https://example.com&wait=2"
+
+# 完整参数示例
+curl "http://localhost:8050/render.html?\
+url=https://example.com&\
+wait=2&\
+timeout=30&\
+images=1&\
+js=1&\
+proxy=proxy.example.com:8080"
+```
+
+### 1.2 render.png - 获取页面截图
+```bash
+# 基本截图
+curl "http://localhost:8050/render.png?url=https://example.com" -o screenshot.png
+
+# 自定义尺寸和质量的截图
+curl "http://localhost:8050/render.png?\
+url=https://example.com&\
+width=1024&\
+height=768&\
+render_all=1&\
+wait=2" -o fullpage.png
+```
+
+### 1.3 render.jpeg - 获取 JPEG 格式截图
+```bash
+curl "http://localhost:8050/render.jpeg?\
+url=https://example.com&\
+width=800&\
+height=600&\
+quality=85" -o screenshot.jpg
+```
+
+### 1.4 render.har - 获取页面 HAR 数据
+```bash
+curl "http://localhost:8050/render.har?\
+url=https://example.com&\
+wait=1" -o page.har
+```
+
+### 1.5 render.json - 获取多种格式数据
+```bash
+curl "http://localhost:8050/render.json?\
+url=https://example.com&\
+html=1&\
+png=1&\
+har=1&\
+wait=1"
+```
+
+## 2. 代理设置详细说明
+
+### 2.1 HTTP/HTTPS 代理
+```bash
+# 基本代理设置
+curl "http://localhost:8050/render.html?\
+url=https://httpbin.org/ip&\
+proxy=http://proxy.example.com:8080"
+
+# 需要认证的代理
+curl "http://localhost:8050/render.html?\
+url=https://httpbin.org/ip&\
+proxy=http://username:password@proxy.example.com:8080"
+```
+
+### 2.2 SOCKS 代理
+```bash
+# SOCKS5 代理
+curl "http://localhost:8050/render.html?\
+url=https://httpbin.org/ip&\
+proxy=socks5://127.0.0.1:1080"
+
+# 带认证的 SOCKS5 代理
+curl "http://localhost:8050/render.html?\
+url=https://httpbin.org/ip&\
+proxy=socks5://user:pass@127.0.0.1:1080"
+```
+
+### 2.3 代理白名单/黑名单
+```lua
+# 通过 Lua 脚本控制代理使用
+curl -X POST http://localhost:8050/execute \
+-H 'Content-Type: application/json' \
+-d '{
+  "lua_source": "function main(splash)\n  splash:on_request(function(request)\n    -- 只对特定域名使用代理\n    if string.find(request.url, \"target-site.com\") then\n      request:set_proxy{\"http://proxy.example.com:8080\"}\n    end\n  end)\n  splash:go(\"https://httpbin.org/ip\")\n  return splash:html()\nend"
+}'
+```
+
+## 3. 请求头设置
+
+### 3.1 自定义请求头
+```bash
+# 通过 headers 参数
+curl -G "http://localhost:8050/render.html" \
+--data-urlencode "url=https://httpbin.org/headers" \
+--data-urlencode "headers={\"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36\", \"Accept-Language\": \"en-US,en;q=0.9\"}"
+```
+
+### 3.2 使用 Lua 脚本设置请求头
+```lua
+curl -X POST http://localhost:8050/execute \
+-H 'Content-Type: application/json' \
+-d '{
+  "lua_source": "function main(splash)\n  splash:set_user_agent(\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36\")\n  splash:set_custom_headers({\n    [\"X-Custom-Header\"] = \"CustomValue\",\n    [\"Accept\"] = \"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\"\n  })\n  splash:go(\"https://httpbin.org/headers\")\n  return splash:html()\nend"
+}'
+```
+
+## 4. 认证处理
+
+### 4.1 HTTP 基本认证
+```bash
+# 方法1: 直接在 URL 中包含认证信息
+curl "http://localhost:8050/render.html?\
+url=http://username:password@example.com/protected"
+
+# 方法2: 通过 Lua 脚本
+curl -X POST http://localhost:8050/execute \
+-H 'Content-Type: application/json' \
+-d '{
+  "lua_source": "function main(splash)\n  splash:set_http_user_agent(\"Mozilla/5.0\")\n  splash:set_http_raw_headers({\n    \"Authorization\" = \"Basic \" .. splash:base64_encode(\"username:password\")\n  })\n  splash:go(\"http://example.com/protected\")\n  return splash:html()\nend"
+}'
+```
+
+### 4.2 Cookie 认证
+```lua
+curl -X POST http://localhost:8050/execute \
+-H 'Content-Type: application/json' \
+-d '{
+  "lua_source": "function main(splash)\n  -- 先登录获取 Cookie\n  splash:go(\"https://example.com/login\")\n  splash:wait(1)\n  \n  -- 填写登录表单\n  splash:send_text(\"#username\", \"my_username\")\n  splash:send_text(\"#password\", \"my_password\")\n  splash:wait(0.5)\n  \n  -- 提交表单\n  splash:runjs(\"document.querySelector(\"#login-form\").submit()\")\n  splash:wait(2)\n  \n  -- 访问需要认证的页面\n  splash:go(\"https://example.com/dashboard\")\n  return splash:html()\nend"
+}'
+```
+
+## 5. 高级过滤和资源控制
+
+### 5.1 资源过滤
+```lua
+curl -X POST http://localhost:8050/execute \
+-H 'Content-Type: application/json' \
+-d '{
+  "lua_source": "function main(splash)\n  -- 阻止图片和 CSS 加载\n  splash:on_request(function(request)\n    if request.url:find(\".css$\") or request.url:find(\".png$\") or request.url:find(\".jpg$\") then\n      request:abort()\n    end\n    -- 阻止特定域名\n    if request.url:find(\"ads.example.com\") then\n      request:abort()\n    end\n  end)\n  \n  splash:go(\"https://example.com\")\n  splash:wait(2)\n  return splash:html()\nend"
+}'
+```
+
+### 5.2 请求重写
+```lua
+curl -X POST http://localhost:8050/execute \
+-H 'Content-Type: application/json' \
+-d '{
+  "lua_source": "function main(splash)\n  splash:on_request(function(request)\n    -- 修改请求头\n    request:set_header(\"User-Agent\", \"Custom Bot\")\n    \n    -- 重写 URL\n    if request.url:find(\"old-domain.com\") then\n      request:set_url(string.gsub(request.url, \"old-domain.com\", \"new-domain.com\"))\n    end\n  end)\n  \n  splash:go(\"https://example.com\")\n  return splash:html()\nend"
+}'
+```
+
+## 6. 执行 JavaScript
+
+### 6.1 页面交互
+```lua
+curl -X POST http://localhost:8050/execute \
+-H 'Content-Type: application/json' \
+-d '{
+  "lua_source": "function main(splash)\n  splash:go(\"https://example.com\")\n  splash:wait(1)\n  \n  -- 点击按钮\n  splash:runjs(\"document.querySelector(\"#load-more\").click()\")\n  splash:wait(2)\n  \n  -- 滚动页面\n  splash:runjs(\"window.scrollTo(0, document.body.scrollHeight)\")\n  splash:wait(1)\n  \n  -- 获取动态数据\n  local data = splash:evaljs(\"window.someData || null\")\n  \n  return {\n    html = splash:html(),\n    dynamic_data = data,\n    url = splash:url()\n  }\nend"
+}'
+```
+
+## 7. 错误处理和调试
+
+### 7.1 错误处理
+```lua
+curl -X POST http://localhost:8050/execute \
+-H 'Content-Type: application/json' \
+-d '{
+  "lua_source": "function main(splash)\n  local ok, reason = splash:go(\"https://example.com\")\n  if not ok then\n    return {error = reason, success = false}\n  end\n  \n  -- 检查元素是否存在\n  local element_exists = splash:select(\"#main-content\")\n  if not element_exists then\n    return {error = \"Element not found\", success = false}\n  end\n  \n  splash:wait(2)\n  return {\n    success = true,\n    html = splash:html(),\n    title = splash:evaljs(\"document.title\")\n  }\nend"
+}'
+```
+
+### 7.2 调试信息
+```lua
+curl -X POST http://localhost:8050/execute \
+-H 'Content-Type: application/json' \
+-d '{
+  "lua_source": "function main(splash)\n  splash:go(\"https://example.com\")\n  \n  -- 获取控制台日志\n  local console_logs = {}\n  splash:on_console_message(function(message)\n    table.insert(console_logs, message)\n  end)\n  \n  splash:wait(2)\n  \n  return {\n    html = splash:html(),\n    console_logs = console_logs,\n    requested_urls = splash:history(),\n    last_url = splash:url()\n  }\nend"
+}'
+```
+
+## 8. 性能优化参数
+
+### 8.1 缓存控制
+```bash
+# 禁用缓存
+curl "http://localhost:8050/render.html?\
+url=https://example.com&\
+wait=1&\
+cache_profile=no_cache"
+
+# 使用缓存
+curl "http://localhost:8050/render.html?\
+url=https://example.com&\
+cache_profile=per_domain"
+```
+
+### 8.2 内存和性能限制
+```bash
+# 限制资源使用
+curl -X POST http://localhost:8050/execute \
+-H 'Content-Type: application/json' \
+-d '{
+  "timeout": 60,
+  "lua_source": "function main(splash)\n  splash:go(\"https://example.com\")\n  splash:wait(2)\n  return splash:html()\nend",
+  "filters": "nostore"
+}'
+```
+
+## 9. 批量处理
+
+### 9.1 使用 Python 批量处理
+```python
+import requests
+import json
+
+def batch_render(urls):
+    splash_url = "http://localhost:8050/execute"
+    results = []
+    
+    for url in urls:
+        lua_script = f"""
+        function main(splash)
+            splash:go("{url}")
+            splash:wait(2)
+            return {{
+                url = splash:url(),
+                title = splash:evaljs("document.title"),
+                html = splash:html()
+            }}
+        end
+        """
+        
+        response = requests.post(splash_url, json={
+            "lua_source": lua_script,
+            "timeout": 30
+        })
+        
+        if response.status_code == 200:
+            results.append(response.json())
+        else:
+            results.append({"error": f"Failed to render {url}"})
+    
+    return results
+
+# 使用示例
+urls = ["https://example.com", "https://example.org", "https://example.net"]
+results = batch_render(urls)
+print(json.dumps(results, indent=2))
+```
+
+## 10. 监控和健康检查
+
+### 10.1 健康检查端点
+```bash
+# 检查 Splash 状态
+curl "http://localhost:8050/_ping"
+
+# 获取统计信息
+curl "http://localhost:8050/_debug"
+
+# 获取活跃任务数
+curl "http://localhost:8050/_active_tasks"
+```
+
