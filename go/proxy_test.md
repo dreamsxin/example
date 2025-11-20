@@ -1,3 +1,13 @@
+```bash
+./proxy-test \
+  -proxy http://proxy.example.com:8080 \
+  -target http://httpbin.org/get \
+  -concurrency 10 \
+  -requests 1000 \
+  -timeout 30s \
+  -verbose \
+  -output result.txt
+```
 ```go
 package main
 
