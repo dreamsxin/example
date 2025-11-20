@@ -268,3 +268,15 @@ ax[3].plot(x, y4, c='m', ls='-.', lw=2)
 
 plt.show()
 ```
+
+## Windows 中文乱码问题
+下载 SimSun https://www.webfontfree.com/cn/download/SimSun
+修改 `D:\Program Files\python313\Lib\site-packages\matplotlib\mpl-data\matplotlibrc`
+
+```ini
+#font.serif:      SimSun, DejaVu Serif, Bitstream Vera Serif, Computer Modern Roman, New Century Schoolbook, Century Schoolbook L, Utopia, ITC Bookman, Bookman, Nimbus Roman No9 L, Times New Roman, Times, Palatino, Charter, serif
+#font.sans-serif: SimSun, DejaVu Sans, Bitstream Vera Sans, Computer Modern Sans Serif, Lucida Grande, Verdana, Geneva, Lucid, Arial, Helvetica, Avant Garde, sans-serif
+#font.cursive:    SimSun, Apple Chancery, Textile, Zapf Chancery, Sand, Script MT, Felipa, Comic Neue, Comic Sans MS, cursive
+#font.fantasy:    SimSun, Chicago, Charcoal, Impact, Western, xkcd script, fantasy
+#font.monospace:  SimSun, DejaVu Sans Mono, Bitstream Vera Sans Mono, Computer Modern Typewriter, Andale Mono, Nimbus Mono L, Courier New, Courier, Fixed, Terminal, monospace
+```
