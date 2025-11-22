@@ -1,3 +1,5 @@
+- https://github.com/chromiumembedded/cef
+- https://github.com/CefView/QCefView
 - https://github.com/energye/energy
 - https://github.com/richardwilkes/cef
 - https://github.com/go-rod/rod
