@@ -317,3 +317,208 @@ free -h
 # 减少连接数或线程数
 wrk -t2 -c100 -d30s http://localhost:8080/
 ```
+
+## 使用 lua
+
+我来介绍几种使用wrk进行随机关键词测试的方法：
+
+### 1. 使用Lua脚本实现随机关键词
+
+#### 基本Lua脚本示例
+```lua
+-- random_keywords.lua
+math.randomseed(os.time())
+
+-- 定义关键词列表
+keywords = {
+    "technology", "programming", "software", 
+    "development", "testing", "performance",
+    "optimization", "benchmark", "analysis"
+}
+
+request = function()
+    -- 随机选择关键词
+    local random_index = math.random(1, #keywords)
+    local keyword = keywords[random_index]
+    
+    -- 构建URL路径
+    local path = "/search?q=" .. keyword
+    
+    return wrk.format("GET", path)
+end
+```
+
+#### 使用方式
+```bash
+wrk -t4 -c100 -d30s -s random_keywords.lua http://your-api.com
+```
+
+### 2. 动态生成随机关键词
+
+```lua
+-- dynamic_keywords.lua
+math.randomseed(os.time())
+
+function random_string(length)
+    local chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+    local result = ""
+    for i = 1, length do
+        local rand_index = math.random(1, #chars)
+        result = result .. chars:sub(rand_index, rand_index)
+    end
+    return result
+end
+
+request = function()
+    -- 生成长度3-10的随机关键词
+    local keyword_length = math.random(3, 10)
+    local keyword = random_string(keyword_length)
+    
+    local path = "/api/search?keyword=" .. keyword
+    return wrk.format("GET", path)
+end
+```
+
+### 3. 从文件读取关键词
+
+#### 关键词文件 (keywords.txt)
+```
+apple
+banana
+orange
+computer
+keyboard
+programming
+```
+
+#### Lua脚本
+```lua
+-- file_keywords.lua
+math.randomseed(os.time())
+
+-- 读取关键词文件
+function load_keywords(filename)
+    local keywords = {}
+    local file = io.open(filename, "r")
+    if file then
+        for line in file:lines() do
+            table.insert(keywords, line)
+        end
+        file:close()
+    end
+    return keywords
+end
+
+keywords = load_keywords("keywords.txt")
+
+request = function()
+    local random_index = math.random(1, #keywords)
+    local keyword = keywords[random_index]
+    local path = "/search?q=" .. wrk.urlencode(keyword)
+    return wrk.format("GET", path)
+end
+```
+
+### 4. 高级随机测试脚本
+
+```lua
+-- advanced_random_test.lua
+math.randomseed(os.time())
+
+-- 配置参数
+local config = {
+    base_url = "http://your-api.com",
+    endpoints = {
+        "/search",
+        "/api/v1/products",
+        "/api/v1/users"
+    },
+    search_params = {"q", "keyword", "search", "query"}
+}
+
+function get_random_endpoint()
+    return config.endpoints[math.random(1, #config.endpoints)]
+end
+
+function get_random_param()
+    return config.search_params[math.random(1, #config.search_params)]
+end
+
+function generate_random_keyword()
+    local lengths = {3, 4, 5, 6, 7, 8}
+    local length = lengths[math.random(1, #lengths)]
+    local chars = "abcdefghijklmnopqrstuvwxyz"
+    local result = ""
+    
+    for i = 1, length do
+        result = result .. chars:sub(math.random(1, #chars), math.random(1, #chars))
+    end
+    
+    return result
+end
+
+request = function()
+    local endpoint = get_random_endpoint()
+    local param = get_random_param()
+    local keyword = generate_random_keyword()
+    
+    local url = endpoint .. "?" .. param .. "=" .. keyword
+    
+    -- 随机添加其他参数
+    if math.random() > 0.7 then
+        url = url .. "&page=" .. math.random(1, 5)
+    end
+    
+    if math.random() > 0.5 then
+        url = url .. "&limit=" .. math.random(10, 50)
+    end
+    
+    return wrk.format("GET", url)
+end
+
+-- 响应处理（可选）
+response = function(status, headers, body)
+    if status ~= 200 then
+        print("Error: " .. status)
+    end
+end
+```
+
+### 5. POST请求随机数据测试
+
+```lua
+-- post_random.lua
+math.randomseed(os.time())
+
+function random_string(length)
+    local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    local result = ""
+    for i = 1, length do
+        result = result .. chars:sub(math.random(1, #chars), math.random(1, #chars))
+    end
+    return result
+end
+
+request = function()
+    local keyword = random_string(math.random(5, 15))
+    
+    local body = string.format('{"query": "%s", "type": "search"}', keyword)
+    local headers = {}
+    headers["Content-Type"] = "application/json"
+    
+    return wrk.format("POST", "/api/search", headers, body)
+end
+```
+
+### 完整的测试命令示例
+
+```bash
+# 基础测试
+wrk -t12 -c100 -d30s -s random_keywords.lua http://localhost:8080
+
+# 带延迟统计
+wrk -t12 -c100 -d30s --latency -s random_keywords.lua http://localhost:8080
+
+# 输出详细结果
+wrk -t12 -c100 -d60s --latency --timeout 10s -s advanced_random_test.lua http://api.example.com
+```
