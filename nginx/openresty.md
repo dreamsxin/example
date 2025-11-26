@@ -5,338 +5,8 @@
 `wget -qO - https://openresty.org/package/pubkey.gpg | gpg --dearmor -o /etc/apt/trusted.gpg.d/openresty.gpg`
 
 ## 负载均衡
-- https://github.com/OpenNJet/OpenNJet/blob/main/lualib/lib/njt/balancer.lua
-Name
-====
 
-njt.balancer - Lua API for defining dynamic upstream balancers in Lua
-
-```lua
--- Copyright (C) Yichun Zhang (agentzh)
-
-
-local base = require "resty.core.base"
-base.allows_subsystem('http', 'stream')
-
-
-local ffi = require "ffi"
-local C = ffi.C
-local ffi_str = ffi.string
-local errmsg = base.get_errmsg_ptr()
-local FFI_OK = base.FFI_OK
-local FFI_ERROR = base.FFI_ERROR
-local int_out = ffi.new("int[1]")
-local get_request = base.get_request
-local error = error
-local type = type
-local tonumber = tonumber
-local max = math.max
-local subsystem = njt.config.subsystem
-local njt_lua_ffi_balancer_set_current_peer
-local njt_lua_ffi_balancer_set_more_tries
-local njt_lua_ffi_balancer_get_last_failure
-local njt_lua_ffi_balancer_set_timeouts -- used by both stream and http
-
-
-if subsystem == 'http' then
-    ffi.cdef[[
-    int njt_http_lua_ffi_balancer_set_current_peer(njt_http_request_t *r,
-        const unsigned char *addr, size_t addr_len, int port, char **err);
-
-    int njt_http_lua_ffi_balancer_set_more_tries(njt_http_request_t *r,
-        int count, char **err);
-
-    int njt_http_lua_ffi_balancer_get_last_failure(njt_http_request_t *r,
-        int *status, char **err);
-
-    int njt_http_lua_ffi_balancer_set_timeouts(njt_http_request_t *r,
-        long connect_timeout, long send_timeout,
-        long read_timeout, char **err);
-
-    int njt_http_lua_ffi_balancer_recreate_request(njt_http_request_t *r,
-        char **err);
-    ]]
-
-    njt_lua_ffi_balancer_ =
-        C.njt_http_lua_ffi_balancer_set_current_peer
-
-    njt_lua_ffi_balancer_set_more_tries =
-        C.njt_http_lua_ffi_balancer_set_more_tries
-
-    njt_lua_ffi_balancer_get_last_failure =
-        C.njt_http_lua_ffi_balancer_get_last_failure
-
-    njt_lua_ffi_balancer_set_timeouts =
-        C.njt_http_lua_ffi_balancer_set_timeouts
-
-elseif subsystem == 'stream' then
-    ffi.cdef[[
-    int njt_stream_lua_ffi_balancer_set_current_peer(
-        njt_stream_lua_request_t *r,
-        const unsigned char *addr, size_t addr_len, int port, char **err);
-
-    int njt_stream_lua_ffi_balancer_set_more_tries(njt_stream_lua_request_t *r,
-        int count, char **err);
-
-    int njt_stream_lua_ffi_balancer_get_last_failure(
-        njt_stream_lua_request_t *r, int *status, char **err);
-
-    int njt_stream_lua_ffi_balancer_set_timeouts(njt_stream_lua_request_t *r,
-        long connect_timeout, long timeout, char **err);
-    ]]
-
-    njt_lua_ffi_balancer_set_current_peer =
-        C.njt_stream_lua_ffi_balancer_set_current_peer
-
-    njt_lua_ffi_balancer_set_more_tries =
-        C.njt_stream_lua_ffi_balancer_set_more_tries
-
-    njt_lua_ffi_balancer_get_last_failure =
-        C.njt_stream_lua_ffi_balancer_get_last_failure
-
-    local njt_stream_lua_ffi_balancer_set_timeouts =
-        C.njt_stream_lua_ffi_balancer_set_timeouts
-
-    njt_lua_ffi_balancer_set_timeouts =
-        function(r, connect_timeout, send_timeout, read_timeout, err)
-            local timeout = max(send_timeout, read_timeout)
-
-            return njt_stream_lua_ffi_balancer_set_timeouts(r, connect_timeout,
-                                                            timeout, err)
-        end
-
-else
-    error("unknown subsystem: " .. subsystem)
-end
-
-
-local peer_state_names = {
-    [1] = "keepalive",
-    [2] = "next",
-    [4] = "failed",
-}
-
-
-local _M = { version = base.version }
-
-
-function _M.set_current_peer(addr, port)
-    local r = get_request()
-    if not r then
-        error("no request found")
-    end
-
-    if not port then
-        port = 0
-    elseif type(port) ~= "number" then
-        port = tonumber(port)
-    end
-
-    local rc = njt_lua_ffi_balancer_set_current_peer(r, addr, #addr,
-                                                     port, errmsg)
-    if rc == FFI_OK then
-        return true
-    end
-
-    return nil, ffi_str(errmsg[0])
-end
-
-
-function _M.set_more_tries(count)
-    local r = get_request()
-    if not r then
-        error("no request found")
-    end
-
-    local rc = njt_lua_ffi_balancer_set_more_tries(r, count, errmsg)
-    if rc == FFI_OK then
-        if errmsg[0] == nil then
-            return true
-        end
-        return true, ffi_str(errmsg[0])  -- return the warning
-    end
-
-    return nil, ffi_str(errmsg[0])
-end
-
-
-function _M.get_last_failure()
-    local r = get_request()
-    if not r then
-        error("no request found")
-    end
-
-    local state = njt_lua_ffi_balancer_get_last_failure(r, int_out, errmsg)
-
-    if state == 0 then
-        return nil
-    end
-
-    if state == FFI_ERROR then
-        return nil, nil, ffi_str(errmsg[0])
-    end
-
-    return peer_state_names[state] or "unknown", int_out[0]
-end
-
-
-function _M.set_timeouts(connect_timeout, send_timeout, read_timeout)
-    local r = get_request()
-    if not r then
-        error("no request found")
-    end
-
-    if not connect_timeout then
-        connect_timeout = 0
-    elseif type(connect_timeout) ~= "number" or connect_timeout <= 0 then
-        error("bad connect timeout", 2)
-    else
-        connect_timeout = connect_timeout * 1000
-    end
-
-    if not send_timeout then
-        send_timeout = 0
-    elseif type(send_timeout) ~= "number" or send_timeout <= 0 then
-        error("bad send timeout", 2)
-    else
-        send_timeout = send_timeout * 1000
-    end
-
-    if not read_timeout then
-        read_timeout = 0
-    elseif type(read_timeout) ~= "number" or read_timeout <= 0 then
-        error("bad read timeout", 2)
-    else
-        read_timeout = read_timeout * 1000
-    end
-
-    local rc
-
-    rc = njt_lua_ffi_balancer_set_timeouts(r, connect_timeout,
-                                           send_timeout, read_timeout,
-                                           errmsg)
-
-    if rc == FFI_OK then
-        return true
-    end
-
-    return false, ffi_str(errmsg[0])
-end
-
-
-if subsystem == 'http' then
-    function _M.recreate_request()
-        local r = get_request()
-        if not r then
-            error("no request found")
-        end
-
-        local rc = C.njt_http_lua_ffi_balancer_recreate_request(r, errmsg)
-        if rc == FFI_OK then
-            return true
-        end
-
-        if errmsg[0] ~= nil then
-            return nil, ffi_str(errmsg[0])
-        end
-
-        return nil, "failed to recreate the upstream request"
-    end
-end
-
-
-return _M
-```
-
-http subsystem
---------------
-
-```nginx
-http {
-    upstream backend {
-        server 0.0.0.1;   # just an invalid address as a place holder
-
-        balancer_by_lua_block {
-            local balancer = require "njt.balancer"
-
-            -- well, usually we calculate the peer's host and port
-            -- according to some balancing policies instead of using
-            -- hard-coded values like below
-            local host = "127.0.0.2"
-            local port = 8080
-
-            local ok, err = balancer.set_current_peer(host, port)
-            if not ok then
-                njt.log(njt.ERR, "failed to set the current peer: ", err)
-                return njt.exit(500)
-            end
-        }
-
-        keepalive 10;  # connection pool
-    }
-
-    server {
-        # this is the real entry point
-        listen 80;
-
-        location / {
-            # make use of the upstream named "backend" defined above:
-            proxy_pass http://backend/fake;
-        }
-    }
-
-    server {
-        # this server is just for mocking up a backend peer here...
-        listen 127.0.0.2:8080;
-
-        location = /fake {
-            echo "this is the fake backend peer...";
-        }
-    }
-}
-```
-
-stream subsystem
-----------------
-
-```nginx
-stream {
-    upstream backend {
-        server 0.0.0.1:1234;   # just an invalid address as a place holder
-
-        balancer_by_lua_block {
-            local balancer = require "njt.balancer"
-
-            -- well, usually we calculate the peer's host and port
-            -- according to some balancing policies instead of using
-            -- hard-coded values like below
-            local host = "127.0.0.2"
-            local port = 8080
-
-            local ok, err = balancer.set_current_peer(host, port)
-            if not ok then
-                njt.log(njt.ERR, "failed to set the current peer: ", err)
-                return njt.exit(njt.ERROR)
-            end
-        }
-    }
-
-    server {
-        # this is the real entry point
-        listen 10000;
-
-        # make use of the upstream named "backend" defined above:
-        proxy_pass backend;
-    }
-
-    server {
-        # this server is just for mocking up a backend peer here...
-        listen 127.0.0.2:8080;
-
-        echo "this is the fake backend peer...";
-    }
-}
-```
+在“balancer_by_lua”里除了基本的 ngx.*功能接口外，主要使用的是库 ngx.balancer，
 
 ### 完整的 Lua 模块代码 (zset_upstream.lua)
 
@@ -474,7 +144,7 @@ function _M:is_server_active(server_addr)
     return time_since_heartbeat <= self.config.heartbeat_ttl
 end
 
--- 清理过期服务器
+-- 清理过期服务器 - 简化版本：直接从 ZSET 删除过期数据
 function _M:cleanup_expired_servers()
     if not self:connect_redis() then
         return false, "Failed to connect to Redis"
@@ -505,27 +175,30 @@ function _M:cleanup_expired_servers()
         end
     end
     
-    -- 禁用过期的服务器
-    local disabled_count = 0
+    -- 直接从 ZSET、METADATA 和 HEARTBEAT 中删除过期服务器
+    local removed_count = 0
     for _, server_addr in ipairs(expired_servers) do
-        -- 获取当前元数据
-        local meta_json, err = self.redis_conn:hget(UPSTREAM_METADATA_KEY, server_addr)
-        if meta_json and meta_json ~= ngx.null then
-            local meta = cjson.decode(meta_json)
-            if meta and meta.enabled then
-                -- 禁用服务器
-                meta.enabled = false
-                meta.disabled_at = now
-                meta.disabled_reason = "heartbeat_timeout"
-                
-                local hset_ok, hset_err = self.redis_conn:hset(UPSTREAM_METADATA_KEY, server_addr, cjson.encode(meta))
-                if hset_ok then
-                    disabled_count = disabled_count + 1
-                    ngx.log(ngx.INFO, "Disabled expired server: ", server_addr)
-                else
-                    ngx.log(ngx.ERR, "Failed to disable expired server ", server_addr, ": ", hset_err)
-                end
-            end
+        -- 从 ZSET 删除
+        local zrem_ok, zrem_err = self.redis_conn:zrem(UPSTREAM_ZSET_KEY, server_addr)
+        if not zrem_ok then
+            ngx.log(ngx.ERR, "Failed to remove expired server from ZSET ", server_addr, ": ", zrem_err)
+        end
+        
+        -- 从 METADATA 删除
+        local hdel_meta_ok, hdel_meta_err = self.redis_conn:hdel(UPSTREAM_METADATA_KEY, server_addr)
+        if not hdel_meta_ok then
+            ngx.log(ngx.ERR, "Failed to remove expired server metadata ", server_addr, ": ", hdel_meta_err)
+        end
+        
+        -- 从 HEARTBEAT 删除
+        local hdel_heartbeat_ok, hdel_heartbeat_err = self.redis_conn:hdel(UPSTREAM_HEARTBEAT_KEY, server_addr)
+        if not hdel_heartbeat_ok then
+            ngx.log(ngx.ERR, "Failed to remove expired server heartbeat ", server_addr, ": ", hdel_heartbeat_err)
+        end
+        
+        if zrem_ok and hdel_meta_ok and hdel_heartbeat_ok then
+            removed_count = removed_count + 1
+            ngx.log(ngx.INFO, "Removed expired server: ", server_addr)
         end
     end
     
@@ -534,8 +207,8 @@ function _M:cleanup_expired_servers()
     -- 清除缓存
     self.upstream_cache = nil
     
-    ngx.log(ngx.INFO, "Cleanup completed: ", disabled_count, " servers disabled due to heartbeat timeout")
-    return true, { expired_count = #expired_servers, disabled_count = disabled_count }
+    ngx.log(ngx.INFO, "Cleanup completed: ", removed_count, " servers removed due to heartbeat timeout")
+    return true, { expired_count = #expired_servers, removed_count = removed_count }
 end
 
 -- 获取所有启用的服务器（带缓存）
