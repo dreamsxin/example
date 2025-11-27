@@ -4,6 +4,11 @@
 
 `wget -qO - https://openresty.org/package/pubkey.gpg | gpg --dearmor -o /etc/apt/trusted.gpg.d/openresty.gpg`
 
+- https://github.com/Klaessen/openresty-loadbalancers
+- https://github.com/jesse-greathouse/loba
+- https://github.com/Quiq/lua-consul-balancer
+- https://github.com/tl-open-source/tl-ops-manage
+
 ## 负载均衡
 
 在“balancer_by_lua”里除了基本的 ngx.*功能接口外，主要使用的是库 ngx.balancer，
