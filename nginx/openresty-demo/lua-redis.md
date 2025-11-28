@@ -103,7 +103,17 @@ http {
 }
 ```
 ```lua
+-- upstream.lua
+local cjson = require "cjson"
+local balancer = require "ngx.balancer"
+local ngx_shared = ngx.shared.upstream_servers
+
 local _M = {}
+
+-- 服务器过期时间（秒）
+local SERVER_EXPIRE_TIME = 120
+-- 清理间隔（秒）
+local CLEANUP_INTERVAL = 10
 
 -- Redis配置
 local redis_host = "127.0.0.1"
@@ -131,7 +141,7 @@ local function get_redis()
     return red
 end
 
--- 从Redis同步服务器列表
+-- 刚启动时，从Redis同步服务器列表
 local function sync_from_redis()
     local red, err = get_redis()
     if not red then
@@ -141,54 +151,76 @@ local function sync_from_redis()
     
     local dict = ngx.shared.upstream_servers
     local cjson = require "cjson"
-    
-    -- 获取Redis中的所有服务器
-    local servers, err = red:hgetall(redis_key)
+
+    -- 删除Redis过期服务器
+    red:zremrangebyscore(redis_key, 0, ngx.now() - SERVER_EXPIRE_TIME)
+
+    -- 从Redis获取所有服务器
+    local servers = red:zremrangebyscore(redis_key, 0, -1)
     if not servers then
         ngx.log(ngx.WARN, "Failed to get servers from redis: ", err)
         red:set_keepalive(10000, 100)
         return
     end
+
+    red:set_keepalive(10000, 100)
     
-    -- 清空本地共享内存
-    dict:flush_all()
-    
-    -- 同步服务器信息
-    for i = 1, #servers, 2 do
-        local server_key = servers[i]
-        local server_data_str = servers[i + 1]
-        
-        if server_key and server_data_str then
-            dict:set(server_key, server_data_str)
+    -- 保存到共享字典
+    for i, v in ipairs(servers) do
+        ngx.log(ngx.DEBUG, "server: ", v)
+        local host, port = v:match("^([^:]+):(%d+)$")
+        -- local server_info = cjson.decode(v)
+        if not host or not port then
+            ngx.log(ngx.WARN, "Invalid server info: ", v)
+        else
+            local server_info = {
+                host = host,
+                port = port,
+                conn_count = 0,
+                last_heartbeat = ngx.now(),
+                created_time = ngx.now()
+            }
+            local server_key = get_server_key(host, port)
+            -- 保存到共享内存
+            local success, err = ngx_shared:set(server_key, cjson.encode(server_info), SERVER_EXPIRE_TIME)
+            
+            if not success then
+                ngx.log(ngx.WARN, "Failed to add server to shared memory: ", err)
+            else
+                ngx.log(ngx.INFO, "Successfully added server to shared memory: ", server_key)
+            end
         end
     end
-    
-    red:set_keepalive(10000, 100)
-    ngx.log(ngx.INFO, "Successfully synced ", #servers/2, " servers from redis")
 end
 
 -- 保存到Redis并同步
-local function save_to_redis_and_sync(server_key, server_data_str)
+local function save_to_redis(host, port, last_heartbeat)
     local red, err = get_redis()
     if not red then
         ngx.log(ngx.WARN, "Failed to connect to redis: ", err)
         return false
     end
     
-    -- 保存到Redis
-    local ok, err = red:hset(redis_key, server_key, server_data_str)
-    if not ok then
-        ngx.log(ngx.WARN, "Failed to save to redis: ", err)
-        red:set_keepalive(10000, 100)
-        return false
+    local member = host .. ":" .. port
+
+    if last_heartbeat < 0 then
+        -- 从Redis删除服务器
+        local ok, err = red:zrem(redis_key, member)
+        if not ok then
+            ngx.log(ngx.WARN, "Failed to remove server from redis: ", err)
+            red:set_keepalive(10000, 100)
+            return false
+        end
+    else 
+        -- 保存到Redis
+        local ok, err = red:zadd(redis_key, last_heartbeat, member)
+        if not ok then
+            ngx.log(ngx.WARN, "Failed to save to redis: ", err)
+            red:set_keepalive(10000, 100)
+            return false
+        end
     end
-    
-    -- 发布同步消息
-    local ok, err = red:publish("upstream:sync", server_key)
-    if not ok then
-        ngx.log(ngx.WARN, "Failed to publish sync message: ", err)
-    end
-    
+
     red:set_keepalive(10000, 100)
     return true
 end
@@ -196,334 +228,235 @@ end
 -- 获取客户端IP
 local function get_client_ip()
     local headers = ngx.req.get_headers()
-    local ip = headers["X-Real-IP"] or headers["x-real-ip"] or headers["X-Forwarded-For"] or headers["x-forwarded-for"] or ngx.var.remote_addr
+    local ip = headers["X-Real-IP"] or headers["X-Forwarded-For"] or ngx.var.remote_addr
+    -- 处理X-Forwarded-For可能有多个IP的情况
+    if type(ip) == "table" then
+        ip = ip[1]
+    end
+    if ip and string.find(ip, ",") then
+        ip = string.match(ip, "([^,]+)")
+    end
     return ip
 end
 
--- 记录服务器失败
-local function record_server_failure(server_key)
-    local dict = ngx.shared.upstream_servers
-    local value = dict:get(server_key)
-    
-    if value then
-        local cjson = require "cjson"
-        local server_data = cjson.decode(value)
-        
-        -- 增加失败次数
-        server_data.fails = server_data.fails + 1
-        server_data.last_fail = ngx.time()
-        
-        -- 更新到共享内存
-        local data_str = cjson.encode(server_data)
-        dict:set(server_key, data_str)
-        
-        -- 同步到Redis
-        save_to_redis_and_sync(server_key, data_str)
-        
-        ngx.log(ngx.WARN, "Recorded failure for server: ", server_key, " fails: ", server_data.fails)
-    end
+-- 序列化服务器键
+local function get_server_key(host, port)
+    return host .. ":" .. port
 end
 
--- 添加服务器
+-- 添加或更新服务器
 function _M.add_server()
     local args = ngx.req.get_uri_args()
+    local host = args.host
     local port = tonumber(args.port)
-    local host = args.host or get_client_ip()
     
-    if not port or port <= 0 or port > 65535 then
-        ngx.status = 400
-        ngx.say("Invalid port number")
+    if not port then
+        ngx.status = ngx.HTTP_BAD_REQUEST
+        ngx.say('{"error": "port is required"}')
         return
     end
     
-    -- 验证IP格式
-    if not host:match("^%d+%.%d+%.%d+%.%d+$") then
-        ngx.status = 400
-        ngx.say("Invalid host IP format")
-        return
+    -- 如果host为空，使用客户端IP
+    if not host or host == "" then
+        host = get_client_ip()
     end
     
-    local server_key = host .. ":" .. port
-    local dict = ngx.shared.upstream_servers
+    local server_key = get_server_key(host, port)
     
-    -- 检查服务器是否已存在
-    local server_info = dict:get(server_key)
-    if server_info then
-        ngx.say("Server already exists: " .. server_key)
-        return
+    -- 获取现有服务器信息或创建新的
+    local server_info_str = ngx_shared:get(server_key)
+    local server_info
+    
+    if server_info_str then
+        server_info = cjson.decode(server_info_str)
+        server_info.last_heartbeat = ngx.now()
+        ngx.log(ngx.INFO, "Updated server heartbeat: ", server_key)
+    else
+        server_info = {
+            host = host,
+            port = port,
+            conn_count = 0,
+            last_heartbeat = ngx.now(),
+            created_time = ngx.now()
+        }
+        ngx.log(ngx.INFO, "Added new server: ", server_key)
     end
     
-    -- 初始化服务器信息
-    local server_data = {
-        host = host,
-        port = port,
-        connections = 0,
-        fails = 0,
-        last_fail = 0,
-        weight = 1,
-        added_time = ngx.time(),
-        last_success = 0,
-        total_requests = 0,
-        success_rate = 100
-    }
+    -- 保存到共享内存
+    local success, err = ngx_shared:set(server_key, cjson.encode(server_info), SERVER_EXPIRE_TIME)
     
-    -- 序列化数据
-    local cjson = require "cjson"
-    local data_str = cjson.encode(server_data)
+    if not success then
+        ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+        ngx.say('{"error": "failed to add server: ' .. err .. '"}')
+        return
+    end
+
+    -- 保存到Redis并同步
+    if not save_to_redis(host, port, server_info.last_heartbeat) then
+        ngx.log(ngx.WARN, "Failed to save server to redis")
+    end
     
-    -- 存储到共享内存
-    dict:set(server_key, data_str)
-    
-    -- 存储到Redis并同步
-    save_to_redis_and_sync(server_key, data_str)
-    
-    ngx.say("Server added successfully: " .. server_key)
+    ngx.say('{"success": true, "server": "' .. server_key .. '"}')
 end
 
 -- 移除服务器
 function _M.remove_server()
     local args = ngx.req.get_uri_args()
+    local host = args.host
     local port = tonumber(args.port)
-    local host = args.host or get_client_ip()
     
     if not port then
-        ngx.status = 400
-        ngx.say("Port parameter is required")
+        ngx.status = ngx.HTTP_BAD_REQUEST
+        ngx.say('{"error": "port is required"}')
         return
     end
     
-    local server_key = host .. ":" .. port
-    local dict = ngx.shared.upstream_servers
+    if not host or host == "" then
+        host = get_client_ip()
+    end
     
-    -- 检查服务器是否存在
-    local server_info = dict:get(server_key)
-    if not server_info then
-        ngx.status = 404
-        ngx.say("Server not found: " .. server_key)
+    local server_key = get_server_key(host, port)
+    local success, err = ngx_shared:delete(server_key)
+    
+    if not success then
+        ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+        ngx.say('{"error": "failed to remove server: ' .. err .. '"}')
         return
     end
-    
-    -- 从共享内存移除
-    dict:delete(server_key)
-    
-    -- 从Redis移除
-    local red, err = get_redis()
-    if red then
-        local ok, err = red:hdel(redis_key, server_key)
-        if not ok then
-            ngx.log(ngx.WARN, "Failed to remove from redis: ", err)
-        end
-        
-        -- 发布移除消息
-        red:publish("upstream:remove", server_key)
-        red:set_keepalive(10000, 100)
+
+    -- 保存到Redis并同步
+    if not save_to_redis(host, port, -1) then
+        ngx.log(ngx.WARN, "Failed to remove server from redis: ", err)
     end
     
-    ngx.say("Server removed successfully: " .. server_key)
+    ngx.say('{"success": true, "removed": "' .. server_key .. '"}')
 end
 
--- 获取状态
+-- 获取服务器状态
 function _M.get_status()
-    local dict = ngx.shared.upstream_servers
     local servers = {}
-    
-    -- 获取所有服务器
-    local keys = dict:get_keys(0)
-    local cjson = require "cjson"
+    local keys = ngx_shared:get_keys(0)  -- 获取所有键
     
     for _, key in ipairs(keys) do
-        local value = dict:get(key)
-        if value then
-            local server_data = cjson.decode(value)
-            servers[key] = server_data
+        local server_info_str = ngx_shared:get(key)
+        if server_info_str then
+            local server_info = cjson.decode(server_info_str)
+            table.insert(servers, server_info)
         end
     end
     
-    local status = {
-        total_servers = #keys,
+    ngx.header["Content-Type"] = "application/json; charset=utf-8"
+    ngx.say(cjson.encode({
         servers = servers,
-        timestamp = ngx.time()
-    }
-    
-    ngx.header.content_type = "application/json"
-    ngx.say(cjson.encode(status))
+        total = #servers,
+        timestamp = ngx.now()
+    }))
 end
 
--- 最少连接数负载均衡算法
+-- 最少连接数负载均衡
 function _M.least_conn_balancer()
-    local dict = ngx.shared.upstream_servers
-    local keys = dict:get_keys(0)
+    local least_conn_server = nil
+    local least_conn_count = math.huge
+    local keys = ngx_shared:get_keys(0)
     
-    if #keys == 0 then
-        ngx.log(ngx.ERR, "No upstream servers available")
-        return ngx.exit(502)
-    end
-    
-    local cjson = require "cjson"
-    local selected_server = nil
-    local min_connections = math.huge
-    
-    -- 找到连接数最少的服务器
+    -- 查找连接数最少的服务器
     for _, key in ipairs(keys) do
-        local value = dict:get(key)
-        if value then
-            local server_data = cjson.decode(value)
+	ngx.log(ngx.DEBUG, "key", key)
+        local server_info_str = ngx_shared:get(key)
+	ngx.log(ngx.INFO, "server", server_info_str)
+        if server_info_str then
+            local server_info = cjson.decode(server_info_str)
             
-            -- 检查服务器是否健康（失败次数小于3次且距离上次失败超过10秒）
-            if server_data.fails < 3 and (ngx.time() - server_data.last_fail) > 10 then
-                if server_data.connections < min_connections then
-                    min_connections = server_data.connections
-                    selected_server = server_data
-                    selected_server.key = key
+            -- 检查服务器是否过期
+            if ngx.now() - server_info.last_heartbeat <= SERVER_EXPIRE_TIME then
+                if server_info.conn_count < least_conn_count then
+                    least_conn_count = server_info.conn_count
+                    least_conn_server = server_info
                 end
             end
         end
     end
     
-    if not selected_server then
-        ngx.log(ngx.ERR, "No healthy upstream servers available")
-        return ngx.exit(502)
+    if not least_conn_server then
+        ngx.log(ngx.ERR, "No available servers found")
+        return ngx.exit(ngx.HTTP_SERVICE_UNAVAILABLE)
     end
     
-    -- 增加连接数和总请求数
-    selected_server.connections = selected_server.connections + 1
-    selected_server.total_requests = selected_server.total_requests + 1
+    -- 增加连接数
+    least_conn_server.conn_count = least_conn_server.conn_count + 1
+    local server_key = get_server_key(least_conn_server.host, least_conn_server.port)
+    ngx_shared:set(server_key, cjson.encode(least_conn_server), SERVER_EXPIRE_TIME)
     
-    -- 更新到共享内存
-    local data_str = cjson.encode(selected_server)
-    dict:set(selected_server.key, data_str)
     
-    -- 保存选中的服务器信息
-    ngx.ctx.selected_server = selected_server.key
-    
-    -- 设置后端服务器
-    local ok, err = ngx.balancer.set_current_peer(selected_server.host, selected_server.port)
+    -- 记录选择的服务器，用于后续减少连接数
+    ngx.ctx.selected_server = server_key
+   
+    ngx.log(ngx.DEBUG, "server", least_conn_server.host) 
+    -- 设置代理
+    local ok, err = balancer.set_current_peer(least_conn_server.host, least_conn_server.port)
     if not ok then
-        ngx.log(ngx.ERR, "Failed to set current peer: ", err)
-        -- 记录失败
-        record_server_failure(selected_server.key)
-        return ngx.exit(502)
+        ngx.log(ngx.ERR, "failed to set current peer: ", err)
+        -- 如果设置失败，减少连接数
+        _M.decrease_conn_count(server_key)
+        return ngx.exit(ngx.HTTP_SERVICE_UNAVAILABLE)
     end
 end
 
--- 减少连接数
+-- 减少连接数（在请求完成后调用）
 function _M.decrease_conn_count(server_key)
-    local dict = ngx.shared.upstream_servers
-    local value = dict:get(server_key)
-    
-    if value then
-        local cjson = require "cjson"
-        local server_data = cjson.decode(value)
-        
-        if server_data.connections > 0 then
-            server_data.connections = server_data.connections - 1
-            server_data.last_success = ngx.time()
-            
-            -- 计算成功率
-            if server_data.total_requests > 0 then
-                server_data.success_rate = math.floor(((server_data.total_requests - server_data.fails) / server_data.total_requests) * 100)
-            end
-            
-            local data_str = cjson.encode(server_data)
-            dict:set(server_key, data_str)
+    local server_info_str = ngx_shared:get(server_key)
+    if server_info_str then
+        local server_info = cjson.decode(server_info_str)
+        if server_info.conn_count > 0 then
+            server_info.conn_count = server_info.conn_count - 1
+            ngx_shared:set(server_key, cjson.encode(server_info), SERVER_EXPIRE_TIME)
         end
     end
 end
 
--- 处理代理响应
-function _M.handle_proxy_response()
-    local server_key = ngx.ctx.selected_server
-    if not server_key then
-        return
+-- 清理过期服务器
+function _M.cleanup_expired_servers()
+    local keys = ngx_shared:get_keys(0)
+    local removed_count = 0
+    
+    for _, key in ipairs(keys) do
+        local server_info_str = ngx_shared:get(key)
+        if server_info_str then
+            local server_info = cjson.decode(server_info_str)
+            -- 检查服务器是否过期
+            if ngx.now() - server_info.last_heartbeat > SERVER_EXPIRE_TIME then
+                ngx_shared:delete(key)
+                removed_count = removed_count + 1
+                ngx.log(ngx.INFO, "Removed expired server: ", key)
+                -- 保存到Redis并同步
+                if not save_to_redis(server_info.host, server_info.port, -1) then
+                    ngx.log(ngx.WARN, "Failed to remove server from redis: ", err)
+                end
+            end
+        end
     end
     
-    local status = ngx.status
-    
-    -- 如果响应状态码是5xx，记录为失败
-    if status >= 500 and status < 600 then
-        record_server_failure(server_key)
+    if removed_count > 0 then
+        ngx.log(ngx.INFO, "Cleanup removed ", removed_count, " expired servers")
     end
 end
 
--- 健康检查定时器
+-- 初始化定时清理任务
 function _M.init_cleanup_timer()
-    local function check_health(premature)
+    local handler
+    handler = function(premature)
         if premature then
             return
         end
         
-        -- 首先从Redis同步数据
-        sync_from_redis()
+        _M.cleanup_expired_servers()
         
-        local dict = ngx.shared.upstream_servers
-        local keys = dict:get_keys(0)
-        local cjson = require "cjson"
-        local now = ngx.time()
-        
-        for _, key in ipairs(keys) do
-            local value = dict:get(key)
-            if value then
-                local server_data = cjson.decode(value)
-                
-                -- 清理长时间失败的服务器
-                if server_data.fails >= 5 and (now - server_data.last_fail) > 300 then
-                    dict:delete(key)
-                    ngx.log(ngx.INFO, "Removed unhealthy server: ", key)
-                    
-                    -- 从Redis中移除
-                    local red, err = get_redis()
-                    if red then
-                        red:hdel(redis_key, key)
-                        red:set_keepalive(10000, 100)
-                    end
-                end
-                
-                -- 重置长时间无请求的服务器失败次数
-                if server_data.fails > 0 and (now - server_data.last_fail) > 600 then
-                    server_data.fails = 0
-                    local data_str = cjson.encode(server_data)
-                    dict:set(key, data_str)
-                end
-            end
-        end
+        -- 再次设置定时器
+        ngx.timer.at(CLEANUP_INTERVAL, handler)
     end
     
-    -- 每30秒执行一次健康检查
-    local ok, err = ngx.timer.every(30, check_health)
-    if not ok then
-        ngx.log(ngx.ERR, "Failed to create health check timer: ", err)
-    end
-    
-    -- 订阅Redis消息
-    local function subscribe_to_redis()
-        local red, err = get_redis()
-        if not red then
-            ngx.log(ngx.ERR, "Failed to connect to redis for subscription: ", err)
-            return
-        end
-        
-        local function handle_message(message, channel)
-            if channel == "upstream:sync" then
-                sync_from_redis()
-            elseif channel == "upstream:remove" then
-                local dict = ngx.shared.upstream_servers
-                dict:delete(message)
-            end
-        end
-        
-        -- 订阅相关频道
-        red:subscribe("upstream:sync", "upstream:remove")
-        
-        while true do
-            local res, err = red:read_reply()
-            if res then
-                handle_message(res[3], res[2])
-            end
-        end
-    end
-    
-    -- 启动订阅线程
-    ngx.timer.at(0, subscribe_to_redis)
+    -- 启动定时器
+    ngx.timer.at(CLEANUP_INTERVAL, handler)
 end
 
 return _M
