@@ -2,6 +2,11 @@
 - https://github.com/apache/apisix
 - https://github.com/go-kratos/gateway
 - https://github.com/alibaba/higress
+- https://github.com/TykTechnologies/tyk
+- https://github.com/seaweedfs/seaweedfs
+- https://github.com/envoyproxy/gateway
+- https://github.com/maximhq/bifrost
+- https://github.com/jkaninda/goma-gateway
 
 ## 1. Apache APISIX 部署
 
