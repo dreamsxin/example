@@ -173,6 +173,8 @@ local function sync_from_redis()
         if not host or not port then
             ngx.log(ngx.WARN, "Invalid server info: ", v)
         else
+			-- 转换为数字类型（如果需要）
+			port = tonumber(port)
             local server_info = {
                 host = host,
                 port = port,
