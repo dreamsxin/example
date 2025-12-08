@@ -79,6 +79,7 @@ docker start -ai <容器名称>
 
 ```shell
 sudo docker attach xxxxx
+docker exec -it <容器名或容器ID> /bin/bash
 ```
 
 ## 容器重命名
@@ -107,6 +108,7 @@ sudo docker rm xxxx
 https://github.com/weaveworks/scope
 
 https://github.com/swarmpit/swarmpit
+
 
 
 
