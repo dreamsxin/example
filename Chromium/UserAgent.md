@@ -1,0 +1,1 @@
+- https://github.com/ssl/SecCollection/tree/main/Other/Web/User-agents
