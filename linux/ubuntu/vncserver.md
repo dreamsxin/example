@@ -22,7 +22,9 @@ Add the following line to the end of the file:
 
 `startxfce4 &`
 
-如果是 ubuntu-desktop 环境
+`sudo chmod +x ~\.vnc\xstartup`
+
+## ubuntu-desktop
 ```shell
 sudo apt-get install --no-install-recommends ubuntu-desktop gnome-panel gnome-settings-daemon metacity nautilus gnome-terminal -y
 ```
