@@ -1,0 +1,4 @@
+
+```bash
+pip install xxx -i https://pypi.tuna.tsinghua.edu.cn/simple
+```
