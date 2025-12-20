@@ -2,6 +2,8 @@
 
 ## 1. 基本命令解析
 
+`python -m venv .venv; .\.venv\Scripts\Activate; pip install -r requirements.txt`
+
 ### 创建虚拟环境
 ```bash
 python -m venv .venv
