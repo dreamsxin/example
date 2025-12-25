@@ -251,11 +251,14 @@ dex2jar软件包中包含的工具：
 
 **Google 官方：android-classysh**
 
-[android-classysh](https://github.com/google/android-classyshark/) 是 Google 退出的一键反编译工具，直接打开 Apk 文件，就可以看到 Apk 中所有的文件结构，甚至还集成了 dex 文件查看，java 代码查看，方法数分析、导入混淆 mapping 文件等一系列工具。谷歌推出这个工具的目的是为了让我们开发者更清楚的了解自己的 Apk 中都有什么文件、混淆前后有什么变化，并方便我们进一步优化自己的 Apk 打包实现。比较不好的体验是无法进行导出。
+[android-classysh](https://github.com/google/android-classyshark/) 是 Google 推出的一键反编译工具，直接打开 Apk 文件，就可以看到 Apk 中所有的文件结构，甚至还集成了 dex 文件查看，java 代码查看，方法数分析、导入混淆 mapping 文件等一系列工具。谷歌推出这个工具的目的是为了让我们开发者更清楚的了解自己的 Apk 中都有什么文件、混淆前后有什么变化，并方便我们进一步优化自己的 Apk 打包实现。比较不好的体验是无法进行导出。
 
 **Python 实现的工具：Androguard**
 
 [Androguard](https://github.com/androguard/androguard/) 集成了反编译资源、代码等各种文件的工具包。需要安装 Python 环境来运行这个工具，这个工具按照不同的反编译需求，分别写成了不同的 py 功能模块，还有静态分析的功能。所以如果想要用 Python 开发一个解析 Apk 文件并进行静态扫描分析的服务，可以引用这个工具来实现。
+
+- https://github.com/androguard/androguard
+- https://github.com/androguard/goauld
 
 **AndroidKiller**
 
@@ -359,7 +362,8 @@ vmp:用 vmp 加固后的还原过程比较复杂和困难，需要用大量的�
 FDex2，可以从安卓app中dump导出有用的dex文件，供后续再从dex导出jar包，jar包导出java源码，功能非常的强大。
 
 **frida**
-
+- https://github.com/frida/frida
+- https://github.com/iddoeldor/frida-snippets
 [frida](https://frida.re/)的原理是，通过在PC上安装Frida，手机上运行frida-server，实现PC对手机的控制，同时通过js注入的方式，将dex从“壳”里“钩”出来。它是一款基于Python的hook（钩子）工具，因此在安装它之前我们需要先配置Py环境，现在的frida仅支持3.7以下的环境，3.8以上的暂不支持。[FRIDA-DEXDump](https://github.com/hluwa/FRIDA-DEXDump)
 
 **dumpDex**
