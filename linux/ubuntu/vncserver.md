@@ -2,14 +2,20 @@
 - tigervnc
 - gnome-remote-desktop
 
+`vncserver -list`
+
+# 确认桌面
+
+`echo $XDG_CURRENT_DESKTOP`
+
 ```shell
 sudo apt install xfce4 xfce4-goodies tightvncserver（会要求你选择显示管理器是gdm3还是lightdm，这里选择lightdm）
 # 启动
-```shell
 tightvncserver
 
 nc -zv 127.0.0.1 5901
 ```
+
 ## `~/.vnc/config`
 ```conf
 geometry=1920x1084
@@ -20,7 +26,13 @@ dpi=96
 
 Add the following line to the end of the file:
 
-`startxfce4 &`
+```conf
+#!/bin/bash
+xrdb $HOME/.Xresources
+startxfce4 &
+```
+
+`chmod +x ~/.vnc/xstartup`
 
 `sudo chmod +x ~\.vnc\xstartup`
 
