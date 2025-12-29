@@ -1,6 +1,7 @@
 # Apktool
 
-https://github.com/iBotPeaches/Apktool
+- https://github.com/iBotPeaches/Apktool
+- https://apktool.org/docs/install
 
 ```shell
 apktool d -f xxx.apk
@@ -25,3 +26,4 @@ smali2java -path_to_smali=<smali_directory>
 https://github.com/skylot/jadx
 
 https://github.com/jiangxincode/ApkToolBoxGUI
+
