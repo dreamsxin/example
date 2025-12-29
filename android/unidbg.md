@@ -17,3 +17,4 @@ unidbg是一个基于Unicorn的逆向工具，可以黑盒调用Android和iOS中
 - https://github.com/r0ysue/FridaAndrioidNativeBeginnersBook/tree/6be19b07269fb91f5e054e5485ce327a1bf07a60/Chap14/AES/ExAndroidNativeEmu-master
 - https://mp.weixin.qq.com/s/Ef4GwJrS2-tlH5Yz2mbVmQ
 - https://mp.weixin.qq.com/s/HLzuQfnqRlh3vCihludkoQ
+- https://github.com/irabbit666666/unidbg-mt-server23/blob/main/src/main/java/com/anjia/unidbgserver/service/MeiTuanService.java
