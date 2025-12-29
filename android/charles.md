@@ -1,0 +1,3 @@
+- https://github.com/crifan/app_capture_package_tool_charles
+- https://crifan.github.io/app_capture_package_tool_charles/website/how_capture_app/complex_https/https_ssl_pinning/android/
+- https://github.com/hang666/JustTrustMePro
