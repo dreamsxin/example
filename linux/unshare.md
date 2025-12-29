@@ -1012,3 +1012,185 @@ unshare --mount --propagation private sh -c "
 2. 不同 Android 版本可能有差异
 3. 某些应用可能有其他检测手段
 4. 重启后设置会丢失（需要持久化配置）
+
+-----------------------------------------------
+
+这个命令是使用 `unshare` 创建私有挂载传播的隔离挂载命名空间。让我详细解释：
+
+## 命令解析
+```bash
+unshare -mount --propagation private
+```
+
+### 选项含义：
+- **`--mount`** 或 **`-m`**：创建新的挂载命名空间
+- **`--propagation private`**：设置所有挂载点的传播类型为私有
+
+## 挂载传播类型
+
+Linux 有 4 种挂载传播类型：
+
+### 1. **shared**（共享）
+```bash
+mount --make-shared /mnt
+```
+- 挂载事件会传播到其他命名空间
+- 其他命名空间的挂载也会传播回来
+
+### 2. **slave**（从属）
+```bash
+mount --make-slave /mnt
+```
+- 接收主命名空间的挂载事件
+- 自身的挂载不会传播出去
+
+### 3. **private**（私有）← **你使用的类型**
+```bash
+mount --make-private /mnt
+```
+- 完全隔离，不传播也不接收挂载事件
+- 最安全的隔离模式
+
+### 4. **unbindable**（不可绑定）
+```bash
+mount --make-unbindable /mnt
+```
+- 私有 + 不能被绑定挂载
+
+## 实际应用示例
+
+### 示例1：创建私有挂载空间并测试
+```bash
+# 创建私有挂载命名空间
+unshare --mount --propagation private bash
+
+# 查看当前传播类型
+findmnt -o PROPAGATION /
+
+# 创建测试挂载
+mkdir /tmp/testmnt
+mount -t tmpfs tmpfs /tmp/testmnt
+
+# 在另一个终端查看，这个挂载不会传播到主机
+```
+
+### 示例2：运行程序时隔离挂载
+```bash
+# 运行程序在私有挂载空间中
+unshare --mount --propagation private /path/to/your-app
+
+# 或配合其他命名空间
+unshare --mount --propagation private --pid --fork --mount-proc /bin/bash
+```
+
+### 示例3：临时修改文件系统而不影响主机
+```bash
+# 创建私有挂载空间
+unshare --mount --propagation private bash
+
+# 创建 overlay 文件系统进行修改
+mkdir -p /tmp/{lower,upper,work,merged}
+mount -t overlay overlay -o lowerdir=/tmp/lower,upperdir=/tmp/upper,workdir=/tmp/work /tmp/merged
+
+# 现在对 /tmp/merged 的修改不会影响原文件系统
+```
+
+### 示例4：更精细的控制传播类型
+```bash
+unshare --mount bash
+
+# 先设置为私有（默认）
+mount --make-private /
+
+# 只将特定目录设置为共享（如果需要）
+mount --make-shared /tmp
+
+# 查看不同挂载点的传播类型
+cat /proc/self/mountinfo | grep -oP '(?<=shared:)\d+'
+```
+
+## 应用场景
+
+### 1. **安全沙盒**
+```bash
+# 运行不可信程序，防止它挂载设备或修改主机挂载点
+unshare --mount --propagation private --ipc --net --pid --fork --mount-proc /path/to/untrusted-app
+```
+
+### 2. **开发测试**
+```bash
+# 测试挂载操作而不影响系统
+unshare --mount --propagation private bash
+# 安全地测试 mount、umount、fstab 等
+```
+
+### 3. **容器运行**
+```bash
+# 类似容器的挂载隔离
+unshare --mount --propagation private \
+    --pid --fork --mount-proc \
+    --uts --hostname container1 \
+    --net \
+    /bin/bash
+```
+
+### 4. **临时文件系统操作**
+```bash
+# 创建临时文件系统进行实验
+unshare --mount --propagation private bash
+mkdir /tmp/myroot
+mount -t tmpfs tmpfs /tmp/myroot
+# 现在可以在隔离环境中自由挂载
+```
+
+## 查看当前状态
+
+### 查看传播类型：
+```bash
+# 查看所有挂载点的传播类型
+findmnt -o TARGET,PROPAGATION
+
+# 或查看详细信息
+cat /proc/self/mountinfo | awk '{print $4, $5, $6, $7}'
+```
+
+### 查看命名空间：
+```bash
+# 查看当前进程的命名空间
+ls -la /proc/$$/ns/
+
+# 查看挂载命名空间ID
+readlink /proc/$$/ns/mnt
+```
+
+## 注意事项
+
+1. **权限需求**：需要 root 权限或 `CAP_SYS_ADMIN` 能力
+2. **传播继承**：默认从父命名空间继承传播类型
+3. **子挂载点**：新挂载点会继承父目录的传播类型
+4. **递归设置**：使用 `--make-rprivate` 等选项可以递归设置
+
+## 完整示例脚本
+
+```bash
+#!/bin/bash
+# 创建完全隔离的测试环境
+
+# 创建临时目录结构
+TEMP_ROOT=$(mktemp -d)
+mkdir -p $TEMP_ROOT/{bin,lib,lib64,dev,proc,sys,tmp}
+
+# 复制必要程序
+cp /bin/bash $TEMP_ROOT/bin/
+cp /bin/ls $TEMP_ROOT/bin/
+
+# 创建私有挂载命名空间运行
+unshare --mount --propagation private \
+    --pid --fork \
+    --uts --hostname isolated \
+    --net \
+    chroot $TEMP_ROOT /bin/bash
+
+# 清理
+rm -rf $TEMP_ROOT
+```
