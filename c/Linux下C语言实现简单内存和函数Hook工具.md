@@ -38,7 +38,7 @@ int main() {
 
 编译测试程序：
 ```bash
-gcc -o hello hello.c -no-pie  # 禁用PIE便于演示
+gcc -o hello hello.c -no-pie  # 禁用PIE便于演示（Position Independent Executable）
 ```
 
 ## 二、内存Hook工具：memory_hook.c
