@@ -1,8 +1,10 @@
 # Python虚拟环境（venv）详细用法指南
 
 ## 1. 基本命令解析
-
+Windows
 `python -m venv .venv; .\.venv\Scripts\Activate; pip install -r requirements.txt`
+Ubuntu
+`python -m venv .venv; source .venv/bin/activate`
 
 ### 创建虚拟环境
 ```bash
