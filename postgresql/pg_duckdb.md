@@ -1,5 +1,8 @@
 #
 
+- https://github.com/duckdb/pg_duckdb
+- https://github.com/euiko/duckdb-pgwire
+
 pg_duckdb is a Postgres extension that embeds DuckDB's columnar-vectorized analytics engine and features into Postgres. We recommend using pg_duckdb to build high performance analytics and data-intensive applications.
 
 提供了列存表和向量化执行能力，显著提升复杂查询的执行速度。
