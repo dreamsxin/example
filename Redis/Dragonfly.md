@@ -13,3 +13,24 @@
             --tiered_upload_threshold=0.6 \
             --maxmemory=16gb
 ```
+
+```shell
+# 查看分层存储统计信息
+curl http://localhost:6379/metrics | grep tiered
+ 
+# 输出示例：
+tiered_storage_cool_memory_used 524288000
+tiered_storage_offloaded_items 12500
+tiered_storage_read_hits 98000
+tiered_storage_read_misses 1200
+```
+
+```shell
+./dragonfly --tiered_storage_enabled=true \
+            --tiered_storage_path=/data/order_storage \
+            --tiered_offload_threshold=0.75 \
+            --tiered_upload_threshold=0.55 \
+            --tiered_min_value_size=256 \
+            --maxmemory=32gb \
+            --cache_mode=true
+```
