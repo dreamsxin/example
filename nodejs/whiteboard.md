@@ -1,3 +1,5 @@
 - https://github.com/excalidraw/excalidraw
 - https://github.com/tldraw/tldraw
 - https://github.com/jgraph/drawio
+- https://github.com/coderamp-labs/pad.ws
+- https://github.com/LHRUN/paint-board
