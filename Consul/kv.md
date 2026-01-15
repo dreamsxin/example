@@ -1,3 +1,7 @@
+```shell
+consul kv get -token=xxxx-8d2a-2882-82c8-xxx projects/server/test/serp-seo.yaml
+```
+
 ```go
 package main
 
