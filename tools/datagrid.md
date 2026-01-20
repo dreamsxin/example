@@ -1,0 +1,2 @@
+- https://github.com/beekeeper-studio/beekeeper-studio
+- https://github.com/dbgate/dbgate
