@@ -14,3 +14,8 @@
 ## 浏览器
 
 - https://github.com/lightpanda-io/browser
+
+
+## 应用
+
+- https://github.com/SingularityLabs-ai/beyond-bard-mini
