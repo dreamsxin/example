@@ -1,3 +1,4 @@
 - https://github.com/karust/openserp
+- https://github.com/CharlesPikachu/imagedl
 - https://github.com/Zarcolio/2ulb
 - https://github.com/Zarcolio/sitedorks
