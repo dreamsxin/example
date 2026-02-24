@@ -220,201 +220,7 @@ admin
 # now we needn't any root rights. We can chroot and setgid/setuid.
 ```
 
-## 1. 完整配置示例
-
-```bash
-#!/usr/local/bin/3proxy
-# ========== 基础配置 ==========
-# 设置系统用户和权限
-setuid 65534    # 运行用户 (nobody)
-setgid 65534    # 运行组 (nogroup)
-chroot /var/empty  # 安全隔离目录
-# daemon        # 守护进程模式 (Linux)
-service        # 服务模式 (Windows)
-
-# ========== 低延时优化 ==========
-nserver 8.8.8.8
-nserver 8.8.4.4
-nserver 1.1.1.1
-nscache 65536   # DNS缓存大小，单位KB
-
-# 连接超时设置（低延时优化）
-timeouts 1 2 10 20 30 60 10 30
-# 参数说明：connect auth client server pconnect anon udp udp
-# connect: 连接建立超时(1秒)
-# auth: 认证超时(2秒) 
-# client: 客户端空闲超时(10秒)
-# server: 服务器空闲超时(20秒)
-# pconnect: 持久连接超时(30秒)
-# anon: 匿名会话超时(60秒)
-# udp: UDP会话超时(10秒)
-# udp: UDP数据包超时(30秒)
-
-# 性能调优
-maxconn 5000     # 最大连接数
-nofiles 65536    # 文件描述符限制
-stacksize 65536  # 栈大小(KB)
-bandlim 1024000  # 带宽限制(KB/s)，0为无限制
-
-# ========== 日志配置 ==========
-log /var/log/3proxy/3proxy.log D
-logformat "L%t.%p %E %U %C:%c %R:%r %O %I %h %T %N"
-rotate 30        # 保留30个日志文件
-# logformat 变量说明：
-# %t - 时间戳
-# %p - 进程ID
-# %E - 错误码
-# %U - 用户名
-# %C - 客户端地址
-# %c - 客户端端口
-# %R - 请求地址
-# %r - 请求端口
-# %O - 发送字节数
-# %I - 接收字节数
-# %h - 协议类型
-# %T - 请求内容
-# %N - 服务名称
-
-# ========== 用户认证配置 ==========
-# 认证方式选择（三选一）：
-# auth none       # 无需认证（不推荐）
-# auth iponly     # IP认证
-# auth strong     # 强密码认证（推荐）
-auth strong
-
-# 用户定义（多种格式）：
-# 1. 明文密码（不推荐）：
-# users username:CL:password
-
-# 2. crypt加密密码（推荐）：
-# 生成密码：openssl passwd -crypt password
-users proxyuser:CL:yW2H5cJX8eLQ6
-
-# 3. MD5加密密码：
-# 生成密码：openssl passwd -1 password
-users md5user:CL:$1$salt$hashed_password
-
-# 4. 从文件读取用户：
-# users $/path/to/passwd
-# passwd文件格式：username:CL:password
-
-# 5. IP段用户（IP认证时使用）：
-allow * 192.168.1.0/24 * *  # 允许整个网段
-
-# ========== 网络接口配置 ==========
-# 外部地址（出口IP）
-external 1.2.3.4
-
-# 内部地址（监听IP）
-# 可配置多个监听地址：
-internal 0.0.0.0    # 监听所有接口
-# internal 192.168.1.100  # 监听特定IP
-# internal eth0      # 监听特定网卡
-# internal 0.0.0.0:3128  # 指定端口
-
-# ========== HTTP代理配置 ==========
-# 基础HTTP代理
-proxy -p3128 -a     # -p端口，-a启用匿名
-allow * * * 80,443,8080  # 允许访问的端口
-deny * * * 25        # 禁止访问的端口
-
-# 带认证的HTTP代理
-auth strong
-flush               # 清除之前的ACL规则
-allow proxyuser     # 允许指定用户
-proxy -p8080
-
-# HTTP CONNECT代理（用于HTTPS）
-allow * * * 443     # 允许HTTPS连接
-proxy -p8443
-
-# 父级代理（链式代理）
-# parent 1000 http 10.0.0.1 3128 proxyuser password
-# 参数：权重 协议 地址 端口 用户名 密码
-
-# ========== SOCKS5代理配置 ==========
-# 基础SOCKS5代理
-socks -p1080
-allow * * * 1-65535  # SOCKS允许所有端口
-
-# 带认证的SOCKS5代理
-auth strong
-flush
-allow proxyuser
-socks -p1081
-
-# SOCKS4/SOCKS4a代理
-socks -p1082 -s4    # -s4指定SOCKS4协议
-
-# ========== 高级功能配置 ==========
-# DNS代理
-dnspr -p53          # DNS代理端口
-
-# POP3代理
-pop3p -p110
-
-# FTP代理
-ftppr -p2121
-
-# 端口映射
-# TCP端口映射
-tcppm 2222 192.168.1.100 22   # 将2222映射到内网SSH
-tcppm 3389 192.168.1.101 3389 # RDP映射
-
-# UDP端口映射
-udppm 5353 8.8.8.8 53        # DNS映射
-
-# ========== 访问控制列表(ACL) ==========
-# 基于时间的访问控制
-allow * * * * 08:00-18:00    # 工作时间允许
-deny * * * * 00:00-08:00     # 夜间禁止
-
-# 基于URL的过滤
-filter /etc/3proxy/filter     # 过滤规则文件
-filter regexp "(porno|adult)" # 正则表达式过滤
-
-# 带宽控制
-bandlim 512000 proxyuser      # 用户带宽限制
-bandlim 1024000 * 192.168.1.* # IP段带宽限制
-
-# 连接数限制
-maxconn 100 proxyuser         # 用户最大连接数
-maxconn 50 * 192.168.1.100    # IP最大连接数
-
-# ========== 安全配置 ==========
-# 防止滥用
-deny * 10.0.0.0/8 * 25        # 禁止内部发邮件
-deny * * 192.168.1.100 *      # 禁止访问特定主机
-
-# 监控接口（仅本地访问）
-auth strong
-internal 127.0.0.1
-allow adminuser 127.0.0.1
-admin -p8089                  # 管理端口
-stat -p8090                   # 统计端口
-
-# 防止DDoS
-monitor /etc/3proxy/monitor   # 监控配置
-deny * * * * * 100/60         # 60秒内100次连接
-
-# ========== 高级优化 ==========
-# TCP优化
-socketpolicy notdefer         # 不延迟ACK
-socketpolicy nodelay          # 禁用Nagle算法
-
-# 内存优化
-allocrate 16                  # 内存分配率
-allocalert 80                 # 内存警报阈值(%)
-
-# 子进程管理
-children 4                    # 子进程数
-restart 3600                  # 重启间隔(秒)
-
-# 插件支持
-# plugin /path/to/plugin.so   # 加载插件
-```
-
-## 2. 低延时专用配置示例
+## 低延时专用配置示例
 
 ```bash
 #!/usr/local/bin/3proxy
@@ -571,3 +377,79 @@ curl --proxy http://user:pass@localhost:8080 https://example.com
 5. **启用日志审计**
 6. **使用chroot隔离**
 7. **避免使用root运行**
+
+## CONNECTION_L
+
+在 `proxychild` 函数（HTTP/HTTPS/FTP 代理的核心处理逻辑）中，`CONNECTION_L` 主要作用于特定场景：
+
+### 1. **CONNECT 隧道（HTTPS 代理）**
+当客户端发送 `CONNECT` 请求建立隧道时，代理会调用 `mapsocket` 在客户端和目标服务器之间双向转发原始数据。此处使用了 `CONNECTION_L`：
+```c
+if(isconnect && param->redirtype != R_HTTP) {
+    // ... 
+    param->res = mapsocket(param, conf.timeouts[CONNECTION_L]);
+}
+```
+这意味着 `CONNECTION_L` 决定了 HTTPS 隧道建立后，在没有数据交换时连接能够保持的最大空闲时间。
+
+### 2. **FTP over HTTP 代理**
+当代理处理 FTP 协议（通过 HTTP 代理访问 FTP 资源）时，数据传输阶段同样使用了 `CONNECTION_L`：
+```c
+if(!mode){
+    // ... 文件传输
+    res = mapsocket(param, conf.timeouts[CONNECTION_L]);
+}
+```
+这影响 FTP 数据连接的空闲超时。
+
+### **长连接 vs 短连接**
+- 对于普通的 HTTP 请求（GET/POST）且使用 **Keep-Alive** 时，`mapsocket` 调用的是 `CONNECTION_S`（短连接超时）：
+  ```c
+  if(!hascontent && !param->chunked) {
+      RETURN(mapsocket(param, conf.timeouts[CONNECTION_S]));
+  }
+  ```
+  因此，`CONNECTION_L` 并不直接影响普通 HTTP 请求的持久连接空闲时间。
+
+- 但在某些情况下（如 `isconnect` 成功后的隧道），`CONNECTION_L` 会覆盖 `CONNECTION_S` 成为隧道连接的空闲超时。
+
+### 总结
+- **`CONNECTION_L` 对 HTTP 代理的影响范围**：主要影响 **CONNECT 方法建立的隧道** 和 **FTP over HTTP 的数据连接**，这些属于长连接场景。
+- **普通 HTTP 请求（GET/POST）** 的 Keep-Alive 空闲超时由 `CONNECTION_S` 控制。
+- 两者共同决定了 HTTP 代理在不同操作下的超时行为，调整 `CONNECTION_L` 会改变 HTTPS 代理和 FTP 代理的会话保持时间。
+
+在 `proxychild` 函数中，`redirtype` 并没有被直接赋值，它是在进入 `proxychild` 之前或通过过滤器函数间接设置的。对于 HTTPS CONNECT 隧道，`redirtype` 的判断和设置主要发生在以下阶段：
+
+### **请求解析后的过滤器处理**
+在 `proxychild` 读取并解析完 HTTP 请求头后，会调用两个关键的过滤器函数：
+```c
+action = handlereqfilters(param, &req, &reqbufsize, 0, &reqsize);
+action = handlehdrfilterscli(param, &buf, &bufsize, 0, &inbuf);
+```
+这些过滤器（包括 parent 规则处理）会根据配置的 `parent` 指令、访问控制列表等条件，决定是否将请求重定向到父代理。如果匹配了需要父代理转发的规则，过滤器内部会将 `param->redirtype` 设置为 `R_HTTP`（或其他重定向类型），同时可能设置 `param->redirectfunc` 用于后续处理。
+
+### **CONNECT 请求的处理分支**
+在 `isconnect` 分支中，代码会根据 `redirtype` 决定行为：
+```c
+if(isconnect && param->redirtype != R_HTTP) {
+    // 直接建立隧道：发送 200 Connection established，然后 mapsocket
+    socksend(param, param->clisock, (unsigned char *)proxy_stringtable[8], ...);
+    param->res = mapsocket(param, conf.timeouts[CONNECTION_L]);
+} else {
+    // 如果 redirtype == R_HTTP，则不会执行上述代码，请求将转发给父代理
+}
+```
+- 如果 `redirtype != R_HTTP`（默认情况），则立即向客户端回复 `200 Connection established`，并调用 `mapsocket` 在客户端和目标服务器之间建立双向数据转发隧道。
+- 如果 `redirtype == R_HTTP`，说明该 CONNECT 请求需要经由 HTTP 父代理处理，此时不会发送成功响应，也不会建立本地隧道，而是将请求转发给父代理（后续可能由 `redirectfunc` 或继续发送请求头完成）。
+
+### **parent 规则的触发**
+`redirtype` 的赋值通常由 `parent` 指令触发。例如配置：
+```
+parent 1000 http 192.168.1.100 3128
+```
+当 CONNECT 请求的目标匹配该 parent 规则时，过滤器会设置 `redirtype = R_HTTP`，使得请求被转发到指定的父代理，而不是直接连接目标服务器。
+
+### 总结
+- **设置位置**：`redirtype` 在 `handlereqfilters` 和 `handlehdrfilterscli` 等过滤器函数中被赋值（具体实现在 3proxy 核心的过滤/路由模块，未在给出的代码段中）。
+- **判断时机**：`proxychild` 中通过 `if(isconnect && param->redirtype != R_HTTP)` 来判断是否直接建立隧道。
+- **对 HTTPS CONNECT 的影响**：该判断决定了 CONNECT 请求是本地直连还是通过父代理转发。
