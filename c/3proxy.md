@@ -1,6 +1,7 @@
 # 3proxy
 
 - https://github.com/3proxy/3proxy
+- https://3proxy.org/doc/man3/3proxy.cfg.3.html
 
 ```conf
 daemon
