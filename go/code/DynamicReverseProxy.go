@@ -2,27 +2,51 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"log"
 	"net"
 	"net/http"
+	"net/http/httptrace"
 	"net/http/httputil"
 	"net/url"
 	"os"
 	"time"
+
+	"github.com/spf13/viper"
 )
+
+type ProxyConfig struct {
+	SetXForwarded         bool          `mapstructure:"set_x_forwarded"`
+	PassHost              bool          `mapstructure:"pass_host"`
+	DialTimeout           time.Duration `mapstructure:"dial_timeout"`
+	KeepAlive             time.Duration `mapstructure:"keep_alive"`
+	TLSHandshakeTimeout   time.Duration `mapstructure:"tls_handshake_timeout"`
+	ResponseHeaderTimeout time.Duration `mapstructure:"response_header_timeout"`
+	ExpectContinueTimeout time.Duration `mapstructure:"expect_continue_timeout"`
+	MaxIdleConns          int           `mapstructure:"max_idle_conns"`
+	IdleConnTimeout       time.Duration `mapstructure:"idle_conn_timeout"`
+}
+
+// AppConfig 包含所有应用配置
+type AppConfig struct {
+	Server struct {
+		Host string `mapstructure:"host"`
+		Port int    `mapstructure:"port"`
+	} `mapstructure:"server"`
+
+	Proxy struct {
+		DefaultTarget string                   `mapstructure:"default_target"`
+		ProxyConfig   `mapstructure:",squash"` // 扁平化嵌入，使 ProxyConfig 的字段直接成为 proxy 的子字段
+	} `mapstructure:"proxy"`
+}
 
 // Config 保存代理的配置选项
 type Config struct {
-	// DefaultTarget 默认目标 URL，当请求未提供 target 参数时使用
 	DefaultTarget *url.URL
-	// SetXForwarded 是否设置 X-Forwarded-* 头
-	SetXForwarded bool
-	// PassHost 是否传递客户端原始 Host 头（透明代理）
-	PassHost bool
-	// Logger 自定义日志记录器，为 nil 时使用标准日志
-	Logger *log.Logger
+	Logger        *log.Logger
+	ProxyConfig   // 嵌入公共配置
 }
 
 // contextKey 用于上下文传值的键类型
@@ -41,19 +65,19 @@ func DynamicReverseProxy(cfg Config) http.Handler {
 
 	// 创建自定义 Transport，支持从上下文获取源 IP 并绑定本地地址
 	transport := &http.Transport{
-		// 禁用 Keep-Alive 以确保每个请求使用独立的连接，从而能按请求绑定源 IP
-		DisableKeepAlives: true,
-		// 其他 Transport 配置可按需调整
-		MaxIdleConns:        0, // 禁用空闲连接
-		IdleConnTimeout:     0,
-		TLSHandshakeTimeout: 10 * time.Second,
+		DisableKeepAlives:     cfg.MaxIdleConns == 0, // 如果 MaxIdleConns 为 0，禁用 Keep-Alive
+		MaxIdleConns:          cfg.MaxIdleConns,
+		IdleConnTimeout:       cfg.IdleConnTimeout,
+		TLSHandshakeTimeout:   cfg.TLSHandshakeTimeout,
+		ResponseHeaderTimeout: cfg.ResponseHeaderTimeout,
+		ExpectContinueTimeout: cfg.ExpectContinueTimeout,
 	}
 
 	// 包装 DialContext，从请求上下文读取 sourceIP 并设置 LocalAddr
 	transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
 		dialer := &net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
+			Timeout:   cfg.DialTimeout,
+			KeepAlive: cfg.KeepAlive,
 		}
 
 		// 尝试从上下文中获取 sourceIP
@@ -65,8 +89,38 @@ func DynamicReverseProxy(cfg Config) http.Handler {
 			} else {
 				cfg.Logger.Printf("警告: 无效的源 IP 地址 %s，将使用默认路由", ipStr)
 			}
+		} else {
+			cfg.Logger.Printf("警告: 无法从上下文获取 sourceIP，将使用默认路由")
 		}
 
+		// 分离主机和端口
+		host, port, err := net.SplitHostPort(addr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid address %q: %w", addr, err)
+		}
+
+		// 如果主机名不是 IP，则手动解析并计时
+		if net.ParseIP(host) == nil {
+			// 可选：从配置中获取 DNS 超时，构造带超时的 context
+			// dnsCtx, cancel := context.WithTimeout(ctx, cfg.DNSTimeout)
+			// defer cancel()
+			start := time.Now()
+			ips, err := net.DefaultResolver.LookupIPAddr(ctx, host) // 使用原 ctx 或带超时的 ctx
+			dnsDuration := time.Since(start)
+			if err != nil {
+				cfg.Logger.Printf("DNS 解析失败 %s: %v (耗时 %v)", host, err, dnsDuration)
+				return nil, err
+			}
+			if len(ips) == 0 {
+				return nil, fmt.Errorf("no IP addresses for %s", host)
+			}
+			// 简单取第一个 IP（可根据策略选择）
+			ip := ips[0].IP
+			cfg.Logger.Printf("DNS 解析 %s -> %s, 耗时 %v", host, ip, dnsDuration)
+			addr = net.JoinHostPort(ip.String(), port)
+		}
+
+		// 现在 addr 为 IP:port，dialer.DialContext 将直接连接
 		return dialer.DialContext(ctx, network, addr)
 	}
 
@@ -76,8 +130,10 @@ func DynamicReverseProxy(cfg Config) http.Handler {
 			query := r.In.URL.Query()
 			targetStr := query.Get("_target")
 			sourceIP := query.Get("_source_ip")
+			cfg.Logger.Printf("targetStr: %v, sourceIP: %v", targetStr, sourceIP)
 
-			// 从查询参数中删除 target 和 source_ip
+			// 从查询参数中删除 request_id、target 和 source_ip
+			query.Del("_request_id")
 			query.Del("_target")
 			query.Del("_source_ip")
 			// 重新编码查询参数，供后续使用
@@ -111,8 +167,26 @@ func DynamicReverseProxy(cfg Config) http.Handler {
 
 			// 将 sourceIP 存入上下文，供 Transport 使用
 			if sourceIP != "" {
-				ctx := context.WithValue(r.In.Context(), sourceIPKey, sourceIP)
-				r.In = r.In.WithContext(ctx)
+				ctx := context.WithValue(r.Out.Context(), sourceIPKey, sourceIP)
+
+				// 4. 创建 ClientTrace，注册 TLS 握手回调
+				trace := &httptrace.ClientTrace{
+					TLSHandshakeStart: func() {
+						fmt.Println("TLS 握手开始", time.Now().Format("2006-01-02 15:04:05.000"))
+					},
+					TLSHandshakeDone: func(connState tls.ConnectionState, err error) {
+						fmt.Println("TLS 握手结束", time.Now().Format("2006-01-02 15:04:05.000"))
+						if err != nil {
+							fmt.Printf("TLS 握手错误: %v\n", err)
+						} else {
+							fmt.Printf("TLS 握手成功, 连接状态: %v\n", connState)
+						}
+					},
+				}
+
+				// 5. 将跟踪器附加到请求的上下文中
+				ctx = httptrace.WithClientTrace(ctx, trace)
+				r.Out = r.Out.WithContext(ctx)
 			}
 
 			// 构建最终要发送的查询参数
@@ -155,44 +229,93 @@ func DynamicReverseProxy(cfg Config) http.Handler {
 		},
 		ErrorLog: cfg.Logger, // 使用自定义 Logger
 	}
-
-	return proxy
+	//return proxy
+	// 包装一层以记录请求开始、结束及时长
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		cfg.Logger.Printf("请求开始: %s %s", r.Method, r.URL)
+		proxy.ServeHTTP(w, r)
+		cfg.Logger.Printf("请求结束: %s %s, 耗时: %v", r.Method, r.URL, time.Since(start))
+	})
+	return handler
 }
-
 func main() {
-	println(os.Args)
-	// 示例用法：从命令行参数读取默认目标（可选）
-	var defaultTarget *url.URL
-	if len(os.Args) == 2 {
-		var err error
-		defaultTarget, err = url.Parse(os.Args[1])
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "无效的默认目标 URL: %v\n", err)
-			os.Exit(1)
+
+	// 初始化 viper
+	viper.SetConfigName("config")   // 配置文件名称（无扩展名）
+	viper.SetConfigType("yaml")     // 配置文件类型
+	viper.AddConfigPath(".")        // 查找配置文件的路径
+	viper.AddConfigPath("./config") // 可添加多个路径
+
+	// 设置默认值（可选）
+	viper.SetDefault("server.host", "0.0.0.0")
+	viper.SetDefault("server.port", 8080)
+	viper.SetDefault("proxy.set_x_forwarded", false)
+	viper.SetDefault("proxy.pass_host", false)
+
+	viper.SetDefault("proxy.dial_timeout", "30s")
+	viper.SetDefault("proxy.keep_alive", "30s")
+	viper.SetDefault("proxy.tls_handshake_timeout", "10s")
+	viper.SetDefault("proxy.response_header_timeout", "0s")
+	viper.SetDefault("proxy.expect_continue_timeout", "0s")
+	viper.SetDefault("proxy.max_idle_conns", 0)
+	viper.SetDefault("proxy.idle_conn_timeout", "0s")
+
+	// 读取环境变量（支持前缀 PROXY_）
+	viper.SetEnvPrefix("PROXY")
+	viper.AutomaticEnv()
+
+	// 读取配置文件
+	if err := viper.ReadInConfig(); err != nil {
+		// 如果配置文件不存在，仅打印警告并继续使用默认值
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			log.Println("未找到配置文件，将使用默认值和环境变量")
+		} else {
+			log.Fatalf("读取配置文件失败: %v", err)
 		}
-	} else if len(os.Args) > 2 {
-		fmt.Fprintf(os.Stderr, "用法: %s [默认目标URL]\n", os.Args[0])
-		os.Exit(1)
+	} else {
+		log.Println("使用配置文件:", viper.ConfigFileUsed())
 	}
 
+	// 将配置解析到结构体
+	var appConfig AppConfig
+	if err := viper.Unmarshal(&appConfig); err != nil {
+		log.Fatalf("解析配置失败: %v", err)
+	}
+
+	// 处理默认目标
+	var defaultTargetURL *url.URL
+	if appConfig.Proxy.DefaultTarget != "" {
+		var err error
+		defaultTargetURL, err = url.Parse(appConfig.Proxy.DefaultTarget)
+		if err != nil {
+			log.Fatalf("配置文件中的默认目标 URL 无效: %v", err)
+		}
+	}
+
+	// 构建代理配置
 	cfg := Config{
-		DefaultTarget: defaultTarget,
-		SetXForwarded: false,
-		PassHost:      false,
+		DefaultTarget: defaultTargetURL,
 		Logger:        log.New(os.Stdout, "[dynamic-proxy] ", log.LstdFlags),
+		ProxyConfig:   appConfig.Proxy.ProxyConfig, // 直接赋值嵌入的结构体
 	}
 
+	// 创建处理器
 	handler := DynamicReverseProxy(cfg)
 
-	fmt.Println("动态透明代理启动，监听 :8080")
-	if defaultTarget != nil {
-		fmt.Println("默认目标:", defaultTarget.String())
+	// 组装监听地址
+	listenAddr := fmt.Sprintf("%s:%d", appConfig.Server.Host, appConfig.Server.Port)
+
+	// 启动服务
+	fmt.Printf("动态透明代理启动，监听 %s\n", listenAddr)
+	if defaultTargetURL != nil {
+		fmt.Println("默认目标:", defaultTargetURL.String())
 	}
 	fmt.Println("参数说明:")
-	fmt.Println("  target:    转发目标 URL (必需，除非有默认值)")
-	fmt.Println("  source_ip: 指定出口 IP (可选，必须是本机有效IP)")
+	fmt.Println("  _target:    转发目标 URL (必需，除非有默认值)")
+	fmt.Println("  _source_ip: 指定出口 IP (可选，必须是本机有效IP)")
 
-	if err := http.ListenAndServe(":8080", handler); err != nil {
+	if err := http.ListenAndServe(listenAddr, handler); err != nil {
 		fmt.Fprintf(os.Stderr, "服务器启动失败: %v\n", err)
 		os.Exit(1)
 	}
