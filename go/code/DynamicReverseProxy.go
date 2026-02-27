@@ -53,8 +53,9 @@ type Config struct {
 type contextKey string
 
 const (
-	sourceIPKey contextKey = "sourceIP"
-	proxyErrKey contextKey = "proxyError"
+	sourceIPKey  contextKey = "sourceIP"
+	proxyErrKey  contextKey = "proxyError"
+	localConnKey contextKey = "localConn"
 )
 
 // DynamicReverseProxy 创建一个可根据请求参数动态转发并指定出口 IP 的反向代理
@@ -130,6 +131,17 @@ func DynamicReverseProxy(cfg Config) http.Handler {
 			query := r.In.URL.Query()
 			targetStr := query.Get("_target")
 			sourceIP := query.Get("_source_ip")
+			if sourceIP == "" {
+				// 尝试从请求上下文中获取本地连接 IP
+				if conn, ok := r.In.Context().Value(localConnKey).(net.Conn); ok {
+					if localAddr := conn.LocalAddr(); localAddr != nil {
+						if tcpAddr, ok := localAddr.(*net.TCPAddr); ok {
+							sourceIP = tcpAddr.IP.String()
+							cfg.Logger.Printf("使用本地 IP %s 作为源 IP", sourceIP)
+						}
+					}
+				}
+			}
 			cfg.Logger.Printf("targetStr: %v, sourceIP: %v", targetStr, sourceIP)
 
 			// 从查询参数中删除 request_id、target 和 source_ip
@@ -169,24 +181,26 @@ func DynamicReverseProxy(cfg Config) http.Handler {
 			if sourceIP != "" {
 				ctx := context.WithValue(r.Out.Context(), sourceIPKey, sourceIP)
 
-				// 4. 创建 ClientTrace，注册 TLS 握手回调
+				// 创建 ClientTrace，注册 TLS 握手回调
 				trace := &httptrace.ClientTrace{
 					TLSHandshakeStart: func() {
 						fmt.Println("TLS 握手开始", time.Now().Format("2006-01-02 15:04:05.000"))
 					},
 					TLSHandshakeDone: func(connState tls.ConnectionState, err error) {
-						fmt.Println("TLS 握手结束", time.Now().Format("2006-01-02 15:04:05.000"))
 						if err != nil {
-							fmt.Printf("TLS 握手错误: %v\n", err)
+							fmt.Println("TLS 握手错误", err, time.Now().Format("2006-01-02 15:04:05.000"))
 						} else {
-							fmt.Printf("TLS 握手成功, 连接状态: %v\n", connState)
+							fmt.Println("TLS 握手成功, 连接状态", connState, time.Now().Format("2006-01-02 15:04:05.000"))
 						}
 					},
 				}
 
-				// 5. 将跟踪器附加到请求的上下文中
+				// 将跟踪器附加到请求的上下文中
 				ctx = httptrace.WithClientTrace(ctx, trace)
 				r.Out = r.Out.WithContext(ctx)
+			} else {
+				cfg.Logger.Printf("警告: 无法从上下文获取 sourceIP，将使用默认路由")
+
 			}
 
 			// 构建最终要发送的查询参数
@@ -315,8 +329,21 @@ func main() {
 	fmt.Println("  _target:    转发目标 URL (必需，除非有默认值)")
 	fmt.Println("  _source_ip: 指定出口 IP (可选，必须是本机有效IP)")
 
-	if err := http.ListenAndServe(listenAddr, handler); err != nil {
+	server := &http.Server{
+		Addr:    listenAddr,
+		Handler: handler,
+		ConnContext: func(ctx context.Context, c net.Conn) context.Context {
+			return context.WithValue(ctx, localConnKey, c)
+		},
+	}
+
+	fmt.Printf("动态透明代理启动，监听 %s\n", listenAddr)
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		fmt.Fprintf(os.Stderr, "服务器启动失败: %v\n", err)
 		os.Exit(1)
 	}
+	// if err := http.ListenAndServe(listenAddr, handler); err != nil {
+	// 	fmt.Fprintf(os.Stderr, "服务器启动失败: %v\n", err)
+	// 	os.Exit(1)
+	// }
 }
