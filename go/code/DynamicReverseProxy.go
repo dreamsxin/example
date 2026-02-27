@@ -136,8 +136,13 @@ func DynamicReverseProxy(cfg Config) http.Handler {
 				if conn, ok := r.In.Context().Value(localConnKey).(net.Conn); ok {
 					if localAddr := conn.LocalAddr(); localAddr != nil {
 						if tcpAddr, ok := localAddr.(*net.TCPAddr); ok {
-							sourceIP = tcpAddr.IP.String()
-							cfg.Logger.Printf("使用本地 IP %s 作为源 IP", sourceIP)
+							ip := tcpAddr.IP
+							if ip.IsLoopback() {
+								cfg.Logger.Printf("本地IP是回环地址 %s，跳过使用", ip)
+							} else {
+								sourceIP = ip.String()
+								cfg.Logger.Printf("使用本地IP %s 作为源IP", sourceIP)
+							}
 						}
 					}
 				}
@@ -238,6 +243,7 @@ func DynamicReverseProxy(cfg Config) http.Handler {
 				http.Error(w, ctxErr.(error).Error(), http.StatusBadRequest)
 				return
 			}
+			cfg.Logger.Printf("代理错误: %v", err)
 			// 默认错误处理
 			http.Error(w, "代理错误: "+err.Error(), http.StatusBadGateway)
 		},
