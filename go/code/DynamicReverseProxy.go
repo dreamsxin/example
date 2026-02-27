@@ -17,6 +17,35 @@ import (
 	"github.com/spf13/viper"
 )
 
+/*
+# 监听地址和端口
+server:
+  host: "0.0.0.0"
+  port: 4000
+
+# 代理默认配置
+proxy:
+  # 默认目标 URL（可选）
+  default_target: "http://localhost:8081"
+  # 是否设置 X-Forwarded-* 头
+  set_x_forwarded: false
+  # 是否透传客户端原始 Host 头
+  pass_host: false
+  # 超时相关配置
+  dial_timeout: 10s
+  keep_alive: 20s
+  tls_handshake_timeout: 10s
+  response_header_timeout: 0s
+  expect_continue_timeout: 0s
+  max_idle_conns: 0
+  idle_conn_timeout: 0s
+
+basic_auth:
+  enabled: true
+  username: "admin"
+  password: "secret123"
+*/
+
 type ProxyConfig struct {
 	SetXForwarded         bool          `mapstructure:"set_x_forwarded"`
 	PassHost              bool          `mapstructure:"pass_host"`
@@ -27,6 +56,13 @@ type ProxyConfig struct {
 	ExpectContinueTimeout time.Duration `mapstructure:"expect_continue_timeout"`
 	MaxIdleConns          int           `mapstructure:"max_idle_conns"`
 	IdleConnTimeout       time.Duration `mapstructure:"idle_conn_timeout"`
+}
+
+// BasicAuthConfig 基础认证配置
+type BasicAuthConfig struct {
+	Enabled  bool   `mapstructure:"enabled"`
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
 }
 
 // AppConfig 包含所有应用配置
@@ -40,6 +76,8 @@ type AppConfig struct {
 		DefaultTarget string                   `mapstructure:"default_target"`
 		ProxyConfig   `mapstructure:",squash"` // 扁平化嵌入，使 ProxyConfig 的字段直接成为 proxy 的子字段
 	} `mapstructure:"proxy"`
+
+	BasicAuth BasicAuthConfig `mapstructure:"basic_auth"`
 }
 
 // Config 保存代理的配置选项
@@ -47,6 +85,7 @@ type Config struct {
 	DefaultTarget *url.URL
 	Logger        *log.Logger
 	ProxyConfig   // 嵌入公共配置
+	BasicAuth     BasicAuthConfig
 }
 
 // contextKey 用于上下文传值的键类型
@@ -252,6 +291,16 @@ func DynamicReverseProxy(cfg Config) http.Handler {
 	//return proxy
 	// 包装一层以记录请求开始、结束及时长
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if cfg.BasicAuth.Enabled {
+			// 获取 Basic Auth 凭据
+			user, pass, ok := r.BasicAuth()
+			if !ok || user != cfg.BasicAuth.Username || pass != cfg.BasicAuth.Password {
+				// 认证失败，返回 401
+				w.Header().Set("WWW-Authenticate", `Basic realm="Proxy Authentication Required"`)
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+		}
 		start := time.Now()
 		cfg.Logger.Printf("请求开始: %s %s", r.Method, r.URL)
 		proxy.ServeHTTP(w, r)
@@ -280,6 +329,10 @@ func main() {
 	viper.SetDefault("proxy.expect_continue_timeout", "0s")
 	viper.SetDefault("proxy.max_idle_conns", 0)
 	viper.SetDefault("proxy.idle_conn_timeout", "0s")
+
+	viper.SetDefault("basic_auth.enabled", false)
+	viper.SetDefault("basic_auth.username", "")
+	viper.SetDefault("basic_auth.password", "")
 
 	// 读取环境变量（支持前缀 PROXY_）
 	viper.SetEnvPrefix("PROXY")
@@ -318,6 +371,7 @@ func main() {
 		DefaultTarget: defaultTargetURL,
 		Logger:        log.New(os.Stdout, "[dynamic-proxy] ", log.LstdFlags),
 		ProxyConfig:   appConfig.Proxy.ProxyConfig, // 直接赋值嵌入的结构体
+		BasicAuth:     appConfig.BasicAuth,
 	}
 
 	// 创建处理器
