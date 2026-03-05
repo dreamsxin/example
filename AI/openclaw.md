@@ -6,6 +6,43 @@ npm install -g openclaw-cn
 openclaw onboard --install-daemon
 openclaw onboard
 openclaw gateway restart
+
+# 检查服务状态
+openclaw status
+# 深度健康检查
+openclaw health
+# 诊断配置问题
+openclaw doctor
+```
+
+## 配置 Brave Search API
+`openclaw configure --section web`
+
+##
+让 AI 记录错误和经验，转化为长期记忆，避免重复犯同样的错。
+```shell
+npm install -g undici
+npm i -g clawdhub
+clawdhub install self-improving-agent
+```
+
+## 添加飞书
+
+```shell
+openclaw channels add
+openclaw config set channels.feishu.appId "<App_ID>"
+openclaw config set channels.feishu.appSecret "<App_Secret>"
+openclaw config set channels.feishu.enabled true
+openclaw config set channels.feishu.connectionMode websocket
+openclaw config set channels.feishu.dmPolicy pairing
+openclaw config set channels.feishu.groupPolicy allowlist
+openclaw config set channels.feishu.requireMention true
+```
+
+**配置**
+私信机器人，获得配对码
+```shell
+openclaw pairing approve feishu V3WUEKUX
 ```
 
 ## auth-profiles.json
