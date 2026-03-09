@@ -1160,3 +1160,40 @@ import { chromium, devices } from 'playwright';
   }
 })();
 ```
+
+## ariaSnapshot
+
+`locator.ariaSnapshot()` 是 Playwright 提供的一个高级API，它的工作原理是在**底层调用不同浏览器引擎的原生接口**来获取可访问性树，然后将这些浏览器相关的数据结构统一成 Playwright 自己的 YAML 格式输出。因此，它不仅支持 Chrome，也**完全支持 Firefox**。
+
+### 核心原理与跨浏览器支持总览
+
+| 特性维度 | 具体说明 |
+| :--- | :--- |
+| **核心原理** | Playwright 通过 CDP（Chrome DevTools Protocol）的 `Accessibility` 域 或 Firefox 的 Marionette 协议，从浏览器内核直接获取完整的可访问性树。 |
+| **返回格式** | 统一为易读的 **YAML 格式**，包含角色的层级结构和元素的属性（如名称、层级、URL 等）。 |
+| **Chrome 接口** | 基于 **Chrome DevTools Protocol (CDP)** 中的 `Accessibility.getFullAXTree` 等命令。 |
+| **Firefox 支持** | **完全支持**。通过 Firefox 的 **Marionette** 协议获取其内部的可访问性树。 |
+| **核心用途** | **可访问性测试**、**UI 验证**（通过快照对比）以及为 **AI 自动化** 提供结构化的页面语义描述（如你之前代码中使用的场景）。 |
+
+### 原理详解：Chrome 与 Firefox 的实现
+
+#### 1. 在 Chrome（及 Chromium 内核）中的实现
+当你在 Chromium 浏览器上调用 `locator.ariaSnapshot()` 时，Playwright 通过 **Chrome DevTools Protocol (CDP)** 与浏览器内核通信。
+
+*   **底层接口**：主要使用 CDP 的 `Accessibility` 域。Playwright 会向浏览器发送类似 `Accessibility.getFullAXTree` 的命令，请求返回指定节点（或整个页面）的完整可访问性树。
+*   **数据来源**：这个树直接来源于浏览器渲染引擎（Blink）内部维护的**可访问性树**。这棵树是浏览器为辅助技术（如屏幕阅读器）提供的页面语义化表示，它综合了原生 HTML 语义、显式设置的 ARIA 属性以及计算出的角色和名称。因此，它比单纯的 DOM 结构更能反映页面如何被辅助技术解读。
+*   **数据统一**：获取到的原始 CDP 数据经过 Playwright 的处理和格式化，最终输出为结构清晰的 YAML 文本。
+
+#### 2. 在 Firefox 中的实现
+**Firefox 完全支持此功能**，Playwright 的每个版本发布时都会明确列出其测试通过的 Firefox 版本（例如 v1.52 对应 Firefox 137.0）。
+
+*   **底层接口**：Playwright 通过 **Marionette 协议** 与 Firefox 进行底层通信。Marionette 是 Firefox 内置的自动化驱动程序，它允许 Playwright 控制浏览器并访问其内部状态。
+*   **数据来源**：Firefox 的 Gecko 引擎同样维护着自己的可访问性树。Marionette 协议提供了访问这棵树的接口，Playwright 通过调用这些接口获取数据。
+*   **一致性**：虽然底层协议和数据格式不同，但 Playwright 在 API 层面进行了抽象和统一，确保你在 Firefox 上调用 `ariaSnapshot()` 时，得到的 YAML 结构与在 Chromium 上得到的结构在语义上是一致的。这让你编写的测试或自动化脚本可以跨浏览器运行。
+
+### 关键特性补充：`ref` 选项
+值得一提的是，从 Playwright 1.52 版本开始，`locator.ariaSnapshot()` 新增了一个 **`ref` 选项**，这正是你之前代码中核心概念的官方实现。
+
+*   **官方 `ref` 支持**：通过 `{ ref: true }` 选项，Playwright 会自动在快照中为每个元素生成一个引用 ID，并且后续可以直接使用 `page.getByRef('xxx')` 来定位该元素。这说明你的思路与 Playwright 官方的演进方向不谋而合。
+
+希望这个解释能帮助你更好地理解 `locator.ariaSnapshot()` 的底层原理。如果你对其在 Safari（WebKit）中的实现或其他细节还有疑问，随时可以继续交流。
