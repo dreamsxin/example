@@ -18,6 +18,15 @@ openclaw status
 openclaw health
 # 诊断配置问题
 openclaw doctor
+
+# 切换到稳定版
+openclaw update --channel stable
+
+# 切换到测试版
+openclaw update --channel beta
+
+# 切换到开发版
+openclaw update --channel dev
 ```
 
 ## 配置 Brave Search API
