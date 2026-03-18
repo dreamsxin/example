@@ -5,12 +5,15 @@ $env:OPENAI_API_KEY = "xxx"
 npm install -g openclaw-cn
 openclaw onboard --install-daemon
 openclaw onboard
+# 设置权限
+openclaw config set tools.profile "coding"
 openclaw gateway restart
 # 打开控制台
 openclaw dashboard
 
 # 新建智能体
 openclaw agents add new-agent
+openclaw agents add --workspace new-agent
 
 # 检查服务状态
 openclaw status
