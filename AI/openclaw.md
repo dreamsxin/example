@@ -6,6 +6,8 @@ npm install -g openclaw-cn
 openclaw onboard --install-daemon
 openclaw onboard
 openclaw gateway restart
+# 打开控制台
+openclaw dashboard
 
 # 检查服务状态
 openclaw status
