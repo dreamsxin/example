@@ -10,6 +10,11 @@ openclaw config set tools.profile "coding"
 openclaw gateway restart
 # 打开控制台
 openclaw dashboard
+# 日志
+openclaw gateway --log-level debug
+# 设置 Max
+openclaw config set models.providers.custom-coding-dashscope-aliyuncs-com.models[0].maxTokens 65536
+openclaw config set models.providers.custom-coding-dashscope-aliyuncs-com.models[0].contextWindow 1000000
 
 # 新建智能体
 openclaw agents add new-agent
