@@ -9,6 +9,9 @@ openclaw gateway restart
 # 打开控制台
 openclaw dashboard
 
+# 新建智能体
+openclaw agents add new-agent
+
 # 检查服务状态
 openclaw status
 # 深度健康检查
