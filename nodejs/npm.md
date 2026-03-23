@@ -28,3 +28,16 @@ cnpm 在 win10 下可能需要设置 权限 `set-ExecutionPolicy RemoteSigned`
 pnpm config get registry 
 pnpm config set registry http://registry.npm.taobao.org 
 ```
+
+## 发布包
+
+如果没有双面认证，需要生成token，选择绕过2FA
+
+```bash
+npm view brosdk-sdk
+nrm ls
+nrm use npm
+npm login
+npm config set //registry.npmjs.org/:_authToken npm_xxxxxx
+npm publish
+```
