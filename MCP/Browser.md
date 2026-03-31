@@ -216,4 +216,350 @@ await mcp.call('stop_environment', { envId: env.envId });
 
 ---
 
-这套完整清单涵盖了从**基础自动化**到**多指纹环境隔离**再到**AI 原生交互**的全方位能力，可支持任意复杂的网页自动化场景。
+# 🧪 MCP 工具详细示例
+
+所有示例假设已建立 MCP 客户端连接，支持 `stdio` 或 `Streamable HTTP` 模式。`client.call(toolName, arguments)` 为异步调用。
+
+---
+
+## 一、P0 核心必备工具示例（基础自动化）
+
+### 1.1 导航与页面控制
+
+```javascript
+// 打开网页
+await client.call('navigate_page', { url: 'https://example.com/login' });
+
+// 新建标签页
+const { pageId } = await client.call('new_page', { url: 'https://google.com' });
+
+// 列出所有标签页
+const pages = await client.call('list_pages', {});
+console.log(pages); // [{ pageId, url, title }, ...]
+
+// 切换回第一个标签页
+await client.call('select_page', { pageId: pages[0].pageId });
+
+// 关闭当前标签页
+await client.call('close_page', {});
+```
+
+### 1.2 元素交互
+
+```javascript
+// 填写表单
+await client.call('fill', { selector: '#username', text: 'alice' });
+await client.call('fill', { selector: '#password', text: 'secret' });
+
+// 点击登录按钮
+await client.call('click', { selector: 'button[type="submit"]' });
+
+// 按键（例如提交搜索）
+await client.call('press_key', { key: 'Enter' });
+
+// 悬停菜单
+await client.call('hover', { selector: '.dropdown-menu' });
+
+// 上传文件
+await client.call('upload_file', { selector: 'input[type="file"]', path: '/path/to/file.png' });
+```
+
+### 1.3 数据提取与分析
+
+```javascript
+// 执行 JS 获取标题
+const { result: title } = await client.call('evaluate_script', {
+  function: '() => document.title'
+});
+
+// 获取完整 HTML（高性能，适合大页面）
+const { html, size } = await client.call('get_page_html', { compress: false });
+console.log(`HTML size: ${size} bytes`);
+
+// 仅获取 #main 区域 HTML
+const { html: mainHtml } = await client.call('get_page_html', { selector: '#main' });
+
+// 获取页面文本快照（供 AI 理解结构）
+const { snapshot } = await client.call('take_snapshot', {});
+console.log(snapshot); // 可访问性树文本
+
+// 截图
+const { data: screenshotBase64 } = await client.call('take_screenshot', { fullPage: true });
+```
+
+### 1.4 等待与弹窗处理
+
+```javascript
+// 等待文本出现
+await client.call('wait_for', { text: '欢迎', timeout: 5000 });
+
+// 等待元素出现
+await client.call('wait_for', { selector: '.user-avatar', timeout: 10000 });
+
+// 点击可能触发弹窗的按钮
+await client.call('click', { selector: '#delete-btn' });
+
+// 处理弹窗（必须紧接着调用）
+await client.call('handle_dialog', { action: 'accept' });  // 确定
+// 或取消
+await client.call('handle_dialog', { action: 'dismiss' });
+// 或 prompt 输入
+await client.call('handle_dialog', { action: 'accept', promptText: '用户输入' });
+```
+
+### 1.5 调试基础
+
+```javascript
+// 获取控制台日志
+const { messages } = await client.call('list_console_messages', { limit: 20 });
+messages.forEach(msg => console.log(`${msg.level}: ${msg.text}`));
+```
+
+---
+
+## 二、P1 Agent Browser 高级接口示例
+
+Agent Browser 接口专为 **AI Agent 自然交互** 设计，通过 **结构化快照** + **稳定引用** 大幅降低 Agent 对选择器的依赖，并支持端到端任务执行。
+
+### 2.1 获取结构化快照 (`get_snapshot`)
+
+Agent 的第一步通常是获取当前页面的快照，用于理解页面布局和可交互元素。
+
+```javascript
+const snapshot = await client.call('get_snapshot', { sessionId });
+```
+
+**快照结构示例**（文本形式，实际返回 JSON）：
+```
+[1] link: "Home", ref: L1
+[2] textbox: "Search products", ref: I1
+[3] button: "Search", ref: B1
+[4] heading: "Today's Deals", ref: H1
+[5] link: "View all", ref: L2
+```
+
+每个可交互元素都有一个 **稳定引用（ref）**，Agent 后续交互可直接使用该引用，无需手写 CSS 选择器。
+
+### 2.2 自然语言交互 (`agent_interact`)
+
+Agent 根据快照决定操作，然后调用 `agent_interact`。
+
+```javascript
+// 点击 ref 为 B1 的按钮（“Search”按钮）
+await client.call('agent_interact', {
+  sessionId,
+  instruction: 'click',
+  ref: 'B1'
+});
+
+// 在输入框 ref I1 中输入文本
+await client.call('agent_interact', {
+  sessionId,
+  instruction: 'fill',
+  ref: 'I1',
+  text: 'laptop'
+});
+
+// 或者使用自然语言描述，由 MCP Server 自动解析
+await client.call('agent_interact', {
+  sessionId,
+  instruction: '点击“登录”按钮'
+  // 不提供 ref 时，Server 会根据快照中的语义自动匹配
+});
+```
+
+### 2.3 智能等待 (`agent_wait`)
+
+等待页面状态满足条件，比基础 `wait_for` 更智能。
+
+```javascript
+// 等待某个引用指向的元素出现
+await client.call('agent_wait', {
+  sessionId,
+  condition: 'ref_exists',
+  ref: 'L2',    // 等待“View all”链接出现
+  timeout: 10000
+});
+
+// 等待页面出现包含“购物车”文本的元素
+await client.call('agent_wait', {
+  sessionId,
+  condition: 'text_appears',
+  text: '购物车',
+  timeout: 8000
+});
+
+// 等待页面 URL 包含特定字符串
+await client.call('agent_wait', {
+  sessionId,
+  condition: 'url_contains',
+  value: '/cart',
+  timeout: 5000
+});
+```
+
+### 2.4 结构化数据提取 (`agent_extract`)
+
+根据 JSON Schema 从当前页面提取数据，AI 自动定位元素。
+
+```javascript
+const schema = {
+  type: 'object',
+  properties: {
+    productName: { type: 'string', selector: '.product-title' },
+    price: { type: 'number', selector: '.price' },
+    inStock: { type: 'boolean', selector: '.stock-status', textMatch: 'In stock' }
+  }
+};
+
+const { data } = await client.call('agent_extract', {
+  sessionId,
+  schema
+});
+console.log(data); // { productName: "Laptop", price: 999.99, inStock: true }
+```
+
+### 2.5 端到端任务执行 (`agent_task`)
+
+这是最强大的接口：用自然语言描述整个任务，MCP Server 内部自动规划并执行步骤。
+
+```javascript
+const taskResult = await client.call('agent_task', {
+  sessionId,
+  taskDescription: '打开 amazon.com，搜索 "wireless mouse"，将第一个结果加入购物车，然后进入购物车页面确认商品数量为1',
+  maxSteps: 15,         // 最多执行 15 步，防止无限循环
+  onStep?: (step) => {} // 可选回调，实时获取进度
+});
+console.log(taskResult.status); // "completed" | "failed" | "human_handoff_needed"
+```
+
+**内部执行过程示意**：
+1. Agent 获取快照，识别搜索框和按钮。
+2. 输入“wireless mouse”并提交搜索。
+3. 获取新快照，识别商品列表，定位第一个商品。
+4. 点击“加入购物车”按钮。
+5. 等待购物车更新提示，然后导航到购物车页面。
+6. 验证商品数量，完成任务。
+
+### 2.6 观察页面变化 (`agent_observe`)
+
+在两次快照之间检测变化，返回结构化摘要。
+
+```javascript
+// 先获取第一次快照
+const snapshot1 = await client.call('get_snapshot', { sessionId });
+
+// 执行某些操作（例如点击）
+await client.call('agent_interact', { sessionId, instruction: 'click', ref: 'B1' });
+
+// 观察变化
+const changes = await client.call('agent_observe', {
+  sessionId,
+  previousSnapshot: snapshot1   // 可选，若不传则对比上一步的快照
+});
+console.log(changes);
+// 输出示例：
+// {
+//   "added": [{ ref: "C1", type: "button", text: "Confirm" }],
+//   "removed": [{ ref: "L2", text: "Loading" }],
+//   "urlChanged": "https://example.com/cart",
+//   "textChanged": ["购物车 (1)"]
+// }
+```
+
+### 2.7 人工介入 (`agent_human_handoff`)
+
+当 Agent 遇到无法处理的情况（验证码、需要人工审批等）时，调用此工具。
+
+```javascript
+// Agent 任务中检测到验证码
+const handoff = await client.call('agent_human_handoff', {
+  sessionId,
+  reason: 'captcha_detected',
+  contextData: {
+    screenshot: screenshotBase64,
+    url: await client.call('evaluate_script', { function: '() => location.href' }),
+    captchaType: 'reCAPTCHA'
+  }
+});
+console.log(`Waiting for human, handoffId: ${handoff.handoffId}`);
+
+// 轮询等待人工解决
+while (handoff.status === 'waiting') {
+  await sleep(2000);
+  const status = await client.call('get_handoff_status', { handoffId: handoff.handoffId });
+  if (status.status === 'resolved') {
+    // 人工已完成操作，Agent 可以继续执行后续任务
+    await client.call('agent_task', { sessionId, taskDescription: '继续完成下单流程' });
+    break;
+  }
+}
+```
+
+## 三、完整综合示例：AI Agent 自动购物
+
+以下示例展示了一个完整的 Agent 流程：创建环境 → 启动会话 → 执行自然语言任务 → 处理验证码（人工介入）→ 继续任务 → 清理资源。
+
+```javascript
+// 1. 创建并启动指纹环境
+const { envId } = await client.call('create_environment', {
+  name: 'shopping_bot',
+  proxy: 'us.proxy:8080'
+});
+await client.call('start_environment', { envId });
+
+// 2. 创建 Agent 会话
+const { sessionId } = await client.call('create_agent_session', { envId });
+
+try {
+  // 3. 执行主要购物任务
+  const result = await client.call('agent_task', {
+    sessionId,
+    taskDescription: `
+      登录 amazon.com（用户名: test@example.com, 密码: demo123），
+      搜索 "noise cancelling headphones"，
+      按价格升序排序，
+      选择第二件商品，
+      加入购物车，
+      进入购物车并截取全屏截图保存为 cart.png
+    `,
+    maxSteps: 20
+  });
+
+  if (result.status === 'human_handoff_needed') {
+    // 4. 遇到验证码，请求人工介入
+    const handoff = await client.call('agent_human_handoff', {
+      sessionId,
+      reason: result.handoffReason,
+      contextData: result.context
+    });
+    
+    // 等待人工处理（实际应用中可通过 Webhook 或轮询）
+    await waitForHuman(handoff.handoffId);
+    
+    // 人工解决后，继续执行剩余步骤
+    await client.call('agent_task', {
+      sessionId,
+      taskDescription: '继续完成剩余任务：进入购物车并截图'
+    });
+  }
+
+  // 5. 提取购物车总价
+  const { data: cartInfo } = await client.call('agent_extract', {
+    sessionId,
+    schema: {
+      type: 'object',
+      properties: {
+        totalPrice: { type: 'string', selector: '.grand-total' },
+        itemCount: { type: 'number', selector: '.cart-count' }
+      }
+    }
+  });
+  console.log('购物车信息:', cartInfo);
+
+} finally {
+  // 6. 清理
+  await client.call('close_agent_session', { sessionId });
+  await client.call('stop_environment', { envId });
+}
+```
