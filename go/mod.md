@@ -30,3 +30,11 @@ go get -v xxx
 go clean -r github.com/dreamsxin/gota
 go clean --modcache
 ```
+
+## 分析依赖
+
+```shell
+go list -m all
+go mod graph
+go mod why github.com/Azure/azure-sdk-for-go/sdk/azcore
+```
