@@ -1,5 +1,9 @@
 # Agent
 
+- https://github.com/NousResearch/hermes-agent
+
+- https://github.com/nesquena/hermes-webui
+
 - https://github.com/kortix-ai/suna
 
 - https://github.com/FellouAI/eko
