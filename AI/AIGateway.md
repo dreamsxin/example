@@ -1,0 +1,2 @@
+- https://github.com/BerriAI/litellm
+- https://github.com/qixing-jk/all-api-hub
