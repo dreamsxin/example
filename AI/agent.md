@@ -1,5 +1,7 @@
 # Agent
 
+- https://github.com/anomalyco/opencode
+
 - https://github.com/EvoMap/evolver
 
 - https://github.com/NousResearch/hermes-agent
