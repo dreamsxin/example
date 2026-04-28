@@ -1,1 +1,2 @@
 - https://github.com/obra/superpowers
+- https://github.com/anthropics/skills
