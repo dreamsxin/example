@@ -1,0 +1,2 @@
+- https://github.com/atomicmemory/llm-wiki-compiler
+- https://github.com/nvk/llm-wiki
