@@ -9,6 +9,9 @@
 - https://github.com/ssteja698/smart-browser-detection
 - https://github.com/vytal-io/vytal-extension
 - https://github.com/juzeon/spoofed-round-tripper
+- https://github.com/embeddinglayer/awesome-fingerprinting
+- https://github.com/prescience-data/dark-knowledge
+- https://github.com/embeddinglayer/awesome-fingerprinting
 
 Browser fingerprinting is a process of identifying web clients by collecting specific data points from devices, HTTP connections, and software features.
 
