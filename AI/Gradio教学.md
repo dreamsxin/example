@@ -1,11 +1,7 @@
-好的，我们调整一下教学重心。这次我们不只交付一个成品，而是把本项目当成一个**教学载体**，逐步教会你两件事：
+# Gradio 教学
 
 1. **Gradio 的使用**：如何搭建一个包含多标签页、文件上传、聊天界面的交互式应用。
 2. **Agent 开发流程与关键技术**：如何从零构建一个带文档库的 LLM Agent，系统性地掌握 Prompt、Embedding、Function Calling、上下文压缩管理等核心环节。
-
-我将用**先讲解概念，再展示代码，最后解释设计意图**的方式，带你走完整个开发过程。
-
----
 
 ## 教学目标概述
 
@@ -18,34 +14,67 @@
 
 ---
 
-## 模块 1：认识 Gradio — 搭建界面骨架
+将模块1的内容拆解为“快速上手 `gr.Interface`”和“用 `gr.Blocks` 搭建灵活布局”两部分，并把常见组件串进去，方便你一次了解全貌。
 
-### 我们要学什么
-- 使用 `gr.Blocks` 构建应用主体。
-- 创建 `gr.Tab` 实现多标签页布局。
-- 放置 `gr.File` 用于文件上传，`gr.Chatbot` 用于对话展示，`gr.Textbox` 用于输入。
-- 绑定按钮和事件处理函数。
+---
 
-### 代码 (界面骨架)
-先写一个纯界面的空壳，感受 Gradio 的组件组织方式。
+### 1. 快速上手：用 `gr.Interface` 做一个文本反转工具
+
+```python
+import gradio as gr
+
+def reverse_text(text):
+    return text[::-1]
+
+demo = gr.Interface(
+    fn=reverse_text,         # 处理函数
+    inputs="text",           # 输入组件（简写形式，等价于 gr.Textbox()）
+    outputs="text"           # 输出组件
+)
+
+demo.launch(share=True)      # share=True 生成公网临时链接，方便分享
+```
+
+- `gr.Interface` 是 Gradio 最高层的封装，**适合只有一个输入和一个输出的简单场景**。
+- `inputs` 和 `outputs` 可直接写字符串 `"text"`，也可以传入组件实例（如 `gr.Textbox()`）来定制样式和参数。
+- 启动后会自动打开浏览器，页面上一个文本框输入，点击提交即显示反转结果。
+
+---
+
+### 2. 为什么还需要 `gr.Blocks`？
+
+`gr.Interface` 虽然简单，但无法实现复杂布局，比如：
+
+- 多个标签页切换
+- 并排的多列布局
+- 自定义 CSS 样式
+- 复杂的多输入多输出交互
+
+这些都需要 `gr.Blocks` 来实现。它像搭积木一样，可以自由放置组件。
+
+---
+
+### 3. 用 `gr.Blocks` 构建多标签页应用（界面骨架）
+
+下面用 `gr.Blocks` + `gr.Tab` 做一个“LLM Wiki Agent”的空壳，提前熟悉组件组织方式。
 
 ```python
 import gradio as gr
 
 with gr.Blocks(title="LLM Wiki Agent") as demo:
-    gr.Markdown("# 📚 LLM Wiki Agent")
+    gr.Markdown("# 📚 LLM Wiki Agent")          # 标题
 
-    with gr.Tab("📁 文档上传"):
+    with gr.Tab("📁 文档上传"):                 # 第一个标签页
         file_input = gr.File(label="选择 PDF 或 TXT 文件")
         upload_btn = gr.Button("开始处理并入库")
         upload_msg = gr.Textbox(label="处理状态", interactive=False)
 
-    with gr.Tab("💬 Wiki 对话"):
+    with gr.Tab("💬 Wiki 对话"):                 # 第二个标签页
         chatbot = gr.Chatbot(label="对话记录")
         msg = gr.Textbox(label="输入你的问题或指令")
         clear = gr.Button("清空对话")
 
-        # 暂时空的事件绑定
+        # 事件绑定（暂时用 lambda 占位）
         upload_btn.click(fn=lambda f: "上传功能未实现", inputs=file_input, outputs=upload_msg)
         msg.submit(fn=lambda m, h: ("", h + [[m, "回复功能未实现"]]), inputs=[msg, chatbot], outputs=[msg, chatbot])
         clear.click(fn=lambda: [], outputs=chatbot)
@@ -54,13 +83,85 @@ if __name__ == "__main__":
     demo.launch()
 ```
 
-### 设计意图讲解
-- **`gr.Blocks`**：这是 Gradio 最灵活的布局容器，支持组件自由排列。
-- **`gr.Tab`**：将功能分区，避免界面杂乱。
-- **事件绑定 (`click`, `submit`)**：Gradio 的核心交互方式。函数签名中的 `inputs` 和 `outputs` 会自动匹配组件值。
-- **`Chatbot` 组件**：接受一个列表 `[[user_msg, bot_msg], ...]`，每一对是一次对话。
+运行这个脚本，你就会看到两个可以切换的标签页，按钮点击时显示占位文字。**功能尚未真正实现，但骨架已经搭好。**
 
-运行此脚本，你就能看到一个可交互的页面，只是功能尚未实现。接下来我们会逐步填上真实逻辑。
+---
+
+### 4. 骨架中的常用组件解析
+
+| 组件 | 作用 | 关键参数 |
+|------|------|----------|
+| `gr.Markdown` | 渲染 Markdown 文字，可做标题、说明 | 直接传字符串 |
+| `gr.Tab` | 创建标签页，用 `with` 包裹其中的组件 | `label` 指定标签名 |
+| `gr.File` | 文件上传，支持单文件或多文件 | `label`, `file_count` |
+| `gr.Button` | 按钮，绑定 `click` 事件 | `value` 按钮文字 |
+| `gr.Textbox` | 文本输入框，可单行或多行 | `label`, `lines`, `interactive` |
+| `gr.Chatbot` | 聊天显示区，接受 `[[user, bot], ...]` 格式的列表 | `label`, `height` |
+
+---
+
+### 5. 更多常用组件速览
+
+除了上面这些，还有大量现成的输入/输出组件：
+
+```python
+import gradio as gr
+
+def show_result(text, num, option, img):
+    return f"文本：{text}\n数字×2：{num*2}\n选择：{option}", img
+
+with gr.Blocks() as demo:
+    gr.Markdown("## 组件展示")
+    with gr.Row():                          # Row 将内部组件水平排列
+        with gr.Column():
+            text = gr.Textbox(label="输入文本")
+            num = gr.Slider(1, 10, step=1, label="选择数字")
+            option = gr.Dropdown(["A", "B", "C"], label="下拉选项")
+            img = gr.Image(label="上传图片", type="pil")
+            btn = gr.Button("提交")
+        with gr.Column():
+            out_text = gr.Textbox(label="输出结果")
+            out_img = gr.Image(label="图片预览")
+    btn.click(show_result, [text, num, option, img], [out_text, out_img])
+
+demo.launch()
+```
+
+一些常用组件说明：
+
+- **`gr.Slider`**：滑块，可设置最小值、最大值、步长。
+- **`gr.Dropdown`**：下拉选择，传入选项列表。
+- **`gr.Radio` / `gr.Checkbox`**：单选/多选。
+- **`gr.Image`**：图片上传与显示，`type="pil"` 会传入 PIL 图像对象。
+- **`gr.DataFrame`**：表格数据，处理 pandas DataFrame。
+- **`gr.Row` / `gr.Column`**：布局组件，控制横向/纵向排列。
+
+---
+
+### 6. 事件绑定的核心逻辑
+
+无论是 `click`、`submit` 还是 `change`，本质都是：
+
+```
+组件.事件类型(fn=处理函数, inputs=[...], outputs=[...])
+```
+
+- **`fn`**：当事件发生时被调用的函数，其参数顺序与 `inputs` 中的组件顺序一一对应。
+- **`inputs`**：传入的组件或组件列表，函数会收到这些组件的当前值。
+- **`outputs`**：接收函数返回值的组件，返回值顺序要与 `outputs` 中的顺序一致。如果只想更新部分组件，其他组件可以返回 `gr.update()` 占位。
+
+---
+
+### 7. 小结
+
+通过模块1，你已经学会：
+
+- 用 `gr.Interface` 快速搭建单功能应用
+- 用 `gr.Blocks` 和 `gr.Tab` 构建多标签页复杂布局
+- 放置、配置常见组件，并理解事件绑定规则
+- 熟悉了 `Textbox`、`File`、`Chatbot`、`Slider`、`Dropdown`、`Image` 等常用组件
+
+后续模块会在此基础上逐步填充真实功能，例如读取 PDF 文本、调用大模型、维护对话历史等。
 
 ---
 
