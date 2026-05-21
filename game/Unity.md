@@ -26,6 +26,7 @@
 ---
 
 ## 5. UABEA (Unity Asset Bundle Extractor)
+- https://github.com/nesrak1/UABEANext
 - **项目主页**：[https://github.com/nesrak1/UABEA](https://github.com/nesrak1/UABEA)
 - **最新 Release**：[https://github.com/nesrak1/UABEA/releases](https://github.com/nesrak1/UABEA/releases)
 - **最新 Nightly (Windows)**：[https://nightly.link/nesrak1/UABEA/workflows/dotnet-desktop/master/uabea-windows.zip](https://nightly.link/nesrak1/UABEA/workflows/dotnet-desktop/master/uabea-windows.zip)
