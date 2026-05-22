@@ -12,6 +12,7 @@
 ---
 
 ## 3. AssetStudio
+- https://github.com/4NaNBo1/AssetStudio
 - https://github.com/Razviar/assetstudio
 - **项目主页**：[https://github.com/Perfare/AssetStudio](https://github.com/Perfare/AssetStudio)
 - **下载方式**：进入 Releases 页面下载最新版（最新发布为 v0.16.47，支持 Unity 3.4 - 2022.1）
