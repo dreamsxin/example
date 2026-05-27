@@ -1,6 +1,12 @@
 # Agent
 
+- https://github.com/microsoft/autogen
+
+- https://github.com/multica-ai/multica
+
 - https://github.com/anomalyco/opencode
+
+- https://github.com/agentscope-ai/agentscope
 
 - https://github.com/EvoMap/evolver
 
