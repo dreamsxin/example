@@ -51,7 +51,7 @@ docker volume prune -f --filter "label=com.docker.compose.project=multica"
 Remove-Item -Recurse -Force "$env:USERPROFILE\.multica" -ErrorAction SilentlyContinue
 ```
 
-## 自定义服务器地址
+## 自定义服务器配置
 
 根据安装脚本中的端口定义，**Multica 自托管服务的默认端口**为：
 
@@ -59,6 +59,22 @@ Remove-Item -Recurse -Force "$env:USERPROFILE\.multica" -ErrorAction SilentlyCon
 *   **前端 Web 端口：`3000`**
 
 下面这个改写后的脚本**只安装 CLI，不启动任何本地 Docker 服务**。它会自动连接你指定的局域网 IP 和默认端口，完成 CLI 与远程自托管服务的配对。
+
+### 如果已经安装好 multica
+
+Desktop 修改配置 `.multica\desktop.json`
+```json
+{
+  "schemaVersion": 1,
+  "apiUrl": "http://localhost:8080"
+}
+```
+CLI 修改配置 `.multica\config.json`
+```json
+{
+  "server_url": "http://192.168.0.13:8080"
+}
+```
 
 ### 使用方法
 ```powershell
