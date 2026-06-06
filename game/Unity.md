@@ -13,6 +13,7 @@
 
 ## 3. AssetStudio
 - https://github.com/4NaNBo1/AssetStudio
+- https://github.com/GustavoMartins123/AssetStudio
 - https://github.com/Razviar/assetstudio
 - **项目主页**：[https://github.com/Perfare/AssetStudio](https://github.com/Perfare/AssetStudio)
 - **下载方式**：进入 Releases 页面下载最新版（最新发布为 v0.16.47，支持 Unity 3.4 - 2022.1）
@@ -24,6 +25,7 @@
 - **官方下载页**：[https://assetripper.github.io/AssetRipper/articles/Downloads.html](https://assetripper.github.io/AssetRipper/articles/Downloads.html)
 - **支持版本**：Unity 3.5.0 至 6000.5.X
 
+- https://github.com/xamarth/UtinyRipper
 ---
 
 ## 5. UABEA (Unity Asset Bundle Extractor)
