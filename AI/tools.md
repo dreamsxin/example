@@ -1,0 +1,1 @@
+- https://github.com/epiral/bb-browser.git
