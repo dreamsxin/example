@@ -1,80 +1,63 @@
 # BrowserOS Browser Automation Tools 技术文档
 
-> 文档版本：2026-06  
-> 代码路径：`packages/browseros-agent/apps/server/src/`
+> **文档版本**：2026-06  
+> **适用范围**：BrowserOS 浏览器自动化工具全栈实现  
+> **代码路径**：`packages/browseros-agent/apps/server/src/`  
+> **底层协议**：CDP (Chrome DevTools Protocol) over WebSocket
 
 ---
 
 ## 目录
 
-1. [整体架构概览](#1-整体架构概览)
+1. [架构总览](#1-架构总览)
 2. [MCP 工具注册机制](#2-mcp-工具注册机制)
 3. [Browser Tools 列表与 API](#3-browser-tools-列表与-api)
-   - [tabs — 标签页管理](#31-tabs--标签页管理)
-   - [navigate — 页面导航](#32-navigate--页面导航)
-   - [snapshot — 页面快照](#33-snapshot--页面快照)
-   - [diff — 变化感知](#34-diff--变化感知)
-   - [act — 页面交互](#35-act--页面交互)
-   - [read — 内容提取](#36-read--内容提取)
-   - [grep — 内容搜索](#37-grep--内容搜索)
-   - [screenshot — 截图](#38-screenshot--截图)
-   - [wait — 等待条件](#39-wait--等待条件)
-   - [run — 执行 JavaScript](#310-run--执行-javascript)
 4. [核心框架层 (framework.ts)](#4-核心框架层-frameworkts)
 5. [Browser 核心子系统](#5-browser-核心子系统)
-   - [BrowserSession](#51-browsersession)
-   - [CdpConnection & CdpBackend](#52-cdpconnection--cdpbackend)
-   - [PageManager](#53-pagemanager)
-   - [Navigation](#54-navigation)
-   - [Observer 与 FrameRegistry](#55-observer-与-frameregistry)
 6. [输入子系统 (Input)](#6-输入子系统-input)
-   - [坐标与元素定位 (geometry.ts)](#61-坐标与元素定位-geometryts)
-   - [鼠标事件 (mouse.ts)](#62-鼠标事件-mousets)
-   - [键盘事件 (keyboard.ts)](#63-键盘事件-keyboardts)
 7. [快照子系统 (Snapshot)](#7-快照子系统-snapshot)
-   - [AX Tree 获取](#71-ax-tree-获取)
-   - [角色分类 (roles.ts)](#72-角色分类-rolests)
-   - [快照渲染 (render.ts)](#73-快照渲染-renderts)
-   - [Ref 系统 (refs.ts)](#74-ref-系统-refsts)
-   - [Ref 解析 (resolve.ts)](#75-ref-解析-resolvets)
-   - [Cursor 增强 (cursor-augment.ts)](#76-cursor-增强-cursor-augmentts)
-   - [快照 Diff (diff.ts)](#77-快照-diff-diffts)
 8. [安全机制 (Trust Boundary)](#8-安全机制-trust-boundary)
 9. [ToolResponse 与 Post-Action](#9-toolresponse-与-post-action)
 10. [大内容处理 (output-file.ts)](#10-大内容处理-output-filets)
 11. [数据流与调用链路](#11-数据流与调用链路)
 12. [OOPIF (跨域 iframe) 支持](#12-oopif-跨域-iframe-支持)
+13. [附录：目录结构一览](#13-附录目录结构一览)
 
 ---
 
-## 1. 整体架构概览
+## 1. 架构总览
 
-BrowserOS 的 browser automation 系统由三层组成：
+BrowserOS 的 browser automation 系统由三层组成，通过 CDP 与定制版 Chromium 浏览器通信：
 
 ```
-┌───────────────────────────────────────────────────────────┐
-│                      MCP 工具层                             │
-│  tabs / navigate / snapshot / diff / act / read / grep /  │
-│  screenshot / wait / run                                   │
-│  (tools/browser/*.ts)                                      │
-├───────────────────────────────────────────────────────────┤
-│                    Browser Core 层                          │
-│  BrowserSession ──► PageManager / Observer / Input / Nav  │
-│  (browser/core/*.ts)                                       │
-├───────────────────────────────────────────────────────────┤
-│                      CDP 后端层                             │
-│  CdpBackend ─► WebSocket ─► Chrome DevTools Protocol      │
-│  (browser/backends/cdp.ts)                                 │
-└───────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                      MCP 工具层（TypeScript）                    │
+│  tabs / navigate / snapshot / diff / act / read / grep /       │
+│  screenshot / wait / run                                      │
+│  (tools/browser/*.ts)                                       │
+├─────────────────────────────────────────────────────────────────┤
+│                    Browser Core 层（TypeScript）                 │
+│  BrowserSession ──► PageManager / Observer / Input / Nav     │
+│  (browser/core/*.ts)                                        │
+├─────────────────────────────────────────────────────────────────┤
+│                      CDP 后端层（TypeScript）                    │
+│  CdpBackend ─► WebSocket ─► Chrome DevTools Protocol     │
+│  (browser/backends/cdp.ts)                                │
+├─────────────────────────────────────────────────────────────────┤
+│                   Chromium 浏览器（C++，定制版）                 │
+│  BrowserOS 定制 Chromium，支持通过 CDP 远程控制                │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-**核心设计原则：**
+### 核心设计原则
 
-- **MCP over CDP**：工具通过 MCP (Model Context Protocol) 对外暴露，底层通过 CDP (Chrome DevTools Protocol) 与浏览器通信。
-- **Accessibility Tree 优先**：用 AX Tree 而非 CSS 选择器定位元素，稳定性更高。
-- **Ref 句柄隔离**：可交互元素分配 `[ref=eN]` 短句柄，Agent 只需传 ref，无需理解 DOM 结构。
-- **Trust Boundary**：所有页面内容用随机 nonce 包裹，防止 prompt injection。
-- **OOPIF 透明处理**：跨域 iframe 通过 FrameRegistry 对 Agent 完全透明。
+| 原则 | 说明 |
+|------|------|
+| **MCP over CDP** | 工具通过 MCP (Model Context Protocol) 对外暴露，底层通过 CDP 与浏览器通信 |
+| **Accessibility Tree 优先** | 用 AX Tree 而非 CSS 选择器定位元素，稳定性更高 |
+| **Ref 句柄隔离** | 可交互元素分配 `[ref=eN]` 短句柄，Agent 只需传 ref，无需理解 DOM 结构 |
+| **Trust Boundary** | 所有页面内容用随机 nonce 包裹，防止 prompt injection |
+| **OOPIF 透明处理** | 跨域 iframe 通过 FrameRegistry 对 Agent 完全透明 |
 
 ---
 
@@ -90,14 +73,16 @@ export function registerBrowserTools(
 ): void
 ```
 
-注册流程：
+### 注册流程
 
 1. 遍历 `BROWSER_TOOLS` 数组（来自 `registry.ts`）
 2. 为每个工具调用 `server.tool(name, description, schema, handler)`
 3. handler 内部调用 `executeTool`，记录执行时间和成功/失败 metrics
 4. 每个工具绑定到同一个 `BrowserSession` 实例
 
-**工具列表定义：** `tools/browser/registry.ts`
+### 工具列表定义
+
+**文件：** `tools/browser/registry.ts`
 
 ```typescript
 export const BROWSER_TOOLS: ToolDefinition<ZodTypeAny>[] = [
@@ -321,7 +306,7 @@ interface ToolContext {
 interface ToolAnnotations {
   readOnlyHint?: boolean      // 工具是否只读
   destructiveHint?: boolean   // 是否可能破坏性操作
-  idempotentHint?: boolean    // 是否幂等
+  idempotentHint?: boolean   // 是否幂等
 }
 ```
 
@@ -737,26 +722,26 @@ async function writeTempToolOutputFile(
 
 ```
 act tool handler
-  └─► ctx.session.observe().resolveRef('e3')
-        ├─► RefMap.get('e3')  →  RefEntry{backendNodeId, role, name, nth, frameId}
-        └─► FrameRegistry.resolveFrameTarget(pageId, frameId)
-              →  FrameTarget{session, axParams}
-  └─► resolveRefEntry(session, entry)
-        ├─► DOM.resolveNode(backendNodeId)  [验证节点活跃]
-        └─► (if stale) fetchAxTree → findByRoleNameNth → refresh backendNodeId
-  └─► scrollIntoView(session, backendNodeId)    [geometry.ts]
-  └─► getElementCenter(session, backendNodeId)  [geometry.ts]
-        └─► DOM.getContentQuads(backendNodeId)  → {x, y}
-  └─► dispatchClick(session, x, y, ...)        [mouse.ts]
-        └─► Input.dispatchMouseEvent(mouseMoved)
-        └─► Input.dispatchMouseEvent(mousePressed)
-        └─► Input.dispatchMouseEvent(mouseReleased)
-  └─► ToolResponse.includeSnapshot()
-        └─► Observer.snapshot(pageId)
-              ├─► fetchAxTree(session) + frame stitching
-              ├─► findCursorHits(session)  [cursor-augment.ts]
-              ├─► renderSnapshot(nodes, new RefMap())  [render.ts]
-              └─► wrapUntrusted(text, url)  [trust-boundary.ts]
+ └─► ctx.session.observe().resolveRef('e3')
+       ├─► RefMap.get('e3')  →  RefEntry{backendNodeId, role, name, nth, frameId}
+       └─► FrameRegistry.resolveFrameTarget(pageId, frameId)
+             →  FrameTarget{session, axParams}
+ └─► resolveRefEntry(session, entry)
+       ├─► DOM.resolveNode(backendNodeId)  [验证节点活跃]
+       └─► (if stale) fetchAxTree → findByRoleNameNth → refresh backendNodeId
+ └─► scrollIntoView(session, backendNodeId)    [geometry.ts]
+ └─► getElementCenter(session, backendNodeId)  [geometry.ts]
+       └─► DOM.getContentQuads(backendNodeId)  →  {x, y}
+ └─► dispatchClick(session, x, y, ...)        [mouse.ts]
+       └─► Input.dispatchMouseEvent(mouseMoved)
+       └─► Input.dispatchMouseEvent(mousePressed)
+       └─► Input.dispatchMouseEvent(mouseReleased)
+ └─► ToolResponse.includeSnapshot()
+       └─► Observer.snapshot(pageId)
+             ├─► fetchAxTree(session) + frame stitching
+             ├─► findCursorHits(session)  [cursor-augment.ts]
+             ├─► renderSnapshot(nodes, new RefMap())  [render.ts]
+             └─► wrapUntrusted(text, url)  [trust-boundary.ts]
 ```
 
 ---
@@ -785,7 +770,7 @@ BrowserOS 的处理方案：
 
 ---
 
-## 附录：目录结构一览
+## 13. 附录：目录结构一览
 
 ```
 packages/browseros-agent/apps/server/src/
