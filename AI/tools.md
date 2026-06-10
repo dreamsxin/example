@@ -1,2 +1,3 @@
 - https://github.com/epiral/bb-browser.git
 - https://github.com/platonai/Browser4
+- https://github.com/SawyerHood/dev-browser
