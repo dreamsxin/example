@@ -1,3 +1,10 @@
+`~/.openclaw/workspace`
+- SOUL.md
+- USER.md
+- AGENTS.md
+
+❝SOUL.md 定风格，USER.md 定对象，AGENTS.md 定流程。
+
 ## 安装配置
 
 ```shell
