@@ -1,0 +1,5 @@
+- https://github.com/MeiGen-AI/MultiTalk.git
+- https://github.com/duixcom/Duix-Avatar
+- https://github.com/modstart-lib/aigcpanel
+- https://github.com/stepfun-ai/Step-Video-T2V
+- https://github.com/stepfun-ai/Step-Audio
