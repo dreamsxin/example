@@ -274,8 +274,13 @@ SELECT create_hypertable('conditions', 'time', if_not_exists => TRUE);
 SELECT show_chunks('tablename'); -- 显示超表所有区块
 SELECT show_chunks('tablename', older_than => INTERVAL '3 months');
 SELECT show_chunks('tablename', created_before => INTERVAL '3 months');
-SELECT * FROM chunks_detailed_size('tablename')
-  ORDER BY chunk_name, node_name;
+SELECT * FROM chunks_detailed_size('tablename') ORDER BY chunk_name, node_name;
+
+SELECT 
+    hypertable_name, 
+    hypertable_size(format('%I.%I', hypertable_schema, hypertable_name)::regclass) AS size_bytes,
+    pg_size_pretty(hypertable_size(format('%I.%I', hypertable_schema, hypertable_name)::regclass)) AS size_pretty
+FROM  timescaledb_information.hypertables;
 ```
 
 ## 转换已存在的表和数据
