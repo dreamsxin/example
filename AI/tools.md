@@ -8,3 +8,12 @@
 - https://github.com/calesthio/OpenMontage
 - https://github.com/palmier-io/palmier-pro/tree/main
 - 
+
+## audio
+
+- https://github.com/jamiepine/voicebox
+
+## search
+
+- https://github.com/stickerdaniel/linkedin-mcp-server
+- https://github.com/Panniantong/Agent-Reach
