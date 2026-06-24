@@ -1,5 +1,6 @@
 # Agent
 
+- https://github.com/continuedev/continue
 - https://github.com/microsoft/autogen
 
 - https://github.com/multica-ai/multica
