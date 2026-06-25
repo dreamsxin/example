@@ -17,3 +17,7 @@
 
 - https://github.com/stickerdaniel/linkedin-mcp-server
 - https://github.com/Panniantong/Agent-Reach
+
+## database
+
+- https://github.com/directus/directus
