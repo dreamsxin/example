@@ -21,3 +21,7 @@
 ## database
 
 - https://github.com/directus/directus
+- https://github.com/YoKONCy/TriviumDB
+
+## dashboard
+- https://github.com/briefercloud/briefer
