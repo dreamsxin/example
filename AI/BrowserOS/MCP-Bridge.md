@@ -1,6 +1,81 @@
-这个补充是关键突破：`chrome.debugger.getTargets()` 能直接给出 `TargetInfo.id -> targetId` 和 `TargetInfo.tabId`，这比我前面提到的 URL/title/nonce 匹配方案稳很多。Chrome 官方文档也确认 `TargetInfo.id` 是 target id，`tabId` 在 `type == "page"` 时定义，且使用 `chrome.debugger` 需要 `"debugger"` 权限。参考：[chrome.debugger API](https://developer.chrome.com/docs/extensions/reference/api/debugger)。
+# 基于Chrome Debugger API的MCP Bridge标签同步与能力增强方案
 
-我会把方案调整为：**扩展负责建立真实 Chrome 标签模型，MCP 负责把它融合进现有 CDP 页面会话模型。**
+以下是方案的核心流程图，用 **Mermaid** 描述，清晰展示了扩展、Bridge 服务、MCP 工具与 CDP 之间的数据流和关键步骤。
+
+```mermaid
+flowchart TB
+    subgraph Chrome浏览器
+        Ext[Chrome扩展]
+        Ext -->|监听| Events[chrome.tabs / windows / tabGroups 事件]
+        Events -->|debounce| Sync[同步任务]
+        Sync -->|1. chrome.tabs.query| TabState[获取标签状态]
+        Sync -->|2. chrome.debugger.getTargets| TargetMap[获取 targetId ↔ tabId 映射]
+        Sync -->|3. 合并快照| Snapshot[生成完整状态快照]
+        Snapshot -->|POST /extension/state| Bridge
+    end
+
+    subgraph MCP Bridge服务
+        Bridge[Bridge HTTP 服务]
+        Bridge -->|存储| Store[Bridge Store\n(tabId→targetId, windows, groups)]
+        Store -->|提供查询| BridgeAPI[API 端点]
+        BridgeAPI -->|状态读取| Tools
+    end
+
+    subgraph MCP工具层
+        Tools[MCP Tools\n(tabs/windows/tab_groups/snapshot/act)]
+        Tools -->|优先使用 Bridge 数据| Merge[合并真实 tab 元数据]
+        Tools -->|若 bridge 未连接| Fallback[降级到原生 CDP]
+        Tools -->|执行操作时| CDP[CDP 命令]
+        CDP -->|Target.getTargets| RealTarget[获取实时 targetId]
+        RealTarget -->|与 Bridge 映射交叉校验| Valid[确认同一浏览器实例]
+        Valid -->|成功| Execute[执行操作]
+        Valid -->|失败| Disable[禁用 Bridge 能力]
+    end
+
+    Bridge -.->|长期轮询/WebSocket| Ext
+    Ext -->|定期拉取命令| Bridge
+
+    style Ext fill:#f9f,stroke:#333,stroke-width:2px
+    style Bridge fill:#bbf,stroke:#333,stroke-width:2px
+    style Tools fill:#bfb,stroke:#333,stroke-width:2px
+```
+
+### 文字流程说明
+
+1. **扩展侧同步**  
+   - 监听所有标签、窗口、分组事件（均做防抖）。  
+   - 触发同步时：  
+     - 调用 `chrome.tabs.query` 获取完整标签状态。  
+     - 调用 `chrome.debugger.getTargets` 获取 CDP target 列表，对 `type === "page"` 且存在 `tabId` 的项建立 `tabId → targetId` 映射。  
+     - 合并成完整快照（包含 windowId、index、active、pinned、groupId 等）。  
+   - 将快照通过 HTTP POST 上报给 Bridge 服务（或通过 WebSocket 实时推送）。
+
+2. **Bridge 服务维护状态**  
+   - 存储 `tabsById`、`targetToTab`、`windowsById`、`groupsById` 等映射。  
+   - 提供状态查询接口（`/extension/state`、`/extension/health` 等）和命令拉取接口（`/extension/commands`）。  
+   - 扩展通过长轮询或 WebSocket 主动拉取待执行命令，并返回结果。
+
+3. **MCP 工具层融合**  
+   - 现有 MCP 工具（如 `listChrome`、窗口管理、标签组管理）不再完全依赖 CDP，而是优先从 Bridge Store 获取真实的 `tabId`、`windowId`、索引、分组等元数据。  
+   - 对于需要执行的操作（如打开、关闭、激活），仍通过 CDP 命令执行，但会利用 Bridge 提供的 `targetId` 来定位目标。  
+   - 在敏感操作前，会调用 `Target.getTargets()` 实时刷新 targetId，并与 Bridge 上报的映射交叉校验，确保扩展与 MCP 连接的是同一个浏览器实例，否则自动降级或提示安装。
+
+4. **能力降级与提示**  
+   - 当 Bridge 未连接时，工具返回明确的安装指引。  
+   - 引入能力层（`capabilities`），动态决定哪些功能可用（窗口、标签组、真实 tabId 等）。
+
+### 关键设计原则
+
+- **真实数据源优先**：`chrome.debugger.getTargets()` 提供稳定的 targetId 映射，避免 URL/title 匹配的不确定性。  
+- **扩展主动上报**：Bridge 服务无法主动向扩展发起请求，因此采用扩展定期同步 + 命令拉取（long polling）模式。  
+- **交叉校验**：每次操作前比对 Bridge 映射与 CDP 实时 targetId，确保同一浏览器实例，防止跨实例误操作。  
+- **渐进式增强**：未安装扩展时，现有 CDP 功能仍可工作（仅部分能力受限），安装后自动升级。
+
+该流程完整覆盖了从数据采集、上报、存储到 MCP 工具融合的全链路，既保证了可靠性，又兼容了现有架构。
+
+**关键突破：`chrome.debugger.getTargets()` 能直接给出 `TargetInfo.id -> targetId` 和 `TargetInfo.tabId`，这比我前面提到的 URL/title/nonce 匹配方案稳很多。Chrome 官方文档也确认 `TargetInfo.id` 是 target id，`tabId` 在 `type == "page"` 时定义，且使用 `chrome.debugger` 需要 `"debugger"` 权限。参考：[chrome.debugger API](https://developer.chrome.com/docs/extensions/reference/api/debugger)。**
+
+方案调整：**扩展负责建立真实 Chrome 标签模型，MCP 负责把它融合进现有 CDP 页面会话模型。**
 
 **推荐架构**
 ```text
