@@ -1,0 +1,3 @@
+- https://github.com/Arsie-codes/bridgemcp
+- https://github.com/luis-codex/atlas-browser-connect
+- https://github.com/Unagi-cq/cdp-bridge-mcp
