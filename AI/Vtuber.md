@@ -1,0 +1,4 @@
+- https://github.com/CocoRoF/Geny
+- https://github.com/1996scarlet/OpenVtuber
+- https://github.com/Open-LLM-VTuber/open-llm-vtuber
+- https://github.com/Eikanya/Live2d-model
