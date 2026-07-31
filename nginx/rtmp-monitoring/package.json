@@ -24,7 +24,7 @@
   "dependencies": {
     "express": "4.19.2",
     "fetch": "1.0.1",
-    "xml2js": "0.4.16",
+    "xml2js": "0.5.0",
     "socket.io": "1.4.6",
     "os": "0.1.1",
     "swig": "1.4.2"
