@@ -3,3 +3,4 @@
 - https://github.com/outerbase/studio
 - https://github.com/sqlchat/sqlchat
 - https://github.com/vanna-ai/vanna
+- https://github.com/directus/directus
