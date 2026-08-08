@@ -360,4 +360,233 @@ AI 擅长模式匹配和模板生成（基于大量训练），但缺乏对业�
 6. **系统如何落地**：Rust 协程运行时、分布式追踪、安全防御
 7. **人如何与 AI 协作**：AI 辅助编程的边界、组织推广方法论
 
+# AI技术能力原理
+
+## 1. Agent 执行引擎
+**Rust + tokio 实现 Chat/Agent 双模式、Function Calling、上下文滑动窗口（24条/64KB）、执行追踪、死循环检测**
+
+### 核心数学结构
+Agent 可以建模成一个 **ReAct 循环**，状态转移由函数 \( f \) 决定：
+\[
+\text{state}_{t+1} = f(\text{context}_t, \text{action}_t)
+\]
+其中 \(\text{context}_t = [\text{system\_prompt}, m_1, m_2, \dots, m_t]\) 是当前对话历史。
+
+- **滑动窗口**：  
+  上下文窗口大小固定，我们保留最近的 \( L \) 条消息和一个锚点（首条任务）。
+  \[
+  \text{context}_t = \text{Truncate}(\text{history}, W)
+  \]
+  裁剪函数：  
+  - 保留索引 \(0\) 和 \([t-L+1, t]\) 的消息  
+  - 总 token 数 ≤ \(C_{\max} = 64\text{K}\)（用分词器实时计数）
+
+- **Function Calling**：  
+  模型输出一个工具调用 \(a_t = (\text{tool\_name}, \text{params})\)，动作空间由可用工具集合 \(\mathcal{T}\) 定义。  
+  执行后得到观察 \(o_t = \text{execute}(a_t)\)，拼接回上下文：
+  \[
+  m_{t+1} = \text{assistant}(a_t), \quad m_{t+2} = \text{user}(o_t)
+  \]
+
+- **死循环检测**：  
+  将动作序列映射为签名向量：
+  \[
+  s_t = \text{Hash}(\text{tool\_name}, \text{params})
+  \]
+  在滑动窗口 \(W_d\)（如最近 5 步）内统计签名频率。如果连续 \(k\) 步（如 3 步）的签名完全相同，即：
+  \[
+  \max_{i} \text{count}(s_i \in W_d) \ge k \implies \text{循环告警}
+  \]
+  这本质是 **吸引子检测**，防止策略函数陷入局部死循环。
+
+- **执行追踪**：  
+  记录每条 trace：\(\{(t, \text{input\_tokens}, \text{output\_tokens}, \text{tool\_latency}, \text{status})\}\)。整个任务的总成本：
+  \[
+  C = \sum_{i} (P_{\text{in}} \cdot \text{tokens\_in}_i + P_{\text{out}} \cdot \text{tokens\_out}_i)
+  \]
+  追踪让你能按 \(C\) 和成功率做优化。
+
+---
+
+## 2. MCP 协议开发
+**Streamable HTTP 端点工具发现与调用，权限自动分级，敏感操作人工确认**
+
+### 形式化定义
+MCP 基于 **JSON-RPC 2.0**，核心是两个原语：
+- **工具发现**：客户端请求 `tools/list`，服务器返回工具集合
+  \[
+  \mathcal{T} = \{t_i = (\text{name}, \text{description}, \text{inputSchema}, \text{permission})\}
+  \]
+- **工具调用**：客户端发送 `tools/call`，携带工具名和参数，返回结果。
+
+**权限分级** 用二元谓词判断：
+\[
+\text{IsSensitive}(t) = 
+\begin{cases}
+1 & \text{if } t.\text{type} \in \{\text{write, delete, execute}\} \\
+0 & \text{otherwise}
+\end{cases}
+\]
+当 \(\text{IsSensitive}(t) = 1\) 时，系统不直接执行，而是触发人工确认的 **中断协议**：
+\[
+\text{confirmation\_token} = \text{RequestUserConsent}(t, \text{params})
+\]
+只有收到带有效 token 的确认请求，才实际执行。
+
+这构成一个 **带守卫的有限状态机**：
+- 自动执行状态：权限为 read-only
+- 等待状态：等待用户确认
+- 执行状态：得到授权后执行
+
+数学上，这确保了系统的安全性——所有状态转移都有明确的守卫条件。
+
+---
+
+## 3. 多模型适配层
+**OpenAI / Anthropic / DeepSeek / Ollama 统一接口（adapter 模式），流式输出、Token 统计、模型路由**
+
+### 适配层数学
+我们定义一个统一接口 \(I\)：
+\[
+\text{chat}(\text{messages}, \text{tools}) \rightarrow (\text{text}, \text{tool\_calls})
+\]
+\[
+\text{stream}(\text{messages}) \rightarrow \text{AsyncIterator}[\text{delta}]
+\]
+每个模型提供商实现一个适配器 \(A_m\)，将统一请求转换为各家的 API 格式：
+\[
+\text{request}_m = A_m.\text{encode}(\text{messages}, \text{tools})
+\]
+响应再被解码回统一格式。
+
+- **Token 统计**：  
+  每个请求的 token 数：
+  \[
+  N_{\text{prompt}} = \text{tokenizer}(\text{messages}), \quad N_{\text{completion}} = \text{len}(\text{output\_tokens})
+  \]
+  成本函数为：
+  \[
+  \text{Cost} = N_{\text{prompt}} \cdot c_{\text{in}}^m + N_{\text{completion}} \cdot c_{\text{out}}^m
+  \]
+  其中 \(c^m\) 是模型 \(m\) 的单价。
+
+- **模型路由**：  
+  任务被分为多个类别（规划、摘要、隐私等）。路由就是求解一个约束优化问题：
+  \[
+  \min_{m \in \mathcal{M}} \text{Cost}(m, \text{task}) \quad \text{s.t.} \quad \text{Capability}(m) \ge \text{Required}(\text{task})
+  \]
+  能力矩阵 \(\text{Capability}\) 根据基准测试预先定义（如工具调用能力、推理能力）。对于隐私任务，增加约束 \(m\) 必须在本地部署，即 \(m \in \mathcal{M}_{\text{local}}\)。
+
+- **流式输出**：  
+  每个 SSE 事件携带一个 token 的增量 \(\Delta\)，最终文本由拼接得到：
+  \[
+  \text{text} = \sum \Delta_i
+  \]
+
+---
+
+## 4. RAG 与记忆系统
+**文档切分 → embedding → ChromaDB → top-k 检索；短期/长期向量记忆，多用户隔离**
+
+### 向量空间的数学本质
+**建库**：  
+每个文档被切分成块 \(c_i\)，通过嵌入函数 \(E\) 映射到向量空间 \(\mathbb{R}^d\)：
+\[
+v_i = E(c_i) \in \mathbb{R}^d
+\]
+所有向量存入 ChromaDB，构建近似最近邻（ANN）索引。
+
+**检索**：  
+用户查询 \(q\) 同样被嵌入为 \(v_q\)，检索 top-\(k\) 依据余弦相似度：
+\[
+\text{sim}(v_q, v_i) = \frac{v_q \cdot v_i}{\|v_q\| \|v_i\|}
+\]
+可以理解为在高维空间中找角度最小的向量。混合检索时，融合 BM25 分数 \(s_{\text{BM25}}\)：
+\[
+s_{\text{final}} = \alpha \cdot \text{sim} + (1-\alpha) \cdot s_{\text{BM25}}
+\]
+然后按 \(s_{\text{final}}\) 重排，取前 \(k\) 个。
+
+**记忆隔离**：  
+长期记忆按用户 ID 分区，每个用户 \(u\) 拥有独立的集合 \(\mathcal{V}_u\)。查询时只在当前用户的向量空间内搜索：
+\[
+v_i \in \mathcal{V}_u
+\]
+用元数据过滤实现，即 \( \text{where: \{user\_id: u\}} \)。这保证了记忆的 **租户隔离**。
+
+**短期 vs 长期**：  
+- 短期记忆：当前会话的消息序列 \( [m_1, \dots, m_t] \)，完全保留在上下文窗口。
+- 长期记忆：在每次会话开始时，从 \(\mathcal{V}_u\) 中检索与初始任务最相关的 top-\(l\) 个记忆块，拼接到系统提示词中。
+
+整个过程就像：
+\[
+\text{Answer} = \text{LLM}(\text{query} + \underbrace{[m_1,\dots,m_t]}_{\text{短期}} + \underbrace{\text{Retrieve}(q, \mathcal{V}_u)}_{\text{长期}})
+\]
+
+---
+
+## 5. 模型原理工程化
+**NumPy 手写 Q/K/V 注意力计算、softmax 缩放、卷积，自研 Canvas 2D 渲染引擎可视化**
+
+### 注意力就是矩阵乘法
+核心公式：
+\[
+\text{Attention}(Q, K, V) = \text{softmax}\!\left(\frac{Q K^T}{\sqrt{d_k}}\right) V
+\]
+逐层拆解：
+- 输入：\(X \in \mathbb{R}^{n \times d_{\text{model}}}\)
+- 投影：\(Q = X W^Q, \; K = X W^K, \; V = X W^V\)，其中 \(W^* \in \mathbb{R}^{d_{\text{model}} \times d_k}\)
+- 注意力分数矩阵：\(S = \frac{Q K^T}{\sqrt{d_k}}\)，形状 \([n, n]\)，每个元素 \(s_{ij}\) 是第 \(i\) 个查询与第 \(j\) 个键的相似度。
+- 缩放因子 \(\sqrt{d_k}\) 的数学原因：假设 \(q,k\) 各分量独立且方差为 1，点积方差为 \(d_k\)。除以 \(\sqrt{d_k}\) 将方差拉回 1，防止 softmax 进入饱和区，梯度不至于消失。
+- softmax 逐行归一化：\(A = \text{softmax}(S)\)，使得 \(\sum_j A_{ij} = 1\)。
+- 输出：\(O = A V\)，每个位置的输出是所有 \(V\) 的加权和。
+
+### 卷积（CNN 基础）
+2D 卷积的互相关操作：
+\[
+Y_{i,j} = \sum_{u=-k}^{k} \sum_{v=-k}^{k} X_{i+u, j+v} \cdot F_{u,v} + b
+\]
+通过 NumPy 实现时，本质上就是四重循环或 im2col 变换成矩阵乘法。
+
+### 可视化引擎
+自研 Canvas 2D 渲染引擎通过矩阵变换实现坐标系统：
+\[
+\begin{bmatrix} x' \\ y' \\ 1 \end{bmatrix} = 
+\begin{bmatrix} a & b & t_x \\ c & d & t_y \\ 0 & 0 & 1 \end{bmatrix}
+\begin{bmatrix} x \\ y \\ 1 \end{bmatrix}
+\]
+用于将计算图中的张量形状、数据流动画化，把抽象矩阵运算转为可视图形。
+
+---
+
+## 6. 工程化与测试
+**Playwright 冒烟测试、Rust 集成测试、pytest + GitHub Actions CI/CD 自动发布 PyPI**
+
+### 测试与交付的数学建模
+- **冒烟测试**：定义一组关键路径的断言集合 \(\mathcal{T}_{\text{smoke}}\)，每个测试验证系统基本功能。冒烟通过的条件是：
+  \[
+  \forall t \in \mathcal{T}_{\text{smoke}}, \; t.\text{status} = \text{pass}
+  \]
+  否则阻止合入。
+
+- **CI/CD 流水线**：  
+  构建过程可视为有向无环图（DAG），节点包括：代码检出 → 依赖安装 → 单元测试 → 集成测试 → 构建制品 → 发布。  
+  成功发布的条件是：
+  \[
+  \bigwedge_{i \in \text{stages}} \text{stage}_i = \text{success}
+  \]
+  任一阶段失败则停止下游，这是 fail-fast 策略。
+
+- **自动化发布 PyPI**：  
+  在 tag 推送时触发 workflow，执行：
+  \[
+  \text{build} \rightarrow \text{twine upload}
+  \]
+  整个流程用 GitHub Actions 的 YAML 定义，本质是事件驱动的状态机：`push tag` 事件启动一个作业，根据退出码决定成功或失败。
+
+- **测试金字塔**的数量比例：大量单元测试（快速、隔离）、少量集成测试、极少端到端测试，这可通过成本与反馈速度的权衡来理解：
+  \[
+  \text{Optimal} = \arg\min (\text{cost} + \lambda \cdot \text{bug\_escape\_rate})
+  \]
+
 每个环节都不是孤立的知识点，而是一条完整的 **AI 系统设计逻辑链**。当你能够从原理上解释每一个“为什么”，面试就不再是问答，而是你展示领域深度的舞台。
