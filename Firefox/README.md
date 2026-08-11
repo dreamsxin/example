@@ -85,6 +85,10 @@ https://www.python.org/downloads/release/python-3119/
 **MozillaBuild**
 https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe
 
+**环境变量**
+- MOZBUILD_STATE_PATH
+- MOZILLABUILD
+
 ### 下载源码
 
 运行 mozilla-build
