@@ -46,6 +46,145 @@ call "C:\mozilla-build\start-shell.bat" -where "%FIREFOX130_SRC%"
 exit /b %ERRORLEVEL%
 ```
 
+## 配置过程
+已为 Firefox 130 建立独立编译环境，未修改 Firefox 源码去兼容 `windows-rs 0.62.2`。
+
+**目录结构**
+
+```text
+E:\moz\.mozbuild                    其他 Firefox 版本继续使用
+E:\moz\.mozbuild130                 Firefox 130 专用
+├─ windows-rs                       windows 0.52.0，实际使用
+├─ windows-rs-0.62.2                原 0.62.2 备份
+├─ windows-0.52.0.crate             下载的官方 crate
+├─ srcdirs                          Firefox 130 新虚拟环境
+└─ srcdirs-copied-backup            复制过来的旧虚拟环境备份
+```
+
+**1. 复制编译工具链**
+
+原目录约 `13.65 GB`、32,011 个文件：
+
+```powershell
+robocopy E:\moz\.mozbuild E:\moz\.mozbuild130 `
+  /E /COPY:DAT /DCOPY:DAT /R:2 /W:2 /MT:16
+```
+
+复制后核对文件数量和容量一致。
+
+**2. 下载 windows-rs 0.52.0**
+
+Firefox 130 源码指定的下载信息位于：
+
+```text
+taskcluster\kinds\fetch\toolchains.yml
+```
+
+下载地址：
+
+```text
+https://static.crates.io/crates/windows/windows-0.52.0.crate
+```
+
+下载命令：
+
+```powershell
+curl.exe -L --fail --retry 3 `
+  --user-agent "Mozilla/5.0" `
+  --output E:\moz\.mozbuild130\windows-0.52.0.crate `
+  https://static.crates.io/crates/windows/windows-0.52.0.crate
+```
+
+Firefox 源码记录的 SHA-256：
+
+```text
+e48a53791691ab099e5e2ad123536d0fff50652600abaf43bbf952894110d0be
+```
+
+实际下载文件校验结果完全一致。
+
+**3. 安装 0.52.0 并保留 0.62.2**
+
+```powershell
+Move-Item `
+  E:\moz\.mozbuild130\windows-rs `
+  E:\moz\.mozbuild130\windows-rs-0.62.2
+
+New-Item -ItemType Directory `
+  E:\moz\.mozbuild130\windows-0.52.0
+
+tar.exe -xf E:\moz\.mozbuild130\windows-0.52.0.crate `
+  -C E:\moz\.mozbuild130\windows-0.52.0
+
+Move-Item `
+  E:\moz\.mozbuild130\windows-0.52.0\windows-0.52.0 `
+  E:\moz\.mozbuild130\windows-rs
+```
+
+最终版本：
+
+```text
+E:\moz\.mozbuild130\windows-rs             0.52.0
+E:\moz\.mozbuild130\windows-rs-0.62.2      0.62.2
+```
+
+**4. 重建 Mach 虚拟环境**
+
+复制来的 `srcdirs` 虚拟环境不可直接复用，因此保留备份并让 Mach 重建：
+
+```powershell
+Move-Item `
+  E:\moz\.mozbuild130\srcdirs `
+  E:\moz\.mozbuild130\srcdirs-copied-backup
+
+New-Item -ItemType Directory `
+  E:\moz\.mozbuild130\srcdirs
+```
+
+**5. 独立启动脚本**
+
+已创建 [start-shell130.bat](E:/moz/start-shell130.bat)，主要环境变量如下：
+
+```bat
+set "FIREFOX130_SRC=E:\moz\firefox-130.0.1"
+set "MOZBUILD_STATE_PATH=E:\moz\.mozbuild130"
+set "MOZ_WINDOWS_RS_DIR=E:\moz\.mozbuild130\windows-rs"
+set "MAKENSISU=E:\moz\.mozbuild130\nsis\bin\makensis.exe"
+set "MACH_HIDE_DEV_DRIVE_SUGGESTION=1"
+```
+
+其中 `MAKENSISU` 必须明确指向 `.exe`。NSIS 目录同时存在 Linux ELF 格式的 `makensis` 和 Windows 的 `makensis.exe`，不指定时 Firefox 130 会错误选中 ELF 文件。
+
+使用方式：
+
+```bat
+E:\moz\start-shell130.bat dbg
+```
+
+或发布构建：
+
+```bat
+E:\moz\start-shell130.bat rel
+```
+
+不传参数时默认使用 `mozconfig-dbg`。
+
+进入 Shell 后：
+
+```bash
+./mach configure
+./mach build
+```
+
+`./mach configure` 已验证成功，日志确认：
+
+```text
+checking for the windows rust crate source...
+E:\moz\.mozbuild130\windows-rs
+```
+
+`./mach build pre-export` 后续验证被中断，尚未确认完成。
+
 ---
 
 ## 目录
