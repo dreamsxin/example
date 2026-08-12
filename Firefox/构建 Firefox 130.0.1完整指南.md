@@ -10,9 +10,34 @@ setlocal
 set "FIREFOX130_SRC=E:\moz\firefox-130.0.1"
 set "MOZBUILD_STATE_PATH=E:\moz\.mozbuild130"
 set "MOZ_WINDOWS_RS_DIR=E:\moz\.mozbuild130\windows-rs"
+set "RUSTUP_TOOLCHAIN=1.79.0-x86_64-pc-windows-msvc"
+set "WINSYSROOT=E:\moz\.mozbuild130\vs-14.39.17.9"
+set "MOZ_MSVC_TOOLS_VERSION=14.39.33519"
+set "MOZ_WINDOWS_SDK_VERSION=10.0.22621.0"
+set "VCToolsVersion=%MOZ_MSVC_TOOLS_VERSION%"
+set "VCToolsInstallDir=%WINSYSROOT%\VC\Tools\MSVC\%MOZ_MSVC_TOOLS_VERSION%\"
+rem Do not pass WindowsSdkDir/WINDOWSSDKDIR together with WINSYSROOT.
+rem Firefox's configure derives the SDK location from WINSYSROOT, and treats
+rem these environment names case-insensitively on Windows.
+set "WINDOWSSDKDIR="
+set "WINDOWSSDKVERSION="
+set "UNIVERSALCRTSDKDIR="
+set "UCRTVERSION="
+set "MOZ_CLANG_DIR=E:\moz\.mozbuild130\clang"
+set "MOZ_CLANG_VERSION=18.1.7"
 set "CBINDGEN=E:\moz\.mozbuild130\cbindgen-0.26.0\bin\cbindgen.exe"
 set "MAKENSISU=E:\moz\.mozbuild130\nsis\bin\makensis.exe"
 set "MACH_HIDE_DEV_DRIVE_SUGGESTION=1"
+set "CC=E:/moz/.mozbuild130/clang/bin/clang-cl.exe"
+set "CXX=E:/moz/.mozbuild130/clang/bin/clang-cl.exe"
+set "HOST_CC=E:/moz/.mozbuild130/clang/bin/clang-cl.exe"
+set "HOST_CXX=E:/moz/.mozbuild130/clang/bin/clang-cl.exe"
+set "LINKER=E:/moz/.mozbuild130/clang/bin/lld-link.exe"
+set "HOST_LINKER=E:/moz/.mozbuild130/clang/bin/lld-link.exe"
+set "AR=E:/moz/.mozbuild130/clang/bin/llvm-lib.exe"
+set "HOST_AR=E:/moz/.mozbuild130/clang/bin/llvm-lib.exe"
+set "RC=E:/moz/.mozbuild130/clang/bin/llvm-rc.exe"
+set "PATH=E:\moz\.cargo\bin;%MOZ_CLANG_DIR%\bin;%VCToolsInstallDir%bin\Hostx64\x64;%WINSYSROOT%\Windows Kits\10\bin\%MOZ_WINDOWS_SDK_VERSION%\x64;%PATH%"
 
 set "BUILD_MODE=%~1"
 if "%BUILD_MODE%"=="" set "BUILD_MODE=dbg"
@@ -41,11 +66,67 @@ if not exist "%CBINDGEN%" (
   exit /b 5
 )
 
+where rustup >nul 2>nul
+if errorlevel 1 (
+  echo rustup was not found. Expected E:\moz\.cargo\bin\rustup.exe or rustup on PATH.
+  exit /b 6
+)
+
+if not exist "%WINSYSROOT%\VC\Tools\MSVC\%MOZ_MSVC_TOOLS_VERSION%\bin\Hostx64\x64\cl.exe" (
+  echo MSVC %MOZ_MSVC_TOOLS_VERSION% was not found under %WINSYSROOT%.
+  exit /b 7
+)
+
+if not exist "%WINSYSROOT%\Windows Kits\10\Include\%MOZ_WINDOWS_SDK_VERSION%\um\windows.h" (
+  echo Windows SDK %MOZ_WINDOWS_SDK_VERSION% was not found under %WINSYSROOT%.
+  exit /b 8
+)
+
+if not exist "%VCToolsInstallDir%include\yvals_core.h" (
+  echo MSVC include files were not found at %VCToolsInstallDir%include.
+  exit /b 9
+)
+
+if not exist "%VCToolsInstallDir%lib\x64\msvcrt.lib" (
+  echo MSVC x64 libraries were not found at %VCToolsInstallDir%lib\x64.
+  exit /b 10
+)
+
+if not exist "%MOZ_CLANG_DIR%\bin\clang-cl.exe" (
+  echo Clang %MOZ_CLANG_VERSION% was not found at %MOZ_CLANG_DIR%\bin\clang-cl.exe.
+  exit /b 11
+)
+
+if not exist "%MOZ_CLANG_DIR%\bin\libclang.dll" (
+  echo libclang was not found at %MOZ_CLANG_DIR%\bin\libclang.dll.
+  exit /b 12
+)
+
+if not exist "%MOZ_CLANG_DIR%\bin\lld-link.exe" (
+  echo lld-link was not found at %MOZ_CLANG_DIR%\bin\lld-link.exe.
+  exit /b 13
+)
+
+if not exist "%MOZ_CLANG_DIR%\bin\llvm-lib.exe" (
+  echo llvm-lib was not found at %MOZ_CLANG_DIR%\bin\llvm-lib.exe.
+  exit /b 14
+)
+
+if not exist "%MOZ_CLANG_DIR%\bin\llvm-rc.exe" (
+  echo llvm-rc was not found at %MOZ_CLANG_DIR%\bin\llvm-rc.exe.
+  exit /b 15
+)
+
 echo Firefox source: %FIREFOX130_SRC%
 echo Build mode:      %BUILD_MODE%
 echo MOZCONFIG:       %MOZCONFIG%
 echo State path:      %MOZBUILD_STATE_PATH%
 echo windows-rs:      %MOZ_WINDOWS_RS_DIR%
+echo Rust toolchain:  %RUSTUP_TOOLCHAIN%
+echo Windows sysroot: %WINSYSROOT%
+echo MSVC tools:      %MOZ_MSVC_TOOLS_VERSION%
+echo Windows SDK:     %MOZ_WINDOWS_SDK_VERSION%
+echo Clang:           %MOZ_CLANG_DIR%
 echo cbindgen:        %CBINDGEN%
 echo makensis:        %MAKENSISU%
 
