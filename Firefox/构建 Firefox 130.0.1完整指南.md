@@ -178,6 +178,9 @@ cargo --version
 ```bash
 cd /e/moz/mozilla-source/firefox
 
+# 指定make
+#env -u PYTHONPATH MOZBUILD_STATE_PATH='E:\moz\.mozbuild' RUSTUP_HOME='E:\moz\.rustup' CARGO_HOME='E:\moz\.cargo' MACH_HIDE_DEV_DRIVE_SUGGESTION=1 MAKE='E:/moz/.mozbuild/mozmake/mozmake.exe' /c/mozilla-build/python3/python.exe mach build
+
 env -u PYTHONPATH \
     MOZBUILD_STATE_PATH='E:\moz\.mozbuild' \
     RUSTUP_HOME='E:\moz\.rustup' \
