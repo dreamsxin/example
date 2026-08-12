@@ -10,6 +10,7 @@ setlocal
 set "FIREFOX130_SRC=E:\moz\firefox-130.0.1"
 set "MOZBUILD_STATE_PATH=E:\moz\.mozbuild130"
 set "MOZ_WINDOWS_RS_DIR=E:\moz\.mozbuild130\windows-rs"
+set "CBINDGEN=E:\moz\.mozbuild130\cbindgen-0.26.0\bin\cbindgen.exe"
 set "MAKENSISU=E:\moz\.mozbuild130\nsis\bin\makensis.exe"
 set "MACH_HIDE_DEV_DRIVE_SUGGESTION=1"
 
@@ -35,11 +36,17 @@ if not exist "%MOZ_WINDOWS_RS_DIR%\Cargo.toml" (
   exit /b 4
 )
 
+if not exist "%CBINDGEN%" (
+  echo cbindgen 0.26.0 was not found at %CBINDGEN%.
+  exit /b 5
+)
+
 echo Firefox source: %FIREFOX130_SRC%
 echo Build mode:      %BUILD_MODE%
 echo MOZCONFIG:       %MOZCONFIG%
 echo State path:      %MOZBUILD_STATE_PATH%
 echo windows-rs:      %MOZ_WINDOWS_RS_DIR%
+echo cbindgen:        %CBINDGEN%
 echo makensis:        %MAKENSISU%
 
 call "C:\mozilla-build\start-shell.bat" -where "%FIREFOX130_SRC%"
@@ -126,6 +133,51 @@ Move-Item `
 ```text
 E:\moz\.mozbuild130\windows-rs             0.52.0
 E:\moz\.mozbuild130\windows-rs-0.62.2      0.62.2
+```
+
+**安装cbindgen 0.26.0**
+Firefox 130 对 cbindgen 的实际兼容版本是 `0.26.0`。之前 `E:\moz\.mozbuild130\cbindgen\cbindgen.exe` 是 `0.29.4`，会生成错误的 WebRender 头文件，出现：
+
+```text
+use of undeclared identifier 'COUNT'
+BudgetType_VALUES[COUNT]
+```
+
+**安装位置**
+
+cbindgen 0.26.0 安装到了：
+
+```text
+E:\moz\.mozbuild130\cbindgen-0.26.0\bin\cbindgen.exe
+```
+
+来源是 Cargo 从 crates.io 安装，不是手工下载 zip：
+
+```powershell
+E:\moz\.cargo\bin\cargo.exe install cbindgen --version 0.26.0 --root E:\moz\.mozbuild130\cbindgen-0.26.0 --locked
+```
+
+验证结果：
+
+```text
+cbindgen 0.26.0
+```
+
+**环境变量配置**
+
+已写入 [start-shell130.bat](E:/moz/start-shell130.bat:7)：
+
+```bat
+set "CBINDGEN=E:\moz\.mozbuild130\cbindgen-0.26.0\bin\cbindgen.exe"
+```
+
+脚本里也加了存在性检查：
+
+```bat
+if not exist "%CBINDGEN%" (
+  echo cbindgen 0.26.0 was not found at %CBINDGEN%.
+  exit /b 5
+)
 ```
 
 **4. 重建 Mach 虚拟环境**
