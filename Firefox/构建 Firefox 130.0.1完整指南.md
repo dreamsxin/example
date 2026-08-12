@@ -2,6 +2,50 @@
 
 > **核心思路**：Firefox 130.0.1 的 `mach bootstrap` 在中文 Windows 11 上存在多个致命 bug，无法直接使用。解决方案是先用最新源码（155.0a1）的 bootstrap 下载完整 toolchain，再切换到 130.0.1 源码，手动修复 4 个兼容性问题后完成 configure 和 build。
 
+`start-shell130.bat`
+```cmd
+@echo off
+setlocal
+
+set "FIREFOX130_SRC=E:\moz\firefox-130.0.1"
+set "MOZBUILD_STATE_PATH=E:\moz\.mozbuild130"
+set "MOZ_WINDOWS_RS_DIR=E:\moz\.mozbuild130\windows-rs"
+set "MAKENSISU=E:\moz\.mozbuild130\nsis\bin\makensis.exe"
+set "MACH_HIDE_DEV_DRIVE_SUGGESTION=1"
+
+set "BUILD_MODE=%~1"
+if "%BUILD_MODE%"=="" set "BUILD_MODE=dbg"
+
+if /I "%BUILD_MODE%"=="dbg" (
+  set "MOZCONFIG=E:\moz\firefox-130.0.1\mozconfig-dbg"
+) else if /I "%BUILD_MODE%"=="rel" (
+  set "MOZCONFIG=E:\moz\firefox-130.0.1\mozconfig-rel"
+) else (
+  echo Usage: %~nx0 [dbg^|rel]
+  exit /b 2
+)
+
+if not exist "C:\mozilla-build\start-shell.bat" (
+  echo MozillaBuild was not found at C:\mozilla-build.
+  exit /b 3
+)
+
+if not exist "%MOZ_WINDOWS_RS_DIR%\Cargo.toml" (
+  echo windows-rs was not found at %MOZ_WINDOWS_RS_DIR%.
+  exit /b 4
+)
+
+echo Firefox source: %FIREFOX130_SRC%
+echo Build mode:      %BUILD_MODE%
+echo MOZCONFIG:       %MOZCONFIG%
+echo State path:      %MOZBUILD_STATE_PATH%
+echo windows-rs:      %MOZ_WINDOWS_RS_DIR%
+echo makensis:        %MAKENSISU%
+
+call "C:\mozilla-build\start-shell.bat" -where "%FIREFOX130_SRC%"
+exit /b %ERRORLEVEL%
+```
+
 ---
 
 ## 目录
