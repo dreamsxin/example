@@ -10,6 +10,7 @@
 - https://github.com/deepseek-ai/Janus
 - https://github.com/BlinkDL/RWKV-LM
 - https://github.com/Ai00-X/ai00_server
+- https://github.com/mlc-ai/web-llm
 
 ## 浏览器
 
