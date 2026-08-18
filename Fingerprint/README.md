@@ -12,6 +12,7 @@
 - https://github.com/embeddinglayer/awesome-fingerprinting
 - https://github.com/prescience-data/dark-knowledge
 - https://github.com/embeddinglayer/awesome-fingerprinting
+- https://github.com/ProxyShard/ShardBrowser.git
 
 Browser fingerprinting is a process of identifying web clients by collecting specific data points from devices, HTTP connections, and software features.
 
