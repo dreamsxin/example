@@ -6,6 +6,7 @@
 - https://github.com/tdeva14/minidump-stackwalk-lite
 - https://github.com/ccjuuc/minidump-stackwalk-viewer
 - https://github.com/rust-minidump/rust-minidump
+- DIA SDK
 
 ## **从“内存地址”到“函数名”的快速索引**
 
