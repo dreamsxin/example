@@ -1,3 +1,4 @@
+- https://github.com/mozilla/dump_syms
 - llvm-pdbutil
 - https://github.com/mstange/pdb-addr2line
 - windbg
