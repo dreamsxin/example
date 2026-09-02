@@ -16,6 +16,7 @@
 - https://github.com/zhom/donutbrowser
 - https://github.com/kameleo-io/kameleo
 - https://github.com/EchoHS/GeekezBrowser
+- https://github.com/CloakHQ/CloakBrowser
 
 Browser fingerprinting is a process of identifying web clients by collecting specific data points from devices, HTTP connections, and software features.
 
