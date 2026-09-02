@@ -1,4 +1,5 @@
 - https://github.com/epiral/bb-browser.git
+- https://github.com/h4ckf0r0day/obscura
 - https://github.com/platonai/Browser4
 - https://github.com/SawyerHood/dev-browser
 - https://github.com/ZhuLinsen/daily_stock_analysis
