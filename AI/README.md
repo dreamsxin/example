@@ -1,4 +1,8 @@
-# AI 项目
+# 学习资料
+
+- https://github.com/datawhalechina/base-llm/tree/main
+
+## AI 项目
 
 - https://github.com/ollama/ollama
 - https://github.com/abi/screenshot-to-code
