@@ -15,6 +15,7 @@
 - https://github.com/BlinkDL/RWKV-LM
 - https://github.com/Ai00-X/ai00_server
 - https://github.com/mlc-ai/web-llm
+- https://github.com/yejy53/Editable-Design
 
 ## 浏览器
 
