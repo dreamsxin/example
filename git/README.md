@@ -354,3 +354,13 @@ git remote set-url origin <新的远程仓库地址>
 git remote remove origin
 git remote add origin <新的远程仓库地址>
 ```
+
+## 按提交时间排序，显示各分支最新提交
+```shell
+git branch -a --sort=-committerdate --format='%(committerdate:iso8601) %(refname:short) %(objectname:short)'
+```
+
+## 使用指定的私钥 clone
+```shell
+git -c core.sshCommand="ssh -i .ssh\\id_rsa -o IdentitiesOnly=yes"  clone ssh://git@host:port/dreamsxin/ops.git ops
+```
