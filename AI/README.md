@@ -25,3 +25,12 @@
 ## 应用
 
 - https://github.com/SingularityLabs-ai/beyond-bard-mini
+
+## 评测与动态
+
+- https://benchlm.ai/
+- https://llm-stats.com/
+  一个聚合了 300+ 模型 的排行榜，其 LLM Stats Score 综合了智能、速度和价格。
+- https://ai.36kr.com/
+- https://opencompass.org.cn/home
+- https://github.com/open-compass/opencompass
