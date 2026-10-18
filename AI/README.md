@@ -34,3 +34,8 @@
 - https://ai.36kr.com/
 - https://opencompass.org.cn/home
 - https://github.com/open-compass/opencompass
+
+##
+
+- https://gallery.arenaofbias.icu/
+- https://github.com/wsnxxxs/arenaofbias
