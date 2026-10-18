@@ -21,6 +21,9 @@
 
 - https://github.com/lightpanda-io/browser
 
+## Blender
+
+- https://github.com/sixtysevenlf/dsh-blender-plugin
 
 ## 应用
 
