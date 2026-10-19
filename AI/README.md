@@ -17,6 +17,13 @@
 - https://github.com/mlc-ai/web-llm
 - https://github.com/yejy53/Editable-Design
 
+## AI 复刻项目
+
+- https://github.com/storytold/wordcraft
+- https://github.com/storytold/photocraft
+- https://github.com/storytold/pdfcraft
+- https://github.com/storytold/filmcraft
+
 ## 浏览器
 
 - https://github.com/lightpanda-io/browser
