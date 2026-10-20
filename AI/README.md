@@ -2,6 +2,11 @@
 
 - https://github.com/datawhalechina/base-llm/tree/main
 
+## 推理
+
+- https://github.com/deepseek-ai/DeepInfer
+- https://github.com/deepseek-ai/deepseek-recipe
+
 ## AI 项目
 
 - https://github.com/ollama/ollama
@@ -16,6 +21,14 @@
 - https://github.com/Ai00-X/ai00_server
 - https://github.com/mlc-ai/web-llm
 - https://github.com/yejy53/Editable-Design
+
+## harness
+- http://github.com/google-research/harness2
+
+## SKILL
+- https://github.com/tt-a1i/archify
+- https://github.com/mattpocock/skills
+- https://github.com/titanwings/distilly
 
 ## AI 复刻项目
 
