@@ -21,14 +21,21 @@
 - https://github.com/Ai00-X/ai00_server
 - https://github.com/mlc-ai/web-llm
 - https://github.com/yejy53/Editable-Design
+- https://github.com/Devin-AXIS/iPolloWork
+- https://github.com/MemTensor/MemOS
+- https://github.com/EverMind-AI/EverOS
+- https://github.com/YaoApp/yao
+- https://github.com/nocobase/nocobase
 
 ## harness
 - http://github.com/google-research/harness2
+- https://github.com/walkinglabs/learn-harness-engineering
 
 ## SKILL
 - https://github.com/tt-a1i/archify
 - https://github.com/mattpocock/skills
 - https://github.com/titanwings/distilly
+- https://github.com/lingfengQAQ/webnovel-writer
 
 ## AI 复刻项目
 
