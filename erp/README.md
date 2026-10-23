@@ -1,5 +1,10 @@
 ## 亚马逊
 
+- https://github.com/amzn/selling-partner-api-samples
+- https://github.com/amzn/selling-partner-api-docs
+- https://github.com/amzn/selling-partner-api-models
+- https://github.com/amzn/amazon-pay-api-sdk-nodejs
+
 ### SKILL
 
 - https://github.com/hikari0511/awesome-amazon-ec-skills
