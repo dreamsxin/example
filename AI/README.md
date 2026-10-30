@@ -32,6 +32,7 @@
 - https://github.com/deepseek-ai/deepseek-harness
 - http://github.com/google-research/harness2
 - https://github.com/walkinglabs/learn-harness-engineering
+- https://github.com/CopilotKit/OpenBot
 
 ## SKILL
 
