@@ -28,14 +28,18 @@
 - https://github.com/nocobase/nocobase
 
 ## harness
+
+- https://github.com/deepseek-ai/deepseek-harness
 - http://github.com/google-research/harness2
 - https://github.com/walkinglabs/learn-harness-engineering
 
 ## SKILL
+
 - https://github.com/tt-a1i/archify
 - https://github.com/mattpocock/skills
 - https://github.com/titanwings/distilly
 - https://github.com/lingfengQAQ/webnovel-writer
+- https://github.com/YuJunZhiXue/dsh-purge
 
 ## AI 复刻项目
 
