@@ -44,6 +44,7 @@
 
 ## AI 复刻项目
 
+- https://github.com/storytold/craft-anything
 - https://github.com/storytold/wordcraft
 - https://github.com/storytold/photocraft
 - https://github.com/storytold/pdfcraft
