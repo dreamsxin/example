@@ -33,6 +33,7 @@
 - http://github.com/google-research/harness2
 - https://github.com/walkinglabs/learn-harness-engineering
 - https://github.com/CopilotKit/OpenBot
+- https://github.com/ADWMC/helm-d
 
 ## SKILL
 
