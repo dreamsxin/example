@@ -26,6 +26,7 @@
 - https://github.com/EverMind-AI/EverOS
 - https://github.com/YaoApp/yao
 - https://github.com/nocobase/nocobase
+- https://github.com/Tencent/AI-Infra-Guard
 
 ## harness
 
@@ -33,7 +34,6 @@
 - http://github.com/google-research/harness2
 - https://github.com/walkinglabs/learn-harness-engineering
 - https://github.com/CopilotKit/OpenBot
-- https://github.com/ADWMC/helm-d
 
 ## SKILL
 
@@ -42,6 +42,9 @@
 - https://github.com/titanwings/distilly
 - https://github.com/lingfengQAQ/webnovel-writer
 - https://github.com/YuJunZhiXue/dsh-purge
+- https://github.com/7API/deepseek-v4.1-flash-1017-abliterated
+- https://github.com/ADWMC/helm-d
+- https://github.com/e2sy/jailbreak-archives
 
 ## AI 复刻项目
 
