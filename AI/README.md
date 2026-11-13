@@ -45,6 +45,11 @@
 - https://github.com/7API/deepseek-v4.1-flash-1017-abliterated
 - https://github.com/ADWMC/helm-d
 - https://github.com/e2sy/jailbreak-archives
+- https://github.com/Fission-AI/OpenSpec
+- https://github.com/NVIDIA/SkillEvaluator
+- https://github.com/github/spec-kit
+- https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
+- https://github.com/jaygptpro/amazon-pro-skills
 
 ## AI 复刻项目
 
@@ -65,6 +70,7 @@
 ## 应用
 
 - https://github.com/SingularityLabs-ai/beyond-bard-mini
+- https://github.com/pairtask/pairtask
 
 ## 评测与动态
 
