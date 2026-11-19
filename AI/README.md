@@ -51,6 +51,10 @@
 - https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
 - https://github.com/jaygptpro/amazon-pro-skills
 
+## MCP
+
+- https://github.com/aoci-spec/aoci-code
+
 ## AI 复刻项目
 
 - https://github.com/storytold/craft-anything
