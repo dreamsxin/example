@@ -50,6 +50,7 @@
 - https://github.com/github/spec-kit
 - https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
 - https://github.com/jaygptpro/amazon-pro-skills
+- https://github.com/Kevin-ho616/Hunter-Skill
 
 ## MCP
 
