@@ -76,6 +76,7 @@
 
 - https://github.com/SingularityLabs-ai/beyond-bard-mini
 - https://github.com/pairtask/pairtask
+- https://github.com/ttillberg/codevember-2026
 
 ## 评测与动态
 
