@@ -78,6 +78,7 @@
 - https://github.com/pairtask/pairtask
 - https://github.com/ttillberg/codevember-2026
 - https://designprompts.dev/
+- https://github.com/elvarofficial/teardown
 
 ## 评测与动态
 
